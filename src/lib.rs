@@ -66,3 +66,5 @@ impl fmt::Display for Error {
         write!(f, "Not Implemented yet")
     }
 }
+
+impl std::error::Error for Error {}
