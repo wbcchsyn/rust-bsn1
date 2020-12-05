@@ -50,3 +50,17 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
+
+/// `ClassTag` is u8 enum for Tag class of Identifier in 'ASN.1.'
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ClassTag {
+    /// Universal Tag
+    Universal = 0x00,
+    /// Application Tag
+    Application = 0x40,
+    /// Context-Specific Tag
+    ContextSpecific = 0x80,
+    /// Private Tag
+    Private = 0xc0,
+}
