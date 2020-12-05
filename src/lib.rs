@@ -54,3 +54,7 @@
 #![deny(missing_docs)]
 
 //! # bsn1
+
+/// Errors for this crate.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Error {}
