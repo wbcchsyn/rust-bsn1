@@ -64,3 +64,13 @@ pub enum ClassTag {
     /// Private Tag
     Private = 0xc0,
 }
+
+/// `PCTag` is u8 enum for Private/Constructed flag of Identifier in 'ASN.1.'
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum PCTag {
+    /// Primitive data type.
+    Primitive = 0x00,
+    /// Constructed data type.
+    Constructed = 0x20,
+}
