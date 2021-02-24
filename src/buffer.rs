@@ -54,6 +54,7 @@
 use core::alloc::Layout;
 use core::mem::size_of;
 use core::ptr::null_mut;
+use std::alloc::handle_alloc_error;
 
 pub struct Buffer {
     len_: isize,
@@ -122,6 +123,42 @@ impl Buffer {
         }
     }
 
+    pub fn reserve(&mut self, additional: usize) {
+        let new_cap = self.len() + additional;
+
+        if new_cap <= self.capacity() {
+            return;
+        }
+
+        if self.is_stack() {
+            // First allocation
+
+            // Allocating heap memory.
+            let layout = Layout::array::<u8>(new_cap).unwrap();
+            let ptr = unsafe { std::alloc::alloc(layout) };
+            if ptr.is_null() {
+                handle_alloc_error(layout);
+            }
+
+            // Copy current elements
+            unsafe { ptr.copy_from_nonoverlapping(self.as_ptr(), self.len()) };
+
+            // Update the properties
+            self.buffer.0 = ptr;
+            self.buffer.1 = new_cap;
+            self.len_ = self.len() as isize;
+        } else {
+            let layout = Layout::array::<u8>(self.capacity()).unwrap();
+            let ptr = unsafe { std::alloc::realloc(self.as_mut_ptr(), layout, new_cap) };
+            if ptr.is_null() {
+                handle_alloc_error(layout);
+            }
+
+            self.buffer.0 = ptr;
+            self.buffer.1 = new_cap;
+        }
+    }
+
     fn is_stack(&self) -> bool {
         self.len_ < 0
     }
@@ -136,5 +173,15 @@ mod tests {
         let buffer = Buffer::new();
         assert_eq!(0, buffer.len());
         assert!(0 < buffer.capacity());
+    }
+
+    #[test]
+    fn reserve() {
+        let mut buffer = Buffer::new();
+        for i in 0..40 {
+            buffer.reserve(i);
+            assert_eq!(0, buffer.len());
+            assert!(i <= buffer.capacity());
+        }
     }
 }
