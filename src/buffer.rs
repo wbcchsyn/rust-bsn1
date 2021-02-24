@@ -57,6 +57,15 @@ pub struct Buffer {
 }
 
 impl Buffer {
+    pub fn as_ptr(&self) -> *const u8 {
+        if self.is_stack() {
+            let ptr: *const (*mut u8, usize) = &self.buffer;
+            ptr as *const u8
+        } else {
+            self.buffer.0
+        }
+    }
+
     fn is_stack(&self) -> bool {
         self.len_ < 0
     }
