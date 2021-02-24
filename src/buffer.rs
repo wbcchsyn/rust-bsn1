@@ -55,3 +55,9 @@ pub struct Buffer {
     len_: isize,
     buffer: (*mut u8, usize),
 }
+
+impl Buffer {
+    fn is_stack(&self) -> bool {
+        self.len_ < 0
+    }
+}
