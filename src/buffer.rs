@@ -51,11 +51,24 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+use core::alloc::Layout;
 use core::mem::size_of;
 
 pub struct Buffer {
     len_: isize,
     buffer: (*mut u8, usize),
+}
+
+impl Drop for Buffer {
+    fn drop(&mut self) {
+        if self.is_stack() {
+            return;
+        } else {
+            let layout = Layout::array::<u8>(self.capacity()).unwrap();
+            let ptr = self.as_mut_ptr();
+            unsafe { std::alloc::dealloc(ptr, layout) };
+        }
+    }
 }
 
 impl Buffer {
