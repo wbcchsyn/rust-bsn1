@@ -53,6 +53,7 @@
 
 use core::alloc::Layout;
 use core::mem::size_of;
+use core::ptr::null_mut;
 
 pub struct Buffer {
     len_: isize,
@@ -67,6 +68,15 @@ impl Drop for Buffer {
             let layout = Layout::array::<u8>(self.capacity()).unwrap();
             let ptr = self.as_mut_ptr();
             unsafe { std::alloc::dealloc(ptr, layout) };
+        }
+    }
+}
+
+impl Buffer {
+    pub const fn new() -> Self {
+        Self {
+            len_: isize::MIN,
+            buffer: (null_mut(), 0),
         }
     }
 }
@@ -100,5 +110,15 @@ impl Buffer {
 
     fn is_stack(&self) -> bool {
         self.len_ < 0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new() {
+        let _buffer = Buffer::new();
     }
 }
