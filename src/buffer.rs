@@ -89,6 +89,15 @@ impl AsRef<[u8]> for Buffer {
 }
 
 impl Buffer {
+    pub fn push(&mut self, val: u8) {
+        self.reserve(1);
+        unsafe {
+            let ptr = self.as_mut_ptr().add(self.len());
+            *ptr = val;
+        }
+        self.len_ += 1;
+    }
+
     pub fn as_ptr(&self) -> *const u8 {
         if self.is_stack() {
             let ptr: *const (*mut u8, usize) = &self.buffer;
@@ -182,6 +191,20 @@ mod tests {
             buffer.reserve(i);
             assert_eq!(0, buffer.len());
             assert!(i <= buffer.capacity());
+        }
+    }
+
+    #[test]
+    fn push() {
+        let mut buffer = Buffer::new();
+        let mut vec = Vec::new();
+
+        for i in 0..40 {
+            buffer.push(i);
+            vec.push(i);
+
+            let expected: &[u8] = vec.as_ref();
+            assert_eq!(expected, buffer.as_ref());
         }
     }
 }
