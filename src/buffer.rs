@@ -81,6 +81,12 @@ impl Buffer {
     }
 }
 
+impl AsRef<[u8]> for Buffer {
+    fn as_ref(&self) -> &[u8] {
+        unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len()) }
+    }
+}
+
 impl Buffer {
     pub fn as_ptr(&self) -> *const u8 {
         if self.is_stack() {
