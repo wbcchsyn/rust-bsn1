@@ -108,6 +108,14 @@ impl Buffer {
         }
     }
 
+    pub fn len(&self) -> usize {
+        if self.is_stack() {
+            (self.len_ - isize::MIN) as usize
+        } else {
+            self.len_ as usize
+        }
+    }
+
     fn is_stack(&self) -> bool {
         self.len_ < 0
     }
@@ -119,6 +127,8 @@ mod tests {
 
     #[test]
     fn new() {
-        let _buffer = Buffer::new();
+        let buffer = Buffer::new();
+        assert_eq!(0, buffer.len());
+        assert!(0 < buffer.capacity());
     }
 }
