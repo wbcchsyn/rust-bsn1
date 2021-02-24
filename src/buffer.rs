@@ -51,6 +51,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+use core::mem::size_of;
+
 pub struct Buffer {
     len_: isize,
     buffer: (*mut u8, usize),
@@ -72,6 +74,14 @@ impl Buffer {
             ptr as *mut u8
         } else {
             self.buffer.0
+        }
+    }
+
+    pub fn capacity(&self) -> usize {
+        if self.is_stack() {
+            size_of::<(*mut u8, usize)>()
+        } else {
+            self.buffer.1
         }
     }
 
