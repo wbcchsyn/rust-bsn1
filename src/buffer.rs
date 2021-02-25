@@ -56,6 +56,7 @@ use core::cmp::Ordering;
 use core::hash::{Hash, Hasher};
 use core::mem::size_of;
 use core::mem::MaybeUninit;
+use core::ops::Index;
 use core::ptr::null_mut;
 use std::alloc::handle_alloc_error;
 use std::borrow::Borrow;
@@ -148,6 +149,16 @@ impl Hash for Buffer {
     {
         let this: &[u8] = self.borrow();
         this.hash(hasher);
+    }
+}
+
+impl Index<usize> for Buffer {
+    type Output = u8;
+    fn index(&self, index: usize) -> &Self::Output {
+        unsafe {
+            let ptr = self.as_ptr().add(index);
+            &*ptr
+        }
     }
 }
 
