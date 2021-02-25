@@ -101,6 +101,12 @@ impl IdRef {
     }
 }
 
+impl Borrow<[u8]> for IdRef {
+    fn borrow(&self) -> &[u8] {
+        &self.bytes
+    }
+}
+
 /// `Id` owns `IdRef` and represents Identifier octets in 'ASN.1.'
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id {
