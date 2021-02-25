@@ -51,6 +51,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+use crate::Buffer;
+
 /// `ClassTag` is u8 enum for Tag class of Identifier in 'ASN.1.'
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -81,4 +83,10 @@ pub enum PCTag {
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct IdRef {
     bytes: [u8],
+}
+
+/// `Id` owns `IdRef` and represents Identifier octets in 'ASN.1.'
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Id {
+    buffer: Buffer,
 }
