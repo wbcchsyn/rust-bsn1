@@ -57,6 +57,7 @@
 
 mod buffer;
 
+use buffer::Buffer;
 use std::fmt;
 
 /// Errors for this crate.
