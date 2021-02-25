@@ -256,6 +256,16 @@ impl Buffer {
         }
     }
 
+    pub unsafe fn set_len(&mut self, new_len: usize) {
+        debug_assert!(new_len <= self.capacity());
+
+        if self.is_stack() {
+            self.len_ = isize::MIN + new_len as isize;
+        } else {
+            self.len_ = new_len as isize;
+        }
+    }
+
     pub fn reserve(&mut self, additional: usize) {
         let new_cap = self.len() + additional;
 
