@@ -52,6 +52,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 use crate::Buffer;
+use core::ops::Deref;
 
 /// `ClassTag` is u8 enum for Tag class of Identifier in 'ASN.1.'
 #[repr(u8)]
@@ -103,4 +104,12 @@ impl IdRef {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id {
     buffer: Buffer,
+}
+
+impl Deref for Id {
+    type Target = IdRef;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { IdRef::from_bytes_unchecked(self.buffer.as_ref()) }
+    }
 }
