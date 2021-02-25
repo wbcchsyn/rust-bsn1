@@ -59,7 +59,7 @@ mod buffer;
 mod identifier;
 
 use buffer::Buffer;
-pub use identifier::{ClassTag, PCTag};
+pub use identifier::{ClassTag, IdRef, PCTag};
 use std::fmt;
 
 /// Errors for this crate.
