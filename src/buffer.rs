@@ -98,6 +98,15 @@ impl Buffer {
         self.len_ += 1;
     }
 
+    pub fn extend_from_slice(&mut self, vals: &[u8]) {
+        self.reserve(vals.len());
+        unsafe {
+            let ptr = self.as_mut_ptr().add(self.len());
+            ptr.copy_from_nonoverlapping(vals.as_ptr(), vals.len());
+        }
+        self.len_ += vals.len() as isize;
+    }
+
     pub fn as_ptr(&self) -> *const u8 {
         if self.is_stack() {
             let ptr: *const (*mut u8, usize) = &self.buffer;
@@ -202,6 +211,21 @@ mod tests {
         for i in 0..40 {
             buffer.push(i);
             vec.push(i);
+
+            let expected: &[u8] = vec.as_ref();
+            assert_eq!(expected, buffer.as_ref());
+        }
+    }
+
+    #[test]
+    fn extend_from_slice() {
+        let mut buffer = Buffer::new();
+        let mut vec = Vec::new();
+
+        for i in 0..40 {
+            let vals = [i; 10];
+            buffer.extend_from_slice(&vals);
+            vec.extend_from_slice(&vals);
 
             let expected: &[u8] = vec.as_ref();
             assert_eq!(expected, buffer.as_ref());
