@@ -53,6 +53,7 @@
 
 use core::alloc::Layout;
 use core::cmp::Ordering;
+use core::hash::{Hash, Hasher};
 use core::mem::size_of;
 use core::mem::MaybeUninit;
 use core::ptr::null_mut;
@@ -131,6 +132,16 @@ impl fmt::Debug for Buffer {
 impl Borrow<[u8]> for Buffer {
     fn borrow(&self) -> &[u8] {
         unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len()) }
+    }
+}
+
+impl Hash for Buffer {
+    fn hash<H>(&self, hasher: &mut H)
+    where
+        H: Hasher,
+    {
+        let this: &[u8] = self.borrow();
+        this.hash(hasher);
     }
 }
 
