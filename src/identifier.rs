@@ -53,6 +53,7 @@
 
 use crate::Buffer;
 use core::ops::Deref;
+use std::borrow::Borrow;
 
 /// `ClassTag` is u8 enum for Tag class of Identifier in 'ASN.1.'
 #[repr(u8)]
@@ -104,6 +105,12 @@ impl IdRef {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id {
     buffer: Buffer,
+}
+
+impl Borrow<IdRef> for Id {
+    fn borrow(&self) -> &IdRef {
+        self.deref()
+    }
 }
 
 impl Deref for Id {
