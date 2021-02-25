@@ -56,6 +56,7 @@ use core::mem::size_of;
 use core::mem::MaybeUninit;
 use core::ptr::null_mut;
 use std::alloc::handle_alloc_error;
+use std::fmt;
 
 pub struct Buffer {
     len_: isize,
@@ -115,6 +116,13 @@ impl Buffer {
 impl AsRef<[u8]> for Buffer {
     fn as_ref(&self) -> &[u8] {
         unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len()) }
+    }
+}
+
+impl fmt::Debug for Buffer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let contents: &[u8] = self.as_ref();
+        f.debug_tuple("Buffer").field(&contents).finish()
     }
 }
 
