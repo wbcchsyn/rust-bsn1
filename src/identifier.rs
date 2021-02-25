@@ -74,3 +74,11 @@ pub enum PCTag {
     /// Constructed data type.
     Constructed = 0x20,
 }
+
+/// `IdRef` represents Identifier octets in 'ASN.1.'
+///
+/// This struct is `Unsized` , so usually thay use a reference to it.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct IdRef {
+    bytes: [u8],
+}
