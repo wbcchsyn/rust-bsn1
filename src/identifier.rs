@@ -101,6 +101,12 @@ impl IdRef {
     }
 }
 
+impl AsRef<[u8]> for IdRef {
+    fn as_ref(&self) -> &[u8] {
+        &self.bytes
+    }
+}
+
 impl Borrow<[u8]> for IdRef {
     fn borrow(&self) -> &[u8] {
         &self.bytes
