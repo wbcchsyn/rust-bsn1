@@ -52,6 +52,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 use core::alloc::Layout;
+use core::cmp::Ordering;
 use core::mem::size_of;
 use core::mem::MaybeUninit;
 use core::ptr::null_mut;
@@ -145,6 +146,17 @@ where
 }
 
 impl Eq for Buffer {}
+
+impl<T> PartialOrd<T> for Buffer
+where
+    T: Borrow<[u8]>,
+{
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        let this: &[u8] = self.borrow();
+        let other: &[u8] = other.borrow();
+        this.partial_cmp(other)
+    }
+}
 
 impl Buffer {
     pub fn push(&mut self, val: u8) {
