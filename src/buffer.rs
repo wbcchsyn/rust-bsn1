@@ -80,6 +80,12 @@ impl Buffer {
             buffer: (null_mut(), 0),
         }
     }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        let mut ret = Self::new();
+        ret.reserve(capacity);
+        ret
+    }
 }
 
 impl AsRef<[u8]> for Buffer {
