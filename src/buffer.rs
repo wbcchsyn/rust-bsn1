@@ -133,6 +133,19 @@ impl Borrow<[u8]> for Buffer {
     }
 }
 
+impl<T> PartialEq<T> for Buffer
+where
+    T: Borrow<[u8]>,
+{
+    fn eq(&self, other: &T) -> bool {
+        let this: &[u8] = self.borrow();
+        let other: &[u8] = other.borrow();
+        this == other
+    }
+}
+
+impl Eq for Buffer {}
+
 impl Buffer {
     pub fn push(&mut self, val: u8) {
         self.reserve(1);
