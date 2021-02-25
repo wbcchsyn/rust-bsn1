@@ -67,12 +67,16 @@ use std::fmt;
 pub enum Error {
     /// The bytes finishes before the last octet.
     UnTerminatedBytes,
+    /// The bytes includes some redundant octet(s).
+    /// ('ASN.1' does not allow such bytes.)
+    RedundantBytes,
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::UnTerminatedBytes => f.write_str("The bytes finishes before the last octet."),
+            Self::RedundantBytes => f.write_str("The bytes includes some redundant octet(s)."),
         }
     }
 }
