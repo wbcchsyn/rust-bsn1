@@ -56,7 +56,7 @@ use core::cmp::Ordering;
 use core::hash::{Hash, Hasher};
 use core::mem::size_of;
 use core::mem::MaybeUninit;
-use core::ops::Index;
+use core::ops::{Index, IndexMut};
 use core::ptr::null_mut;
 use std::alloc::handle_alloc_error;
 use std::borrow::Borrow;
@@ -158,6 +158,15 @@ impl Index<usize> for Buffer {
         unsafe {
             let ptr = self.as_ptr().add(index);
             &*ptr
+        }
+    }
+}
+
+impl IndexMut<usize> for Buffer {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        unsafe {
+            let ptr = self.as_mut_ptr().add(index);
+            &mut *ptr
         }
     }
 }
