@@ -122,6 +122,12 @@ impl AsRef<[u8]> for Buffer {
     }
 }
 
+impl AsMut<[u8]> for Buffer {
+    fn as_mut(&mut self) -> &mut [u8] {
+        unsafe { core::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
+    }
+}
+
 impl fmt::Debug for Buffer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let contents: &[u8] = self.as_ref();
