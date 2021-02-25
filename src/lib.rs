@@ -64,11 +64,16 @@ use std::fmt;
 
 /// Errors for this crate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Error {}
+pub enum Error {
+    /// The bytes finishes before the last octet.
+    UnTerminatedBytes,
+}
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Not Implemented yet")
+        match self {
+            Self::UnTerminatedBytes => f.write_str("The bytes finishes before the last octet."),
+        }
     }
 }
 
