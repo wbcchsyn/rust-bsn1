@@ -107,6 +107,15 @@ impl Borrow<[u8]> for IdRef {
     }
 }
 
+impl ToOwned for IdRef {
+    type Owned = Id;
+
+    fn to_owned(&self) -> Self::Owned {
+        let buffer = Buffer::from(self.borrow());
+        Self::Owned { buffer }
+    }
+}
+
 /// `Id` owns `IdRef` and represents Identifier octets in 'ASN.1.'
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id {
