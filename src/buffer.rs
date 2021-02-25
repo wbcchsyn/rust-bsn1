@@ -158,6 +158,14 @@ where
     }
 }
 
+impl Ord for Buffer {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let this: &[u8] = self.borrow();
+        let other: &[u8] = other.borrow();
+        this.cmp(other)
+    }
+}
+
 impl Buffer {
     pub fn push(&mut self, val: u8) {
         self.reserve(1);
