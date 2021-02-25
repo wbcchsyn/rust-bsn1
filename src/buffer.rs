@@ -53,6 +53,7 @@
 
 use core::alloc::Layout;
 use core::mem::size_of;
+use core::mem::MaybeUninit;
 use core::ptr::null_mut;
 use std::alloc::handle_alloc_error;
 
@@ -78,6 +79,21 @@ impl From<&[u8]> for Buffer {
         let mut ret = Self::with_capacity(vals.len());
         ret.extend_from_slice(vals);
         ret
+    }
+}
+
+impl Clone for Buffer {
+    fn clone(&self) -> Self {
+        if self.is_stack() {
+            let mut ret = MaybeUninit::<Self>::uninit();
+            let ptr = ret.as_mut_ptr();
+            unsafe {
+                ptr.copy_from_nonoverlapping(self, 1);
+                ret.assume_init()
+            }
+        } else {
+            Self::from(self.as_ref())
+        }
     }
 }
 
