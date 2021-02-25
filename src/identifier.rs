@@ -50,25 +50,3 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-
-#![deny(missing_docs)]
-
-//! # bsn1
-
-mod buffer;
-mod identifier;
-
-use buffer::Buffer;
-use std::fmt;
-
-/// Errors for this crate.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Error {}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Not Implemented yet")
-    }
-}
-
-impl std::error::Error for Error {}
