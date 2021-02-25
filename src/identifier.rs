@@ -51,7 +51,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::Buffer;
+use crate::{Buffer, Error};
+use core::convert::TryFrom;
 use core::ops::Deref;
 use std::borrow::Borrow;
 
@@ -85,6 +86,47 @@ pub enum PCTag {
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct IdRef {
     bytes: [u8],
+}
+
+impl IdRef {
+    const LONG_FLAG: u8 = 0x1f;
+    const MAX_SHORT: u8 = Self::LONG_FLAG - 1;
+    const MORE_FLAG: u8 = 0x80;
+}
+
+impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
+    type Error = Error;
+
+    fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
+        let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
+
+        if first & IdRef::LONG_FLAG != IdRef::LONG_FLAG {
+            // Short From
+            return Ok(unsafe { IdRef::from_bytes_unchecked(&bytes[0..1]) });
+        }
+
+        let second = *bytes.get(1).ok_or(Error::UnTerminatedBytes)?;
+
+        if second <= IdRef::MAX_SHORT {
+            // Short form will do.
+            return Err(Error::RedundantBytes);
+        }
+
+        if second == IdRef::MORE_FLAG {
+            // The second octet is not necessary.
+            return Err(Error::RedundantBytes);
+        }
+
+        // Find the last octet
+        for i in 1..bytes.len() {
+            if bytes[i] & IdRef::MORE_FLAG != IdRef::MORE_FLAG {
+                return Ok(unsafe { IdRef::from_bytes_unchecked(&bytes[0..=i]) });
+            }
+        }
+
+        // The last octet is not found.
+        Err(Error::UnTerminatedBytes)
+    }
 }
 
 impl IdRef {
@@ -139,5 +181,164 @@ impl Deref for Id {
 
     fn deref(&self) -> &Self::Target {
         unsafe { IdRef::from_bytes_unchecked(self.buffer.as_ref()) }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CLASSES: &[ClassTag] = &[
+        ClassTag::Universal,
+        ClassTag::Application,
+        ClassTag::ContextSpecific,
+        ClassTag::Private,
+    ];
+    const PCS: &[PCTag] = &[PCTag::Primitive, PCTag::Constructed];
+
+    #[test]
+    fn try_from_ok() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                // 1 byte
+                {
+                    let first = cl as u8 + pc as u8 + 0;
+                    let bytes: &[u8] = &[first];
+                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    assert_eq!(bytes, id.as_ref());
+
+                    let first = cl as u8 + pc as u8 + 0x1e;
+                    let bytes: &[u8] = &[first];
+                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    assert_eq!(bytes, id.as_ref());
+                }
+
+                let first = cl as u8 + pc as u8 + 0x1f;
+
+                // 2 bytes
+                {
+                    let bytes: &[u8] = &[first, 0x1f];
+                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    assert_eq!(bytes, id.as_ref());
+
+                    let bytes: &[u8] = &[first, 0x7f];
+                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    assert_eq!(bytes, id.as_ref());
+                }
+
+                // len bytes
+                for len in 3..20 {
+                    let mut bytes = vec![first];
+                    for _ in 1..len {
+                        bytes.push(0x80);
+                    }
+                    bytes[1] = 0x81;
+                    bytes[len - 1] = 0x00;
+
+                    let bytes: &[u8] = bytes.as_ref();
+                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    assert_eq!(bytes.as_ref(), id.as_ref());
+
+                    let mut bytes = vec![first];
+                    for _ in 1..len {
+                        bytes.push(0xff);
+                    }
+                    bytes[len - 1] = 0x7f;
+
+                    let bytes: &[u8] = bytes.as_ref();
+                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    assert_eq!(bytes.as_ref(), id.as_ref());
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn try_from_redundant() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                let first = cl as u8 + pc as u8 + 0x1f;
+
+                // 2 bytes
+                {
+                    let bytes: &[u8] = &[first, 0x00];
+                    let e = <&IdRef>::try_from(bytes).unwrap_err();
+                    assert_eq!(Error::RedundantBytes, e);
+
+                    let bytes: &[u8] = &[first, 0x1e];
+                    let e = <&IdRef>::try_from(bytes).unwrap_err();
+                    assert_eq!(Error::RedundantBytes, e);
+                }
+
+                // len bytes
+                for len in 3..20 {
+                    let mut bytes = vec![first];
+                    for _ in 1..len {
+                        bytes.push(0x80);
+                    }
+                    bytes[len - 1] = 0x00;
+
+                    let bytes: &[u8] = bytes.as_ref();
+                    let e = <&IdRef>::try_from(bytes).unwrap_err();
+                    assert_eq!(Error::RedundantBytes, e);
+
+                    let mut bytes = vec![first];
+                    for _ in 1..len {
+                        bytes.push(0xff);
+                    }
+                    bytes[1] = 0x80;
+                    bytes[len - 1] = 0x7f;
+
+                    let bytes: &[u8] = bytes.as_ref();
+                    let e = <&IdRef>::try_from(bytes).unwrap_err();
+                    assert_eq!(Error::RedundantBytes, e);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn try_from_unterminated() {
+        // Empty
+        {
+            let bytes: &[u8] = &[];
+            let e = <&IdRef>::try_from(bytes).unwrap_err();
+            assert_eq!(Error::UnTerminatedBytes, e);
+        }
+
+        for &cl in CLASSES {
+            for &pc in PCS {
+                let first = cl as u8 + pc as u8 + 0x1f;
+
+                // 1 bytes
+                {
+                    let bytes: &[u8] = &[first];
+                    let e = <&IdRef>::try_from(bytes).unwrap_err();
+                    assert_eq!(Error::UnTerminatedBytes, e);
+                }
+
+                // len bytes
+                for len in 2..20 {
+                    let mut bytes = vec![first];
+                    for _ in 1..len {
+                        bytes.push(0x80);
+                    }
+                    bytes[1] = 0x81;
+
+                    let bytes: &[u8] = bytes.as_ref();
+                    let e = <&IdRef>::try_from(bytes).unwrap_err();
+                    assert_eq!(Error::UnTerminatedBytes, e);
+
+                    let mut bytes = vec![first];
+                    for _ in 1..len {
+                        bytes.push(0xff);
+                    }
+
+                    let bytes: &[u8] = bytes.as_ref();
+                    let e = <&IdRef>::try_from(bytes).unwrap_err();
+                    assert_eq!(Error::UnTerminatedBytes, e);
+                }
+            }
+        }
     }
 }
