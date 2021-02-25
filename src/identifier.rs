@@ -85,6 +85,20 @@ pub struct IdRef {
     bytes: [u8],
 }
 
+impl IdRef {
+    /// Builds instance from `bytes` without any sanitize.
+    /// `bytes` must not include any extra octets.
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if the format of `bytes` is not right.
+    pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
+        let ptr = bytes as *const [u8];
+        let ptr = ptr as *const IdRef;
+        &*ptr
+    }
+}
+
 /// `Id` owns `IdRef` and represents Identifier octets in 'ASN.1.'
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id {
