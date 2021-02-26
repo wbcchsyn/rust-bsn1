@@ -164,6 +164,14 @@ impl ToOwned for IdRef {
     }
 }
 
+impl IdRef {
+    /// Returns `true` if `self` is 'Universal' class, or `false` .
+    pub fn is_universal(&self) -> bool {
+        let first = self.bytes[0];
+        first & 0xc0 == ClassTag::Universal as u8
+    }
+}
+
 /// `Id` owns `IdRef` and represents Identifier octets in 'ASN.1.'
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id {
