@@ -182,6 +182,12 @@ impl IdRef {
         let first = self.bytes[0];
         first & 0xc0 == ClassTag::ContextSpecific as u8
     }
+
+    /// Returns `true` if `self` is 'Private' class, or `false` .
+    pub fn is_private(&self) -> bool {
+        let first = self.bytes[0];
+        first & 0xc0 == ClassTag::Private as u8
+    }
 }
 
 /// `Id` owns `IdRef` and represents Identifier octets in 'ASN.1.'
