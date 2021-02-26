@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::Error;
+use crate::{Buffer, Error};
 use core::mem::size_of;
 
 /// `Length` represents the length octets of 'ASN.1'.
@@ -71,6 +71,7 @@ pub enum Length {
 
 impl Length {
     const LONG_FLAG: u8 = 0x80;
+    const MAX_SHORT: u8 = Self::LONG_FLAG - 1;
     const INDEFINITE: u8 = 0x80;
 }
 
@@ -106,6 +107,34 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
         let bytes = &bytes[followings_count..];
         Ok((Length::Definite(len), bytes))
     }
+}
+
+pub fn serialize(length: &Length) -> Buffer {
+    let mut buffer = Buffer::new();
+
+    match *length {
+        Length::Indefinite => buffer.push(Length::INDEFINITE),
+        Length::Definite(mut val) => {
+            if val <= Length::MAX_SHORT as usize {
+                // Short form
+                buffer.push(val as u8);
+            } else {
+                // Long form
+                let len = (8 * size_of::<usize>() - (val.leading_zeros() as usize) + 7) / 8 + 1;
+                unsafe { buffer.set_len(len) };
+                buffer[0] = Length::LONG_FLAG + (len - 1) as u8;
+
+                for i in (1..len).rev() {
+                    debug_assert!(0 < val);
+                    buffer[i] = val as u8;
+                    val >>= 8;
+                }
+                debug_assert_eq!(0, val);
+            }
+        }
+    }
+
+    buffer
 }
 
 #[cfg(test)]
@@ -301,6 +330,25 @@ mod tests {
             bytes[0] = 0x80 + (size_of::<usize>() as u8) + 1;
             let e = try_from(&bytes).unwrap_err();
             assert_eq!(Error::UnTerminatedBytes, e);
+        }
+    }
+
+    #[test]
+    fn serialize_length() {
+        let empty: &[u8] = &[];
+
+        // Indefinite
+        {
+            let bytes = serialize(&Length::Indefinite);
+            let length = try_from(bytes.as_ref()).unwrap();
+            assert_eq!((Length::Indefinite, empty), length);
+        }
+
+        // Definite
+        for &len in &[0, 1, 0x7f, 0x80, 0xff, 0x0100, 0xffff, usize::MAX] {
+            let bytes = serialize(&Length::Definite(len));
+            let length = try_from(bytes.as_ref()).unwrap();
+            assert_eq!((Length::Definite(len), empty), length);
         }
     }
 }
