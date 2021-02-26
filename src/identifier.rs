@@ -165,6 +165,19 @@ impl ToOwned for IdRef {
 }
 
 impl IdRef {
+    /// Returns `ClassTag` of `self` .
+    pub fn class(&self) -> ClassTag {
+        if self.is_universal() {
+            ClassTag::Universal
+        } else if self.is_application() {
+            ClassTag::Application
+        } else if self.is_context_specific() {
+            ClassTag::ContextSpecific
+        } else {
+            ClassTag::Private
+        }
+    }
+
     /// Returns `true` if `self` is 'Universal' class, or `false` .
     pub fn is_universal(&self) -> bool {
         let first = self.bytes[0];
