@@ -222,6 +222,26 @@ impl IdRef {
         let first = self.bytes[0];
         first & 0x20 == PCTag::Constructed as u8
     }
+
+    /// Returns the number of `self` unless overflow.
+    pub fn number(&self) -> Result<u128, Error> {
+        if self.bytes.len() == 1 {
+            let ret = self.bytes[0] & Self::LONG_FLAG;
+            debug_assert!(ret != Self::LONG_FLAG);
+            Ok(ret as u128)
+        } else if 20 < self.bytes.len() {
+            Err(Error::OverFlow)
+        } else if self.bytes.len() == 20 && 0x83 < self.bytes[1] {
+            Err(Error::OverFlow)
+        } else {
+            let num: u128 = self.bytes[1..].iter().fold(0, |acc, octet| {
+                let octet = octet & !Self::MORE_FLAG;
+                (acc << 7) + (octet as u128)
+            });
+
+            Ok(num)
+        }
+    }
 }
 
 /// `Id` owns `IdRef` and represents Identifier octets in 'ASN.1.'
@@ -397,6 +417,73 @@ mod tests {
                     let bytes: &[u8] = bytes.as_ref();
                     let e = <&IdRef>::try_from(bytes).unwrap_err();
                     assert_eq!(Error::UnTerminatedBytes, e);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn number() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                // 1 byte
+                {
+                    let num: u128 = 0;
+                    let first = cl as u8 + pc as u8 + num as u8;
+                    let bytes: &[u8] = &[first];
+                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    assert_eq!(num, id.number().unwrap());
+
+                    let num: u128 = 30;
+                    let first = cl as u8 + pc as u8 + num as u8;
+                    let bytes: &[u8] = &[first];
+                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    assert_eq!(num, id.number().unwrap());
+                }
+
+                let first = cl as u8 + pc as u8 + 31;
+
+                // 2 bytes
+                {
+                    let num: u128 = 0x1f;
+                    let bytes: &[u8] = &[first, num as u8];
+                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    assert_eq!(num, id.number().unwrap());
+
+                    let num: u128 = 0x7f;
+                    let bytes: &[u8] = &[first, num as u8];
+                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    assert_eq!(num, id.number().unwrap());
+                }
+
+                // 3 bytes
+                {
+                    let num: u128 = 0x80;
+                    let bytes: &[u8] = &[first, 0x81, 0x00];
+                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    assert_eq!(num, id.number().unwrap());
+
+                    let num: u128 = 0x3fff;
+                    let bytes: &[u8] = &[first, 0xff, 0x7f];
+                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    assert_eq!(num, id.number().unwrap());
+                }
+
+                // max
+                {
+                    let mut bytes: [u8; 20] = [0xff; 20];
+                    bytes[0] = first;
+                    bytes[1] = 0x83;
+                    bytes[19] = 0x7f;
+                    let id = <&IdRef>::try_from(&bytes as &[u8]).unwrap();
+                    assert_eq!(u128::MAX, id.number().unwrap());
+
+                    let mut bytes: [u8; 20] = [0x80; 20];
+                    bytes[0] = first;
+                    bytes[1] = 0x84;
+                    bytes[19] = 0x00;
+                    let id = <&IdRef>::try_from(&bytes as &[u8]).unwrap();
+                    assert_eq!(Error::OverFlow, id.number().unwrap_err());
                 }
             }
         }
