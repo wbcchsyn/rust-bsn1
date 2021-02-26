@@ -207,6 +207,12 @@ impl IdRef {
         let first = self.bytes[0];
         first & 0x20 == PCTag::Primitive as u8
     }
+
+    /// Returns `true` if `self` is flagged as 'Constructed', or `false` .
+    pub fn is_constructed(&self) -> bool {
+        let first = self.bytes[0];
+        first & 0x20 == PCTag::Constructed as u8
+    }
 }
 
 /// `Id` owns `IdRef` and represents Identifier octets in 'ASN.1.'
