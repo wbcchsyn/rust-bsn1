@@ -70,6 +70,8 @@ pub enum Error {
     /// The bytes includes some redundant octet(s).
     /// ('ASN.1' does not allow such bytes.)
     RedundantBytes,
+    /// Over flow is occurred to parse bytes as a number.
+    OverFlow,
 }
 
 impl fmt::Display for Error {
@@ -77,6 +79,7 @@ impl fmt::Display for Error {
         match self {
             Self::UnTerminatedBytes => f.write_str("The bytes finishes before the last octet."),
             Self::RedundantBytes => f.write_str("The bytes includes some redundant octet(s)."),
+            Self::OverFlow => f.write_str("Over flow is occurred to parse bytes as a number."),
         }
     }
 }
