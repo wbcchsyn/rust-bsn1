@@ -176,6 +176,12 @@ impl IdRef {
         let first = self.bytes[0];
         first & 0xc0 == ClassTag::Application as u8
     }
+
+    /// Returns `true` if `self` is 'Context Specific' class, or `false` .
+    pub fn is_context_specific(&self) -> bool {
+        let first = self.bytes[0];
+        first & 0xc0 == ClassTag::ContextSpecific as u8
+    }
 }
 
 /// `Id` owns `IdRef` and represents Identifier octets in 'ASN.1.'
