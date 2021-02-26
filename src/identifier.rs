@@ -202,6 +202,15 @@ impl IdRef {
         first & 0xc0 == ClassTag::Private as u8
     }
 
+    /// Returns the Primitive/Constructed flag of `self` .
+    pub fn pc(&self) -> PCTag {
+        if self.is_primitive() {
+            PCTag::Primitive
+        } else {
+            PCTag::Constructed
+        }
+    }
+
     /// Returns `true` if `self` is flagged as 'Primitive', or `false` .
     pub fn is_primitive(&self) -> bool {
         let first = self.bytes[0];
