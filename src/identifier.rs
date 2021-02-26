@@ -250,6 +250,43 @@ pub struct Id {
     buffer: Buffer,
 }
 
+impl Id {
+    /// Creates a new instance from `class` , `pc` , and `number` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, PCTag};
+    ///
+    /// // Creates 'Universal Integer'
+    /// let _id = Id::new(ClassTag::Universal, PCTag::Primitive, 2);
+    /// ```
+    pub fn new(class: ClassTag, pc: PCTag, number: u128) -> Self {
+        let mut buffer = Buffer::new();
+
+        if number <= IdRef::MAX_SHORT as u128 {
+            let o = class as u8 + pc as u8 + number as u8;
+            buffer.push(o);
+        } else {
+            let len = ((128 - number.leading_zeros() + 6) / 7 + 1) as usize;
+            buffer.reserve(len);
+            unsafe { buffer.set_len(len) };
+
+            buffer[0] = class as u8 + pc as u8 + IdRef::LONG_FLAG;
+
+            let mut num = number;
+            for i in (1..len).rev() {
+                let o = (num as u8) | IdRef::MORE_FLAG;
+                buffer[i] = o;
+                num >>= 7;
+            }
+            buffer[len - 1] &= !(IdRef::MORE_FLAG);
+        }
+
+        Self { buffer }
+    }
+}
+
 impl Borrow<IdRef> for Id {
     fn borrow(&self) -> &IdRef {
         self.deref()
@@ -484,6 +521,19 @@ mod tests {
                     bytes[19] = 0x00;
                     let id = <&IdRef>::try_from(&bytes as &[u8]).unwrap();
                     assert_eq!(Error::OverFlow, id.number().unwrap_err());
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn new() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                for &num in &[0, 30, 31, 0x7f, 0x80, 0x3fff, 0x8000, 0x1fffff, u128::MAX] {
+                    let id = Id::new(cl, pc, num);
+                    let idref = <&IdRef>::try_from(id.as_ref()).unwrap();
+                    assert_eq!(idref.as_ref(), id.as_ref());
                 }
             }
         }
