@@ -405,6 +405,12 @@ impl Id {
     }
 }
 
+impl AsRef<[u8]> for Id {
+    fn as_ref(&self) -> &[u8] {
+        self.buffer.as_ref()
+    }
+}
+
 impl Borrow<[u8]> for Id {
     fn borrow(&self) -> &[u8] {
         self.buffer.borrow()
