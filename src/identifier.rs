@@ -201,6 +201,12 @@ impl IdRef {
         let first = self.bytes[0];
         first & 0xc0 == ClassTag::Private as u8
     }
+
+    /// Returns `true` if `self` is flagged as 'Primitive', or `false` .
+    pub fn is_primitive(&self) -> bool {
+        let first = self.bytes[0];
+        first & 0x20 == PCTag::Primitive as u8
+    }
 }
 
 /// `Id` owns `IdRef` and represents Identifier octets in 'ASN.1.'
