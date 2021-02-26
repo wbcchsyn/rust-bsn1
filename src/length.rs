@@ -50,3 +50,18 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
+
+/// `Length` represents the length octets of 'ASN.1'.
+///
+/// Note that `Length` represents the length of the contents, not total length of 'BER' nor
+/// 'DER' nor 'CER'.
+/// ('BER', 'DER', and 'CER' are constituted of identifier, length, and contents.)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Length {
+    /// Represents 'Indefinite' length.
+    ///
+    /// 'Indefinite' is only for 'BER', and the contents ends with 'EOC' octets.
+    Indefinite,
+    /// 'Definite' is for 'BER', 'DER', and 'CER', and represents the byte count of the contents.
+    Definite(usize),
+}
