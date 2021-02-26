@@ -411,6 +411,12 @@ impl AsRef<[u8]> for Id {
     }
 }
 
+impl AsRef<IdRef> for Id {
+    fn as_ref(&self) -> &IdRef {
+        self.deref()
+    }
+}
+
 impl Borrow<[u8]> for Id {
     fn borrow(&self) -> &[u8] {
         self.buffer.borrow()
@@ -662,8 +668,8 @@ mod tests {
             for &pc in PCS {
                 for &num in &[0, 30, 31, 0x7f, 0x80, 0x3fff, 0x8000, 0x1fffff, u128::MAX] {
                     let id = Id::new(cl, pc, num);
-                    let idref = <&IdRef>::try_from(id.as_ref()).unwrap();
-                    assert_eq!(idref.as_ref(), id.as_ref());
+                    let idref = <&IdRef>::try_from(id.as_ref() as &[u8]).unwrap();
+                    assert_eq!(idref.as_ref(), id.as_ref() as &[u8]);
                 }
             }
         }
