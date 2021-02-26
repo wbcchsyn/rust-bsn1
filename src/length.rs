@@ -50,39 +50,3 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-
-#![deny(missing_docs)]
-
-//! # bsn1
-
-mod buffer;
-mod identifier;
-mod length;
-
-use buffer::Buffer;
-pub use identifier::{ClassTag, Id, IdRef, PCTag};
-use std::fmt;
-
-/// Errors for this crate.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Error {
-    /// The bytes finishes before the last octet.
-    UnTerminatedBytes,
-    /// The bytes includes some redundant octet(s).
-    /// ('ASN.1' does not allow such bytes.)
-    RedundantBytes,
-    /// Over flow is occurred to parse bytes as a number.
-    OverFlow,
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::UnTerminatedBytes => f.write_str("The bytes finishes before the last octet."),
-            Self::RedundantBytes => f.write_str("The bytes includes some redundant octet(s)."),
-            Self::OverFlow => f.write_str("Over flow is occurred to parse bytes as a number."),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
