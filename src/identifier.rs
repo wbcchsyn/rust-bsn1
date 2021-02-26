@@ -170,6 +170,12 @@ impl IdRef {
         let first = self.bytes[0];
         first & 0xc0 == ClassTag::Universal as u8
     }
+
+    /// Returns `true` if `self` is 'Application' class, or `false` .
+    pub fn is_application(&self) -> bool {
+        let first = self.bytes[0];
+        first & 0xc0 == ClassTag::Application as u8
+    }
 }
 
 /// `Id` owns `IdRef` and represents Identifier octets in 'ASN.1.'
