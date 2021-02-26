@@ -97,6 +97,10 @@ impl IdRef {
 impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
     type Error = Error;
 
+    /// Parses `bytes` and tries to build a new instance.
+    ///
+    /// This function ignores the extra octet(s) at the end if any.
+    /// i.e. This function returns `Ok` if `bytes` starts with octets of ASN.1 identifier.
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
 
@@ -355,6 +359,10 @@ pub struct Id {
 impl TryFrom<&[u8]> for Id {
     type Error = Error;
 
+    /// Parses `bytes` and tries to build a new instance.
+    ///
+    /// This function ignores the extra octet(s) at the end if any.
+    /// i.e. This function returns `Ok` if `bytes` starts with octets of ASN.1 identifier.
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         <&IdRef>::try_from(bytes).map(|idref| idref.to_owned())
     }
