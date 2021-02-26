@@ -166,6 +166,25 @@ impl ToOwned for IdRef {
 
 impl IdRef {
     /// Returns `ClassTag` of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, PCTag};
+    ///
+    /// // 'Id' implements 'Deref<Target = IdRef>'.
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// assert_eq!(ClassTag::Universal, id.class());
+    ///
+    /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1);
+    /// assert_eq!(ClassTag::Application, id.class());
+    ///
+    /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 2);
+    /// assert_eq!(ClassTag::ContextSpecific, id.class());
+    ///
+    /// let id = Id::new(ClassTag::Private, PCTag::Constructed, 3);
+    /// assert_eq!(ClassTag::Private, id.class());
+    /// ```
     pub fn class(&self) -> ClassTag {
         if self.is_universal() {
             ClassTag::Universal
@@ -179,30 +198,83 @@ impl IdRef {
     }
 
     /// Returns `true` if `self` is 'Universal' class, or `false` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, PCTag};
+    ///
+    /// // 'Id' implements 'Deref<Target = IdRef>'.
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// assert_eq!(true, id.is_universal());
+    /// ```
     pub fn is_universal(&self) -> bool {
         let first = self.bytes[0];
         first & 0xc0 == ClassTag::Universal as u8
     }
 
     /// Returns `true` if `self` is 'Application' class, or `false` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, PCTag};
+    ///
+    /// // 'Id' implements 'Deref<Target = IdRef>'.
+    /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 0);
+    /// assert_eq!(true, id.is_application());
+    /// ```
     pub fn is_application(&self) -> bool {
         let first = self.bytes[0];
         first & 0xc0 == ClassTag::Application as u8
     }
 
     /// Returns `true` if `self` is 'Context Specific' class, or `false` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, PCTag};
+    ///
+    /// // 'Id' implements 'Deref<Target = IdRef>'.
+    /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 0);
+    /// assert_eq!(true, id.is_context_specific());
+    /// ```
     pub fn is_context_specific(&self) -> bool {
         let first = self.bytes[0];
         first & 0xc0 == ClassTag::ContextSpecific as u8
     }
 
     /// Returns `true` if `self` is 'Private' class, or `false` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, PCTag};
+    ///
+    /// // 'Id' implements 'Deref<Target = IdRef>'.
+    /// let id = Id::new(ClassTag::Private, PCTag::Primitive, 0);
+    /// assert_eq!(true, id.is_private());
+    /// ```
     pub fn is_private(&self) -> bool {
         let first = self.bytes[0];
         first & 0xc0 == ClassTag::Private as u8
     }
 
     /// Returns the Primitive/Constructed flag of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, PCTag};
+    ///
+    /// // 'Id' implements 'Deref<Target = IdRef>'.
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    ///
+    /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1);
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// ```
     pub fn pc(&self) -> PCTag {
         if self.is_primitive() {
             PCTag::Primitive
@@ -212,18 +284,48 @@ impl IdRef {
     }
 
     /// Returns `true` if `self` is flagged as 'Primitive', or `false` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, PCTag};
+    ///
+    /// // 'Id' implements 'Deref<Target = IdRef>'.
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// assert_eq!(true, id.is_primitive());
+    /// ```
     pub fn is_primitive(&self) -> bool {
         let first = self.bytes[0];
         first & 0x20 == PCTag::Primitive as u8
     }
 
     /// Returns `true` if `self` is flagged as 'Constructed', or `false` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, PCTag};
+    ///
+    /// // 'Id' implements 'Deref<Target = IdRef>'.
+    /// let id = Id::new(ClassTag::Universal, PCTag::Constructed, 0);
+    /// assert_eq!(true, id.is_constructed());
+    /// ```
     pub fn is_constructed(&self) -> bool {
         let first = self.bytes[0];
         first & 0x20 == PCTag::Constructed as u8
     }
 
     /// Returns the number of `self` unless overflow.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, PCTag};
+    ///
+    /// // 'Id' implements 'Deref<Target = IdRef>'.
+    /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 49);
+    /// assert_eq!(49, id.number().unwrap());
+    /// ```
     pub fn number(&self) -> Result<u128, Error> {
         if self.bytes.len() == 1 {
             let ret = self.bytes[0] & Self::LONG_FLAG;
