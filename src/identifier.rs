@@ -250,6 +250,14 @@ pub struct Id {
     buffer: Buffer,
 }
 
+impl TryFrom<&[u8]> for Id {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
+        <&IdRef>::try_from(bytes).map(|idref| idref.to_owned())
+    }
+}
+
 impl Id {
     /// Creates a new instance from `class` , `pc` , and `number` .
     ///
