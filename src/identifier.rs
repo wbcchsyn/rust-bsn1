@@ -51,25 +51,26 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#![deny(missing_docs)]
-
-//! # bsn1
-
-mod buffer;
-mod identifier;
-
-use buffer::Buffer;
-pub use identifier::{ClassTag, PCTag};
-use std::fmt;
-
-/// Errors for this crate.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Error {}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Not Implemented yet")
-    }
+/// `ClassTag` is u8 enum for Tag class of Identifier in 'ASN.1.'
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ClassTag {
+    /// Universal Tag
+    Universal = 0x00,
+    /// Application Tag
+    Application = 0x40,
+    /// Context-Specific Tag
+    ContextSpecific = 0x80,
+    /// Private Tag
+    Private = 0xc0,
 }
 
-impl std::error::Error for Error {}
+/// `PCTag` is u8 enum for Private/Constructed flag of Identifier in 'ASN.1.'
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum PCTag {
+    /// Primitive data type.
+    Primitive = 0x00,
+    /// Constructed data type.
+    Constructed = 0x20,
+}
