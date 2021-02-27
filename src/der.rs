@@ -123,6 +123,32 @@ pub struct Der {
     buffer: Buffer,
 }
 
+impl Der {
+    /// Creates a new instance from `id` and `contents` .
+    pub fn new(id: &IdRef, contents: &[u8]) -> Self {
+        let len = Length::Definite(contents.len());
+        let len = length::serialize(&len);
+
+        let total_len = id.as_ref().len() + len.len() + contents.len();
+        let mut buffer = Buffer::with_capacity(total_len);
+        unsafe { buffer.set_len(total_len) };
+
+        unsafe {
+            let ptr = buffer.as_mut_ptr();
+            let id = id.as_ref();
+            ptr.copy_from_nonoverlapping(id.as_ptr(), id.len());
+
+            let ptr = ptr.add(id.len());
+            ptr.copy_from_nonoverlapping(len.as_ptr(), len.len());
+
+            let ptr = ptr.add(len.len());
+            ptr.copy_from_nonoverlapping(contents.as_ptr(), contents.len());
+        }
+
+        Self { buffer }
+    }
+}
+
 impl AsRef<[u8]> for Der {
     fn as_ref(&self) -> &[u8] {
         self.buffer.as_ref()
@@ -152,5 +178,23 @@ impl Deref for Der {
 
     fn deref(&self) -> &Self::Target {
         unsafe { DerRef::from_bytes_unchecked(self.buffer.as_ref()) }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new() {
+        let id = IdRef::octet_string();
+
+        let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
+        for &bytes in byteses {
+            let der = Der::new(id, bytes);
+            assert_eq!(id, der.id());
+            assert_eq!(Length::Definite(bytes.len()), der.length());
+            assert_eq!(bytes, der.contents());
+        }
     }
 }
