@@ -159,6 +159,18 @@ pub struct Der {
     buffer: Buffer,
 }
 
+impl TryFrom<&[u8]> for Der {
+    type Error = Error;
+
+    /// Parses `bytes` starting with octets of 'ASN.1 DER' and builds a new instance.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
+        let der_ref = <&DerRef>::try_from(bytes)?;
+        Ok(der_ref.to_owned())
+    }
+}
+
 impl Der {
     /// Creates a new instance from `id` and `contents` .
     pub fn new(id: &IdRef, contents: &[u8]) -> Self {
