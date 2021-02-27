@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{identifier, length, IdRef, Length};
+use crate::{identifier, length, Buffer, IdRef, Length};
 use std::borrow::Borrow;
 
 /// `DerRef` represents 'DER' octets in 'ASN.1.'
@@ -114,4 +114,13 @@ impl DerRef {
         let bytes = &self.bytes[id_len..];
         length::try_from(bytes).unwrap().1
     }
+}
+
+/// `Der` owns `DerRef` and represents 'DER' octets in 'ASN.1.'
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Der {
+    id_len: usize,
+    contents_len: usize,
+    contents_offset: usize,
+    buffer: Buffer,
 }
