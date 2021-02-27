@@ -54,3 +54,17 @@
 #![deny(missing_docs)]
 
 //! # bsn1
+
+use std::fmt;
+
+/// Errors for this crate.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Error {}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Not Implemented yet")
+    }
+}
+
+impl std::error::Error for Error {}
