@@ -51,7 +51,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{identifier, length, Buffer, IdRef, Length};
+use crate::{identifier, length, Buffer, Error, IdRef, Length};
+use core::convert::TryFrom;
 use core::ops::Deref;
 use std::borrow::Borrow;
 
@@ -61,6 +62,32 @@ use std::borrow::Borrow;
 #[derive(Debug, PartialEq, Eq)]
 pub struct DerRef {
     bytes: [u8],
+}
+
+impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
+    type Error = Error;
+
+    /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a reference to `DerRef` .
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
+        let id = <&IdRef>::try_from(bytes)?;
+        let parsing = &bytes[id.as_ref().len()..];
+
+        let (len, parsing) = match length::try_from(parsing) {
+            Err(Error::OverFlow) => return Err(Error::UnTerminatedBytes),
+            Err(e) => return Err(e),
+            Ok((Length::Indefinite, _)) => return Err(Error::IndefiniteLength),
+            Ok((Length::Definite(len), parsing)) => (len, parsing),
+        };
+
+        let total_len = bytes.len() - parsing.len() + len;
+        if bytes.len() < total_len {
+            Err(Error::UnTerminatedBytes)
+        } else {
+            unsafe { Ok(DerRef::from_bytes_unchecked(&bytes[..total_len])) }
+        }
+    }
 }
 
 impl DerRef {
@@ -204,6 +231,18 @@ mod tests {
             assert_eq!(id, der.id());
             assert_eq!(Length::Definite(bytes.len()), der.length());
             assert_eq!(bytes, der.contents());
+        }
+    }
+
+    #[test]
+    fn try_from() {
+        let id = IdRef::octet_string();
+
+        let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
+        for &bytes in byteses {
+            let der = Der::new(id, bytes);
+            let der_ref = <&DerRef>::try_from(der.as_ref() as &[u8]).unwrap();
+            assert_eq!(der_ref, der.as_ref() as &DerRef);
         }
     }
 }
