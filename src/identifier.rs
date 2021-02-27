@@ -145,6 +145,293 @@ impl IdRef {
         let ptr = ptr as *const IdRef;
         &*ptr
     }
+
+    /// Returns an instance representing 'Universal EOC' defined in 'ASN.1.'
+    pub fn eoc() -> &'static Self {
+        const BYTES: [u8; 1] = [0x00];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Boolean' defined in 'ASN.1.'
+    pub fn boolean() -> &'static Self {
+        const BYTES: [u8; 1] = [0x01];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Integer' defined in 'ASN.1.'
+    pub fn integer() -> &'static Self {
+        const BYTES: [u8; 1] = [0x02];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Bit String' defined in 'ASN.1.'
+    pub fn bit_string() -> &'static Self {
+        const BYTES: [u8; 1] = [0x03];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed Bit String' defined in 'ASN.1.'
+    pub fn bit_string_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x23];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Octet String' defined in 'ASN.1.'
+    pub fn octet_string() -> &'static Self {
+        const BYTES: [u8; 1] = [0x04];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed Octet String' defined in 'ASN.1.'
+    pub fn octet_string_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x24];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Null' defined in 'ASN.1.'
+    pub fn null() -> &'static Self {
+        const BYTES: [u8; 1] = [0x05];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Object Identifier' defined in 'ASN.1.'
+    pub fn object_identifier() -> &'static Self {
+        const BYTES: [u8; 1] = [0x06];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Object Descriptor' defined in 'ASN.1.'
+    pub fn object_descriptor() -> &'static Self {
+        const BYTES: [u8; 1] = [0x07];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed Object Descriptor' defined in
+    /// 'ASN.1.'
+    pub fn object_descriptor_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x27];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal External' defined in 'ASN.1.'
+    pub fn external() -> &'static Self {
+        const BYTES: [u8; 1] = [0x28];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Real' defined in 'ASN.1.'
+    pub fn real() -> &'static Self {
+        const BYTES: [u8; 1] = [0x29];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Enumerated' defined in 'ASN.1.'
+    pub fn enumerated() -> &'static Self {
+        const BYTES: [u8; 1] = [0x0a];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Embedded PDV' defined in 'ASN.1.'
+    pub fn embedded_pdv() -> &'static Self {
+        const BYTES: [u8; 1] = [0x2b];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal UTF8 String' defined in 'ASN.1.'
+    pub fn utf8_string() -> &'static Self {
+        const BYTES: [u8; 1] = [0x0c];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed UTF8 String' defined in 'ASN.1.'
+    pub fn utf8_string_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x2c];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Relative OID' defined in 'ASN.1.'
+    pub fn relative_oid() -> &'static Self {
+        const BYTES: [u8; 1] = [0x0d];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Universal Time' defined in 'ASN.1.'
+    pub fn universal_time() -> &'static Self {
+        const BYTES: [u8; 1] = [0x0e];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Sequence' and 'Sequence of' defined in 'ASN.1.'
+    pub fn sequence() -> &'static Self {
+        const BYTES: [u8; 1] = [0x30];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Set' and 'Set of' defined in 'ASN.1.'
+    pub fn set() -> &'static Self {
+        const BYTES: [u8; 1] = [0x31];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Numeric String' defined in 'ASN.1.'
+    pub fn numeric_string() -> &'static Self {
+        const BYTES: [u8; 1] = [0x12];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed Numeric String' defined in 'ASN.1.'
+    pub fn numeric_string_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x32];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Printable String' defined in 'ASN.1.'
+    pub fn printable_string() -> &'static Self {
+        const BYTES: [u8; 1] = [0x13];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed Printable String' defined in
+    /// 'ASN.1.'
+    pub fn printable_string_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x33];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal T61 String' defined in 'ASN.1.'
+    pub fn t61_string() -> &'static Self {
+        const BYTES: [u8; 1] = [0x14];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed T61 String' defined in 'ASN.1.'
+    pub fn t61_string_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x34];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Videotex String' defined in 'ASN.1.'
+    pub fn videotex_string() -> &'static Self {
+        const BYTES: [u8; 1] = [0x15];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed Videotex String' defined in 'ASN.1.'
+    pub fn videotex_string_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x35];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal IA5 String' defined in 'ASN.1.'
+    pub fn ia5_string() -> &'static Self {
+        const BYTES: [u8; 1] = [0x16];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed IA5 String' defined in 'ASN.1.'
+    pub fn ia5_string_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x36];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal UTC Time' defined in 'ASN.1.'
+    pub fn utc_time() -> &'static Self {
+        const BYTES: [u8; 1] = [0x17];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed UTC Time' defined in 'ASN.1.'
+    pub fn utc_time_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x37];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Generalized Time' defined in 'ASN.1.'
+    pub fn generalized_time() -> &'static Self {
+        const BYTES: [u8; 1] = [0x18];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed Generalized Time' defined in
+    /// 'ASN.1.'
+    pub fn generalized_time_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x38];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Graphic String' defined in 'ASN.1.'
+    pub fn graphic_string() -> &'static Self {
+        const BYTES: [u8; 1] = [0x19];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed Graphic String' defined in 'ASN.1.'
+    pub fn graphic_string_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x39];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Visible String' defined in 'ASN.1.'
+    pub fn visible_string() -> &'static Self {
+        const BYTES: [u8; 1] = [0x1a];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed Visible String' defined in 'ASN.1.'
+    pub fn visible_string_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x3a];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal General String' defined in 'ASN.1.'
+    pub fn general_string() -> &'static Self {
+        const BYTES: [u8; 1] = [0x1b];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed General String' defined in 'ASN.1.'
+    pub fn general_string_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x3b];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Universal String' defined in 'ASN.1.'
+    pub fn universal_string() -> &'static Self {
+        const BYTES: [u8; 1] = [0x1c];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed Universal String' defined in
+    /// 'ASN.1.'
+    pub fn universal_string_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x3c];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Character String' defined in 'ASN.1.'
+    pub fn character_string() -> &'static Self {
+        const BYTES: [u8; 1] = [0x1d];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed Character String' defined in
+    /// 'ASN.1.'
+    pub fn character_string_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x3d];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal BMP String' defined in 'ASN.1.'
+    pub fn bmp_string() -> &'static Self {
+        const BYTES: [u8; 1] = [0x1e];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
+
+    /// Returns an instance representing 'Universal Constructed BMP String' defined in 'ASN.1.'
+    pub fn bmp_string_constructed() -> &'static Self {
+        const BYTES: [u8; 1] = [0x3e];
+        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
+    }
 }
 
 impl AsRef<[u8]> for IdRef {
