@@ -90,6 +90,15 @@ impl Borrow<[u8]> for DerRef {
     }
 }
 
+impl ToOwned for DerRef {
+    type Owned = Der;
+
+    fn to_owned(&self) -> Self::Owned {
+        let buffer = Buffer::from(&self.bytes);
+        Der { buffer }
+    }
+}
+
 impl DerRef {
     /// Returns a reference to `IdRef` of `self` .
     pub fn id(&self) -> &IdRef {
