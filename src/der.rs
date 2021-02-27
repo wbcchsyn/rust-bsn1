@@ -107,4 +107,11 @@ impl DerRef {
         let bytes = &self.bytes[id_len..];
         length::try_from(bytes).unwrap().0
     }
+
+    /// Returns a reference to 'contents octets' of `self` .
+    pub fn contents(&self) -> &[u8] {
+        let id_len = self.id().as_ref().len();
+        let bytes = &self.bytes[id_len..];
+        length::try_from(bytes).unwrap().1
+    }
 }
