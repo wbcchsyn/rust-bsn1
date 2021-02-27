@@ -92,6 +92,7 @@ mod identifier;
 mod length;
 
 use buffer::Buffer;
+pub use der::DerRef;
 pub use identifier::{ClassTag, Id, IdRef, PCTag};
 pub use length::Length;
 use std::fmt;
