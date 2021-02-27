@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{identifier, IdRef};
+use crate::{identifier, length, IdRef, Length};
 use std::borrow::Borrow;
 
 /// `DerRef` represents 'DER' octets in 'ASN.1.'
@@ -96,5 +96,15 @@ impl DerRef {
             let bytes = identifier::shrink_to_fit_unchecked(&self.bytes);
             IdRef::from_bytes_unchecked(bytes)
         }
+    }
+
+    /// Returns a `Length` to represent the length of contents.
+    ///
+    /// Note that 'DER' does not allow 'Indefinite Length.'
+    /// The return value must be `Length::Definite` .
+    pub fn length(&self) -> Length {
+        let id_len = self.id().as_ref().len();
+        let bytes = &self.bytes[id_len..];
+        length::try_from(bytes).unwrap().0
     }
 }
