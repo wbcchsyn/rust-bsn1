@@ -51,6 +51,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+use std::borrow::Borrow;
+
 /// `DerRef` represents 'DER' octets in 'ASN.1.'
 ///
 /// This struct is 'Unsized', so usually user uses a reference to the instance.
@@ -76,6 +78,12 @@ impl DerRef {
 
 impl AsRef<[u8]> for DerRef {
     fn as_ref(&self) -> &[u8] {
+        &self.bytes
+    }
+}
+
+impl Borrow<[u8]> for DerRef {
+    fn borrow(&self) -> &[u8] {
         &self.bytes
     }
 }
