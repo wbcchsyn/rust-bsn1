@@ -51,6 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+use crate::{identifier, IdRef};
 use std::borrow::Borrow;
 
 /// `DerRef` represents 'DER' octets in 'ASN.1.'
@@ -85,5 +86,15 @@ impl AsRef<[u8]> for DerRef {
 impl Borrow<[u8]> for DerRef {
     fn borrow(&self) -> &[u8] {
         &self.bytes
+    }
+}
+
+impl DerRef {
+    /// Returns a reference to `IdRef` of `self` .
+    pub fn id(&self) -> &IdRef {
+        unsafe {
+            let bytes = identifier::shrink_to_fit_unchecked(&self.bytes);
+            IdRef::from_bytes_unchecked(bytes)
+        }
     }
 }
