@@ -133,6 +133,26 @@ impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
     }
 }
 
+/// Ommits the extra octets at the end of `bytes` and returns octets just one 'ASN.1 Identifier.'
+///
+/// # Safety
+///
+/// The behavior is undefined if `bytes` does not starts with 'ASN.1 Identifier.'
+pub unsafe fn shrink_to_fit_unchecked(bytes: &[u8]) -> &[u8] {
+    if bytes[0] & IdRef::LONG_FLAG != IdRef::LONG_FLAG {
+        &bytes[0..1]
+    } else {
+        let mut i = 1;
+        loop {
+            if bytes[i] & IdRef::MORE_FLAG != IdRef::MORE_FLAG {
+                return &bytes[..=i];
+            }
+
+            i += 1;
+        }
+    }
+}
+
 impl IdRef {
     /// Builds instance from `bytes` without any sanitize.
     /// `bytes` must not include any extra octets.
