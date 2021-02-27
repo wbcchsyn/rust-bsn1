@@ -52,6 +52,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 use crate::{identifier, length, Buffer, IdRef, Length};
+use core::ops::Deref;
 use std::borrow::Borrow;
 
 /// `DerRef` represents 'DER' octets in 'ASN.1.'
@@ -120,4 +121,12 @@ impl DerRef {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Der {
     buffer: Buffer,
+}
+
+impl Deref for Der {
+    type Target = DerRef;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { DerRef::from_bytes_unchecked(self.buffer.as_ref()) }
+    }
 }
