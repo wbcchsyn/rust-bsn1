@@ -50,3 +50,11 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
+
+/// `BerRef` is a wrapper of `[u8]` and represents 'BER' octets in 'ASN.1.'
+///
+/// This struct is 'Unsized', so usually user uses a reference to the instance.
+#[derive(Debug, PartialEq, Eq)]
+pub struct BerRef {
+    bytes: [u8],
+}
