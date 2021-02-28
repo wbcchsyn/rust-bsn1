@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{identifier, length, Buffer, IdRef, Length};
+use crate::{identifier, length, Buffer, DerRef, IdRef, Length};
 use core::ops::Deref;
 use std::borrow::Borrow;
 
@@ -61,6 +61,12 @@ use std::borrow::Borrow;
 #[derive(Debug, PartialEq, Eq)]
 pub struct BerRef {
     bytes: [u8],
+}
+
+impl<'a> From<&'a DerRef> for &'a BerRef {
+    fn from(der: &'a DerRef) -> Self {
+        unsafe { BerRef::from_bytes_unchecked(der.as_ref()) }
+    }
 }
 
 impl BerRef {
