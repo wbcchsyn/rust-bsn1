@@ -52,6 +52,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 use crate::{identifier, length, Buffer, IdRef, Length};
+use core::ops::Deref;
 use std::borrow::Borrow;
 
 /// `BerRef` is a wrapper of `[u8]` and represents 'BER' octets in 'ASN.1.'
@@ -117,4 +118,12 @@ impl BerRef {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ber {
     buffer: Buffer,
+}
+
+impl Deref for Ber {
+    type Target = BerRef;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { BerRef::from_bytes_unchecked(self.buffer.as_ref()) }
+    }
 }
