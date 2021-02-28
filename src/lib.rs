@@ -86,6 +86,7 @@
 //! To be accurate, there are 4 classes in 'ASN.1;' universal class, application class, context
 //! specific class, and private class. `bns1` knows all of them.
 
+mod ber;
 mod buffer;
 mod der;
 mod identifier;
