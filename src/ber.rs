@@ -73,3 +73,9 @@ impl BerRef {
         &*ptr
     }
 }
+
+impl AsRef<[u8]> for BerRef {
+    fn as_ref(&self) -> &[u8] {
+        &self.bytes
+    }
+}
