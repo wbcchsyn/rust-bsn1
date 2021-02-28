@@ -149,6 +149,19 @@ impl From<Der> for Ber {
     }
 }
 
+impl Ber {
+    /// Creates a new instance from `id` and `contents` with definite length.
+    ///
+    /// Note that 'BER' allows both 'definite length' and 'indefinite length', however, the
+    /// return value is always 'definite length'.
+    /// ('Indefinite length' is valid under some special condition, and the performance is usually
+    /// worse than 'definite length.' Generally speaking, 'Indefinite length' is seldome used.)
+    pub fn new(id: &IdRef, contents: &[u8]) -> Self {
+        let der = Der::new(id, contents);
+        Self::from(der)
+    }
+}
+
 impl AsRef<[u8]> for Ber {
     fn as_ref(&self) -> &[u8] {
         self.buffer.as_ref()
