@@ -103,6 +103,27 @@ impl DerRef {
         let ptr = ptr as *const Self;
         &*ptr
     }
+
+    /// Provides a reference from `bytes` that starts with an 'ASN.1 DER' octets.
+    ///
+    /// `bytes` may include some extra octet(s) at the end.
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if `bytes` does not start with 'ASN.1 DER' octets.
+    pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> &Self {
+        let id = identifier::shrink_to_fit_unchecked(bytes);
+        let parsing = &bytes[id.len()..];
+
+        let (len, parsing) = match length::try_from(parsing).unwrap() {
+            (Length::Definite(len), parsing) => (len, parsing),
+            _ => panic!(format!("{}", Error::IndefiniteLength)),
+        };
+
+        let total_len = bytes.len() - parsing.len() + len;
+        let bytes = &bytes[..total_len];
+        Self::from_bytes_unchecked(bytes)
+    }
 }
 
 impl AsRef<[u8]> for DerRef {
@@ -255,6 +276,25 @@ mod tests {
             let der = Der::new(id, bytes);
             let der_ref = <&DerRef>::try_from(der.as_ref() as &[u8]).unwrap();
             assert_eq!(der_ref, der.as_ref() as &DerRef);
+        }
+    }
+
+    #[test]
+    fn from_bytes_starts_with_unchecked() {
+        let id = IdRef::octet_string();
+
+        let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
+        let extras: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
+        for &bytes in byteses {
+            let der = Der::new(id, bytes);
+
+            for &extra in extras {
+                let mut bytes = Vec::from(der.as_ref() as &[u8]);
+                bytes.extend(extra);
+
+                let der_ref = unsafe { DerRef::from_bytes_starts_with_unchecked(bytes.as_ref()) };
+                assert_eq!(der_ref, der.as_ref());
+            }
         }
     }
 }
