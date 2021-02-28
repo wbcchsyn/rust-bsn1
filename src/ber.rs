@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{identifier, length, IdRef, Length};
+use crate::{identifier, length, Buffer, IdRef, Length};
 use std::borrow::Borrow;
 
 /// `BerRef` is a wrapper of `[u8]` and represents 'BER' octets in 'ASN.1.'
@@ -111,4 +111,10 @@ impl BerRef {
         let bytes = &self.bytes[id_len..];
         length::try_from(bytes).unwrap().1
     }
+}
+
+/// `Ber` owns `BerRef` and represents 'BER' octets in 'ASN.1.'
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Ber {
+    buffer: Buffer,
 }
