@@ -58,3 +58,18 @@
 pub struct BerRef {
     bytes: [u8],
 }
+
+impl BerRef {
+    /// Provides a reference from `bytes` without any sanitization.
+    ///
+    /// `bytes` must be 'ASN.1 BER' octets and must not include any extra octet.
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if `bytes` is not formatted as a 'BER'.
+    pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
+        let ptr = bytes as *const [u8];
+        let ptr = ptr as *const Self;
+        &*ptr
+    }
+}
