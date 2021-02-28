@@ -92,6 +92,7 @@ mod der;
 mod identifier;
 mod length;
 
+pub use ber::BerRef;
 use buffer::Buffer;
 pub use der::{Der, DerRef};
 pub use identifier::{ClassTag, Id, IdRef, PCTag};
