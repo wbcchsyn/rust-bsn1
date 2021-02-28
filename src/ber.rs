@@ -120,6 +120,18 @@ pub struct Ber {
     buffer: Buffer,
 }
 
+impl AsRef<[u8]> for Ber {
+    fn as_ref(&self) -> &[u8] {
+        self.buffer.as_ref()
+    }
+}
+
+impl AsRef<BerRef> for Ber {
+    fn as_ref(&self) -> &BerRef {
+        self.deref()
+    }
+}
+
 impl Deref for Ber {
     type Target = BerRef;
 
