@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{identifier, length, Buffer, DerRef, IdRef, Length};
+use crate::{identifier, length, Buffer, Der, DerRef, IdRef, Length};
 use core::ops::Deref;
 use std::borrow::Borrow;
 
@@ -133,6 +133,20 @@ impl BerRef {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ber {
     buffer: Buffer,
+}
+
+impl From<&DerRef> for Ber {
+    fn from(der: &DerRef) -> Self {
+        <&BerRef>::from(der).to_owned()
+    }
+}
+
+impl From<Der> for Ber {
+    fn from(der: Der) -> Self {
+        Self {
+            buffer: crate::der::disassemble_der(der),
+        }
+    }
 }
 
 impl AsRef<[u8]> for Ber {
