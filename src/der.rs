@@ -250,6 +250,10 @@ impl Deref for Der {
     }
 }
 
+pub fn disassemble_der(der: Der) -> Buffer {
+    der.buffer
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
