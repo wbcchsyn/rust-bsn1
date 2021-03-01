@@ -51,7 +51,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{identifier, length, Buffer, Der, DerRef, IdRef, Length};
+use crate::{identifier, length, Buffer, Der, DerRef, Error, IdRef, Length};
+use core::convert::TryFrom;
 use core::ops::Deref;
 use std::borrow::Borrow;
 
@@ -66,6 +67,48 @@ pub struct BerRef {
 impl<'a> From<&'a DerRef> for &'a BerRef {
     fn from(der: &'a DerRef) -> Self {
         unsafe { BerRef::from_bytes_unchecked(der.as_ref()) }
+    }
+}
+
+impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
+    type Error = Error;
+
+    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a reference to `BerRef` .
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
+        let id = <&IdRef>::try_from(bytes)?;
+        let parsing = &bytes[id.as_ref().len()..];
+
+        match length::try_from(parsing) {
+            Err(e) => Err(e),
+            Ok((Length::Definite(len), parsing)) => {
+                let total_len = bytes.len() - parsing.len() + len;
+
+                if bytes.len() < total_len {
+                    Err(Error::UnTerminatedBytes)
+                } else {
+                    unsafe { Ok(BerRef::from_bytes_unchecked(&bytes[..total_len])) }
+                }
+            }
+            Ok((Length::Indefinite, mut parsing)) => {
+                while {
+                    let element = Self::try_from(parsing)?;
+                    let len = element.as_ref().len();
+                    parsing = &parsing[len..];
+
+                    if element.id() != IdRef::eoc() {
+                        true
+                    } else if element.contents().is_empty() {
+                        false
+                    } else {
+                        return Err(Error::BadEoc);
+                    }
+                } {}
+                let total_len = bytes.len() - parsing.len();
+                unsafe { Ok(BerRef::from_bytes_unchecked(&bytes[..total_len])) }
+            }
+        }
     }
 }
 
@@ -276,6 +319,50 @@ mod tests {
             bytes.extend(eoc.as_ref() as &[u8]);
 
             let ber = unsafe { BerRef::from_bytes_starts_with_unchecked(bytes.as_ref()) };
+            assert_eq!(bytes.as_ref() as &[u8], ber.as_ref() as &[u8]);
+        }
+    }
+
+    #[test]
+    fn try_from_deinite() {
+        let id = IdRef::octet_string();
+
+        let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
+        for &bytes in byteses {
+            let ber = Ber::new(id, bytes);
+            let ber_ref = <&BerRef>::try_from(ber.as_ref() as &[u8]).unwrap();
+            assert_eq!(ber_ref, ber.as_ref() as &BerRef);
+        }
+    }
+
+    #[test]
+    fn try_from_indefinite() {
+        let eoc = {
+            let id = IdRef::eoc();
+            let contents: &[u8] = &[];
+            Ber::new(id, contents)
+        };
+
+        let bers: Vec<Ber> = (0..10)
+            .map(|i| {
+                let id = IdRef::octet_string();
+                let contents: &[u8] = &[i];
+                Ber::new(id, contents)
+            })
+            .collect();
+
+        for i in 0..10 {
+            let id = IdRef::sequence();
+            let mut bytes: Vec<u8> = Vec::from(id.as_ref() as &[u8]);
+
+            bytes.extend(length::serialize(&Length::Indefinite).as_ref());
+
+            for ber in bers[0..i].iter() {
+                bytes.extend(ber.as_ref() as &[u8]);
+            }
+            bytes.extend(eoc.as_ref() as &[u8]);
+
+            let ber = <&BerRef>::try_from(bytes.as_ref() as &[u8]).unwrap();
             assert_eq!(bytes.as_ref() as &[u8], ber.as_ref() as &[u8]);
         }
     }
