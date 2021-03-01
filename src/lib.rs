@@ -88,6 +88,7 @@
 
 mod ber;
 mod buffer;
+pub mod contents;
 mod der;
 mod identifier;
 mod length;
