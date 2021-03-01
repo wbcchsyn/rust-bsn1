@@ -154,6 +154,22 @@ pub fn from_bool(val: bool) -> impl AsRef<[u8]> {
     }
 }
 
+/// Parses `bytes` as 'ASN.1 BER contents.'
+///
+/// This function is valid only for the contents of 'BER', and not applied to the contents of
+/// 'DER' nor 'CER.'
+pub fn to_bool_ber(bytes: &[u8]) -> Result<bool, Error> {
+    if bytes.is_empty() {
+        Err(Error::UnTerminatedBytes)
+    } else if 1 < bytes.len() {
+        Err(Error::InvalidContents)
+    } else if bytes[0] == 0x00 {
+        Ok(false)
+    } else {
+        Ok(true)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
