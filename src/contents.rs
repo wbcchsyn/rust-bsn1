@@ -143,6 +143,17 @@ pub fn to_integer(bytes: &[u8]) -> Result<i128, Error> {
     }
 }
 
+/// Serializes boolean as 'ASN.1 contents.'
+///
+/// This function is common for 'BER', 'DER', and 'CER'.
+pub fn from_bool(val: bool) -> impl AsRef<[u8]> {
+    if val {
+        [0xff] as [u8; 1]
+    } else {
+        [0x00] as [u8; 1]
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
