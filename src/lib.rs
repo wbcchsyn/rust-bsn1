@@ -86,11 +86,13 @@
 //! To be accurate, there are 4 classes in 'ASN.1;' universal class, application class, context
 //! specific class, and private class. `bns1` knows all of them.
 
+mod ber;
 mod buffer;
 mod der;
 mod identifier;
 mod length;
 
+pub use ber::BerRef;
 use buffer::Buffer;
 pub use der::{Der, DerRef};
 pub use identifier::{ClassTag, Id, IdRef, PCTag};
@@ -109,6 +111,8 @@ pub enum Error {
     OverFlow,
     /// 'Indefinite Length' is only for 'BER', but not 'DER', nor 'CER'.
     IndefiniteLength,
+    /// The contents of 'EOC' of the 'Indefinite Length BER' must be empty.
+    BadEoc,
 }
 
 impl fmt::Display for Error {
@@ -118,6 +122,7 @@ impl fmt::Display for Error {
             Self::RedundantBytes => f.write_str("The bytes includes some redundant octet(s)."),
             Self::OverFlow => f.write_str("Over flow is occurred to parse bytes as a number."),
             Self::IndefiniteLength => f.write_str("'Indefinite Length' in 'DER' or 'CER'"),
+            Self::BadEoc => f.write_str("'Indefinite Length BER' includes bad 'EOC' BER."),
         }
     }
 }
