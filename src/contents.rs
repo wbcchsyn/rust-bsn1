@@ -52,3 +52,122 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 //! Provides functions to serialize/deserialize contents octets.
+
+use crate::Buffer;
+use core::mem::size_of_val;
+
+/// Serializes integer as 'ASN.1 contents.'
+///
+/// This function is common for 'BER', 'DER', and 'CER'.
+///
+/// # Wargnings
+///
+/// This function assumes that the CPU adopt 2's complement to represent negative value.
+pub fn from_integer(val: i128) -> impl AsRef<[u8]> {
+    if val < 0 {
+        from_integer_negative(val)
+    } else {
+        from_integer_positive(val)
+    }
+}
+
+fn from_integer_positive(val: i128) -> Buffer {
+    debug_assert!(0 <= val);
+
+    let len = (8 * size_of_val(&val) - val.leading_zeros() as usize) / 8 + 1;
+    let mut buffer = Buffer::with_capacity(len);
+    unsafe { buffer.set_len(len) };
+
+    let mut val = val;
+    for i in (0..len).rev() {
+        buffer[i] = val as u8;
+        val >>= 8;
+    }
+
+    buffer
+}
+
+/// # Wargnings
+///
+/// This function assumes that the CPU adopt 2's complement to represent negative value.
+fn from_integer_negative(val: i128) -> Buffer {
+    debug_assert!(val < 0);
+
+    // I don't think the behavior is not defined to shift negative value, however, 'ISO/IEC
+    // 1539:1991 (C99)' defines the spec of the division and reminder.
+    //
+    // In short, if the numerator is nagative and the divisor is positive,
+    //
+    // - The reminder equals to 0 or less than 0.
+    // - The result of division is truncated towards 0.
+    let shift = |v: i128| -> (i128, u8) { ((v + 1) / 256 - 1, (v % 256 + 256) as u8) };
+
+    let len = (8 * size_of_val(&val) - val.leading_ones() as usize) / 8 + 1;
+    let mut buffer = Buffer::with_capacity(len);
+    unsafe { buffer.set_len(len) };
+
+    let mut val = val;
+    for i in (0..len).rev() {
+        buffer[i] = shift(val).1;
+        val = shift(val).0;
+    }
+
+    buffer
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_from_integer() {
+        // Negative
+        {
+            // -1
+            assert_eq!(&[0xff], from_integer(-1).as_ref());
+            // -0x80
+            assert_eq!(&[0x80], from_integer(-0x80).as_ref());
+            // -0x81
+            assert_eq!(&[0xff, 0x7f], from_integer(-0x81).as_ref());
+            // -0x0100
+            assert_eq!(&[0xff, 0x00], from_integer(-0x0100).as_ref());
+            // -0x0101
+            assert_eq!(&[0xfe, 0xff], from_integer(-0x0101).as_ref());
+            // -0x8000
+            assert_eq!(&[0x80, 0x00], from_integer(-0x8000).as_ref());
+            // -0x8001
+            assert_eq!(&[0xff, 0x7f, 0xff], from_integer(-0x8001).as_ref());
+            // i128::MIN
+            {
+                let bytes: &mut [u8] = &mut [0x00; size_of::<i128>()];
+                bytes[0] = 0x80;
+                assert_eq!(bytes, from_integer(i128::MIN).as_ref());
+            }
+        }
+        // 0
+        assert_eq!(&[0x00], from_integer(0).as_ref());
+        // Positive
+        {
+            // 1
+            assert_eq!(&[0x01], from_integer(1).as_ref());
+            // 0x7f
+            assert_eq!(&[0x7f], from_integer(0x7f).as_ref());
+            // 0x80
+            assert_eq!(&[0x00, 0x80], from_integer(0x80).as_ref());
+            // 0xff
+            assert_eq!(&[0x00, 0xff], from_integer(0xff).as_ref());
+            // 0x0100
+            assert_eq!(&[0x01, 0x00], from_integer(0x0100).as_ref());
+            // 0x7fff
+            assert_eq!(&[0x7f, 0xff], from_integer(0x7fff).as_ref());
+            // 0x8000
+            assert_eq!(&[0x00, 0x80, 0x00], from_integer(0x8000).as_ref());
+            // i128::MAX
+            {
+                let bytes: &mut [u8] = &mut [0xff; size_of::<i128>()];
+                bytes[0] = 0x7f;
+                assert_eq!(bytes, from_integer(i128::MAX).as_ref());
+            }
+        }
+    }
+}
