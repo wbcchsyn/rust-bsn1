@@ -223,6 +223,15 @@ impl From<Der> for Ber {
     }
 }
 
+impl TryFrom<&[u8]> for Ber {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
+        let ber_ref = <&BerRef>::try_from(bytes)?;
+        Ok(ber_ref.to_owned())
+    }
+}
+
 impl Ber {
     /// Creates a new instance from `id` and `contents` with definite length.
     ///
