@@ -180,6 +180,12 @@ pub struct Der {
     buffer: Buffer,
 }
 
+impl From<&DerRef> for Der {
+    fn from(der_ref: &DerRef) -> Self {
+        der_ref.to_owned()
+    }
+}
+
 impl TryFrom<&[u8]> for Der {
     type Error = Error;
 
