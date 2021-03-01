@@ -53,8 +53,8 @@
 
 //! Provides functions to serialize/deserialize contents octets.
 
-use crate::Buffer;
-use core::mem::size_of_val;
+use crate::{Buffer, Error};
+use core::mem::{size_of, size_of_val};
 
 /// Serializes integer as 'ASN.1 contents.'
 ///
@@ -115,6 +115,34 @@ fn from_integer_negative(val: i128) -> Buffer {
     buffer
 }
 
+/// Parses `bytes` as contents of 'ASN.1 Integer.'
+///
+/// This function is common for 'BER', 'DER', and 'CER'.
+///
+/// # Wargnings
+///
+/// This function assumes that the CPU adopt 2's complement to represent negative value.
+pub fn to_integer(bytes: &[u8]) -> Result<i128, Error> {
+    if size_of::<i128>() < bytes.len() {
+        Err(Error::OverFlow)
+    } else if bytes.is_empty() {
+        Err(Error::UnTerminatedBytes)
+    } else {
+        if 1 < bytes.len() {
+            if (bytes[0] == 0) && (bytes[1] & 0x80 == 0x00) {
+                return Err(Error::RedundantBytes);
+            }
+            if (bytes[0] == 0xff) && (bytes[1] & 0x80 == 0x80) {
+                return Err(Error::RedundantBytes);
+            }
+        }
+
+        let init: i128 = if bytes[0] & 0x80 == 0x80 { -1 } else { 0 };
+        let ret = bytes.iter().fold(init, |acc, &o| (acc * 256) + (o as i128));
+        Ok(ret)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -167,6 +195,58 @@ mod tests {
                 let bytes: &mut [u8] = &mut [0xff; size_of::<i128>()];
                 bytes[0] = 0x7f;
                 assert_eq!(bytes, from_integer(i128::MAX).as_ref());
+            }
+        }
+    }
+
+    #[test]
+    fn test_to_integer() {
+        // Negative
+        {
+            // -1
+            assert_eq!(-1, to_integer(&[0xff]).unwrap());
+            // -0x80
+            assert_eq!(-0x80, to_integer(&[0x80]).unwrap());
+            // -0x81
+            assert_eq!(-0x81, to_integer(&[0xff, 0x7f]).unwrap());
+            // -0x0100
+            assert_eq!(-0x0100, to_integer(&[0xff, 0x00]).unwrap());
+            // -0x0101
+            assert_eq!(-0x0101, to_integer(&[0xfe, 0xff]).unwrap());
+            // -0x8000
+            assert_eq!(-0x8000, to_integer(&[0x80, 0x00]).unwrap());
+            // -0x8001
+            assert_eq!(-0x8001, to_integer(&[0xff, 0x7f, 0xff]).unwrap());
+            // i128::MIN
+            {
+                let bytes: &mut [u8] = &mut [0x00; size_of::<i128>()];
+                bytes[0] = 0x80;
+                assert_eq!(i128::MIN, to_integer(bytes).unwrap());
+            }
+        }
+        // 0
+        assert_eq!(0x00, to_integer(&[0x00]).unwrap());
+        // Positive
+        {
+            // 1
+            assert_eq!(1, to_integer(&[0x01]).unwrap());
+            // 0x7f
+            assert_eq!(0x7f, to_integer(&[0x7f]).unwrap());
+            // 0x80
+            assert_eq!(0x80, to_integer(&[0x00, 0x80]).unwrap());
+            // 0xff
+            assert_eq!(0xff, to_integer(&[0x00, 0xff]).unwrap());
+            // 0x0100
+            assert_eq!(0x0100, to_integer(&[0x01, 0x00]).unwrap());
+            // 0x7fff
+            assert_eq!(0x7fff, to_integer(&[0x7f, 0xff]).unwrap());
+            // 0x8000
+            assert_eq!(0x8000, to_integer(&[0x00, 0x80, 0x00]).unwrap());
+            // i128::MAX
+            {
+                let bytes: &mut [u8] = &mut [0xff; size_of::<i128>()];
+                bytes[0] = 0x7f;
+                assert_eq!(i128::MAX, to_integer(bytes).unwrap());
             }
         }
     }
