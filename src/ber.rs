@@ -223,6 +223,12 @@ impl From<Der> for Ber {
     }
 }
 
+impl From<&BerRef> for Ber {
+    fn from(ber_ref: &BerRef) -> Self {
+        ber_ref.to_owned()
+    }
+}
+
 impl TryFrom<&[u8]> for Ber {
     type Error = Error;
 
