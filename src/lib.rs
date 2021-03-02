@@ -95,7 +95,7 @@ mod length;
 
 pub use ber::{Ber, BerRef};
 use buffer::Buffer;
-pub use der::{Der, DerRef};
+pub use der::{Der, DerBuilder, DerRef};
 pub use identifier::{ClassTag, Id, IdRef, PCTag};
 pub use length::to_bytes as length_to_bytes;
 pub use length::try_from as try_length_from;

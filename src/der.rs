@@ -263,7 +263,7 @@ pub fn disassemble_der(der: Der) -> Buffer {
 /// `DerBuilder` is a struct to build `Der` effectively.
 pub struct DerBuilder {
     buffer: Buffer,
-    ptr: *mut u8,
+    cursor: usize,
 }
 
 #[cfg(test)]
