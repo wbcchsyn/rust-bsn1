@@ -97,6 +97,7 @@ pub use ber::BerRef;
 use buffer::Buffer;
 pub use der::{Der, DerRef};
 pub use identifier::{ClassTag, Id, IdRef, PCTag};
+pub use length::to_bytes as length_to_bytes;
 pub use length::Length;
 use std::fmt;
 
