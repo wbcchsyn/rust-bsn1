@@ -77,6 +77,16 @@ impl Length {
     const INDEFINITE: u8 = 0x80;
 }
 
+/// Tries to parse `bytes` as 'ASN.1 Length.'
+///
+/// This function ignores extra octets at the end of `bytes` .
+/// i.e. this function returns `Ok` if `bytes` starts with octets representing 'ASN.1 Length.'
+///
+/// # Warnings
+///
+/// This function may return `Ok(Length::Indefinite)` , however, 'DER' and 'CER' don't allow such
+/// value.
+/// It does not always mean `bytes` is valid that this function returns `Ok` .
 pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
     let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
     let bytes = &bytes[1..];
