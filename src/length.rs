@@ -122,7 +122,7 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
 }
 
 /// Serializes `length` .
-pub fn serialize(length: &Length) -> impl AsRef<[u8]> {
+pub fn to_bytes(length: &Length) -> impl AsRef<[u8]> {
     let mut buffer = Buffer::new();
 
     match *length {
@@ -347,19 +347,19 @@ mod tests {
     }
 
     #[test]
-    fn serialize_length() {
+    fn to_bytes_length() {
         let empty: &[u8] = &[];
 
         // Indefinite
         {
-            let bytes = serialize(&Length::Indefinite);
+            let bytes = to_bytes(&Length::Indefinite);
             let length = try_from(bytes.as_ref()).unwrap();
             assert_eq!((Length::Indefinite, empty), length);
         }
 
         // Definite
         for &len in &[0, 1, 0x7f, 0x80, 0xff, 0x0100, 0xffff, usize::MAX] {
-            let bytes = serialize(&Length::Definite(len));
+            let bytes = to_bytes(&Length::Definite(len));
             let length = try_from(bytes.as_ref()).unwrap();
             assert_eq!((Length::Definite(len), empty), length);
         }

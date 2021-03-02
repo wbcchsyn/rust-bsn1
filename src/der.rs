@@ -202,7 +202,7 @@ impl Der {
     /// Creates a new instance from `id` and `contents` .
     pub fn new(id: &IdRef, contents: &[u8]) -> Self {
         let len = Length::Definite(contents.len());
-        let len = length::serialize(&len);
+        let len = length::to_bytes(&len);
 
         let total_len = id.as_ref().len() + len.as_ref().len() + contents.len();
         let mut buffer = Buffer::with_capacity(total_len);
