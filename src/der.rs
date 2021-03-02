@@ -266,6 +266,34 @@ pub struct DerBuilder {
     cursor: usize,
 }
 
+impl DerBuilder {
+    /// Creates a new instance to build `Der` with `id` and contents whose length equals to
+    /// `contents_len` .
+    ///
+    /// `contents_len` must be `Length::Definite` because 'DER' does not allow indefinite length.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `contents_len` equals `Length::Indefinite` .
+    pub fn new(id: &IdRef, contents_len: Length) -> Self {
+        let length = length::to_bytes(&contents_len);
+        let contents_len = match contents_len {
+            Length::Definite(len) => len,
+            Length::Indefinite => panic!("Indefinite length is specified to DerBuilder."),
+        };
+
+        let total_len = id.as_ref().len() + length.as_ref().len() + contents_len;
+        let mut buffer = Buffer::with_capacity(total_len);
+        unsafe { buffer.set_len(total_len) };
+
+        let mut ret = Self { buffer, cursor: 0 };
+        ret.extend_contents(id);
+        ret.extend_contents(length);
+
+        ret
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
