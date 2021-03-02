@@ -204,7 +204,7 @@ impl Der {
         let len = Length::Definite(contents.len());
         let len = length::serialize(&len);
 
-        let total_len = id.as_ref().len() + len.len() + contents.len();
+        let total_len = id.as_ref().len() + len.as_ref().len() + contents.len();
         let mut buffer = Buffer::with_capacity(total_len);
         unsafe { buffer.set_len(total_len) };
 
@@ -214,9 +214,9 @@ impl Der {
             ptr.copy_from_nonoverlapping(id.as_ptr(), id.len());
 
             let ptr = ptr.add(id.len());
-            ptr.copy_from_nonoverlapping(len.as_ptr(), len.len());
+            ptr.copy_from_nonoverlapping(len.as_ref().as_ptr(), len.as_ref().len());
 
-            let ptr = ptr.add(len.len());
+            let ptr = ptr.add(len.as_ref().len());
             ptr.copy_from_nonoverlapping(contents.as_ptr(), contents.len());
         }
 

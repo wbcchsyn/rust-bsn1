@@ -122,7 +122,7 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
 }
 
 /// Serializes `length` .
-pub fn serialize(length: &Length) -> Buffer {
+pub fn serialize(length: &Length) -> impl AsRef<[u8]> {
     let mut buffer = Buffer::new();
 
     match *length {
