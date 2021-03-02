@@ -260,6 +260,12 @@ pub fn disassemble_der(der: Der) -> Buffer {
     der.buffer
 }
 
+/// `DerBuilder` is a struct to build `Der` effectively.
+pub struct DerBuilder {
+    buffer: Buffer,
+    ptr: *mut u8,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
