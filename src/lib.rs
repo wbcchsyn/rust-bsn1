@@ -88,6 +88,7 @@
 
 mod ber;
 mod buffer;
+pub mod contents;
 mod der;
 mod identifier;
 mod length;
@@ -113,6 +114,8 @@ pub enum Error {
     IndefiniteLength,
     /// The contents of 'EOC' of the 'Indefinite Length BER' must be empty.
     BadEoc,
+    /// The contents includes some invalid octet(s).
+    InvalidContents,
 }
 
 impl fmt::Display for Error {
@@ -123,6 +126,7 @@ impl fmt::Display for Error {
             Self::OverFlow => f.write_str("Over flow is occurred to parse bytes as a number."),
             Self::IndefiniteLength => f.write_str("'Indefinite Length' in 'DER' or 'CER'"),
             Self::BadEoc => f.write_str("'Indefinite Length BER' includes bad 'EOC' BER."),
+            Self::InvalidContents => f.write_str("Contents includes invlid octet(s)."),
         }
     }
 }
