@@ -51,6 +51,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+//! functions and enum about 'Length' octet of 'ASN.1.'
+
 use crate::{Buffer, Error};
 use core::mem::size_of;
 
@@ -75,6 +77,16 @@ impl Length {
     const INDEFINITE: u8 = 0x80;
 }
 
+/// Tries to parse `bytes` as 'ASN.1 Length.'
+///
+/// This function ignores extra octets at the end of `bytes` .
+/// i.e. this function returns `Ok` if `bytes` starts with octets representing 'ASN.1 Length.'
+///
+/// # Warnings
+///
+/// This function may return `Ok(Length::Indefinite)` , however, 'DER' and 'CER' don't allow such
+/// value.
+/// It does not always mean `bytes` is valid that this function returns `Ok` .
 pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
     let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
     let bytes = &bytes[1..];
@@ -109,7 +121,8 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
     }
 }
 
-pub fn serialize(length: &Length) -> Buffer {
+/// Serializes `length` .
+pub fn to_bytes(length: &Length) -> impl AsRef<[u8]> {
     let mut buffer = Buffer::new();
 
     match *length {
@@ -334,19 +347,19 @@ mod tests {
     }
 
     #[test]
-    fn serialize_length() {
+    fn to_bytes_length() {
         let empty: &[u8] = &[];
 
         // Indefinite
         {
-            let bytes = serialize(&Length::Indefinite);
+            let bytes = to_bytes(&Length::Indefinite);
             let length = try_from(bytes.as_ref()).unwrap();
             assert_eq!((Length::Indefinite, empty), length);
         }
 
         // Definite
         for &len in &[0, 1, 0x7f, 0x80, 0xff, 0x0100, 0xffff, usize::MAX] {
-            let bytes = serialize(&Length::Definite(len));
+            let bytes = to_bytes(&Length::Definite(len));
             let length = try_from(bytes.as_ref()).unwrap();
             assert_eq!((Length::Definite(len), empty), length);
         }

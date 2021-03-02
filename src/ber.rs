@@ -326,7 +326,7 @@ mod tests {
             let id = IdRef::sequence();
             let mut bytes: Vec<u8> = Vec::from(id.as_ref() as &[u8]);
 
-            bytes.extend(length::serialize(&Length::Indefinite).as_ref());
+            bytes.extend(length::to_bytes(&Length::Indefinite).as_ref());
 
             for ber in bers[0..i].iter() {
                 bytes.extend(ber.as_ref() as &[u8]);
@@ -370,7 +370,7 @@ mod tests {
             let id = IdRef::sequence();
             let mut bytes: Vec<u8> = Vec::from(id.as_ref() as &[u8]);
 
-            bytes.extend(length::serialize(&Length::Indefinite).as_ref());
+            bytes.extend(length::to_bytes(&Length::Indefinite).as_ref());
 
             for ber in bers[0..i].iter() {
                 bytes.extend(ber.as_ref() as &[u8]);
