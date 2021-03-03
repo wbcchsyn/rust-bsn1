@@ -261,6 +261,56 @@ pub fn disassemble_der(der: Der) -> Buffer {
 }
 
 /// `DerBuilder` is a struct to build `Der` effectively.
+///
+/// # Examples
+///
+/// Empty contents.
+///
+/// ```
+/// use bsn1::{Der, DerBuilder, IdRef, Length};
+///
+/// let id = IdRef::octet_string();
+///
+/// let expected = Der::new(IdRef::octet_string(), &[]);
+///
+/// // Because the contents is empty, do not need to call method 'extend_contents()'.
+/// let mut builder = DerBuilder::new(id, Length::Definite(0));
+/// let der = builder.finish();
+///
+/// assert_eq!(expected, der);
+/// ```
+///
+/// Not empty contents
+///
+/// ```
+/// use bsn1::{Der, DerBuilder, IdRef, Length};
+///
+/// let id = IdRef::octet_string();
+///
+/// let contents = &[0, 1, 2, 3, 4];
+/// let expected = Der::new(IdRef::octet_string(), contents);
+///
+/// // Append 'contents' at once.
+/// {
+///     let length = Length::Definite(contents.len());
+///     let mut builder = DerBuilder::new(id, length);
+///     builder.extend_contents(contents);
+///     let der = builder.finish();
+///
+///     assert_eq!(expected, der);
+/// }
+///
+/// // Split contents into 2 pieces and append them one by one.
+/// {
+///     let length = Length::Definite(contents.len());
+///     let mut builder = DerBuilder::new(id, length);
+///     builder.extend_contents(&contents[..2]);
+///     builder.extend_contents(&contents[2..]);
+///     let der = builder.finish();
+///
+///     assert_eq!(expected, der);
+/// }
+/// ```
 pub struct DerBuilder {
     buffer: Buffer,
     cursor: usize,
