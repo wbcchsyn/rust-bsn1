@@ -292,6 +292,28 @@ impl DerBuilder {
 
         ret
     }
+
+    /// Appends `bytes` to the end of the DER contents to be build.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the accumerated length of the 'contents' exceeds `contents_len` that passed to
+    /// the constructor function [`new`] as the argument.
+    ///
+    /// [`new`]: #method.new
+    pub fn extend_contents<B>(&mut self, bytes: B)
+    where
+        B: AsRef<[u8]>,
+    {
+        let bytes = bytes.as_ref();
+        assert!(self.cursor + bytes.len() <= self.buffer.len());
+
+        unsafe {
+            let ptr = self.buffer.as_mut_ptr().add(self.cursor);
+            ptr.copy_from_nonoverlapping(bytes.as_ptr(), bytes.len());
+            self.cursor += bytes.len();
+        }
+    }
 }
 
 #[cfg(test)]
