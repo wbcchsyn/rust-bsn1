@@ -314,6 +314,22 @@ impl DerBuilder {
             self.cursor += bytes.len();
         }
     }
+
+    /// Consumes `self` , building a new `Der` .
+    ///
+    /// # Panics
+    ///
+    /// Panics if the accumerated length of the 'contents' differs from `contents_len` that passed
+    /// to the constructor function [`new`] as the argument.
+    ///
+    /// [`new`]: #method.new
+    pub fn finish(self) -> Der {
+        assert_eq!(self.cursor, self.buffer.len());
+
+        Der {
+            buffer: self.buffer,
+        }
+    }
 }
 
 #[cfg(test)]
