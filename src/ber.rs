@@ -384,8 +384,8 @@ mod tests {
 }
 
 enum InnerBuilder {
-    DerBuilder,
-    Buffer,
+    Definite(DerBuilder),
+    Indefinite(Buffer),
 }
 
 /// `BerBuilder` is a struct to build `Ber` effectively.
