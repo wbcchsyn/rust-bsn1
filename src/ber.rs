@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{identifier, length, Buffer, Der, DerRef, Error, IdRef, Length};
+use crate::{identifier, length, Buffer, Der, DerBuilder, DerRef, Error, IdRef, Length};
 use core::convert::TryFrom;
 use core::ops::Deref;
 use std::borrow::Borrow;
@@ -381,4 +381,14 @@ mod tests {
             assert_eq!(bytes.as_ref() as &[u8], ber.as_ref() as &[u8]);
         }
     }
+}
+
+enum InnerBuilder {
+    DerBuilder,
+    Buffer,
+}
+
+/// `BerBuilder` is a struct to build `Ber` effectively.
+pub struct BerBuilder {
+    builder: InnerBuilder,
 }
