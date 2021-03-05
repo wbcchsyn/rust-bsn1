@@ -392,3 +392,23 @@ enum InnerBuilder {
 pub struct BerBuilder {
     builder: InnerBuilder,
 }
+
+impl BerBuilder {
+    /// Creates a new instance to build `Der` with `id` and contents whose length equals to
+    /// `contents_len` .
+    pub fn new(id: &IdRef, contents_len: Length) -> Self {
+        let builder = match contents_len {
+            Length::Definite(_) => InnerBuilder::Definite(DerBuilder::new(id, contents_len)),
+            Length::Indefinite => {
+                let mut buffer = Buffer::new();
+                buffer.extend_from_slice(id.as_ref());
+
+                let length = length::to_bytes(&Length::Indefinite);
+                buffer.extend_from_slice(length.as_ref());
+                InnerBuilder::Indefinite(buffer)
+            }
+        };
+
+        Self { builder }
+    }
+}
