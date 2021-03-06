@@ -411,4 +411,30 @@ impl BerBuilder {
 
         Self { builder }
     }
+
+    /// Appends `bytes` to the end of the DER contents to be build.
+    ///
+    /// # Warnings
+    ///
+    /// The user must not adds 'EOC' if it is `Length::Indefinite` that was passed to the
+    /// constructor funciton [`new`] as the argument `contents_len` .
+    /// Function [`finish`] will adds the last 'EOC.'
+    /// (Each contents of 'BER' must include at least one and only one 'EOC.')
+    ///
+    /// # Panics
+    ///
+    /// Panics if it is `Length::Definite` that was passed to the constructor function [`new`] as
+    /// the argument `contents_len` , and if the accumerated length of the 'contents' will exceed
+    /// the value.
+    ///
+    /// [`new`]: #method.new
+    pub fn extend_contents<B>(&mut self, bytes: B)
+    where
+        B: AsRef<[u8]>,
+    {
+        match &mut self.builder {
+            InnerBuilder::Definite(der_builder) => der_builder.extend_contents(bytes),
+            InnerBuilder::Indefinite(buffer) => buffer.extend_from_slice(bytes.as_ref()),
+        }
+    }
 }
