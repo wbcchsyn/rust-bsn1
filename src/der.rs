@@ -382,6 +382,108 @@ impl DerBuilder {
     }
 }
 
+/// Builds a `Der` instance representing 'Constructed DER' effectively.
+///
+/// # Formula
+///
+/// `constructed_der!(id: &IdRef [, (id_1, contents_1) [, (id_2, contents_2) [...]]]) => Der`
+///
+/// `id_n` and `contents_n` must be bounded on `AsRef<[u8]>` .
+///
+/// # Examples
+///
+/// Empty contents.
+///
+/// ```
+/// # #[macro_use] extern crate bsn1;
+/// use bsn1::{Der, IdRef};
+///
+/// let id = IdRef::sequence();
+/// let expected = Der::new(id, &[]);
+/// let der = constructed_der!(id);
+///
+/// assert_eq!(expected, der);
+/// ```
+///
+/// Sequence of 2 DERs.
+///
+/// ```
+/// # #[macro_use] extern crate bsn1;
+/// use bsn1::{contents, DerRef, IdRef};
+/// use std::convert::TryFrom;
+///
+/// let id = IdRef::sequence();
+/// let id1 = IdRef::octet_string();
+/// let contents1: [u8; 3] = [1, 2, 3];
+/// let id2 = IdRef::integer();
+/// let contents2 = contents::from_integer(10);
+///
+/// let der = constructed_der!(id, (id1.to_owned(), contents1), (id2, &contents2));
+///
+/// assert_eq!(id, der.id());
+///
+/// let bytes = der.contents();
+/// let der1 = <&DerRef>::try_from(bytes).unwrap();
+/// assert_eq!(id1, der1.id());
+/// assert_eq!(contents1, der1.contents());
+///
+/// let bytes = &bytes[der1.as_ref().len()..];
+/// let der2 = <&DerRef>::try_from(bytes).unwrap();
+/// assert_eq!(id2, der2.id());
+/// assert_eq!(contents2.as_ref(), der2.contents());
+/// ```
+#[macro_export]
+macro_rules! constructed_der {
+    ($id:expr $(, ($id_n:expr, $contents_n:expr))*) => {{
+        let id = $id;
+        __bsn1__expand_constructed_der!($(($id_n, $contents_n)),* ; id)
+    }};
+    ($id:expr $(, ($id_n:expr, $contents_n:expr))*,) => {
+        constructed_der!($id $(($id_n, $contents_n)),*)
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __bsn1__expand_constructed_der {
+    (; $id:tt $($contents:tt)*) => {{
+        use bsn1::{DerBuilder, Length};
+
+        let contents: &[&[u8]] = &[$($contents),*];
+        let contents_len = contents.iter().fold(0, |acc, &bytes| acc + bytes.len());
+
+        let mut builder = DerBuilder::new($id, Length::Definite(contents_len));
+        for &bytes in contents {
+            builder.extend_contents(bytes);
+        }
+        builder.finish()
+    }};
+
+    (($id_1:expr, $contents_1:expr) $(, ($id_n:expr, $contents_n:expr))* ; $id:tt $($acc:tt)*) => {{
+        use bsn1::{length_to_bytes, Length};
+
+        let id_1 = $id_1;
+        let id_1: &[u8] = id_1.as_ref();
+
+        let contents_1 = $contents_1;
+        let contents_1: &[u8] = contents_1.as_ref();
+
+        let length_1 = Length::Definite(contents_1.len());
+        let length_1 = length_to_bytes(&length_1);
+        let length_1: &[u8] = length_1.as_ref();
+
+        __bsn1__expand_constructed_der!(
+            $(($id_n, $contents_n)),*
+            ;
+            $id
+            $($acc)*
+            id_1
+            length_1
+            contents_1
+        )
+    }};
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
