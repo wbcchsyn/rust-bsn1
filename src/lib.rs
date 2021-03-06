@@ -2,20 +2,20 @@
 //
 // "LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause"
 //
-// This is part of bsn1
+// This is part of x690
 //
-//  bsn1 is free software: you can redistribute it and/or modify
+//  x690 is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU Lesser General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  bsn1 is distributed in the hope that it will be useful,
+//  x690 is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU Lesser General Public License for more details.
 //
 //  You should have received a copy of the GNU Lesser General Public License
-//  along with bsn1.  If not, see <http://www.gnu.org/licenses/>.
+//  along with x690.  If not, see <http://www.gnu.org/licenses/>.
 //
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,7 +53,7 @@
 
 #![deny(missing_docs)]
 
-//! `bsn1` treats 'X.690' and 'ASN.1.'
+//! `x690` treats 'X.690' and 'ASN.1.'
 //!
 //! # What is X.690 and ASN.1?
 //!
@@ -78,9 +78,9 @@
 //!
 //! ['X.690 (07/2002)']: https://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
 //!
-//! # Feature of `bsn1`
+//! # Feature of `x690`
 //!
-//! `bsn1` treats user defined data as well as universal data types; while most other rust
+//! `x690` treats user defined data as well as universal data types; while most other rust
 //! crates can treat only universal data.
 //!
 //! To be accurate, there are 4 classes in 'ASN.1;' universal class, application class, context

@@ -2,20 +2,20 @@
 //
 // "LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause"
 //
-// This is part of bsn1
+// This is part of x690
 //
-//  bsn1 is free software: you can redistribute it and/or modify
+//  x690 is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU Lesser General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  bsn1 is distributed in the hope that it will be useful,
+//  x690 is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU Lesser General Public License for more details.
 //
 //  You should have received a copy of the GNU Lesser General Public License
-//  along with bsn1.  If not, see <http://www.gnu.org/licenses/>.
+//  along with x690.  If not, see <http://www.gnu.org/licenses/>.
 //
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -267,7 +267,7 @@ pub fn disassemble_der(der: Der) -> Buffer {
 /// Empty contents.
 ///
 /// ```
-/// use bsn1::{Der, DerBuilder, IdRef, Length};
+/// use x690::{Der, DerBuilder, IdRef, Length};
 ///
 /// let id = IdRef::octet_string();
 ///
@@ -283,7 +283,7 @@ pub fn disassemble_der(der: Der) -> Buffer {
 /// Not empty contents
 ///
 /// ```
-/// use bsn1::{Der, DerBuilder, IdRef, Length};
+/// use x690::{Der, DerBuilder, IdRef, Length};
 ///
 /// let id = IdRef::octet_string();
 ///
@@ -395,8 +395,8 @@ impl DerBuilder {
 /// Empty contents.
 ///
 /// ```
-/// # #[macro_use] extern crate bsn1;
-/// use bsn1::{Der, IdRef};
+/// # #[macro_use] extern crate x690;
+/// use x690::{Der, IdRef};
 ///
 /// let id = IdRef::sequence();
 /// let expected = Der::new(id, &[]);
@@ -408,8 +408,8 @@ impl DerBuilder {
 /// Sequence of 2 DERs.
 ///
 /// ```
-/// # #[macro_use] extern crate bsn1;
-/// use bsn1::{contents, DerRef, IdRef};
+/// # #[macro_use] extern crate x690;
+/// use x690::{contents, DerRef, IdRef};
 /// use std::convert::TryFrom;
 ///
 /// let id = IdRef::sequence();
@@ -436,7 +436,7 @@ impl DerBuilder {
 macro_rules! constructed_der {
     ($id:expr $(, ($id_n:expr, $contents_n:expr))*) => {{
         let id = $id;
-        __bsn1__expand_constructed_der!($(($id_n, $contents_n)),* ; id)
+        __x690__expand_constructed_der!($(($id_n, $contents_n)),* ; id)
     }};
     ($id:expr $(, ($id_n:expr, $contents_n:expr))*,) => {
         constructed_der!($id $(($id_n, $contents_n)),*)
@@ -445,9 +445,9 @@ macro_rules! constructed_der {
 
 #[doc(hidden)]
 #[macro_export]
-macro_rules! __bsn1__expand_constructed_der {
+macro_rules! __x690__expand_constructed_der {
     (; $id:tt $($contents:tt)*) => {{
-        use bsn1::{DerBuilder, Length};
+        use x690::{DerBuilder, Length};
 
         let contents: &[&[u8]] = &[$($contents),*];
         let contents_len = contents.iter().fold(0, |acc, &bytes| acc + bytes.len());
@@ -460,7 +460,7 @@ macro_rules! __bsn1__expand_constructed_der {
     }};
 
     (($id_1:expr, $contents_1:expr) $(, ($id_n:expr, $contents_n:expr))* ; $id:tt $($acc:tt)*) => {{
-        use bsn1::{length_to_bytes, Length};
+        use x690::{length_to_bytes, Length};
 
         let id_1 = $id_1;
         let id_1: &[u8] = id_1.as_ref();
@@ -472,7 +472,7 @@ macro_rules! __bsn1__expand_constructed_der {
         let length_1 = length_to_bytes(&length_1);
         let length_1: &[u8] = length_1.as_ref();
 
-        __bsn1__expand_constructed_der!(
+        __x690__expand_constructed_der!(
             $(($id_n, $contents_n)),*
             ;
             $id

@@ -2,20 +2,20 @@
 //
 // "LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause"
 //
-// This is part of bsn1
+// This is part of x690
 //
-//  bsn1 is free software: you can redistribute it and/or modify
+//  x690 is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU Lesser General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  bsn1 is distributed in the hope that it will be useful,
+//  x690 is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU Lesser General Public License for more details.
 //
 //  You should have received a copy of the GNU Lesser General Public License
-//  along with bsn1.  If not, see <http://www.gnu.org/licenses/>.
+//  along with x690.  If not, see <http://www.gnu.org/licenses/>.
 //
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -296,8 +296,8 @@ impl Deref for Ber {
 /// Empty contents.
 ///
 /// ```
-/// # #[macro_use] extern crate bsn1;
-/// use bsn1::{Ber, IdRef};
+/// # #[macro_use] extern crate x690;
+/// use x690::{Ber, IdRef};
 ///
 /// let id = IdRef::sequence();
 /// let expected = Ber::new(id, &[]);
@@ -309,8 +309,8 @@ impl Deref for Ber {
 /// Sequence of 2 BERs.
 ///
 /// ```
-/// # #[macro_use] extern crate bsn1;
-/// use bsn1::{contents, Ber, BerRef, IdRef};
+/// # #[macro_use] extern crate x690;
+/// use x690::{contents, Ber, BerRef, IdRef};
 /// use std::convert::TryFrom;
 ///
 /// let id = IdRef::sequence();
@@ -455,7 +455,7 @@ enum InnerBuilder {
 /// Definite length and empty contents.
 ///
 /// ```
-/// use bsn1::{Ber, BerBuilder, IdRef, Length};
+/// use x690::{Ber, BerBuilder, IdRef, Length};
 ///
 /// let id = IdRef::octet_string();
 ///
@@ -471,7 +471,7 @@ enum InnerBuilder {
 /// Indefinite length and empty contents.
 ///
 /// ```
-/// use bsn1::{Ber, BerBuilder, IdRef, Length};
+/// use x690::{Ber, BerBuilder, IdRef, Length};
 ///
 /// let id = IdRef::octet_string();
 /// let eoc = Ber::new(IdRef::eoc(), &[]);
@@ -489,7 +489,7 @@ enum InnerBuilder {
 /// Definite length and not empty contents.
 ///
 /// ```
-/// use bsn1::{Ber, BerBuilder, IdRef, Length};
+/// use x690::{Ber, BerBuilder, IdRef, Length};
 ///
 /// let id = IdRef::octet_string();
 ///
@@ -521,7 +521,7 @@ enum InnerBuilder {
 /// Indefinite length and not empty contents.
 ///
 /// ```
-/// use bsn1::{Ber, BerBuilder, IdRef, Length};
+/// use x690::{Ber, BerBuilder, IdRef, Length};
 ///
 /// let id = IdRef::octet_string();
 /// let contents: &[u8] = &[0, 1, 2, 3, 4];
