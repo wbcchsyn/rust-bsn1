@@ -437,4 +437,25 @@ impl BerBuilder {
             InnerBuilder::Indefinite(buffer) => buffer.extend_from_slice(bytes.as_ref()),
         }
     }
+
+    /// Consumes `self` , building a new `Ber` instance.
+    ///
+    /// If it is `Length::Indefinite` that wass passed to the constructor function [`new`] as
+    /// argument `contents_len` , this method adds `EOC` before building a new `Ber` .
+    ///
+    /// # Panics
+    ///
+    /// Panics if it is `Length::Definite` that wass passed to the constructor function [`new`] as
+    /// argument `contents_len` , and if the accumerated length of the 'contents' does not equal
+    /// to the value.
+    pub fn finish(self) -> Ber {
+        match self.builder {
+            InnerBuilder::Definite(der_builder) => Ber::from(der_builder.finish()),
+            InnerBuilder::Indefinite(mut buffer) => {
+                let eoc = Ber::new(IdRef::eoc(), &[]);
+                buffer.extend_from_slice(eoc.as_ref());
+                Ber { buffer }
+            }
+        }
+    }
 }
