@@ -389,6 +389,117 @@ enum InnerBuilder {
 }
 
 /// `BerBuilder` is a struct to build `Ber` effectively.
+///
+/// # Examples
+///
+/// Definite length and empty contents.
+///
+/// ```
+/// use bsn1::{Ber, BerBuilder, IdRef, Length};
+///
+/// let id = IdRef::octet_string();
+///
+/// let expected = Ber::new(IdRef::octet_string(), &[]);
+///
+/// // Because the contents is empty, do not need to call method 'extend_contents()'.
+/// let mut builder = BerBuilder::new(id, Length::Definite(0));
+/// let ber = builder.finish();
+///
+/// assert_eq!(expected, ber);
+/// ```
+///
+/// Indefinite length and empty contents.
+///
+/// ```
+/// use bsn1::{Ber, BerBuilder, IdRef, Length};
+///
+/// let id = IdRef::octet_string();
+/// let eoc = Ber::new(IdRef::eoc(), &[]);
+///
+/// // Because the contents is empty, do not need to call method 'extend_contents()'.
+/// // Function 'finish()' will adds the last 'EOC.'
+/// let mut builder = BerBuilder::new(id, Length::Indefinite);
+/// let ber = builder.finish();
+///
+/// assert_eq!(id, ber.id());
+/// assert_eq!(Length::Indefinite, ber.length());
+/// assert_eq!(eoc.as_ref() as &[u8], ber.contents());
+/// ```
+///
+/// Definite length and not empty contents.
+///
+/// ```
+/// use bsn1::{Ber, BerBuilder, IdRef, Length};
+///
+/// let id = IdRef::octet_string();
+///
+/// let contents = &[0, 1, 2, 3, 4];
+/// let expected = Ber::new(IdRef::octet_string(), contents);
+///
+/// // Append 'contents' at once.
+/// {
+///     let length = Length::Definite(contents.len());
+///     let mut builder = BerBuilder::new(id, length);
+///     builder.extend_contents(contents);
+///     let ber = builder.finish();
+///
+///     assert_eq!(expected, ber);
+/// }
+///
+/// // Split contents into 2 pieces and append them one by one.
+/// {
+///     let length = Length::Definite(contents.len());
+///     let mut builder = BerBuilder::new(id, length);
+///     builder.extend_contents(&contents[..2]);
+///     builder.extend_contents(&contents[2..]);
+///     let ber = builder.finish();
+///
+///     assert_eq!(expected, ber);
+/// }
+/// ```
+///
+/// Indefinite length and not empty contents.
+///
+/// ```
+/// use bsn1::{Ber, BerBuilder, IdRef, Length};
+///
+/// let id = IdRef::octet_string();
+/// let contents: &[u8] = &[0, 1, 2, 3, 4];
+/// let eoc = Ber::new(IdRef::eoc(), &[]);
+///
+/// // Append 'contents' at once.
+/// {
+///     let length = Length::Indefinite;
+///     let mut builder = BerBuilder::new(id, length);
+///     builder.extend_contents(contents);
+///     let ber = builder.finish();
+///
+///     assert_eq!(id, ber.id());
+///     assert_eq!(Length::Indefinite, ber.length());
+///
+///     let mut bytes = Vec::from(contents);
+///     bytes.extend(eoc.as_ref() as &[u8]);
+///     let bytes: &[u8] = bytes.as_ref();
+///     assert_eq!(bytes, ber.contents());
+/// }
+///
+/// // Split contents into 2 pieces and append them one by one.
+/// {
+///     let length = Length::Indefinite;
+///     let mut builder = BerBuilder::new(id, length);
+///     builder.extend_contents(&contents[..2]);
+///     builder.extend_contents(&contents[2..]);
+///     let ber = builder.finish();
+///
+///     assert_eq!(id, ber.id());
+///     assert_eq!(Length::Indefinite, ber.length());
+///
+///     let mut bytes = Vec::from(contents);
+///     bytes.extend(eoc.as_ref() as &[u8]);
+///     let bytes: &[u8] = bytes.as_ref();
+///     assert_eq!(bytes, ber.contents());
+/// }
+/// ```
 pub struct BerBuilder {
     builder: InnerBuilder,
 }
