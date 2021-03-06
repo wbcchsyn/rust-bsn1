@@ -56,7 +56,7 @@ use core::convert::TryFrom;
 use core::ops::Deref;
 use std::borrow::Borrow;
 
-/// `ClassTag` is u8 enum for Tag class of Identifier in 'ASN.1.'
+/// `ClassTag` represents Tag class of identifier.
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ClassTag {
@@ -70,7 +70,7 @@ pub enum ClassTag {
     Private = 0xc0,
 }
 
-/// `PCTag` is u8 enum for Private/Constructed flag of Identifier in 'ASN.1.'
+/// `PCTag` represents Private/Constructed flag of identifier.
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PCTag {
@@ -80,7 +80,7 @@ pub enum PCTag {
     Constructed = 0x20,
 }
 
-/// `IdRef` represents Identifier octets in 'ASN.1.'
+/// `IdRef` is a wrapper of `[u8]` represents Identifier.
 ///
 /// This struct is `Unsized` , and user will usually use a reference to it.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -97,10 +97,15 @@ impl IdRef {
 impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
     type Error = Error;
 
-    /// Parses `bytes` and tries to build a new instance.
+    /// Parses `bytes` starts with identifier and tries to build a new instance.
     ///
     /// This function ignores the extra octet(s) at the end if any.
-    /// i.e. This function returns `Ok` if `bytes` starts with octets of ASN.1 identifier.
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
+    /// functions returns `Ok` .
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
 
@@ -157,9 +162,14 @@ impl IdRef {
     /// Builds instance from `bytes` without any sanitize.
     /// `bytes` must not include any extra octets.
     ///
+    /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
+    /// implementation instead.
+    ///
     /// # Safety
     ///
     /// The behavior is undefined if the format of `bytes` is not right.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
     ///
     /// # Examples
     ///
@@ -1210,11 +1220,11 @@ impl IdRef {
     }
 }
 
-/// `Id` owns `IdRef` and represents Identifier octets in 'ASN.1.'
+/// `Id` owns `IdRef` and represents Identifier.
 ///
-/// This struct may allocate heap memory because ASN.1 does not limit the length of identifier
-/// bytes. This struct may allocate heap memory if the number is very large. (It won't allocate
-/// at least the number equals to `usize::MAX` or less than `usize::MAX` .)
+/// Note that this struct may allocate heap memory if the number is very large, because ASN.1 does
+/// not limit the length of identifier bytes, however, it uses only stack memory at least the
+/// number equals to or is less than `usize::MAX` .
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id {
     buffer: Buffer,
@@ -1223,10 +1233,18 @@ pub struct Id {
 impl TryFrom<&[u8]> for Id {
     type Error = Error;
 
-    /// Parses `bytes` and tries to build a new instance.
+    /// Parses `bytes` starts with identifier octets and tries to build a new instance.
     ///
     /// This function ignores the extra octet(s) at the end if any.
-    /// i.e. This function returns `Ok` if `bytes` starts with octets of ASN.1 identifier.
+    ///
+    /// # Warnings
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
+    /// functions returns `Ok` .
+    ///
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         <&IdRef>::try_from(bytes).map(|idref| idref.to_owned())
     }
@@ -1234,6 +1252,12 @@ impl TryFrom<&[u8]> for Id {
 
 impl Id {
     /// Creates a new instance from `class` , `pc` , and `number` .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
+    /// function accepts such a number.
     ///
     /// # Examples
     ///

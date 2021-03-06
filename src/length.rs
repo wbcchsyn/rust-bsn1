@@ -56,16 +56,16 @@
 use crate::{Buffer, Error};
 use core::mem::size_of;
 
-/// `Length` represents the length octets of 'ASN.1'.
+/// `Length` represents ASN.1 length.
 ///
-/// Note that `Length` represents the length of the contents, not total length of 'BER' nor
-/// 'DER' nor 'CER'.
-/// ('BER', 'DER', and 'CER' are constituted of identifier, length, and contents.)
+/// Note that `Length` represents the byte count of the contents in ASN.1.
+/// The total byte size of BER, DER, and CER is greater than that.
+/// (BER, DER, and CER are constituted of identifier, length, and contents.)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Length {
     /// Represents 'Indefinite' length.
     ///
-    /// 'Indefinite' is only for 'BER', and the contents ends with 'EOC' octets.
+    /// 'Indefinite' is only for 'BER', and the contents must end with 'EOC' octets.
     Indefinite,
     /// 'Definite' is for 'BER', 'DER', and 'CER', and represents the byte count of the contents.
     Definite(usize),
@@ -77,10 +77,9 @@ impl Length {
     const INDEFINITE: u8 = 0x80;
 }
 
-/// Tries to parse `bytes` as 'ASN.1 Length.'
+/// Tries to parse `bytes` starting with 'length' and returns `Length` .
 ///
 /// This function ignores extra octets at the end of `bytes` .
-/// i.e. this function returns `Ok` if `bytes` starts with octets representing 'ASN.1 Length.'
 ///
 /// # Warnings
 ///

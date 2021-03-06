@@ -56,9 +56,9 @@ use core::convert::TryFrom;
 use core::ops::Deref;
 use std::borrow::Borrow;
 
-/// `BerRef` is a wrapper of `[u8]` and represents 'BER' octets in 'ASN.1.'
+/// `BerRef` is a wrapper of `[u8]` and represents a BER.
 ///
-/// This struct is 'Unsized', so usually user uses a reference to the instance.
+/// This struct is 'Unsized', and user usually uses a reference to the instance.
 #[derive(Debug, PartialEq, Eq)]
 pub struct BerRef {
     bytes: [u8],
@@ -115,11 +115,19 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
 impl BerRef {
     /// Provides a reference from `bytes` without any sanitization.
     ///
-    /// `bytes` must be 'ASN.1 BER' octets and must not include any extra octet.
+    /// `bytes` must be BER octets and must not include any extra octet.
+    ///
+    /// If it is sure that `bytes` starts with BER octets, but if some extra octet(s) may added
+    /// after that, use [`from_bytes_starts_with_unchecked`] instead.
+    /// If it is not sure whether `bytes` starts with BER octets or not, use [`TryFrom`]
+    /// implementation.
     ///
     /// # Safety
     ///
-    /// The behavior is undefined if `bytes` is not formatted as a 'BER'.
+    /// The behavior is undefined if `bytes` is not formatted as a BER.
+    ///
+    /// [`from_bytes_starts_with_unchecked`]: #method.from_bytes_starts_with_unchecked
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
     ///
     /// # Examples
     ///
@@ -139,13 +147,18 @@ impl BerRef {
         &*ptr
     }
 
-    /// Provides a reference from `bytes` that starts with an 'ASN.1 BER' octets.
+    /// Provides a reference from `bytes` that starts with a BER octets.
     ///
     /// `bytes` may include some extra octet(s) at the end.
     ///
+    /// If it is not sure whether `bytes` starts with BER octets or not, use [`TryFrom`]
+    /// implementation.
+    ///
     /// # Safety
     ///
-    /// The behavior is undefined if `bytes` does not start with 'ASN.1 BER' octets.
+    /// The behavior is undefined if `bytes` does not start with BER octets.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
     ///
     /// # Examples
     ///
@@ -228,7 +241,12 @@ impl BerRef {
         }
     }
 
-    /// Returns the `Length` of `self` .
+    /// Returns `Length` of `self` .
+    ///
+    /// # Warnings
+    ///
+    /// `Length` stands for 'the length of the contents' in BER.
+    /// The length of the total bytes is greater than the value.
     ///
     /// # Examples
     ///
@@ -269,7 +287,7 @@ impl BerRef {
     }
 }
 
-/// `Ber` owns `BerRef` and represents 'BER' octets in 'ASN.1.'
+/// `Ber` owns `BerRef` and represents a BER.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ber {
     buffer: Buffer,
@@ -298,6 +316,9 @@ impl From<&BerRef> for Ber {
 impl TryFrom<&[u8]> for Ber {
     type Error = Error;
 
+    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a new instance.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         let ber_ref = <&BerRef>::try_from(bytes)?;
         Ok(ber_ref.to_owned())
@@ -307,10 +328,10 @@ impl TryFrom<&[u8]> for Ber {
 impl Ber {
     /// Creates a new instance from `id` and `contents` with definite length.
     ///
-    /// Note that 'BER' allows both 'definite length' and 'indefinite length', however, the
-    /// return value is always 'definite length'.
-    /// ('Indefinite length' is valid under some special condition, and the performance is usually
-    /// worse than 'definite length.' Generally speaking, 'Indefinite length' is seldome used.)
+    /// Note that BER allows both definite and indefinite length, however, the length of return
+    /// value is always definite.
+    /// (Generally speaking, the performance of definite length is better than that of indefinite
+    /// length. Indefinite length is seldom used these days.)
     ///
     /// # Examples
     ///
@@ -358,7 +379,7 @@ impl Deref for Ber {
     }
 }
 
-/// Builds a `Ber` instance representing 'Constructed BER' effectively.
+/// Builds a `Ber` instance representing Constructed BER effectively.
 ///
 /// # Formula
 ///
@@ -672,10 +693,10 @@ impl BerBuilder {
     ///
     /// # Warnings
     ///
-    /// The user must not adds 'EOC' if it is `Length::Indefinite` that was passed to the
-    /// constructor funciton [`new`] as the argument `contents_len` .
+    /// The user must not adds 'EOC' if `Length::Indefinite` was passed to the constructor
+    /// funciton [`new`] .
     /// Function [`finish`] will adds the last 'EOC.'
-    /// (Each contents of 'BER' must include at least one and only one 'EOC.')
+    /// (Indefinite length BER must include one and only one 'EOC' in the contents.)
     ///
     /// # Safety
     ///
@@ -683,9 +704,8 @@ impl BerBuilder {
     ///
     /// # Panics
     ///
-    /// Panics if it is `Length::Definite` that was passed to the constructor function [`new`] as
-    /// the argument `contents_len` , and if the accumerated length of the 'contents' will exceed
-    /// the value.
+    /// Panics if `Length::Definite` was passed to the constructor [`new`] ,
+    /// and if the accumerated length of the 'contents' will exceed that value.
     ///
     /// # Examples
     ///
@@ -706,14 +726,13 @@ impl BerBuilder {
 
     /// Consumes `self` , building a new `Ber` instance.
     ///
-    /// If it is `Length::Indefinite` that wass passed to the constructor function [`new`] as
-    /// argument `contents_len` , this method adds `EOC` before building a new `Ber` .
+    /// If `Length::Indefinite` was passed to the constructor [`new`] , this method adds 'EOC'
+    /// to the end of contents of a building `Ber` .
     ///
     /// # Panics
     ///
-    /// Panics if it is `Length::Definite` that wass passed to the constructor function [`new`] as
-    /// argument `contents_len` , and if the accumerated length of the 'contents' does not equal
-    /// to the value.
+    /// Panics if `Length::Definite` was passed to the constructor [`new`] ,
+    /// and if the accumerated length of the 'contents' does not equal to that value.
     ///
     /// # Examples
     ///

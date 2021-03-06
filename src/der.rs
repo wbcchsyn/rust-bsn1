@@ -56,9 +56,9 @@ use core::convert::TryFrom;
 use core::ops::Deref;
 use std::borrow::Borrow;
 
-/// `DerRef` represents 'DER' octets in 'ASN.1.'
+/// `DerRef` is a wrapper of `[u8]` and represents DER.
 ///
-/// This struct is 'Unsized', so usually user uses a reference to the instance.
+/// This struct is 'Unsized', and user usually uses a reference to the instance.
 #[derive(Debug, PartialEq, Eq)]
 pub struct DerRef {
     bytes: [u8],
@@ -75,7 +75,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
     ///
     /// ASN.1 does not allow some universal identifier for DER, however, this function will accept
     /// such an identifier.
-    /// For example, 'Octet String' must be primitive in DER, but this function returns `OK` for
+    /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let id = <&IdRef>::try_from(bytes)?;
@@ -102,9 +102,17 @@ impl DerRef {
     ///
     /// `bytes` must not include any extra octet.
     ///
+    /// If it is sure that `bytes` starts with DER octets, but if some extra octet(s) may added
+    /// after that, use [`from_bytes_starts_with_unchecked`] instead.
+    /// If it is not sure whether `bytes` starts with DER octets or not, use [`TryFrom`]
+    /// implementation.
+    ///
+    /// [`from_bytes_starts_with_unchecked`]: #method.from_bytes_starts_with_unchecked
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    ///
     /// # Safety
     ///
-    /// The behavior is undefined if `bytes` is not formatted as a 'DER'.
+    /// The behavior is undefined if `bytes` is not formatted as a DER.
     ///
     /// # Examples
     ///
@@ -121,13 +129,18 @@ impl DerRef {
         &*ptr
     }
 
-    /// Provides a reference from `bytes` that starts with an 'ASN.1 DER' octets.
+    /// Provides a reference from `bytes` that starts with a DER.
     ///
     /// `bytes` may include some extra octet(s) at the end.
+    ///
+    /// If it is not sure whether `bytes` starts with DER octets or not, use [`TryFrom`]
+    /// implementation.
     ///
     /// # Safety
     ///
     /// The behavior is undefined if `bytes` does not start with 'ASN.1 DER' octets.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
     ///
     /// # Examples
     ///
@@ -199,10 +212,15 @@ impl DerRef {
         }
     }
 
-    /// Returns a `Length` to represent the length of contents.
+    /// Returns `Length` to represent the length of contents.
     ///
-    /// Note that 'DER' does not allow 'Indefinite Length.'
+    /// Note that DER does not allow indefinite Length.
     /// The return value must be `Length::Definite` .
+    ///
+    /// # Warnings
+    ///
+    /// `Length` stands for 'the length of the contents' in DER.
+    /// The length of the total bytes is greater than the value.
     ///
     /// # Examples
     ///
@@ -243,7 +261,7 @@ impl DerRef {
     }
 }
 
-/// `Der` owns `DerRef` and represents 'DER' octets in 'ASN.1.'
+/// `Der` owns `DerRef` and represents DER.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Der {
     buffer: Buffer,
@@ -258,7 +276,7 @@ impl From<&DerRef> for Der {
 impl TryFrom<&[u8]> for Der {
     type Error = Error;
 
-    /// Parses `bytes` starting with octets of 'ASN.1 DER' and builds a new instance.
+    /// Parses `bytes` starting with DER octets and builds a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
@@ -266,7 +284,7 @@ impl TryFrom<&[u8]> for Der {
     ///
     /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
     /// such an identifier.
-    /// For example, 'Octet String' must be primitive in DER, but this function returns `OK` for
+    /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         let der_ref = <&DerRef>::try_from(bytes)?;
@@ -403,7 +421,7 @@ impl DerBuilder {
     /// Creates a new instance to build `Der` with `id` and contents whose length equals to
     /// `contents_len` .
     ///
-    /// `contents_len` must be `Length::Definite` because 'DER' does not allow indefinite length.
+    /// `contents_len` must be `Length::Definite` because DER does not allow indefinite length.
     ///
     /// # Warnings
     ///
@@ -415,6 +433,12 @@ impl DerBuilder {
     /// # Panics
     ///
     /// Panics if `contents_len` equals `Length::Indefinite` .
+    ///
+    /// # Examples
+    ///
+    /// See examples for the [`struct`] .
+    ///
+    /// [`struct`]: struct.DerBuilder.html
     pub fn new(id: &IdRef, contents_len: Length) -> Self {
         let length = length::to_bytes(&contents_len);
         let contents_len = match contents_len {
@@ -437,10 +461,15 @@ impl DerBuilder {
     ///
     /// # Panics
     ///
-    /// Panics if the accumerated length of the 'contents' exceeds `contents_len` that passed to
+    /// Panics if the accumerated length of the 'contents' exceeds `contents_len` passed to
     /// the constructor function [`new`] as the argument.
     ///
+    /// # Examples
+    ///
+    /// See examples for the [`struct`] .
+    ///
     /// [`new`]: #method.new
+    /// [`struct`]: struct.DerBuilder.html
     pub fn extend_contents<B>(&mut self, bytes: B)
     where
         B: AsRef<[u8]>,
@@ -459,10 +488,15 @@ impl DerBuilder {
     ///
     /// # Panics
     ///
-    /// Panics if the accumerated length of the 'contents' differs from `contents_len` that passed
+    /// Panics if the accumerated length of the 'contents' differs from `contents_len` passed
     /// to the constructor function [`new`] as the argument.
     ///
+    /// # Examples
+    ///
+    /// See examples for the [`struct`] .
+    ///
     /// [`new`]: #method.new
+    /// [`struct`]: struct.DerBuilder.html
     pub fn finish(self) -> Der {
         assert_eq!(self.cursor, self.buffer.len());
 

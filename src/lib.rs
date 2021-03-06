@@ -116,7 +116,8 @@ pub enum Error {
     RedundantBytes,
     /// Over flow is occurred to parse bytes as a number.
     OverFlow,
-    /// 'Indefinite Length' is only for 'BER', but not 'DER', nor 'CER'.
+    /// 'Indefinite length' used in DER or CER.
+    /// (It is only for BER, but not for DER, nor for CER.)
     IndefiniteLength,
     /// The contents of 'EOC' of the 'Indefinite Length BER' must be empty.
     BadEoc,
@@ -130,8 +131,8 @@ impl fmt::Display for Error {
             Self::UnTerminatedBytes => f.write_str("The bytes finishes before the last octet."),
             Self::RedundantBytes => f.write_str("The bytes includes some redundant octet(s)."),
             Self::OverFlow => f.write_str("Over flow is occurred to parse bytes as a number."),
-            Self::IndefiniteLength => f.write_str("'Indefinite Length' in 'DER' or 'CER'"),
-            Self::BadEoc => f.write_str("'Indefinite Length BER' includes bad 'EOC' BER."),
+            Self::IndefiniteLength => f.write_str("'Indefinite Length' in DER or CER"),
+            Self::BadEoc => f.write_str("'Indefinite Length BER' includes bad 'EOC.'"),
             Self::InvalidContents => f.write_str("Contents includes invlid octet(s)."),
         }
     }
