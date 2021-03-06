@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{identifier, length, Buffer, Der, DerRef, Error, IdRef, Length};
+use crate::{identifier, length, Buffer, Der, DerBuilder, DerRef, Error, IdRef, Length};
 use core::convert::TryFrom;
 use core::ops::Deref;
 use std::borrow::Borrow;
@@ -379,6 +379,194 @@ mod tests {
 
             let ber = <&BerRef>::try_from(bytes.as_ref() as &[u8]).unwrap();
             assert_eq!(bytes.as_ref() as &[u8], ber.as_ref() as &[u8]);
+        }
+    }
+}
+
+enum InnerBuilder {
+    Definite(DerBuilder),
+    Indefinite(Buffer),
+}
+
+/// `BerBuilder` is a struct to build `Ber` effectively.
+///
+/// # Examples
+///
+/// Definite length and empty contents.
+///
+/// ```
+/// use bsn1::{Ber, BerBuilder, IdRef, Length};
+///
+/// let id = IdRef::octet_string();
+///
+/// let expected = Ber::new(IdRef::octet_string(), &[]);
+///
+/// // Because the contents is empty, do not need to call method 'extend_contents()'.
+/// let mut builder = BerBuilder::new(id, Length::Definite(0));
+/// let ber = builder.finish();
+///
+/// assert_eq!(expected, ber);
+/// ```
+///
+/// Indefinite length and empty contents.
+///
+/// ```
+/// use bsn1::{Ber, BerBuilder, IdRef, Length};
+///
+/// let id = IdRef::octet_string();
+/// let eoc = Ber::new(IdRef::eoc(), &[]);
+///
+/// // Because the contents is empty, do not need to call method 'extend_contents()'.
+/// // Function 'finish()' will adds the last 'EOC.'
+/// let mut builder = BerBuilder::new(id, Length::Indefinite);
+/// let ber = builder.finish();
+///
+/// assert_eq!(id, ber.id());
+/// assert_eq!(Length::Indefinite, ber.length());
+/// assert_eq!(eoc.as_ref() as &[u8], ber.contents());
+/// ```
+///
+/// Definite length and not empty contents.
+///
+/// ```
+/// use bsn1::{Ber, BerBuilder, IdRef, Length};
+///
+/// let id = IdRef::octet_string();
+///
+/// let contents = &[0, 1, 2, 3, 4];
+/// let expected = Ber::new(IdRef::octet_string(), contents);
+///
+/// // Append 'contents' at once.
+/// {
+///     let length = Length::Definite(contents.len());
+///     let mut builder = BerBuilder::new(id, length);
+///     builder.extend_contents(contents);
+///     let ber = builder.finish();
+///
+///     assert_eq!(expected, ber);
+/// }
+///
+/// // Split contents into 2 pieces and append them one by one.
+/// {
+///     let length = Length::Definite(contents.len());
+///     let mut builder = BerBuilder::new(id, length);
+///     builder.extend_contents(&contents[..2]);
+///     builder.extend_contents(&contents[2..]);
+///     let ber = builder.finish();
+///
+///     assert_eq!(expected, ber);
+/// }
+/// ```
+///
+/// Indefinite length and not empty contents.
+///
+/// ```
+/// use bsn1::{Ber, BerBuilder, IdRef, Length};
+///
+/// let id = IdRef::octet_string();
+/// let contents: &[u8] = &[0, 1, 2, 3, 4];
+/// let eoc = Ber::new(IdRef::eoc(), &[]);
+///
+/// // Append 'contents' at once.
+/// {
+///     let length = Length::Indefinite;
+///     let mut builder = BerBuilder::new(id, length);
+///     builder.extend_contents(contents);
+///     let ber = builder.finish();
+///
+///     assert_eq!(id, ber.id());
+///     assert_eq!(Length::Indefinite, ber.length());
+///
+///     let mut bytes = Vec::from(contents);
+///     bytes.extend(eoc.as_ref() as &[u8]);
+///     let bytes: &[u8] = bytes.as_ref();
+///     assert_eq!(bytes, ber.contents());
+/// }
+///
+/// // Split contents into 2 pieces and append them one by one.
+/// {
+///     let length = Length::Indefinite;
+///     let mut builder = BerBuilder::new(id, length);
+///     builder.extend_contents(&contents[..2]);
+///     builder.extend_contents(&contents[2..]);
+///     let ber = builder.finish();
+///
+///     assert_eq!(id, ber.id());
+///     assert_eq!(Length::Indefinite, ber.length());
+///
+///     let mut bytes = Vec::from(contents);
+///     bytes.extend(eoc.as_ref() as &[u8]);
+///     let bytes: &[u8] = bytes.as_ref();
+///     assert_eq!(bytes, ber.contents());
+/// }
+/// ```
+pub struct BerBuilder {
+    builder: InnerBuilder,
+}
+
+impl BerBuilder {
+    /// Creates a new instance to build `Der` with `id` and contents whose length equals to
+    /// `contents_len` .
+    pub fn new(id: &IdRef, contents_len: Length) -> Self {
+        let builder = match contents_len {
+            Length::Definite(_) => InnerBuilder::Definite(DerBuilder::new(id, contents_len)),
+            Length::Indefinite => {
+                let mut buffer = Buffer::new();
+                buffer.extend_from_slice(id.as_ref());
+
+                let length = length::to_bytes(&Length::Indefinite);
+                buffer.extend_from_slice(length.as_ref());
+                InnerBuilder::Indefinite(buffer)
+            }
+        };
+
+        Self { builder }
+    }
+
+    /// Appends `bytes` to the end of the DER contents to be build.
+    ///
+    /// # Warnings
+    ///
+    /// The user must not adds 'EOC' if it is `Length::Indefinite` that was passed to the
+    /// constructor funciton [`new`] as the argument `contents_len` .
+    /// Function [`finish`] will adds the last 'EOC.'
+    /// (Each contents of 'BER' must include at least one and only one 'EOC.')
+    ///
+    /// # Panics
+    ///
+    /// Panics if it is `Length::Definite` that was passed to the constructor function [`new`] as
+    /// the argument `contents_len` , and if the accumerated length of the 'contents' will exceed
+    /// the value.
+    ///
+    /// [`new`]: #method.new
+    pub fn extend_contents<B>(&mut self, bytes: B)
+    where
+        B: AsRef<[u8]>,
+    {
+        match &mut self.builder {
+            InnerBuilder::Definite(der_builder) => der_builder.extend_contents(bytes),
+            InnerBuilder::Indefinite(buffer) => buffer.extend_from_slice(bytes.as_ref()),
+        }
+    }
+
+    /// Consumes `self` , building a new `Ber` instance.
+    ///
+    /// If it is `Length::Indefinite` that wass passed to the constructor function [`new`] as
+    /// argument `contents_len` , this method adds `EOC` before building a new `Ber` .
+    ///
+    /// # Panics
+    ///
+    /// Panics if it is `Length::Definite` that wass passed to the constructor function [`new`] as
+    /// argument `contents_len` , and if the accumerated length of the 'contents' does not equal
+    /// to the value.
+    pub fn finish(self) -> Ber {
+        match self.builder {
+            InnerBuilder::Definite(der_builder) => Ber::from(der_builder.finish()),
+            InnerBuilder::Indefinite(mut buffer) => {
+                let eoc = Ber::new(IdRef::eoc(), &[]);
+                buffer.extend_from_slice(eoc.as_ref());
+                Ber { buffer }
+            }
         }
     }
 }
