@@ -283,6 +283,66 @@ impl Deref for Ber {
     }
 }
 
+/// Builds a `Ber` instance representing 'Constructed BER' effectively.
+///
+/// # Formula
+///
+/// `constructed_ber!(id: &IdRef [, (id_1, contents_1) [, (id_2, contents_2) [...]]]) => Ber`
+///
+/// `id_n` and `contents_n` must be bounded on `AsRef<[u8]>` .
+///
+/// # Examples
+///
+/// Empty contents.
+///
+/// ```
+/// # #[macro_use] extern crate bsn1;
+/// use bsn1::{Ber, IdRef};
+///
+/// let id = IdRef::sequence();
+/// let expected = Ber::new(id, &[]);
+/// let ber = constructed_ber!(id);
+///
+/// assert_eq!(expected, ber);
+/// ```
+///
+/// Sequence of 2 BERs.
+///
+/// ```
+/// # #[macro_use] extern crate bsn1;
+/// use bsn1::{contents, Ber, BerRef, IdRef};
+/// use std::convert::TryFrom;
+///
+/// let id = IdRef::sequence();
+/// let id1 = IdRef::octet_string();
+/// let contents1: [u8; 3] = [1, 2, 3];
+/// let id2 = IdRef::integer();
+/// let contents2 = contents::from_integer(10);
+///
+/// let ber = constructed_ber!(id, (id1.to_owned(), contents1), (id2, &contents2));
+///
+/// assert_eq!(id, ber.id());
+///
+/// let bytes = ber.contents();
+/// let ber1 = <&BerRef>::try_from(bytes).unwrap();
+/// assert_eq!(id1, ber1.id());
+/// assert_eq!(contents1, ber1.contents());
+///
+/// let bytes = &bytes[ber1.as_ref().len()..];
+/// let ber2 = <&BerRef>::try_from(bytes).unwrap();
+/// assert_eq!(id2, ber2.id());
+/// assert_eq!(contents2.as_ref(), ber2.contents());
+/// ```
+#[macro_export]
+macro_rules! constructed_ber {
+    ($id:expr $(, ($id_n:expr, $contents_n:expr))*) => {
+        Ber::from(constructed_der!($id $(, ($id_n, $contents_n))*))
+    };
+    ($id:expr $(, ($id_n:expr, $contents_n:expr))*,) => {
+        Ber::from(constructed_der!($id $(, ($id_n, $contents_n))*,))
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
