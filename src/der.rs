@@ -128,6 +128,19 @@ impl DerRef {
     /// # Safety
     ///
     /// The behavior is undefined if `bytes` does not start with 'ASN.1 DER' octets.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use x690::{Der, DerRef, IdRef};
+    ///
+    /// let der = Der::new(IdRef::octet_string(), &[]);
+    /// let mut bytes = Vec::from(der.as_ref() as &[u8]);
+    /// bytes.extend(&[1, 2, 3]);
+    ///
+    /// let der_ref = unsafe { DerRef::from_bytes_starts_with_unchecked(bytes.as_ref()) };
+    /// assert_eq!(der.as_ref() as &DerRef, der_ref);
+    /// ```
     pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> &Self {
         let id = identifier::shrink_to_fit_unchecked(bytes);
         let parsing = &bytes[id.len()..];
