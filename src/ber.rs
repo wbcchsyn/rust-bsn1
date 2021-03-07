@@ -599,6 +599,7 @@ impl BerBuilder {
     /// the value.
     ///
     /// [`new`]: #method.new
+    /// [`finish`]: #method.finish
     pub fn extend_contents<B>(&mut self, bytes: B)
     where
         B: AsRef<[u8]>,
@@ -619,6 +620,8 @@ impl BerBuilder {
     /// Panics if it is `Length::Definite` that wass passed to the constructor function [`new`] as
     /// argument `contents_len` , and if the accumerated length of the 'contents' does not equal
     /// to the value.
+    ///
+    /// [`new`]: #method.new
     pub fn finish(self) -> Ber {
         match self.builder {
             InnerBuilder::Definite(der_builder) => Ber::from(der_builder.finish()),
