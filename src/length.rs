@@ -124,6 +124,18 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
 /// Serializes `length` .
 ///
 /// This function won't allocate heap memory.
+///
+/// # Examples
+///
+/// ```
+/// use x690::{length_to_bytes, try_length_from, Length};
+///
+/// let length = Length::Definite(3);
+/// let bytes = length_to_bytes(&length);
+///
+/// let deserialized = try_length_from(bytes.as_ref()).unwrap();
+/// assert_eq!(length, deserialized.0);
+/// ```
 pub fn to_bytes(length: &Length) -> impl AsRef<[u8]> {
     let mut buffer = Buffer::new();
 
