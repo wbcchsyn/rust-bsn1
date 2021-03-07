@@ -87,6 +87,18 @@ impl Length {
 /// This function may return `Ok(Length::Indefinite)` , however, 'DER' and 'CER' don't allow such
 /// value.
 /// It does not always mean `bytes` is valid that this function returns `Ok` .
+///
+/// # Examples
+///
+/// ```
+/// use x690::{length_to_bytes, try_length_from, Length};
+///
+/// let length = Length::Definite(3);
+/// let bytes = length_to_bytes(&length);
+///
+/// let deserialized = try_length_from(bytes.as_ref()).unwrap();
+/// assert_eq!(length, deserialized.0);
+/// ```
 pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
     let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
     let bytes = &bytes[1..];
