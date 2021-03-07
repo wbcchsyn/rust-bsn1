@@ -70,6 +70,13 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
     /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a reference to `DerRef` .
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function will accept
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function returns `OK` for
+    /// constructed Octet String DER.
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let id = <&IdRef>::try_from(bytes)?;
         let parsing = &bytes[id.as_ref().len()..];
@@ -192,6 +199,13 @@ impl TryFrom<&[u8]> for Der {
     /// Parses `bytes` starting with octets of 'ASN.1 DER' and builds a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function returns `OK` for
+    /// constructed Octet String DER.
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         let der_ref = <&DerRef>::try_from(bytes)?;
         Ok(der_ref.to_owned())
@@ -200,6 +214,13 @@ impl TryFrom<&[u8]> for Der {
 
 impl Der {
     /// Creates a new instance from `id` and `contents` .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function will construct a
+    /// new instance even if `id` represenets constructed 'Octet String.'
     pub fn new(id: &IdRef, contents: &[u8]) -> Self {
         let len = Length::Definite(contents.len());
         let len = length::to_bytes(&len);
@@ -322,6 +343,13 @@ impl DerBuilder {
     ///
     /// `contents_len` must be `Length::Definite` because 'DER' does not allow indefinite length.
     ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function will construct a
+    /// new instance even if `id` represenets constructed 'Octet String.'
+    ///
     /// # Panics
     ///
     /// Panics if `contents_len` equals `Length::Indefinite` .
@@ -389,6 +417,13 @@ impl DerBuilder {
 /// `constructed_der!(id: &IdRef [, (id_1, contents_1) [, (id_2, contents_2) [...]]]) => Der`
 ///
 /// `id_n` and `contents_n` must be bounded on `AsRef<[u8]>` .
+///
+/// # Warnings
+///
+/// ASN.1 does not allow some universal identifier for DER, however, this macro accepts
+/// such an identifier.
+/// For example, 'Octet String' must be primitive in DER, but this function will construct a
+/// new instance even if `id` represenets constructed 'Octet String.'
 ///
 /// # Examples
 ///
