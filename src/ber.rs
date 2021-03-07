@@ -120,6 +120,19 @@ impl BerRef {
     /// # Safety
     ///
     /// The behavior is undefined if `bytes` is not formatted as a 'BER'.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use x690::{Ber, BerRef, IdRef};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let ber = Ber::new(id, &[]);
+    ///
+    /// let bytes: &[u8] = ber.as_ref();
+    /// let deserialized = unsafe { BerRef::from_bytes_unchecked(bytes) };
+    /// assert_eq!(ber.as_ref() as &BerRef, deserialized);
+    /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         let ptr = bytes as *const [u8];
         let ptr = ptr as *const Self;
