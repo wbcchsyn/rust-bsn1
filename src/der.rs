@@ -179,6 +179,19 @@ impl ToOwned for DerRef {
 
 impl DerRef {
     /// Returns a reference to `IdRef` of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use x690::{Der, IdRef};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents = &[1, 2, 3];
+    ///
+    /// // 'DER' implements 'Deref<Target=DerRef>'
+    /// let der = Der::new(id, contents);
+    /// assert_eq!(id, der.id());
+    /// ```
     pub fn id(&self) -> &IdRef {
         unsafe {
             let bytes = identifier::shrink_to_fit_unchecked(&self.bytes);
@@ -190,6 +203,19 @@ impl DerRef {
     ///
     /// Note that 'DER' does not allow 'Indefinite Length.'
     /// The return value must be `Length::Definite` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use x690::{Der, IdRef, Length};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents = &[1, 2, 3];
+    ///
+    /// // 'DER' implements 'Deref<Target=DerRef>'
+    /// let der = Der::new(id, contents);
+    /// assert_eq!(Length::Definite(contents.len()), der.length());
+    /// ```
     pub fn length(&self) -> Length {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
@@ -197,6 +223,19 @@ impl DerRef {
     }
 
     /// Returns a reference to 'contents octets' of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use x690::{Der, IdRef};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents = &[1, 2, 3];
+    ///
+    /// // 'DER' implements 'Deref<Target=DerRef>'
+    /// let der = Der::new(id, contents);
+    /// assert_eq!(contents, der.contents());
+    /// ```
     pub fn contents(&self) -> &[u8] {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
