@@ -642,6 +642,12 @@ pub struct BerBuilder {
 impl BerBuilder {
     /// Creates a new instance to build `Der` with `id` and contents whose length equals to
     /// `contents_len` .
+    ///
+    /// # Examples
+    ///
+    /// See examples for the [`struct`] .
+    ///
+    /// [`struct`]: struct.BerBuilder.html
     pub fn new(id: &IdRef, contents_len: Length) -> Self {
         let builder = match contents_len {
             Length::Definite(_) => InnerBuilder::Definite(DerBuilder::new(id, contents_len)),
@@ -673,8 +679,13 @@ impl BerBuilder {
     /// the argument `contents_len` , and if the accumerated length of the 'contents' will exceed
     /// the value.
     ///
+    /// # Examples
+    ///
+    /// See examples for the [`struct`] .
+    ///
     /// [`new`]: #method.new
     /// [`finish`]: #method.finish
+    /// [`struct`]: struct.BerBuilder.html
     pub fn extend_contents<B>(&mut self, bytes: B)
     where
         B: AsRef<[u8]>,
@@ -696,7 +707,12 @@ impl BerBuilder {
     /// argument `contents_len` , and if the accumerated length of the 'contents' does not equal
     /// to the value.
     ///
+    /// # Examples
+    ///
+    /// See examples for the [`struct`] .
+    ///
     /// [`new`]: #method.new
+    /// [`struct`]: struct.BerBuilder.html
     pub fn finish(self) -> Ber {
         match self.builder {
             InnerBuilder::Definite(der_builder) => Ber::from(der_builder.finish()),
