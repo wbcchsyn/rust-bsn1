@@ -311,6 +311,15 @@ impl Ber {
     /// return value is always 'definite length'.
     /// ('Indefinite length' is valid under some special condition, and the performance is usually
     /// worse than 'definite length.' Generally speaking, 'Indefinite length' is seldome used.)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use x690::{Ber, IdRef};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let _ber = Ber::new(id, &[]);
+    /// ```
     pub fn new(id: &IdRef, contents: &[u8]) -> Self {
         let der = Der::new(id, contents);
         Self::from(der)
