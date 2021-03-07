@@ -146,6 +146,20 @@ impl BerRef {
     /// # Safety
     ///
     /// The behavior is undefined if `bytes` does not start with 'ASN.1 BER' octets.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use x690::{Ber, BerRef, IdRef};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let ber = Ber::new(id, &[]);
+    /// let mut bytes = Vec::from(ber.as_ref() as &[u8]);
+    /// bytes.extend(&[1, 2, 3]);
+    ///
+    /// let deserialized = unsafe { BerRef::from_bytes_starts_with_unchecked(bytes.as_ref()) };
+    /// assert_eq!(ber.as_ref() as &BerRef, deserialized);
+    /// ```
     pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> &Self {
         let id = identifier::shrink_to_fit_unchecked(bytes);
         let parsing = &bytes[id.len()..];
