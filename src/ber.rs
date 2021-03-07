@@ -208,6 +208,19 @@ impl ToOwned for BerRef {
 
 impl BerRef {
     /// Provides a reference to the `IdRef` of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use x690::{Ber, BerRef, IdRef};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents = &[1, 2, 3];
+    ///
+    /// // 'Ber' implements 'Deref<Target=BerRef>.'
+    /// let ber = Ber::new(id, contents);
+    /// assert_eq!(id, ber.id());
+    /// ```
     pub fn id(&self) -> &IdRef {
         unsafe {
             let bytes = identifier::shrink_to_fit_unchecked(&self.bytes);
@@ -216,6 +229,19 @@ impl BerRef {
     }
 
     /// Returns the `Length` of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use x690::{Ber, BerRef, IdRef, Length};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents = &[1, 2, 3];
+    ///
+    /// // 'Ber' implements 'Deref<Target=BerRef>.'
+    /// let ber = Ber::new(id, contents);
+    /// assert_eq!(Length::Definite(contents.len()), ber.length());
+    /// ```
     pub fn length(&self) -> Length {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
@@ -223,6 +249,19 @@ impl BerRef {
     }
 
     /// Provides a reference to the 'contents' of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use x690::{Ber, BerRef, IdRef};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents = &[1, 2, 3];
+    ///
+    /// // 'Ber' implements 'Deref<Target=BerRef>.'
+    /// let ber = Ber::new(id, contents);
+    /// assert_eq!(contents, ber.contents());
+    /// ```
     pub fn contents(&self) -> &[u8] {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
