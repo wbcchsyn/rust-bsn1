@@ -122,6 +122,8 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
 }
 
 /// Serializes `length` .
+///
+/// This function won't allocate heap memory.
 pub fn to_bytes(length: &Length) -> impl AsRef<[u8]> {
     let mut buffer = Buffer::new();
 
