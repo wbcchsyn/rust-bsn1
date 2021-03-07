@@ -105,6 +105,16 @@ impl DerRef {
     /// # Safety
     ///
     /// The behavior is undefined if `bytes` is not formatted as a 'DER'.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use x690::{Der, DerRef, IdRef};
+    ///
+    /// let der = Der::new(IdRef::octet_string(), &[]);
+    /// let der_ref = unsafe { DerRef::from_bytes_unchecked(der.as_ref()) };
+    /// assert_eq!(der.as_ref() as &DerRef, der_ref);
+    /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         let ptr = bytes as *const [u8];
         let ptr = ptr as *const Self;
