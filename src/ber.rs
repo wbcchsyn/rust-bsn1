@@ -575,7 +575,7 @@ enum InnerBuilder {
 /// {
 ///     let length = Length::Definite(contents.len());
 ///     let mut builder = BerBuilder::new(id, length);
-///     builder.extend_contents(contents);
+///     unsafe { builder.extend_contents(contents) };
 ///     let ber = builder.finish();
 ///
 ///     assert_eq!(expected, ber);
@@ -585,8 +585,10 @@ enum InnerBuilder {
 /// {
 ///     let length = Length::Definite(contents.len());
 ///     let mut builder = BerBuilder::new(id, length);
-///     builder.extend_contents(&contents[..2]);
-///     builder.extend_contents(&contents[2..]);
+///     unsafe {
+///         builder.extend_contents(&contents[..2]);
+///         builder.extend_contents(&contents[2..]);
+///     }
 ///     let ber = builder.finish();
 ///
 ///     assert_eq!(expected, ber);
@@ -606,7 +608,7 @@ enum InnerBuilder {
 /// {
 ///     let length = Length::Indefinite;
 ///     let mut builder = BerBuilder::new(id, length);
-///     builder.extend_contents(contents);
+///     unsafe { builder.extend_contents(contents) };
 ///     let ber = builder.finish();
 ///
 ///     assert_eq!(id, ber.id());
@@ -622,8 +624,10 @@ enum InnerBuilder {
 /// {
 ///     let length = Length::Indefinite;
 ///     let mut builder = BerBuilder::new(id, length);
-///     builder.extend_contents(&contents[..2]);
-///     builder.extend_contents(&contents[2..]);
+///     unsafe {
+///         builder.extend_contents(&contents[..2]);
+///         builder.extend_contents(&contents[2..]);
+///     }
 ///     let ber = builder.finish();
 ///
 ///     assert_eq!(id, ber.id());
@@ -673,6 +677,10 @@ impl BerBuilder {
     /// Function [`finish`] will adds the last 'EOC.'
     /// (Each contents of 'BER' must include at least one and only one 'EOC.')
     ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if user appends 'EOC' to a Indefinite length builder instance.
+    ///
     /// # Panics
     ///
     /// Panics if it is `Length::Definite` that was passed to the constructor function [`new`] as
@@ -686,7 +694,7 @@ impl BerBuilder {
     /// [`new`]: #method.new
     /// [`finish`]: #method.finish
     /// [`struct`]: struct.BerBuilder.html
-    pub fn extend_contents<B>(&mut self, bytes: B)
+    pub unsafe fn extend_contents<B>(&mut self, bytes: B)
     where
         B: AsRef<[u8]>,
     {
