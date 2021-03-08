@@ -399,6 +399,7 @@ impl StackBuffer {
 }
 
 impl AsRef<[u8]> for StackBuffer {
+    #[inline]
     fn as_ref(&self) -> &[u8] {
         unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len()) }
     }
@@ -407,6 +408,7 @@ impl AsRef<[u8]> for StackBuffer {
 impl Index<usize> for StackBuffer {
     type Output = u8;
 
+    #[inline]
     fn index(&self, index: usize) -> &Self::Output {
         unsafe {
             let ptr = self.as_ptr().add(index);
@@ -416,6 +418,7 @@ impl Index<usize> for StackBuffer {
 }
 
 impl IndexMut<usize> for StackBuffer {
+    #[inline]
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         unsafe {
             let ptr = self.as_mut_ptr().add(index);
@@ -428,6 +431,7 @@ impl StackBuffer {
     /// # Safety
     ///
     /// The behavior is undefined if the length will exceeds the capacity.
+    #[inline]
     pub unsafe fn push(&mut self, val: u8) {
         debug_assert!(self.len() < self.capacity());
 
@@ -435,24 +439,29 @@ impl StackBuffer {
         self.len_ += 1;
     }
 
+    #[inline]
     pub fn as_ptr(&self) -> *const u8 {
         self.buffer.as_ptr()
     }
 
+    #[inline]
     pub fn as_mut_ptr(&mut self) -> *mut u8 {
         self.buffer.as_mut_ptr()
     }
 
+    #[inline]
     pub const fn len(&self) -> usize {
         self.len_ as usize
     }
 
+    #[inline]
     pub unsafe fn set_len(&mut self, new_len: usize) {
         debug_assert!(new_len <= self.capacity());
 
         self.len_ = new_len as u8
     }
 
+    #[inline]
     pub const fn capacity(&self) -> usize {
         Self::CAPACITY
     }
