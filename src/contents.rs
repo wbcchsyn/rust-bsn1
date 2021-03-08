@@ -53,7 +53,7 @@
 
 //! Provides functions to serialize/deserialize contents octets.
 
-use crate::{Buffer, Error};
+use crate::{Error, StackBuffer};
 use core::mem::{size_of, size_of_val};
 
 /// Serializes integer as contents octets.
@@ -71,11 +71,11 @@ pub fn from_integer(val: i128) -> impl AsRef<[u8]> {
     }
 }
 
-fn from_integer_positive(val: i128) -> Buffer {
+fn from_integer_positive(val: i128) -> StackBuffer {
     debug_assert!(0 <= val);
 
     let len = (8 * size_of_val(&val) - val.leading_zeros() as usize) / 8 + 1;
-    let mut buffer = Buffer::with_capacity(len);
+    let mut buffer = StackBuffer::new();
     unsafe { buffer.set_len(len) };
 
     let mut val = val;
@@ -90,7 +90,7 @@ fn from_integer_positive(val: i128) -> Buffer {
 /// # Wargnings
 ///
 /// This function assumes that the CPU adopt 2's complement to represent negative value.
-fn from_integer_negative(val: i128) -> Buffer {
+fn from_integer_negative(val: i128) -> StackBuffer {
     debug_assert!(val < 0);
 
     // I don't think the behavior is not defined to shift negative value, however, 'ISO/IEC
@@ -103,7 +103,7 @@ fn from_integer_negative(val: i128) -> Buffer {
     let shift = |v: i128| -> (i128, u8) { ((v + 1) / 256 - 1, (v % 256 + 256) as u8) };
 
     let len = (8 * size_of_val(&val) - val.leading_ones() as usize) / 8 + 1;
-    let mut buffer = Buffer::with_capacity(len);
+    let mut buffer = StackBuffer::new();
     unsafe { buffer.set_len(len) };
 
     let mut val = val;
