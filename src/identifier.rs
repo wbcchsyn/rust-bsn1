@@ -2,20 +2,20 @@
 //
 // "LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause"
 //
-// This is part of x690
+// This is part of bsn1
 //
-//  x690 is free software: you can redistribute it and/or modify
+//  bsn1 is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU Lesser General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  x690 is distributed in the hope that it will be useful,
+//  bsn1 is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU Lesser General Public License for more details.
 //
 //  You should have received a copy of the GNU Lesser General Public License
-//  along with x690.  If not, see <http://www.gnu.org/licenses/>.
+//  along with bsn1.  If not, see <http://www.gnu.org/licenses/>.
 //
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -174,7 +174,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, IdRef, PCTag};
+    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
     ///
     /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
     /// let idref = unsafe { IdRef::from_bytes_unchecked(id.as_ref() as &[u8]) };
@@ -191,7 +191,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::eoc();
     ///
@@ -209,7 +209,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::boolean();
     ///
@@ -227,7 +227,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::integer();
     ///
@@ -245,7 +245,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::bit_string();
     ///
@@ -263,7 +263,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::bit_string_constructed();
     ///
@@ -281,7 +281,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::octet_string();
     ///
@@ -299,7 +299,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::octet_string_constructed();
     ///
@@ -317,7 +317,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::null();
     ///
@@ -335,7 +335,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::object_identifier();
     ///
@@ -354,7 +354,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::object_descriptor();
     ///
@@ -372,7 +372,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::external();
     ///
@@ -390,7 +390,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::real();
     ///
@@ -408,7 +408,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::enumerated();
     ///
@@ -426,7 +426,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::embedded_pdv();
     ///
@@ -444,7 +444,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::utf8_string();
     ///
@@ -462,7 +462,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::utf8_string_constructed();
     ///
@@ -480,7 +480,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::relative_oid();
     ///
@@ -499,7 +499,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::sequence();
     ///
@@ -517,7 +517,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::set();
     ///
@@ -536,7 +536,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::numeric_string();
     ///
@@ -555,7 +555,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::numeric_string_constructed();
     ///
@@ -574,7 +574,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::printable_string();
     ///
@@ -593,7 +593,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::printable_string_constructed();
     ///
@@ -611,7 +611,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::t61_string();
     ///
@@ -629,7 +629,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::t61_string_constructed();
     ///
@@ -648,7 +648,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::videotex_string();
     ///
@@ -667,7 +667,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::videotex_string_constructed();
     ///
@@ -685,7 +685,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::ia5_string();
     ///
@@ -703,7 +703,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::ia5_string_constructed();
     ///
@@ -721,7 +721,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::utc_time();
     ///
@@ -739,7 +739,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::utc_time_constructed();
     ///
@@ -758,7 +758,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::generalized_time();
     ///
@@ -777,7 +777,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::generalized_time_constructed();
     ///
@@ -796,7 +796,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::graphic_string();
     ///
@@ -815,7 +815,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::graphic_string_constructed();
     ///
@@ -834,7 +834,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::visible_string();
     ///
@@ -853,7 +853,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::visible_string_constructed();
     ///
@@ -872,7 +872,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::general_string();
     ///
@@ -891,7 +891,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::general_string_constructed();
     ///
@@ -910,7 +910,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::universal_string();
     ///
@@ -929,7 +929,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::universal_string_constructed();
     ///
@@ -948,7 +948,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::character_string();
     ///
@@ -967,7 +967,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::character_string_constructed();
     ///
@@ -985,7 +985,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::bmp_string();
     ///
@@ -1003,7 +1003,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef, PCTag};
     ///
     /// let id = IdRef::bmp_string_constructed();
     ///
@@ -1044,7 +1044,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
@@ -1076,7 +1076,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
@@ -1092,7 +1092,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 0);
@@ -1108,7 +1108,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 0);
@@ -1124,7 +1124,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Private, PCTag::Primitive, 0);
@@ -1140,7 +1140,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
@@ -1162,7 +1162,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
@@ -1178,7 +1178,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Universal, PCTag::Constructed, 0);
@@ -1194,7 +1194,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 49);
@@ -1262,7 +1262,7 @@ impl Id {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // Creates 'Universal Integer'
     /// let _id = Id::new(ClassTag::Universal, PCTag::Primitive, 2);
