@@ -404,6 +404,17 @@ impl AsRef<[u8]> for StackBuffer {
     }
 }
 
+impl Index<usize> for StackBuffer {
+    type Output = u8;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        unsafe {
+            let ptr = self.as_ptr().add(index);
+            &*ptr
+        }
+    }
+}
+
 impl StackBuffer {
     /// # Safety
     ///
