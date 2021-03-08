@@ -378,3 +378,13 @@ mod buffer_tests {
         }
     }
 }
+
+#[derive(Clone, Copy)]
+pub struct StackBuffer {
+    buffer: [u8; Self::CAPACITY],
+    len_: u8,
+}
+
+impl StackBuffer {
+    const CAPACITY: usize = size_of::<i128>();
+}
