@@ -402,6 +402,10 @@ impl StackBuffer {
     pub const fn len(&self) -> usize {
         self.len_ as usize
     }
+
+    pub const fn capacity(&self) -> usize {
+        Self::CAPACITY
+    }
 }
 
 #[cfg(test)]
