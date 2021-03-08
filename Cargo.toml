@@ -7,5 +7,12 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 license = "LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause"
+description = "Rust BER and DER serializer/deserializer."
+documantation = "https://wbcchsyn.github.io/rust-bsn1/bsn1/"
+readme = "README.md"
+repository = "https://github.com/wbcchsyn/rust-bsn1.git"
+keywords = ["ASN.1", "ASN1", "DER", "BER", "serializer"]
+categories = ["encoding"]
+
 
 [dependencies]
