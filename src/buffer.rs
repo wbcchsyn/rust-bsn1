@@ -327,7 +327,7 @@ impl Buffer {
 }
 
 #[cfg(test)]
-mod tests {
+mod buffer_tests {
     use super::*;
 
     #[test]
@@ -376,5 +376,121 @@ mod tests {
             let expected: &[u8] = vec.as_ref();
             assert_eq!(expected, buffer.as_ref());
         }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct StackBuffer {
+    buffer: [u8; Self::CAPACITY],
+    len_: u8,
+}
+
+impl StackBuffer {
+    const CAPACITY: usize = size_of::<i128>();
+}
+
+impl StackBuffer {
+    pub const fn new() -> Self {
+        Self {
+            buffer: [0; Self::CAPACITY],
+            len_: 0,
+        }
+    }
+}
+
+impl AsRef<[u8]> for StackBuffer {
+    #[inline]
+    fn as_ref(&self) -> &[u8] {
+        unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len()) }
+    }
+}
+
+impl Index<usize> for StackBuffer {
+    type Output = u8;
+
+    #[inline]
+    fn index(&self, index: usize) -> &Self::Output {
+        unsafe {
+            let ptr = self.as_ptr().add(index);
+            &*ptr
+        }
+    }
+}
+
+impl IndexMut<usize> for StackBuffer {
+    #[inline]
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        unsafe {
+            let ptr = self.as_mut_ptr().add(index);
+            &mut *ptr
+        }
+    }
+}
+
+impl StackBuffer {
+    /// # Safety
+    ///
+    /// The behavior is undefined if the length will exceeds the capacity.
+    #[inline]
+    pub unsafe fn push(&mut self, val: u8) {
+        debug_assert!(self.len() < self.capacity());
+
+        self.buffer[self.len()] = val;
+        self.len_ += 1;
+    }
+
+    #[inline]
+    pub fn as_ptr(&self) -> *const u8 {
+        self.buffer.as_ptr()
+    }
+
+    #[inline]
+    pub fn as_mut_ptr(&mut self) -> *mut u8 {
+        self.buffer.as_mut_ptr()
+    }
+
+    #[inline]
+    pub const fn len(&self) -> usize {
+        self.len_ as usize
+    }
+
+    #[inline]
+    pub unsafe fn set_len(&mut self, new_len: usize) {
+        debug_assert!(new_len <= self.capacity());
+
+        self.len_ = new_len as u8
+    }
+
+    #[inline]
+    pub const fn capacity(&self) -> usize {
+        Self::CAPACITY
+    }
+}
+
+#[cfg(test)]
+mod stack_buffer_tests {
+    use super::*;
+
+    #[test]
+    fn new() {
+        let buffer = StackBuffer::new();
+        assert_eq!(0, buffer.len());
+    }
+
+    #[test]
+    fn push() {
+        let mut buffer = StackBuffer::new();
+        let mut v = Vec::new();
+
+        for i in 0..StackBuffer::CAPACITY {
+            assert_eq!(i, buffer.len());
+
+            unsafe { buffer.push(i as u8) };
+            v.push(i as u8);
+
+            assert_eq!(v.as_ref() as &[u8], buffer.as_ref());
+        }
+
+        assert_eq!(buffer.capacity(), buffer.len());
     }
 }

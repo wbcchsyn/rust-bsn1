@@ -53,7 +53,7 @@
 
 //! functions and enum about 'Length' octet of 'ASN.1.'
 
-use crate::{Buffer, Error};
+use crate::{Error, StackBuffer};
 use core::mem::size_of;
 
 /// `Length` represents ASN.1 length.
@@ -150,7 +150,7 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
 /// ```
 #[inline]
 pub fn to_bytes(length: &Length) -> impl AsRef<[u8]> {
-    let mut buffer = Buffer::new();
+    let mut buffer = StackBuffer::new();
 
     match *length {
         Length::Indefinite => unsafe { buffer.push(Length::INDEFINITE) },
