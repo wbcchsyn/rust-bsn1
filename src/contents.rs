@@ -2,20 +2,20 @@
 //
 // "LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause"
 //
-// This is part of x690
+// This is part of bsn1
 //
-//  x690 is free software: you can redistribute it and/or modify
+//  bsn1 is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU Lesser General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  x690 is distributed in the hope that it will be useful,
+//  bsn1 is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU Lesser General Public License for more details.
 //
 //  You should have received a copy of the GNU Lesser General Public License
-//  along with x690.  If not, see <http://www.gnu.org/licenses/>.
+//  along with bsn1.  If not, see <http://www.gnu.org/licenses/>.
 //
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,13 +56,13 @@
 use crate::{Buffer, Error};
 use core::mem::{size_of, size_of_val};
 
-/// Serializes integer as 'ASN.1 contents.'
+/// Serializes integer as contents octets.
 ///
-/// This function is common for 'BER', 'DER', and 'CER'.
+/// This function is common for BER, DER, and CER.
 ///
 /// # Wargnings
 ///
-/// This function assumes that the CPU adopt 2's complement to represent negative value.
+/// This function assumes that the CPU adopts 2's complement to represent negative value.
 pub fn from_integer(val: i128) -> impl AsRef<[u8]> {
     if val < 0 {
         from_integer_negative(val)
@@ -115,13 +115,13 @@ fn from_integer_negative(val: i128) -> Buffer {
     buffer
 }
 
-/// Parses `bytes` as contents of 'ASN.1 Integer.'
+/// Parses `bytes` as a contents of Integer.
 ///
-/// This function is common for 'BER', 'DER', and 'CER'.
+/// This function is common for BER, DER, and CER.
 ///
 /// # Wargnings
 ///
-/// This function assumes that the CPU adopt 2's complement to represent negative value.
+/// This function assumes that the CPU adopts 2's complement to represent negative value.
 pub fn to_integer(bytes: &[u8]) -> Result<i128, Error> {
     if size_of::<i128>() < bytes.len() {
         Err(Error::OverFlow)
@@ -143,9 +143,9 @@ pub fn to_integer(bytes: &[u8]) -> Result<i128, Error> {
     }
 }
 
-/// Serializes boolean as 'ASN.1 contents.'
+/// Serializes boolean as contents octets.
 ///
-/// This function is common for 'BER', 'DER', and 'CER'.
+/// This function is common for BER, DER, and CER.
 pub fn from_bool(val: bool) -> impl AsRef<[u8]> {
     if val {
         [0xff] as [u8; 1]
@@ -154,10 +154,10 @@ pub fn from_bool(val: bool) -> impl AsRef<[u8]> {
     }
 }
 
-/// Parses `bytes` as 'ASN.1 BER contents.'
+/// Parses `bytes` as a BER contents of Bool.
 ///
-/// This function is valid only for the contents of 'BER', and not applied to the contents of
-/// 'DER' nor 'CER.'
+/// This function is valid only for the contents of BER, and not applied to the contents of
+/// DER nor CER.
 pub fn to_bool_ber(bytes: &[u8]) -> Result<bool, Error> {
     if bytes.is_empty() {
         Err(Error::UnTerminatedBytes)
@@ -170,9 +170,9 @@ pub fn to_bool_ber(bytes: &[u8]) -> Result<bool, Error> {
     }
 }
 
-/// Parses `bytes` as 'ASN.1 DER contents.'
+/// Parses `bytes` as a DER contents of Bool.
 ///
-/// This function is valid only for the contents of 'DER', and not applied to the contents of
+/// This function is valid only for the contents of DER, and not applied to the contents of
 /// 'CER' nor 'BER.'
 pub fn to_bool_der(bytes: &[u8]) -> Result<bool, Error> {
     if bytes.is_empty() {

@@ -2,20 +2,20 @@
 //
 // "LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause"
 //
-// This is part of x690
+// This is part of bsn1
 //
-//  x690 is free software: you can redistribute it and/or modify
+//  bsn1 is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU Lesser General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  x690 is distributed in the hope that it will be useful,
+//  bsn1 is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU Lesser General Public License for more details.
 //
 //  You should have received a copy of the GNU Lesser General Public License
-//  along with x690.  If not, see <http://www.gnu.org/licenses/>.
+//  along with bsn1.  If not, see <http://www.gnu.org/licenses/>.
 //
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,9 +56,9 @@ use core::convert::TryFrom;
 use core::ops::Deref;
 use std::borrow::Borrow;
 
-/// `DerRef` represents 'DER' octets in 'ASN.1.'
+/// `DerRef` is a wrapper of `[u8]` and represents DER.
 ///
-/// This struct is 'Unsized', so usually user uses a reference to the instance.
+/// This struct is 'Unsized', and user usually uses a reference to the instance.
 #[derive(Debug, PartialEq, Eq)]
 pub struct DerRef {
     bytes: [u8],
@@ -70,6 +70,13 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
     /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a reference to `DerRef` .
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function will accept
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
+    /// constructed Octet String DER.
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let id = <&IdRef>::try_from(bytes)?;
         let parsing = &bytes[id.as_ref().len()..];
@@ -95,22 +102,58 @@ impl DerRef {
     ///
     /// `bytes` must not include any extra octet.
     ///
+    /// If it is sure that `bytes` starts with DER octets, but if some extra octet(s) may added
+    /// after that, use [`from_bytes_starts_with_unchecked`] instead.
+    /// If it is not sure whether `bytes` starts with DER octets or not, use [`TryFrom`]
+    /// implementation.
+    ///
+    /// [`from_bytes_starts_with_unchecked`]: #method.from_bytes_starts_with_unchecked
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    ///
     /// # Safety
     ///
-    /// The behavior is undefined if `bytes` is not formatted as a 'DER'.
+    /// The behavior is undefined if `bytes` is not formatted as a DER.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, DerRef, IdRef};
+    ///
+    /// let der = Der::new(IdRef::octet_string(), &[]);
+    /// let der_ref = unsafe { DerRef::from_bytes_unchecked(der.as_ref()) };
+    /// assert_eq!(der.as_ref() as &DerRef, der_ref);
+    /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         let ptr = bytes as *const [u8];
         let ptr = ptr as *const Self;
         &*ptr
     }
 
-    /// Provides a reference from `bytes` that starts with an 'ASN.1 DER' octets.
+    /// Provides a reference from `bytes` that starts with a DER.
     ///
     /// `bytes` may include some extra octet(s) at the end.
+    ///
+    /// If it is not sure whether `bytes` starts with DER octets or not, use [`TryFrom`]
+    /// implementation.
     ///
     /// # Safety
     ///
     /// The behavior is undefined if `bytes` does not start with 'ASN.1 DER' octets.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, DerRef, IdRef};
+    ///
+    /// let der = Der::new(IdRef::octet_string(), &[]);
+    /// let mut bytes = Vec::from(der.as_ref() as &[u8]);
+    /// bytes.extend(&[1, 2, 3]);
+    ///
+    /// let der_ref = unsafe { DerRef::from_bytes_starts_with_unchecked(bytes.as_ref()) };
+    /// assert_eq!(der.as_ref() as &DerRef, der_ref);
+    /// ```
     pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> &Self {
         let id = identifier::shrink_to_fit_unchecked(bytes);
         let parsing = &bytes[id.len()..];
@@ -149,6 +192,19 @@ impl ToOwned for DerRef {
 
 impl DerRef {
     /// Returns a reference to `IdRef` of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents = &[1, 2, 3];
+    ///
+    /// // 'DER' implements 'Deref<Target=DerRef>'
+    /// let der = Der::new(id, contents);
+    /// assert_eq!(id, der.id());
+    /// ```
     pub fn id(&self) -> &IdRef {
         unsafe {
             let bytes = identifier::shrink_to_fit_unchecked(&self.bytes);
@@ -156,10 +212,28 @@ impl DerRef {
         }
     }
 
-    /// Returns a `Length` to represent the length of contents.
+    /// Returns `Length` to represent the length of contents.
     ///
-    /// Note that 'DER' does not allow 'Indefinite Length.'
+    /// Note that DER does not allow indefinite Length.
     /// The return value must be `Length::Definite` .
+    ///
+    /// # Warnings
+    ///
+    /// `Length` stands for 'the length of the contents' in DER.
+    /// The length of the total bytes is greater than the value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef, Length};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents = &[1, 2, 3];
+    ///
+    /// // 'DER' implements 'Deref<Target=DerRef>'
+    /// let der = Der::new(id, contents);
+    /// assert_eq!(Length::Definite(contents.len()), der.length());
+    /// ```
     pub fn length(&self) -> Length {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
@@ -167,6 +241,19 @@ impl DerRef {
     }
 
     /// Returns a reference to 'contents octets' of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents = &[1, 2, 3];
+    ///
+    /// // 'DER' implements 'Deref<Target=DerRef>'
+    /// let der = Der::new(id, contents);
+    /// assert_eq!(contents, der.contents());
+    /// ```
     pub fn contents(&self) -> &[u8] {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
@@ -174,7 +261,7 @@ impl DerRef {
     }
 }
 
-/// `Der` owns `DerRef` and represents 'DER' octets in 'ASN.1.'
+/// `Der` owns `DerRef` and represents DER.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Der {
     buffer: Buffer,
@@ -189,9 +276,16 @@ impl From<&DerRef> for Der {
 impl TryFrom<&[u8]> for Der {
     type Error = Error;
 
-    /// Parses `bytes` starting with octets of 'ASN.1 DER' and builds a new instance.
+    /// Parses `bytes` starting with DER octets and builds a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
+    /// constructed Octet String DER.
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         let der_ref = <&DerRef>::try_from(bytes)?;
         Ok(der_ref.to_owned())
@@ -200,6 +294,13 @@ impl TryFrom<&[u8]> for Der {
 
 impl Der {
     /// Creates a new instance from `id` and `contents` .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function will construct a
+    /// new instance even if `id` represenets constructed 'Octet String.'
     pub fn new(id: &IdRef, contents: &[u8]) -> Self {
         let len = Length::Definite(contents.len());
         let len = length::to_bytes(&len);
@@ -267,7 +368,7 @@ pub fn disassemble_der(der: Der) -> Buffer {
 /// Empty contents.
 ///
 /// ```
-/// use x690::{Der, DerBuilder, IdRef, Length};
+/// use bsn1::{Der, DerBuilder, IdRef, Length};
 ///
 /// let id = IdRef::octet_string();
 ///
@@ -283,7 +384,7 @@ pub fn disassemble_der(der: Der) -> Buffer {
 /// Not empty contents
 ///
 /// ```
-/// use x690::{Der, DerBuilder, IdRef, Length};
+/// use bsn1::{Der, DerBuilder, IdRef, Length};
 ///
 /// let id = IdRef::octet_string();
 ///
@@ -320,11 +421,24 @@ impl DerBuilder {
     /// Creates a new instance to build `Der` with `id` and contents whose length equals to
     /// `contents_len` .
     ///
-    /// `contents_len` must be `Length::Definite` because 'DER' does not allow indefinite length.
+    /// `contents_len` must be `Length::Definite` because DER does not allow indefinite length.
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function will construct a
+    /// new instance even if `id` represenets constructed 'Octet String.'
     ///
     /// # Panics
     ///
     /// Panics if `contents_len` equals `Length::Indefinite` .
+    ///
+    /// # Examples
+    ///
+    /// See examples for the [`struct`] .
+    ///
+    /// [`struct`]: struct.DerBuilder.html
     pub fn new(id: &IdRef, contents_len: Length) -> Self {
         let length = length::to_bytes(&contents_len);
         let contents_len = match contents_len {
@@ -347,10 +461,15 @@ impl DerBuilder {
     ///
     /// # Panics
     ///
-    /// Panics if the accumerated length of the 'contents' exceeds `contents_len` that passed to
+    /// Panics if the accumerated length of the 'contents' exceeds `contents_len` passed to
     /// the constructor function [`new`] as the argument.
     ///
+    /// # Examples
+    ///
+    /// See examples for the [`struct`] .
+    ///
     /// [`new`]: #method.new
+    /// [`struct`]: struct.DerBuilder.html
     pub fn extend_contents<B>(&mut self, bytes: B)
     where
         B: AsRef<[u8]>,
@@ -369,10 +488,15 @@ impl DerBuilder {
     ///
     /// # Panics
     ///
-    /// Panics if the accumerated length of the 'contents' differs from `contents_len` that passed
+    /// Panics if the accumerated length of the 'contents' differs from `contents_len` passed
     /// to the constructor function [`new`] as the argument.
     ///
+    /// # Examples
+    ///
+    /// See examples for the [`struct`] .
+    ///
     /// [`new`]: #method.new
+    /// [`struct`]: struct.DerBuilder.html
     pub fn finish(self) -> Der {
         assert_eq!(self.cursor, self.buffer.len());
 
@@ -390,13 +514,20 @@ impl DerBuilder {
 ///
 /// `id_n` and `contents_n` must be bounded on `AsRef<[u8]>` .
 ///
+/// # Warnings
+///
+/// ASN.1 does not allow some universal identifier for DER, however, this macro accepts
+/// such an identifier.
+/// For example, 'Octet String' must be primitive in DER, but this function will construct a
+/// new instance even if `id` represenets constructed 'Octet String.'
+///
 /// # Examples
 ///
 /// Empty contents.
 ///
 /// ```
-/// # #[macro_use] extern crate x690;
-/// use x690::{Der, IdRef};
+/// # #[macro_use] extern crate bsn1;
+/// use bsn1::{Der, IdRef};
 ///
 /// let id = IdRef::sequence();
 /// let expected = Der::new(id, &[]);
@@ -408,8 +539,8 @@ impl DerBuilder {
 /// Sequence of 2 DERs.
 ///
 /// ```
-/// # #[macro_use] extern crate x690;
-/// use x690::{contents, DerRef, IdRef};
+/// # #[macro_use] extern crate bsn1;
+/// use bsn1::{contents, DerRef, IdRef};
 /// use std::convert::TryFrom;
 ///
 /// let id = IdRef::sequence();
@@ -436,7 +567,7 @@ impl DerBuilder {
 macro_rules! constructed_der {
     ($id:expr $(, ($id_n:expr, $contents_n:expr))*) => {{
         let id = $id;
-        __x690__expand_constructed_der!($(($id_n, $contents_n)),* ; id)
+        __bsn1__expand_constructed_der!($(($id_n, $contents_n)),* ; id)
     }};
     ($id:expr $(, ($id_n:expr, $contents_n:expr))*,) => {
         constructed_der!($id $(($id_n, $contents_n)),*)
@@ -445,9 +576,9 @@ macro_rules! constructed_der {
 
 #[doc(hidden)]
 #[macro_export]
-macro_rules! __x690__expand_constructed_der {
+macro_rules! __bsn1__expand_constructed_der {
     (; $id:tt $($contents:tt)*) => {{
-        use x690::{DerBuilder, Length};
+        use bsn1::{DerBuilder, Length};
 
         let contents: &[&[u8]] = &[$($contents),*];
         let contents_len = contents.iter().fold(0, |acc, &bytes| acc + bytes.len());
@@ -460,7 +591,7 @@ macro_rules! __x690__expand_constructed_der {
     }};
 
     (($id_1:expr, $contents_1:expr) $(, ($id_n:expr, $contents_n:expr))* ; $id:tt $($acc:tt)*) => {{
-        use x690::{length_to_bytes, Length};
+        use bsn1::{length_to_bytes, Length};
 
         let id_1 = $id_1;
         let id_1: &[u8] = id_1.as_ref();
@@ -472,7 +603,7 @@ macro_rules! __x690__expand_constructed_der {
         let length_1 = length_to_bytes(&length_1);
         let length_1: &[u8] = length_1.as_ref();
 
-        __x690__expand_constructed_der!(
+        __bsn1__expand_constructed_der!(
             $(($id_n, $contents_n)),*
             ;
             $id

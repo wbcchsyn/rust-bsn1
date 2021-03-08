@@ -2,20 +2,20 @@
 //
 // "LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause"
 //
-// This is part of x690
+// This is part of bsn1
 //
-//  x690 is free software: you can redistribute it and/or modify
+//  bsn1 is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU Lesser General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  x690 is distributed in the hope that it will be useful,
+//  bsn1 is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU Lesser General Public License for more details.
 //
 //  You should have received a copy of the GNU Lesser General Public License
-//  along with x690.  If not, see <http://www.gnu.org/licenses/>.
+//  along with bsn1.  If not, see <http://www.gnu.org/licenses/>.
 //
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,7 +56,7 @@ use core::convert::TryFrom;
 use core::ops::Deref;
 use std::borrow::Borrow;
 
-/// `ClassTag` is u8 enum for Tag class of Identifier in 'ASN.1.'
+/// `ClassTag` represents Tag class of identifier.
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ClassTag {
@@ -70,7 +70,7 @@ pub enum ClassTag {
     Private = 0xc0,
 }
 
-/// `PCTag` is u8 enum for Private/Constructed flag of Identifier in 'ASN.1.'
+/// `PCTag` represents Private/Constructed flag of identifier.
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PCTag {
@@ -80,9 +80,9 @@ pub enum PCTag {
     Constructed = 0x20,
 }
 
-/// `IdRef` represents Identifier octets in 'ASN.1.'
+/// `IdRef` is a wrapper of `[u8]` represents Identifier.
 ///
-/// This struct is `Unsized` , so usually thay use a reference to it.
+/// This struct is `Unsized` , and user will usually use a reference to it.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct IdRef {
     bytes: [u8],
@@ -97,10 +97,15 @@ impl IdRef {
 impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
     type Error = Error;
 
-    /// Parses `bytes` and tries to build a new instance.
+    /// Parses `bytes` starts with identifier and tries to build a new instance.
     ///
     /// This function ignores the extra octet(s) at the end if any.
-    /// i.e. This function returns `Ok` if `bytes` starts with octets of ASN.1 identifier.
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
+    /// functions returns `Ok` .
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
 
@@ -157,297 +162,855 @@ impl IdRef {
     /// Builds instance from `bytes` without any sanitize.
     /// `bytes` must not include any extra octets.
     ///
+    /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
+    /// implementation instead.
+    ///
     /// # Safety
     ///
     /// The behavior is undefined if the format of `bytes` is not right.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    ///
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// let idref = unsafe { IdRef::from_bytes_unchecked(id.as_ref() as &[u8]) };
+    /// assert_eq!(id.as_ref() as &IdRef, idref);
+    /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         let ptr = bytes as *const [u8];
         let ptr = ptr as *const IdRef;
         &*ptr
     }
 
-    /// Returns an instance representing 'Universal EOC' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal EOC.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::eoc();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x00, id.number().unwrap());
+    /// ```
     pub fn eoc() -> &'static Self {
         const BYTES: [u8; 1] = [0x00];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Boolean' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Boolean.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::boolean();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x01, id.number().unwrap());
+    /// ```
     pub fn boolean() -> &'static Self {
         const BYTES: [u8; 1] = [0x01];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Integer' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Integer.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::integer();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x02, id.number().unwrap());
+    /// ```
     pub fn integer() -> &'static Self {
         const BYTES: [u8; 1] = [0x02];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Bit String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Bit String' with primitive flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::bit_string();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x03, id.number().unwrap());
+    /// ```
     pub fn bit_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x03];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed Bit String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Bit String' with constructed flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::bit_string_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x03, id.number().unwrap());
+    /// ```
     pub fn bit_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x23];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Octet String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Octet String' with primitive flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::octet_string();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x04, id.number().unwrap());
+    /// ```
     pub fn octet_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x04];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed Octet String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Octet String' with constructed flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::octet_string_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x04, id.number().unwrap());
+    /// ```
     pub fn octet_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x24];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Null' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Null.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::null();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x05, id.number().unwrap());
+    /// ```
     pub fn null() -> &'static Self {
         const BYTES: [u8; 1] = [0x05];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Object Identifier' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Object Identifier.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::object_identifier();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x06, id.number().unwrap());
+    /// ```
     pub fn object_identifier() -> &'static Self {
         const BYTES: [u8; 1] = [0x06];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Object Descriptor' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Object Descriptor' with primitive
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::object_descriptor();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x07, id.number().unwrap());
+    /// ```
     pub fn object_descriptor() -> &'static Self {
         const BYTES: [u8; 1] = [0x07];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed Object Descriptor' defined in
-    /// 'ASN.1.'
-    pub fn object_descriptor_constructed() -> &'static Self {
-        const BYTES: [u8; 1] = [0x27];
-        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
-    }
-
-    /// Returns an instance representing 'Universal External' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal External.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::external();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x08, id.number().unwrap());
+    /// ```
     pub fn external() -> &'static Self {
         const BYTES: [u8; 1] = [0x28];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Real' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Real.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::real();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x09, id.number().unwrap());
+    /// ```
     pub fn real() -> &'static Self {
-        const BYTES: [u8; 1] = [0x29];
+        const BYTES: [u8; 1] = [0x09];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Enumerated' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Enumerated.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::enumerated();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x0a, id.number().unwrap());
+    /// ```
     pub fn enumerated() -> &'static Self {
         const BYTES: [u8; 1] = [0x0a];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Embedded PDV' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Embedded PDV.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::embedded_pdv();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x0b, id.number().unwrap());
+    /// ```
     pub fn embedded_pdv() -> &'static Self {
         const BYTES: [u8; 1] = [0x2b];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal UTF8 String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal UTF8 String' with primitive flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::utf8_string();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x0c, id.number().unwrap());
+    /// ```
     pub fn utf8_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x0c];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed UTF8 String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal UTF8 String' with constructed flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::utf8_string_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x0c, id.number().unwrap());
+    /// ```
     pub fn utf8_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x2c];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Relative OID' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal UTF8 OID.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::relative_oid();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x0d, id.number().unwrap());
+    /// ```
     pub fn relative_oid() -> &'static Self {
         const BYTES: [u8; 1] = [0x0d];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Universal Time' defined in 'ASN.1.'
-    pub fn universal_time() -> &'static Self {
-        const BYTES: [u8; 1] = [0x0e];
-        unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
-    }
-
-    /// Returns an instance representing 'Universal Sequence' and 'Sequence of' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Sequence' or 'Universal Sequence
+    /// of.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::sequence();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x10, id.number().unwrap());
+    /// ```
     pub fn sequence() -> &'static Self {
         const BYTES: [u8; 1] = [0x30];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Set' and 'Set of' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Set' or 'Universal Set of.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::set();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x11, id.number().unwrap());
+    /// ```
     pub fn set() -> &'static Self {
         const BYTES: [u8; 1] = [0x31];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Numeric String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Numeric String' with primitive
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::numeric_string();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x12, id.number().unwrap());
+    /// ```
     pub fn numeric_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x12];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed Numeric String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Numeric String' with constructed
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::numeric_string_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x12, id.number().unwrap());
+    /// ```
     pub fn numeric_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x32];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Printable String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Printable String' with primitive
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::printable_string();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x13, id.number().unwrap());
+    /// ```
     pub fn printable_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x13];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed Printable String' defined in
-    /// 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Printable String' with constructed
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::printable_string_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x13, id.number().unwrap());
+    /// ```
     pub fn printable_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x33];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal T61 String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal T61 String' with primitive flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::t61_string();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x14, id.number().unwrap());
+    /// ```
     pub fn t61_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x14];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed T61 String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal T61 String' with constructed flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::t61_string_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x14, id.number().unwrap());
+    /// ```
     pub fn t61_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x34];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Videotex String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Videotex String' with primitive
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::videotex_string();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x15, id.number().unwrap());
+    /// ```
     pub fn videotex_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x15];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed Videotex String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Videotex String' with constructed
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::videotex_string_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x15, id.number().unwrap());
+    /// ```
     pub fn videotex_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x35];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal IA5 String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal IA5 String' with primitive flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::ia5_string();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x16, id.number().unwrap());
+    /// ```
     pub fn ia5_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x16];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed IA5 String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal IA5 String' with constructed flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::ia5_string_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x16, id.number().unwrap());
+    /// ```
     pub fn ia5_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x36];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal UTC Time' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal UTC Time' with primitive flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::utc_time();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x17, id.number().unwrap());
+    /// ```
     pub fn utc_time() -> &'static Self {
         const BYTES: [u8; 1] = [0x17];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed UTC Time' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal UTC Time' with constructed flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::utc_time_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x17, id.number().unwrap());
+    /// ```
     pub fn utc_time_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x37];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Generalized Time' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Generalized Time' with primitive
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::generalized_time();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x18, id.number().unwrap());
+    /// ```
     pub fn generalized_time() -> &'static Self {
         const BYTES: [u8; 1] = [0x18];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed Generalized Time' defined in
-    /// 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Generalized Time' with constructed
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::generalized_time_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x18, id.number().unwrap());
+    /// ```
     pub fn generalized_time_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x38];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Graphic String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Graphic String' with primitive
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::graphic_string();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x19, id.number().unwrap());
+    /// ```
     pub fn graphic_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x19];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed Graphic String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Graphic String' with constructed
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::graphic_string_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x19, id.number().unwrap());
+    /// ```
     pub fn graphic_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x39];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Visible String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Visible String' with primitive
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::visible_string();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x1a, id.number().unwrap());
+    /// ```
     pub fn visible_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1a];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed Visible String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Visible String' with constructed
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::visible_string_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x1a, id.number().unwrap());
+    /// ```
     pub fn visible_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3a];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal General String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal General String' with primitive
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::general_string();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x1b, id.number().unwrap());
+    /// ```
     pub fn general_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1b];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed General String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal General String' with constructed
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::general_string_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x1b, id.number().unwrap());
+    /// ```
     pub fn general_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3b];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Universal String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Universal String' with primitive
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::universal_string();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x1c, id.number().unwrap());
+    /// ```
     pub fn universal_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1c];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed Universal String' defined in
-    /// 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Universal String' with constructed
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::universal_string_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x1c, id.number().unwrap());
+    /// ```
     pub fn universal_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3c];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Character String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Character String' with primitive
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::character_string();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x1d, id.number().unwrap());
+    /// ```
     pub fn character_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1d];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed Character String' defined in
-    /// 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal Character String' with constructed
+    /// flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::character_string_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x1d, id.number().unwrap());
+    /// ```
     pub fn character_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3d];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal BMP String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal BMP String' with primitive flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::bmp_string();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Primitive, id.pc());
+    /// assert_eq!(0x1e, id.number().unwrap());
+    /// ```
     pub fn bmp_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1e];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Returns an instance representing 'Universal Constructed BMP String' defined in 'ASN.1.'
+    /// Provides a reference to `IdRef` representing 'Universal BMP String' with constructed flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, IdRef, PCTag};
+    ///
+    /// let id = IdRef::bmp_string_constructed();
+    ///
+    /// assert_eq!(ClassTag::Universal, id.class());
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(0x1e, id.number().unwrap());
+    /// ```
     pub fn bmp_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3e];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
@@ -481,7 +1044,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
@@ -513,7 +1076,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
@@ -529,7 +1092,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 0);
@@ -545,7 +1108,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 0);
@@ -561,7 +1124,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Private, PCTag::Primitive, 0);
@@ -577,7 +1140,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
@@ -599,7 +1162,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
@@ -615,7 +1178,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Universal, PCTag::Constructed, 0);
@@ -631,7 +1194,7 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 49);
@@ -657,7 +1220,11 @@ impl IdRef {
     }
 }
 
-/// `Id` owns `IdRef` and represents Identifier octets in 'ASN.1.'
+/// `Id` owns `IdRef` and represents Identifier.
+///
+/// Note that this struct may allocate heap memory if the number is very large, because ASN.1 does
+/// not limit the length of identifier bytes, however, it uses only stack memory at least the
+/// number equals to or is less than `usize::MAX` .
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id {
     buffer: Buffer,
@@ -666,10 +1233,18 @@ pub struct Id {
 impl TryFrom<&[u8]> for Id {
     type Error = Error;
 
-    /// Parses `bytes` and tries to build a new instance.
+    /// Parses `bytes` starts with identifier octets and tries to build a new instance.
     ///
     /// This function ignores the extra octet(s) at the end if any.
-    /// i.e. This function returns `Ok` if `bytes` starts with octets of ASN.1 identifier.
+    ///
+    /// # Warnings
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
+    /// functions returns `Ok` .
+    ///
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         <&IdRef>::try_from(bytes).map(|idref| idref.to_owned())
     }
@@ -678,10 +1253,16 @@ impl TryFrom<&[u8]> for Id {
 impl Id {
     /// Creates a new instance from `class` , `pc` , and `number` .
     ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
+    /// function accepts such a number.
+    ///
     /// # Examples
     ///
     /// ```
-    /// use x690::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // Creates 'Universal Integer'
     /// let _id = Id::new(ClassTag::Universal, PCTag::Primitive, 2);

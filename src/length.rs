@@ -2,20 +2,20 @@
 //
 // "LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause"
 //
-// This is part of x690
+// This is part of bsn1
 //
-//  x690 is free software: you can redistribute it and/or modify
+//  bsn1 is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU Lesser General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  x690 is distributed in the hope that it will be useful,
+//  bsn1 is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU Lesser General Public License for more details.
 //
 //  You should have received a copy of the GNU Lesser General Public License
-//  along with x690.  If not, see <http://www.gnu.org/licenses/>.
+//  along with bsn1.  If not, see <http://www.gnu.org/licenses/>.
 //
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,16 +56,16 @@
 use crate::{Buffer, Error};
 use core::mem::size_of;
 
-/// `Length` represents the length octets of 'ASN.1'.
+/// `Length` represents ASN.1 length.
 ///
-/// Note that `Length` represents the length of the contents, not total length of 'BER' nor
-/// 'DER' nor 'CER'.
-/// ('BER', 'DER', and 'CER' are constituted of identifier, length, and contents.)
+/// Note that `Length` represents the byte count of the contents in ASN.1.
+/// The total byte size of BER, DER, and CER is greater than that.
+/// (BER, DER, and CER are constituted of identifier, length, and contents.)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Length {
     /// Represents 'Indefinite' length.
     ///
-    /// 'Indefinite' is only for 'BER', and the contents ends with 'EOC' octets.
+    /// 'Indefinite' is only for 'BER', and the contents must end with 'EOC' octets.
     Indefinite,
     /// 'Definite' is for 'BER', 'DER', and 'CER', and represents the byte count of the contents.
     Definite(usize),
@@ -77,16 +77,27 @@ impl Length {
     const INDEFINITE: u8 = 0x80;
 }
 
-/// Tries to parse `bytes` as 'ASN.1 Length.'
+/// Tries to parse `bytes` starting with 'length' and returns `Length` .
 ///
 /// This function ignores extra octets at the end of `bytes` .
-/// i.e. this function returns `Ok` if `bytes` starts with octets representing 'ASN.1 Length.'
 ///
 /// # Warnings
 ///
 /// This function may return `Ok(Length::Indefinite)` , however, 'DER' and 'CER' don't allow such
 /// value.
 /// It does not always mean `bytes` is valid that this function returns `Ok` .
+///
+/// # Examples
+///
+/// ```
+/// use bsn1::{length_to_bytes, try_length_from, Length};
+///
+/// let length = Length::Definite(3);
+/// let bytes = length_to_bytes(&length);
+///
+/// let deserialized = try_length_from(bytes.as_ref()).unwrap();
+/// assert_eq!(length, deserialized.0);
+/// ```
 pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
     let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
     let bytes = &bytes[1..];
@@ -122,6 +133,20 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
 }
 
 /// Serializes `length` .
+///
+/// This function won't allocate heap memory.
+///
+/// # Examples
+///
+/// ```
+/// use bsn1::{length_to_bytes, try_length_from, Length};
+///
+/// let length = Length::Definite(3);
+/// let bytes = length_to_bytes(&length);
+///
+/// let deserialized = try_length_from(bytes.as_ref()).unwrap();
+/// assert_eq!(length, deserialized.0);
+/// ```
 pub fn to_bytes(length: &Length) -> impl AsRef<[u8]> {
     let mut buffer = Buffer::new();
 
