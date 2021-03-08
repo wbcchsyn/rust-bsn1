@@ -398,6 +398,12 @@ impl StackBuffer {
     }
 }
 
+impl AsRef<[u8]> for StackBuffer {
+    fn as_ref(&self) -> &[u8] {
+        unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len()) }
+    }
+}
+
 impl StackBuffer {
     /// # Safety
     ///
@@ -439,10 +445,15 @@ mod stack_buffer_tests {
     #[test]
     fn push() {
         let mut buffer = StackBuffer::new();
+        let mut v = Vec::new();
 
         for i in 0..StackBuffer::CAPACITY {
             assert_eq!(i, buffer.len());
+
             unsafe { buffer.push(i as u8) };
+            v.push(i as u8);
+
+            assert_eq!(v.as_ref() as &[u8], buffer.as_ref());
         }
 
         assert_eq!(buffer.capacity(), buffer.len());
