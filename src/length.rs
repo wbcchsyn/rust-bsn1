@@ -151,11 +151,11 @@ pub fn to_bytes(length: &Length) -> impl AsRef<[u8]> {
     let mut buffer = Buffer::new();
 
     match *length {
-        Length::Indefinite => buffer.push(Length::INDEFINITE),
+        Length::Indefinite => unsafe { buffer.push(Length::INDEFINITE) },
         Length::Definite(mut val) => {
             if val <= Length::MAX_SHORT as usize {
                 // Short form
-                buffer.push(val as u8);
+                unsafe { buffer.push(val as u8) };
             } else {
                 // Long form
                 let len = (8 * size_of::<usize>() - (val.leading_zeros() as usize) + 7) / 8 + 1;

@@ -1272,7 +1272,7 @@ impl Id {
 
         if number <= IdRef::MAX_SHORT as u128 {
             let o = class as u8 + pc as u8 + number as u8;
-            buffer.push(o);
+            unsafe { buffer.push(o) };
         } else {
             let len = ((128 - number.leading_zeros() + 6) / 7 + 1) as usize;
             buffer.reserve(len);
