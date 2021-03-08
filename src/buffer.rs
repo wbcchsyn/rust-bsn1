@@ -415,6 +415,15 @@ impl Index<usize> for StackBuffer {
     }
 }
 
+impl IndexMut<usize> for StackBuffer {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        unsafe {
+            let ptr = self.as_mut_ptr().add(index);
+            &mut *ptr
+        }
+    }
+}
+
 impl StackBuffer {
     /// # Safety
     ///
