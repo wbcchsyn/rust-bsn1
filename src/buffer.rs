@@ -427,6 +427,12 @@ impl StackBuffer {
         self.len_ as usize
     }
 
+    pub unsafe fn set_len(&mut self, new_len: usize) {
+        debug_assert!(new_len <= self.capacity());
+
+        self.len_ = new_len as u8
+    }
+
     pub const fn capacity(&self) -> usize {
         Self::CAPACITY
     }
