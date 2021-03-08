@@ -388,3 +388,22 @@ pub struct StackBuffer {
 impl StackBuffer {
     const CAPACITY: usize = size_of::<i128>();
 }
+
+impl StackBuffer {
+    pub const fn new() -> Self {
+        Self {
+            buffer: [0; Self::CAPACITY],
+            len_: 0,
+        }
+    }
+}
+
+#[cfg(test)]
+mod stack_buffer_tests {
+    use super::*;
+
+    #[test]
+    fn new() {
+        let _buffer = StackBuffer::new();
+    }
+}
