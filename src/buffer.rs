@@ -413,6 +413,10 @@ impl StackBuffer {
         self.buffer.as_ptr()
     }
 
+    pub fn as_mut_ptr(&mut self) -> *mut u8 {
+        self.buffer.as_mut_ptr()
+    }
+
     pub const fn len(&self) -> usize {
         self.len_ as usize
     }
