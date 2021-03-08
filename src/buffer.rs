@@ -399,6 +399,16 @@ impl StackBuffer {
 }
 
 impl StackBuffer {
+    /// # Safety
+    ///
+    /// The behavior is undefined if the length will exceeds the capacity.
+    pub unsafe fn push(&mut self, val: u8) {
+        debug_assert!(self.len() < self.capacity());
+
+        self.buffer[self.len()] = val;
+        self.len_ += 1;
+    }
+
     pub const fn len(&self) -> usize {
         self.len_ as usize
     }
@@ -416,5 +426,17 @@ mod stack_buffer_tests {
     fn new() {
         let buffer = StackBuffer::new();
         assert_eq!(0, buffer.len());
+    }
+
+    #[test]
+    fn push() {
+        let mut buffer = StackBuffer::new();
+
+        for i in 0..StackBuffer::CAPACITY {
+            assert_eq!(i, buffer.len());
+            unsafe { buffer.push(i as u8) };
+        }
+
+        assert_eq!(buffer.capacity(), buffer.len());
     }
 }
