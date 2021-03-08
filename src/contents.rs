@@ -122,6 +122,7 @@ fn from_integer_negative(val: i128) -> Buffer {
 /// # Wargnings
 ///
 /// This function assumes that the CPU adopts 2's complement to represent negative value.
+#[inline]
 pub fn to_integer(bytes: &[u8]) -> Result<i128, Error> {
     if size_of::<i128>() < bytes.len() {
         Err(Error::OverFlow)
@@ -146,6 +147,7 @@ pub fn to_integer(bytes: &[u8]) -> Result<i128, Error> {
 /// Serializes boolean as contents octets.
 ///
 /// This function is common for BER, DER, and CER.
+#[inline]
 pub fn from_bool(val: bool) -> impl AsRef<[u8]> {
     if val {
         [0xff] as [u8; 1]
@@ -158,6 +160,7 @@ pub fn from_bool(val: bool) -> impl AsRef<[u8]> {
 ///
 /// This function is valid only for the contents of BER, and not applied to the contents of
 /// DER nor CER.
+#[inline]
 pub fn to_bool_ber(bytes: &[u8]) -> Result<bool, Error> {
     if bytes.is_empty() {
         Err(Error::UnTerminatedBytes)
@@ -174,6 +177,7 @@ pub fn to_bool_ber(bytes: &[u8]) -> Result<bool, Error> {
 ///
 /// This function is valid only for the contents of DER, and not applied to the contents of
 /// 'CER' nor 'BER.'
+#[inline]
 pub fn to_bool_der(bytes: &[u8]) -> Result<bool, Error> {
     if bytes.is_empty() {
         Err(Error::UnTerminatedBytes)

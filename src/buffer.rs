@@ -118,12 +118,14 @@ impl Buffer {
 }
 
 impl AsRef<[u8]> for Buffer {
+    #[inline]
     fn as_ref(&self) -> &[u8] {
         unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len()) }
     }
 }
 
 impl AsMut<[u8]> for Buffer {
+    #[inline]
     fn as_mut(&mut self) -> &mut [u8] {
         unsafe { core::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
     }
@@ -137,12 +139,14 @@ impl fmt::Debug for Buffer {
 }
 
 impl Borrow<[u8]> for Buffer {
+    #[inline]
     fn borrow(&self) -> &[u8] {
         unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len()) }
     }
 }
 
 impl Hash for Buffer {
+    #[inline]
     fn hash<H>(&self, hasher: &mut H)
     where
         H: Hasher,
@@ -154,6 +158,8 @@ impl Hash for Buffer {
 
 impl Index<usize> for Buffer {
     type Output = u8;
+
+    #[inline]
     fn index(&self, index: usize) -> &Self::Output {
         unsafe {
             let ptr = self.as_ptr().add(index);
@@ -163,6 +169,7 @@ impl Index<usize> for Buffer {
 }
 
 impl IndexMut<usize> for Buffer {
+    #[inline]
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         unsafe {
             let ptr = self.as_mut_ptr().add(index);
@@ -175,6 +182,7 @@ impl<T> PartialEq<T> for Buffer
 where
     T: Borrow<[u8]>,
 {
+    #[inline]
     fn eq(&self, other: &T) -> bool {
         let this: &[u8] = self.borrow();
         let other: &[u8] = other.borrow();
@@ -188,6 +196,7 @@ impl<T> PartialOrd<T> for Buffer
 where
     T: Borrow<[u8]>,
 {
+    #[inline]
     fn partial_cmp(&self, other: &T) -> Option<Ordering> {
         let this: &[u8] = self.borrow();
         let other: &[u8] = other.borrow();
@@ -196,6 +205,7 @@ where
 }
 
 impl Ord for Buffer {
+    #[inline]
     fn cmp(&self, other: &Self) -> Ordering {
         let this: &[u8] = self.borrow();
         let other: &[u8] = other.borrow();
@@ -204,12 +214,15 @@ impl Ord for Buffer {
 }
 
 impl Buffer {
-    pub fn push(&mut self, val: u8) {
-        self.reserve(1);
-        unsafe {
-            let ptr = self.as_mut_ptr().add(self.len());
-            *ptr = val;
-        }
+    /// # Safety
+    ///
+    /// The behavior is undefined if the length will exceeds the capacity.
+    #[inline]
+    pub unsafe fn push(&mut self, val: u8) {
+        debug_assert!(self.len() < self.capacity());
+
+        let ptr = self.as_mut_ptr().add(self.len());
+        *ptr = val;
         self.len_ += 1;
     }
 
@@ -222,6 +235,7 @@ impl Buffer {
         self.len_ += vals.len() as isize;
     }
 
+    #[inline]
     pub fn as_ptr(&self) -> *const u8 {
         if self.is_stack() {
             let ptr: *const (*mut u8, usize) = &self.buffer;
@@ -231,6 +245,7 @@ impl Buffer {
         }
     }
 
+    #[inline]
     pub fn as_mut_ptr(&mut self) -> *mut u8 {
         if self.is_stack() {
             let ptr: *mut (*mut u8, usize) = &mut self.buffer;
@@ -240,6 +255,7 @@ impl Buffer {
         }
     }
 
+    #[inline]
     pub fn capacity(&self) -> usize {
         if self.is_stack() {
             size_of::<(*mut u8, usize)>()
@@ -248,6 +264,7 @@ impl Buffer {
         }
     }
 
+    #[inline]
     pub fn len(&self) -> usize {
         if self.is_stack() {
             (self.len_ - isize::MIN) as usize
@@ -256,6 +273,7 @@ impl Buffer {
         }
     }
 
+    #[inline]
     pub unsafe fn set_len(&mut self, new_len: usize) {
         debug_assert!(new_len <= self.capacity());
 
@@ -302,6 +320,7 @@ impl Buffer {
         }
     }
 
+    #[inline]
     fn is_stack(&self) -> bool {
         self.len_ < 0
     }
@@ -330,12 +349,14 @@ mod tests {
 
     #[test]
     fn push() {
-        let mut buffer = Buffer::new();
+        const LENGTH: usize = 40;
+
+        let mut buffer = Buffer::with_capacity(LENGTH);
         let mut vec = Vec::new();
 
-        for i in 0..40 {
-            buffer.push(i);
-            vec.push(i);
+        for i in 0..LENGTH {
+            unsafe { buffer.push(i as u8) };
+            vec.push(i as u8);
 
             let expected: &[u8] = vec.as_ref();
             assert_eq!(expected, buffer.as_ref());

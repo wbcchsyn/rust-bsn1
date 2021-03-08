@@ -65,6 +65,7 @@ pub struct BerRef {
 }
 
 impl<'a> From<&'a DerRef> for &'a BerRef {
+    #[inline]
     fn from(der: &'a DerRef) -> Self {
         unsafe { BerRef::from_bytes_unchecked(der.as_ref()) }
     }
@@ -141,6 +142,7 @@ impl BerRef {
     /// let deserialized = unsafe { BerRef::from_bytes_unchecked(bytes) };
     /// assert_eq!(ber.as_ref() as &BerRef, deserialized);
     /// ```
+    #[inline]
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         let ptr = bytes as *const [u8];
         let ptr = ptr as *const Self;
@@ -173,6 +175,7 @@ impl BerRef {
     /// let deserialized = unsafe { BerRef::from_bytes_starts_with_unchecked(bytes.as_ref()) };
     /// assert_eq!(ber.as_ref() as &BerRef, deserialized);
     /// ```
+    #[inline]
     pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> &Self {
         let id = identifier::shrink_to_fit_unchecked(bytes);
         let parsing = &bytes[id.len()..];
@@ -199,12 +202,14 @@ impl BerRef {
 }
 
 impl AsRef<[u8]> for BerRef {
+    #[inline]
     fn as_ref(&self) -> &[u8] {
         &self.bytes
     }
 }
 
 impl Borrow<[u8]> for BerRef {
+    #[inline]
     fn borrow(&self) -> &[u8] {
         &self.bytes
     }
@@ -234,6 +239,7 @@ impl BerRef {
     /// let ber = Ber::new(id, contents);
     /// assert_eq!(id, ber.id());
     /// ```
+    #[inline]
     pub fn id(&self) -> &IdRef {
         unsafe {
             let bytes = identifier::shrink_to_fit_unchecked(&self.bytes);
@@ -260,6 +266,7 @@ impl BerRef {
     /// let ber = Ber::new(id, contents);
     /// assert_eq!(Length::Definite(contents.len()), ber.length());
     /// ```
+    #[inline]
     pub fn length(&self) -> Length {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
@@ -280,6 +287,7 @@ impl BerRef {
     /// let ber = Ber::new(id, contents);
     /// assert_eq!(contents, ber.contents());
     /// ```
+    #[inline]
     pub fn contents(&self) -> &[u8] {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
@@ -294,12 +302,14 @@ pub struct Ber {
 }
 
 impl From<&DerRef> for Ber {
+    #[inline]
     fn from(der: &DerRef) -> Self {
         <&BerRef>::from(der).to_owned()
     }
 }
 
 impl From<Der> for Ber {
+    #[inline]
     fn from(der: Der) -> Self {
         Self {
             buffer: crate::der::disassemble_der(der),
@@ -308,6 +318,7 @@ impl From<Der> for Ber {
 }
 
 impl From<&BerRef> for Ber {
+    #[inline]
     fn from(ber_ref: &BerRef) -> Self {
         ber_ref.to_owned()
     }
@@ -348,24 +359,28 @@ impl Ber {
 }
 
 impl AsRef<[u8]> for Ber {
+    #[inline]
     fn as_ref(&self) -> &[u8] {
         self.buffer.as_ref()
     }
 }
 
 impl AsRef<BerRef> for Ber {
+    #[inline]
     fn as_ref(&self) -> &BerRef {
         self.deref()
     }
 }
 
 impl Borrow<[u8]> for Ber {
+    #[inline]
     fn borrow(&self) -> &[u8] {
         self.buffer.borrow()
     }
 }
 
 impl Borrow<BerRef> for Ber {
+    #[inline]
     fn borrow(&self) -> &BerRef {
         self.deref()
     }
@@ -374,6 +389,7 @@ impl Borrow<BerRef> for Ber {
 impl Deref for Ber {
     type Target = BerRef;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         unsafe { BerRef::from_bytes_unchecked(self.buffer.as_ref()) }
     }
@@ -714,6 +730,7 @@ impl BerBuilder {
     /// [`new`]: #method.new
     /// [`finish`]: #method.finish
     /// [`struct`]: struct.BerBuilder.html
+    #[inline]
     pub unsafe fn extend_contents<B>(&mut self, bytes: B)
     where
         B: AsRef<[u8]>,
