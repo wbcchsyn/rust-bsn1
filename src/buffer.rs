@@ -398,12 +398,19 @@ impl StackBuffer {
     }
 }
 
+impl StackBuffer {
+    pub const fn len(&self) -> usize {
+        self.len_ as usize
+    }
+}
+
 #[cfg(test)]
 mod stack_buffer_tests {
     use super::*;
 
     #[test]
     fn new() {
-        let _buffer = StackBuffer::new();
+        let buffer = StackBuffer::new();
+        assert_eq!(0, buffer.len());
     }
 }
