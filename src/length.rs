@@ -98,6 +98,7 @@ impl Length {
 /// let deserialized = try_length_from(bytes.as_ref()).unwrap();
 /// assert_eq!(length, deserialized.0);
 /// ```
+#[inline]
 pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
     let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
     let bytes = &bytes[1..];
@@ -147,6 +148,7 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
 /// let deserialized = try_length_from(bytes.as_ref()).unwrap();
 /// assert_eq!(length, deserialized.0);
 /// ```
+#[inline]
 pub fn to_bytes(length: &Length) -> impl AsRef<[u8]> {
     let mut buffer = Buffer::new();
 
