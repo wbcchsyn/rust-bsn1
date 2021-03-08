@@ -409,6 +409,10 @@ impl StackBuffer {
         self.len_ += 1;
     }
 
+    pub fn as_ptr(&self) -> *const u8 {
+        self.buffer.as_ptr()
+    }
+
     pub const fn len(&self) -> usize {
         self.len_ as usize
     }
