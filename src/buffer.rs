@@ -51,63 +51,31 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use core::alloc::Layout;
 use core::cmp::Ordering;
 use core::hash::{Hash, Hasher};
 use core::mem::size_of;
-use core::mem::MaybeUninit;
 use core::ops::{Index, IndexMut};
-use core::ptr::null_mut;
-use std::alloc::handle_alloc_error;
 use std::borrow::Borrow;
 use std::fmt;
 
-pub struct Buffer {
-    len_: isize,
-    buffer: (*mut u8, usize),
-}
-
-impl Drop for Buffer {
-    fn drop(&mut self) {
-        if self.is_stack() {
-            return;
-        } else {
-            let layout = Layout::array::<u8>(self.capacity()).unwrap();
-            let ptr = self.as_mut_ptr();
-            unsafe { std::alloc::dealloc(ptr, layout) };
-        }
-    }
+#[derive(Clone)]
+pub enum Buffer {
+    Heap(Vec<u8>),
+    Stack(StackBuffer),
 }
 
 impl From<&[u8]> for Buffer {
     fn from(vals: &[u8]) -> Self {
-        let mut ret = Self::with_capacity(vals.len());
-        ret.extend_from_slice(vals);
-        ret
-    }
-}
-
-impl Clone for Buffer {
-    fn clone(&self) -> Self {
-        if self.is_stack() {
-            let mut ret = MaybeUninit::<Self>::uninit();
-            let ptr = ret.as_mut_ptr();
-            unsafe {
-                ptr.copy_from_nonoverlapping(self, 1);
-                ret.assume_init()
-            }
-        } else {
-            Self::from(self.as_ref())
+        match StackBuffer::from_bytes(vals) {
+            None => Buffer::Heap(Vec::from(vals)),
+            Some(s) => Buffer::Stack(s),
         }
     }
 }
 
 impl Buffer {
     pub const fn new() -> Self {
-        Self {
-            len_: isize::MIN,
-            buffer: (null_mut(), 0),
-        }
+        Self::Stack(StackBuffer::new())
     }
 
     pub fn with_capacity(capacity: usize) -> Self {
@@ -221,55 +189,50 @@ impl Buffer {
     pub unsafe fn push(&mut self, val: u8) {
         debug_assert!(self.len() < self.capacity());
 
-        let ptr = self.as_mut_ptr().add(self.len());
-        *ptr = val;
-        self.len_ += 1;
+        match self {
+            Self::Heap(v) => v.push(val),
+            Self::Stack(s) => s.push(val),
+        }
     }
 
+    #[inline]
     pub fn extend_from_slice(&mut self, vals: &[u8]) {
         self.reserve(vals.len());
-        unsafe {
-            let ptr = self.as_mut_ptr().add(self.len());
-            ptr.copy_from_nonoverlapping(vals.as_ptr(), vals.len());
+        match self {
+            Self::Heap(v) => v.extend_from_slice(vals),
+            Self::Stack(s) => unsafe { s.extend_from_slice(vals) },
         }
-        self.len_ += vals.len() as isize;
     }
 
     #[inline]
     pub fn as_ptr(&self) -> *const u8 {
-        if self.is_stack() {
-            let ptr: *const (*mut u8, usize) = &self.buffer;
-            ptr as *const u8
-        } else {
-            self.buffer.0
+        match self {
+            Self::Heap(v) => v.as_ptr(),
+            Self::Stack(s) => s.as_ptr(),
         }
     }
 
     #[inline]
     pub fn as_mut_ptr(&mut self) -> *mut u8 {
-        if self.is_stack() {
-            let ptr: *mut (*mut u8, usize) = &mut self.buffer;
-            ptr as *mut u8
-        } else {
-            self.buffer.0
+        match self {
+            Self::Heap(v) => v.as_mut_ptr(),
+            Self::Stack(s) => s.as_mut_ptr(),
         }
     }
 
     #[inline]
     pub fn capacity(&self) -> usize {
-        if self.is_stack() {
-            size_of::<(*mut u8, usize)>()
-        } else {
-            self.buffer.1
+        match self {
+            Self::Heap(v) => v.capacity(),
+            Self::Stack(s) => s.capacity(),
         }
     }
 
     #[inline]
     pub fn len(&self) -> usize {
-        if self.is_stack() {
-            (self.len_ - isize::MIN) as usize
-        } else {
-            self.len_ as usize
+        match self {
+            Self::Heap(v) => v.len(),
+            Self::Stack(s) => s.len(),
         }
     }
 
@@ -277,52 +240,25 @@ impl Buffer {
     pub unsafe fn set_len(&mut self, new_len: usize) {
         debug_assert!(new_len <= self.capacity());
 
-        if self.is_stack() {
-            self.len_ = isize::MIN + new_len as isize;
-        } else {
-            self.len_ = new_len as isize;
+        match self {
+            Self::Heap(v) => v.set_len(new_len),
+            Self::Stack(s) => s.set_len(new_len),
         }
     }
 
     pub fn reserve(&mut self, additional: usize) {
-        let new_cap = self.len() + additional;
-
-        if new_cap <= self.capacity() {
-            return;
-        }
-
-        if self.is_stack() {
-            // First allocation
-
-            // Allocating heap memory.
-            let layout = Layout::array::<u8>(new_cap).unwrap();
-            let ptr = unsafe { std::alloc::alloc(layout) };
-            if ptr.is_null() {
-                handle_alloc_error(layout);
+        match self {
+            Self::Heap(v) => v.reserve(additional),
+            Self::Stack(s) => {
+                if s.len() + additional <= s.capacity() {
+                    return;
+                } else {
+                    let mut v = Vec::with_capacity(s.len() + additional);
+                    v.extend_from_slice(s.as_ref());
+                    *self = Self::Heap(v)
+                }
             }
-
-            // Copy current elements
-            unsafe { ptr.copy_from_nonoverlapping(self.as_ptr(), self.len()) };
-
-            // Update the properties
-            self.buffer.0 = ptr;
-            self.buffer.1 = new_cap;
-            self.len_ = self.len() as isize;
-        } else {
-            let layout = Layout::array::<u8>(self.capacity()).unwrap();
-            let ptr = unsafe { std::alloc::realloc(self.as_mut_ptr(), layout, new_cap) };
-            if ptr.is_null() {
-                handle_alloc_error(layout);
-            }
-
-            self.buffer.0 = ptr;
-            self.buffer.1 = new_cap;
         }
-    }
-
-    #[inline]
-    fn is_stack(&self) -> bool {
-        self.len_ < 0
     }
 }
 
