@@ -396,6 +396,16 @@ impl StackBuffer {
             len_: 0,
         }
     }
+
+    pub fn from_bytes(vals: &[u8]) -> Option<Self> {
+        if vals.len() <= Self::CAPACITY {
+            let mut ret = Self::new();
+            unsafe { ret.extend_from_slice(vals) };
+            Some(ret)
+        } else {
+            None
+        }
+    }
 }
 
 impl AsRef<[u8]> for StackBuffer {
