@@ -260,6 +260,14 @@ impl Buffer {
             }
         }
     }
+
+    #[inline]
+    pub fn into_vec(self) -> Vec<u8> {
+        match self {
+            Self::Heap(v) => v,
+            Self::Stack(s) => Vec::from(s.as_ref()),
+        }
+    }
 }
 
 #[cfg(test)]
