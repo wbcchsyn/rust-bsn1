@@ -439,6 +439,18 @@ impl StackBuffer {
         self.len_ += 1;
     }
 
+    /// # Safety
+    ///
+    /// The behavior is undefined if the length will exceeds the capacity.
+    #[inline]
+    pub unsafe fn extend_from_slice(&mut self, vals: &[u8]) {
+        debug_assert!(self.len() + vals.len() <= self.capacity());
+
+        let ptr = self.as_mut_ptr().add(self.len());
+        ptr.copy_from_nonoverlapping(vals.as_ptr(), vals.len());
+        self.len_ += vals.len() as u8;
+    }
+
     #[inline]
     pub fn as_ptr(&self) -> *const u8 {
         self.buffer.as_ptr()
@@ -492,5 +504,18 @@ mod stack_buffer_tests {
         }
 
         assert_eq!(buffer.capacity(), buffer.len());
+    }
+
+    #[test]
+    fn extend_from_slice() {
+        let mut buffer = StackBuffer::new();
+        let mut v = Vec::new();
+
+        for i in 0..(StackBuffer::CAPACITY / 2) {
+            let bytes: &[u8] = &[i as u8, i as u8];
+            v.extend_from_slice(bytes);
+            unsafe { buffer.extend_from_slice(bytes) };
+            assert_eq!(v.as_ref() as &[u8], buffer.as_ref());
+        }
     }
 }
