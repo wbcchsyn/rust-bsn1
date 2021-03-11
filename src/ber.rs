@@ -395,6 +395,27 @@ impl Deref for Ber {
     }
 }
 
+impl Ber {
+    /// Consumes `self` , returning `Vec` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, IdRef};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents: &[u8] = &[0, 1, 2, 3, 4];
+    ///
+    /// let ber = Ber::new(id, contents);
+    /// let v = ber.clone().into_vec();
+    ///
+    /// assert_eq!(ber.as_ref() as &[u8], v.as_ref() as &[u8]);
+    /// ```
+    pub fn into_vec(self) -> Vec<u8> {
+        self.buffer.into_vec()
+    }
+}
+
 /// Builds a `Ber` instance representing Constructed BER effectively.
 ///
 /// # Formula

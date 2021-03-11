@@ -369,6 +369,27 @@ impl Deref for Der {
     }
 }
 
+impl Der {
+    /// Consumes `self` , returning `Vec` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents: &[u8] = &[0, 1, 2, 3, 4];
+    ///
+    /// let der = Der::new(id, contents);
+    /// let v = der.clone().into_vec();
+    ///
+    /// assert_eq!(der.as_ref() as &[u8], v.as_ref() as &[u8]);
+    /// ```
+    pub fn into_vec(self) -> Vec<u8> {
+        self.buffer.into_vec()
+    }
+}
+
 #[inline]
 pub fn disassemble_der(der: Der) -> Buffer {
     der.buffer
