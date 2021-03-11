@@ -53,7 +53,7 @@
 
 use core::cmp::Ordering;
 use core::hash::{Hash, Hasher};
-use core::mem::size_of;
+use core::mem::{align_of, size_of};
 use core::ops::{Index, IndexMut};
 use std::borrow::Borrow;
 use std::fmt;
@@ -273,6 +273,16 @@ impl Buffer {
 #[cfg(test)]
 mod buffer_tests {
     use super::*;
+    use core::alloc::Layout;
+
+    #[test]
+    fn size_align() {
+        let layout = Layout::new::<Buffer>();
+        let vec_layout = Layout::new::<Vec<u8>>();
+
+        assert_eq!(vec_layout.align(), layout.align());
+        assert_eq!(vec_layout.size() + layout.align(), layout.size());
+    }
 
     #[test]
     fn new() {
@@ -330,7 +340,8 @@ pub struct StackBuffer {
 }
 
 impl StackBuffer {
-    const CAPACITY: usize = size_of::<i128>();
+    // The size of 'Buffer' will be 'size_of::<Vec<u8>>() + align_of::<Vec<u8>>()'.
+    const CAPACITY: usize = size_of::<Vec<u8>>() + align_of::<Vec<u8>>() - 2;
 }
 
 impl StackBuffer {
