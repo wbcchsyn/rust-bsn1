@@ -224,8 +224,8 @@ impl DerRef {
     ///
     /// # Warnings
     ///
-    /// `Length` stands for 'the length of the contents' in DER.
-    /// The length of the total bytes is greater than the value.
+    /// `Length` stands for the length octets in DER.
+    /// The total bytes is greater than the value.
     ///
     /// # Examples
     ///
@@ -246,7 +246,7 @@ impl DerRef {
         length::try_from(bytes).unwrap().0
     }
 
-    /// Returns a reference to 'contents octets' of `self` .
+    /// Returns a reference to the contents octets of `self` .
     ///
     /// # Examples
     ///
@@ -268,7 +268,9 @@ impl DerRef {
     }
 }
 
-/// `Der` owns `DerRef` and represents DER.
+/// `Der` owns [`DerRef`] and represents DER.
+///
+/// [`DerRef`]: struct.DerRef.html
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Der {
     buffer: Buffer,
@@ -395,7 +397,9 @@ pub fn disassemble_der(der: Der) -> Buffer {
     der.buffer
 }
 
-/// `DerBuilder` is a struct to build `Der` effectively.
+/// `DerBuilder` is a struct to build [`Der`] effectively.
+///
+/// [`Der`]: struct.Der.html
 ///
 /// # Examples
 ///
@@ -409,7 +413,7 @@ pub fn disassemble_der(der: Der) -> Buffer {
 /// let expected = Der::new(IdRef::octet_string(), &[]);
 ///
 /// // Because the contents is empty, do not need to call method 'extend_contents()'.
-/// let mut builder = DerBuilder::new(id, Length::Definite(0));
+/// let builder = DerBuilder::new(id, Length::Definite(0));
 /// let der = builder.finish();
 ///
 /// assert_eq!(expected, der);

@@ -77,15 +77,9 @@ impl Length {
     const INDEFINITE: u8 = 0x80;
 }
 
-/// Tries to parse `bytes` starting with 'length' and returns `Length` .
+/// Tries to parse `bytes` starting with 'length' and returns `(Length, octets_after_length)` .
 ///
 /// This function ignores extra octets at the end of `bytes` .
-///
-/// # Warnings
-///
-/// This function may return `Ok(Length::Indefinite)` , however, 'DER' and 'CER' don't allow such
-/// value.
-/// It does not always mean `bytes` is valid that this function returns `Ok` .
 ///
 /// # Examples
 ///
