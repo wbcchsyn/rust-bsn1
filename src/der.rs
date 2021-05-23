@@ -678,7 +678,7 @@ macro_rules! constructed_der {
         __bsn1__expand_constructed_der!($(($id_n, $contents_n)),* ; id)
     }};
     ($id:expr $(, ($id_n:expr, $contents_n:expr))*,) => {
-        constructed_der!($id $(($id_n, $contents_n)),*)
+        constructed_der!($id, $(($id_n, $contents_n)),*)
     };
 }
 
