@@ -162,7 +162,7 @@ impl DerRef {
 
         let (len, parsing) = match length::try_from(parsing).unwrap() {
             (Length::Definite(len), parsing) => (len, parsing),
-            _ => panic!(format!("{}", Error::IndefiniteLength)),
+            _ => panic!("{}", Error::IndefiniteLength),
         };
 
         let total_len = bytes.len() - parsing.len() + len;
