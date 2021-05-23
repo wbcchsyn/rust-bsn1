@@ -409,6 +409,23 @@ impl Ber {
     pub fn utf8_string(val: &str) -> Self {
         Self::from(Der::utf8_string(val))
     }
+
+    /// Returns a new instance representing octet_string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, IdRef};
+    ///
+    /// let val = &[1, 2, 3];
+    /// let ber = Ber::octet_string(val);
+    ///
+    /// assert_eq!(IdRef::octet_string(), ber.id());
+    /// assert_eq!(val, ber.contents());
+    /// ```
+    pub fn octet_string(val: &[u8]) -> Self {
+        Self::from(Der::octet_string(val))
+    }
 }
 
 impl AsRef<[u8]> for Ber {
