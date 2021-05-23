@@ -130,10 +130,10 @@ impl Length {
 /// # Examples
 ///
 /// ```
-/// use bsn1::{length_to_bytes, try_length_from, Length};
+/// use bsn1::{try_length_from, Length};
 ///
 /// let length = Length::Definite(3);
-/// let bytes = length_to_bytes(&length);
+/// let bytes = length.to_bytes();
 ///
 /// let deserialized = try_length_from(bytes.as_ref()).unwrap();
 /// assert_eq!(length, deserialized.0);
@@ -180,10 +180,10 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
 /// # Examples
 ///
 /// ```
-/// use bsn1::{length_to_bytes, try_length_from, Length};
+/// use bsn1::{try_length_from, Length};
 ///
 /// let length = Length::Definite(3);
-/// let bytes = length_to_bytes(&length);
+/// let bytes = length.to_bytes();
 ///
 /// let deserialized = try_length_from(bytes.as_ref()).unwrap();
 /// assert_eq!(length, deserialized.0);
@@ -414,19 +414,19 @@ mod tests {
     }
 
     #[test]
-    fn to_bytes_length() {
+    fn to_bytes() {
         let empty: &[u8] = &[];
 
         // Indefinite
         {
-            let bytes = to_bytes(&Length::Indefinite);
+            let bytes = Length::Indefinite.to_bytes();
             let length = try_from(bytes.as_ref()).unwrap();
             assert_eq!((Length::Indefinite, empty), length);
         }
 
         // Definite
         for &len in &[0, 1, 0x7f, 0x80, 0xff, 0x0100, 0xffff, usize::MAX] {
-            let bytes = to_bytes(&Length::Definite(len));
+            let bytes = Length::Definite(len).to_bytes();
             let length = try_from(bytes.as_ref()).unwrap();
             assert_eq!((Length::Definite(len), empty), length);
         }

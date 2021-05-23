@@ -589,7 +589,7 @@ mod tests {
             let id = IdRef::sequence();
             let mut bytes: Vec<u8> = Vec::from(id.as_ref() as &[u8]);
 
-            bytes.extend(length::to_bytes(&Length::Indefinite).as_ref());
+            bytes.extend(Length::Indefinite.to_bytes().as_ref());
 
             for ber in bers[0..i].iter() {
                 bytes.extend(ber.as_ref() as &[u8]);
@@ -633,7 +633,7 @@ mod tests {
             let id = IdRef::sequence();
             let mut bytes: Vec<u8> = Vec::from(id.as_ref() as &[u8]);
 
-            bytes.extend(length::to_bytes(&Length::Indefinite).as_ref());
+            bytes.extend(Length::Indefinite.to_bytes().as_ref());
 
             for ber in bers[0..i].iter() {
                 bytes.extend(ber.as_ref() as &[u8]);
@@ -788,7 +788,7 @@ impl BerBuilder {
                 let mut buffer = Buffer::new();
                 buffer.extend_from_slice(id.as_ref());
 
-                let length = length::to_bytes(&Length::Indefinite);
+                let length = Length::Indefinite.to_bytes();
                 buffer.extend_from_slice(length.as_ref());
                 InnerBuilder::Indefinite(buffer)
             }
