@@ -392,6 +392,23 @@ impl Ber {
     pub fn integer(val: i128) -> Self {
         Self::from(Der::integer(val))
     }
+
+    /// Returns a new instance representing utf8_string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, IdRef};
+    ///
+    /// let val = &"foo";
+    /// let ber = Ber::utf8_string(val);
+    ///
+    /// assert_eq!(IdRef::utf8_string(), ber.id());
+    /// assert_eq!(val.as_bytes(), ber.contents());
+    /// ```
+    pub fn utf8_string(val: &str) -> Self {
+        Self::from(Der::utf8_string(val))
+    }
 }
 
 impl AsRef<[u8]> for Ber {
