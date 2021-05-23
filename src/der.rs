@@ -349,6 +349,23 @@ impl Der {
     pub fn boolean(val: bool) -> Self {
         Self::new(IdRef::boolean(), contents::from_bool(val).as_ref())
     }
+
+    /// Returns a new instance representing ingeger.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{contents, Der, IdRef};
+    ///
+    /// let val = 39;
+    /// let der = Der::integer(val);
+    ///
+    /// assert_eq!(IdRef::integer(), der.id());
+    /// assert_eq!(val, contents::to_integer(der.contents()).unwrap());
+    /// ```
+    pub fn integer(val: i128) -> Self {
+        Self::new(IdRef::integer(), contents::from_integer(val).as_ref())
+    }
 }
 
 impl AsRef<[u8]> for Der {
