@@ -225,7 +225,7 @@ impl ToOwned for BerRef {
 }
 
 impl BerRef {
-    /// Provides a reference to the `IdRef` of `self` .
+    /// Provides a reference to `IdRef` of `self` .
     ///
     /// # Examples
     ///
@@ -251,8 +251,8 @@ impl BerRef {
     ///
     /// # Warnings
     ///
-    /// `Length` stands for 'the length of the contents' in BER.
-    /// The length of the total bytes is greater than the value.
+    /// `Length` stands for 'the length octets of the contents' in BER.
+    /// The total bytes is greater than the value.
     ///
     /// # Examples
     ///
@@ -273,7 +273,7 @@ impl BerRef {
         length::try_from(bytes).unwrap().0
     }
 
-    /// Provides a reference to the 'contents' of `self` .
+    /// Provides a reference to the 'contents' octets of `self` .
     ///
     /// # Examples
     ///
@@ -295,7 +295,9 @@ impl BerRef {
     }
 }
 
-/// `Ber` owns `BerRef` and represents a BER.
+/// `Ber` owns [`BerRef`] and represents a BER.
+///
+/// [`BerRef`]: struct.BerRef.html
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ber {
     buffer: Buffer,
@@ -339,7 +341,7 @@ impl TryFrom<&[u8]> for Ber {
 impl Ber {
     /// Creates a new instance from `id` and `contents` with definite length.
     ///
-    /// Note that BER allows both definite and indefinite length, however, the length of return
+    /// Note that BER allows both definite and indefinite length, however, the length of the return
     /// value is always definite.
     /// (Generally speaking, the performance of definite length is better than that of indefinite
     /// length. Indefinite length is seldom used these days.)
@@ -581,7 +583,9 @@ enum InnerBuilder {
     Indefinite(Buffer),
 }
 
-/// `BerBuilder` is a struct to build `Ber` effectively.
+/// `BerBuilder` is a struct to build [`Ber`] effectively.
+///
+/// [`Ber`]: struct.Ber.html
 ///
 /// # Examples
 ///
@@ -591,11 +595,10 @@ enum InnerBuilder {
 /// use bsn1::{Ber, BerBuilder, IdRef, Length};
 ///
 /// let id = IdRef::octet_string();
-///
 /// let expected = Ber::new(IdRef::octet_string(), &[]);
 ///
 /// // Because the contents is empty, do not need to call method 'extend_contents()'.
-/// let mut builder = BerBuilder::new(id, Length::Definite(0));
+/// let builder = BerBuilder::new(id, Length::Definite(0));
 /// let ber = builder.finish();
 ///
 /// assert_eq!(expected, ber);
@@ -611,7 +614,7 @@ enum InnerBuilder {
 ///
 /// // Because the contents is empty, do not need to call method 'extend_contents()'.
 /// // Function 'finish()' will adds the last 'EOC.'
-/// let mut builder = BerBuilder::new(id, Length::Indefinite);
+/// let builder = BerBuilder::new(id, Length::Indefinite);
 /// let ber = builder.finish();
 ///
 /// assert_eq!(id, ber.id());
@@ -702,7 +705,7 @@ pub struct BerBuilder {
 }
 
 impl BerBuilder {
-    /// Creates a new instance to build `Der` with `id` and contents whose length equals to
+    /// Creates a new instance to build `Ber` with `id` and contents whose length equals to
     /// `contents_len` .
     ///
     /// # Examples
@@ -726,11 +729,11 @@ impl BerBuilder {
         Self { builder }
     }
 
-    /// Appends `bytes` to the end of the DER contents to be build.
+    /// Appends `bytes` to the end of the contents to be build.
     ///
     /// # Warnings
     ///
-    /// The user must not adds 'EOC' if `Length::Indefinite` was passed to the constructor
+    /// The user must `not` adds 'EOC' if `Length::Indefinite` was passed to the constructor
     /// funciton [`new`] .
     /// Function [`finish`] will adds the last 'EOC.'
     /// (Indefinite length BER must include one and only one 'EOC' in the contents.)

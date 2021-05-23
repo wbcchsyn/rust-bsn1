@@ -160,7 +160,7 @@ pub unsafe fn shrink_to_fit_unchecked(bytes: &[u8]) -> &[u8] {
 }
 
 impl IdRef {
-    /// Builds instance from `bytes` without any sanitize.
+    /// Provides a reference from `bytes` without any sanitize.
     /// `bytes` must not include any extra octets.
     ///
     /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
@@ -1279,10 +1279,6 @@ impl IdRef {
 }
 
 /// `Id` owns `IdRef` and represents Identifier.
-///
-/// Note that this struct may allocate heap memory if the number is very large, because ASN.1 does
-/// not limit the length of identifier bytes, however, it uses only stack memory at least the
-/// number equals to or is less than `usize::MAX` .
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id {
     buffer: Buffer,
@@ -1300,7 +1296,7 @@ impl TryFrom<&[u8]> for Id {
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
+    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok` .
     ///
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
