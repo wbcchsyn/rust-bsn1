@@ -77,6 +77,52 @@ impl Length {
     const INDEFINITE: u8 = 0x80;
 }
 
+impl Length {
+    /// Serializes `length` .
+    ///
+    /// This function won't allocate heap memory.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{try_length_from, Length};
+    ///
+    /// let length = Length::Definite(3);
+    /// let bytes = length.to_bytes();
+    ///
+    /// let deserialized = try_length_from(bytes.as_ref()).unwrap();
+    /// assert_eq!(length, deserialized.0);
+    /// ```
+    #[inline]
+    pub fn to_bytes(&self) -> impl AsRef<[u8]> {
+        let mut buffer = StackBuffer::new();
+
+        match *self {
+            Length::Indefinite => unsafe { buffer.push(Length::INDEFINITE) },
+            Length::Definite(mut val) => {
+                if val <= Length::MAX_SHORT as usize {
+                    // Short form
+                    unsafe { buffer.push(val as u8) };
+                } else {
+                    // Long form
+                    let len = (8 * size_of::<usize>() - (val.leading_zeros() as usize) + 7) / 8 + 1;
+                    unsafe { buffer.set_len(len) };
+                    buffer[0] = Length::LONG_FLAG + (len - 1) as u8;
+
+                    for i in (1..len).rev() {
+                        debug_assert!(0 < val);
+                        buffer[i] = val as u8;
+                        val >>= 8;
+                    }
+                    debug_assert_eq!(0, val);
+                }
+            }
+        }
+
+        buffer
+    }
+}
+
 /// Tries to parse `bytes` starting with 'length' and returns `(Length, octets_after_length)` .
 ///
 /// This function ignores extra octets at the end of `bytes` .
