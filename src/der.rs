@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{identifier, length, Buffer, Error, IdRef, Length};
+use crate::{contents, identifier, length, Buffer, Error, IdRef, Length};
 use core::convert::TryFrom;
 use core::ops::Deref;
 use std::borrow::Borrow;
@@ -331,6 +331,23 @@ impl Der {
         }
 
         Self { buffer }
+    }
+
+    /// Returns a new instance representing boolean.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{contents, Der, IdRef};
+    ///
+    /// let val = true;
+    /// let der = Der::boolean(val);
+    ///
+    /// assert_eq!(IdRef::boolean(), der.id());
+    /// assert_eq!(val, contents::to_bool_der(der.contents()).unwrap());
+    /// ```
+    pub fn boolean(val: bool) -> Self {
+        Self::new(IdRef::boolean(), contents::from_bool(val).as_ref())
     }
 }
 
