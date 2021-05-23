@@ -358,6 +358,74 @@ impl Ber {
         let der = Der::new(id, contents);
         Self::from(der)
     }
+
+    /// Returns a new instance representing boolean.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{contents, Ber, IdRef};
+    ///
+    /// let val = true;
+    /// let ber = Ber::boolean(val);
+    ///
+    /// assert_eq!(IdRef::boolean(), ber.id());
+    /// assert_eq!(val, contents::to_bool_ber(ber.contents()).unwrap());
+    /// ```
+    pub fn boolean(val: bool) -> Self {
+        Self::from(Der::boolean(val))
+    }
+
+    /// Returns a new instance representing ingeger.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{contents, Ber, IdRef};
+    ///
+    /// let val = 39;
+    /// let ber = Ber::integer(val);
+    ///
+    /// assert_eq!(IdRef::integer(), ber.id());
+    /// assert_eq!(val, contents::to_integer(ber.contents()).unwrap());
+    /// ```
+    pub fn integer(val: i128) -> Self {
+        Self::from(Der::integer(val))
+    }
+
+    /// Returns a new instance representing utf8_string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, IdRef};
+    ///
+    /// let val = &"foo";
+    /// let ber = Ber::utf8_string(val);
+    ///
+    /// assert_eq!(IdRef::utf8_string(), ber.id());
+    /// assert_eq!(val.as_bytes(), ber.contents());
+    /// ```
+    pub fn utf8_string(val: &str) -> Self {
+        Self::from(Der::utf8_string(val))
+    }
+
+    /// Returns a new instance representing octet_string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, IdRef};
+    ///
+    /// let val = &[1, 2, 3];
+    /// let ber = Ber::octet_string(val);
+    ///
+    /// assert_eq!(IdRef::octet_string(), ber.id());
+    /// assert_eq!(val, ber.contents());
+    /// ```
+    pub fn octet_string(val: &[u8]) -> Self {
+        Self::from(Der::octet_string(val))
+    }
 }
 
 impl AsRef<[u8]> for Ber {

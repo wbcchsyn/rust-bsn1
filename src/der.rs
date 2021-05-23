@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{identifier, length, Buffer, Error, IdRef, Length};
+use crate::{contents, identifier, length, Buffer, Error, IdRef, Length};
 use core::convert::TryFrom;
 use core::ops::Deref;
 use std::borrow::Borrow;
@@ -331,6 +331,74 @@ impl Der {
         }
 
         Self { buffer }
+    }
+
+    /// Returns a new instance representing boolean.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{contents, Der, IdRef};
+    ///
+    /// let val = true;
+    /// let der = Der::boolean(val);
+    ///
+    /// assert_eq!(IdRef::boolean(), der.id());
+    /// assert_eq!(val, contents::to_bool_der(der.contents()).unwrap());
+    /// ```
+    pub fn boolean(val: bool) -> Self {
+        Self::new(IdRef::boolean(), contents::from_bool(val).as_ref())
+    }
+
+    /// Returns a new instance representing ingeger.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{contents, Der, IdRef};
+    ///
+    /// let val = 39;
+    /// let der = Der::integer(val);
+    ///
+    /// assert_eq!(IdRef::integer(), der.id());
+    /// assert_eq!(val, contents::to_integer(der.contents()).unwrap());
+    /// ```
+    pub fn integer(val: i128) -> Self {
+        Self::new(IdRef::integer(), contents::from_integer(val).as_ref())
+    }
+
+    /// Returns a new instance representing utf8_string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let val = &"foo";
+    /// let der = Der::utf8_string(val);
+    ///
+    /// assert_eq!(IdRef::utf8_string(), der.id());
+    /// assert_eq!(val.as_bytes(), der.contents());
+    /// ```
+    pub fn utf8_string(val: &str) -> Self {
+        Self::new(IdRef::utf8_string(), val.as_bytes())
+    }
+
+    /// Returns a new instance representing octet_string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let val = &[1, 2, 3];
+    /// let der = Der::octet_string(val);
+    ///
+    /// assert_eq!(IdRef::octet_string(), der.id());
+    /// assert_eq!(val, der.contents());
+    /// ```
+    pub fn octet_string(val: &[u8]) -> Self {
+        Self::new(IdRef::octet_string(), val)
     }
 }
 
