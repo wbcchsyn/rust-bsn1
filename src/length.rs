@@ -54,6 +54,7 @@
 //! functions and enum about 'Length' octet of 'ASN.1.'
 
 use crate::{Error, StackBuffer};
+use core::convert::TryFrom;
 use core::mem::size_of;
 
 /// `Length` represents ASN.1 length.
@@ -69,6 +70,17 @@ pub enum Length {
     Indefinite,
     /// 'Definite' is for 'BER', 'DER', and 'CER', and represents the byte count of the contents.
     Definite(usize),
+}
+
+impl TryFrom<&[u8]> for Length {
+    type Error = Error;
+
+    /// Parses `bytes` starting with length octets and returns a `Length` .
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
+        try_from(bytes).map(|(length, _rest)| length)
+    }
 }
 
 impl Length {
