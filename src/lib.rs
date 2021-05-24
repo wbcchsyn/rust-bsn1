@@ -96,7 +96,7 @@ mod length;
 
 pub use ber::{Ber, BerRef};
 use buffer::{Buffer, StackBuffer};
-pub use der::{Der, DerBuilder, DerRef};
+pub use der::{Der, DerRef};
 pub use identifier::{ClassTag, Id, IdRef, PCTag};
 pub use length::Length;
 use std::fmt;
