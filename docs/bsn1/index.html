@@ -1,44 +1,41 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `bsn1` crate."><meta name="keywords" content="rust, rustlang, rust-lang, bsn1"><title>bsn1 - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="`bsn1` is a rust library to serialize/deserialize in ‘ASN.1’ format."><meta name="keywords" content="rust, rustlang, rust-lang, bsn1"><title>bsn1 - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><script src="../crates.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../bsn1/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate bsn1</p><div class="block version"><p>Version 0.2.0</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all bsn1's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#functions">Functions</a></li></ul></div><p class="location"></p><script>window.sidebarCurrent = {name: "bsn1", ty: "mod", relpath: "../"};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
-                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/bsn1/lib.rs.html#54-141" title="goto source code">[src]</a></span><span class="in-band">Crate <a class="mod" href="">bsn1</a></span></h1><div class="docblock"><p><code>bsn1</code> treats 'ASN.1.'</p>
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../bsn1/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate bsn1</p><div class="block version"><p>Version 0.3.0</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all bsn1's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li></ul></div><p class="location"></p><div id="sidebar-vars" data-name="bsn1" data-ty="mod" data-relpath="../"></div></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Crate <a class="mod" href="">bsn1</a></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/bsn1/lib.rs.html#54-136" title="goto source code">[src]</a></span></h1><div class="docblock"><p><code>bsn1</code> is a rust library to serialize/deserialize in ‘ASN.1’ format.</p>
+<p>Unlike to other crates, <code>bsn.1</code> is able to treat class ‘Application’, ‘Context-specific’,
+and ‘Private’ as well as ‘Universal’.</p>
 <h1 id="what-is-asn1" class="section-header"><a href="#what-is-asn1">What is ASN.1?</a></h1>
-<p>ASN.1 stands for 'Abstruct Syntax Notation One' and X.690 is an 'ITU-T' standard specifying
-the following ASN.1 encording formats.</p>
+<p>ASN.1 stands for ‘Abstract Syntax Notation One’ and X.690 is an ‘ITU-T’ standard specifying
+the following ASN.1 encoding formats.</p>
 <ul>
 <li>Basic Encoding Rules (BER)</li>
 <li>Canonical Encoding Rules (CER)</li>
 <li>Distinguished Encoding Rules (DER)</li>
 </ul>
-<p>This crate supports BER and DER so far.</p>
-<p>ASN.1 formats resembles 'JSON' in some ways, because they both are about serializing
-structured data, however, they differs in the following points.</p>
+<p>This crate supports BER and DER for now.</p>
+<p>ASN.1 resembles ‘JSON’ in some ways because they both are about serializing structured data,
+however, they differ in the following points.</p>
 <ul>
-<li>JSON are easy for human to read, on the other hand, ASN.1 is readable for a computer.
-i.e. ASN.1 consumes less computer resources and less CPU time than JSON does.</li>
-<li>ASN.1 defines types 'Integer', 'Boolean', 'String', 'Sequence', and so on universally like
-JSON. What is more, ASN.1 allows for users to define a new data type.</li>
+<li>JSON is easy for a human to read, on the other hand, ASN.1 is readable for a computer.
+i.e. ASN.1 consumes less computer resource like CPU time than JSON does.</li>
+<li>There are 4 classes in ASN.1 formats, ‘Universal’, ‘Application’, ‘Context-specific’,
+and ‘Private’.
+Class ‘Universal’ defines types like ‘Integer’, ‘Boolean’, ‘String’, ‘Sequence’ and so on
+like JSON. What is more, ASN.1 allows users to define a new data type using other classes.</li>
 </ul>
-<p>ASN.1 has been used all over the world for a long time and very stable. For example,
-'Transport Layer Security (TLS, SSL)', 'Lightweight Directory Access Protocol (LDAP)',
-'4th Generation Mobile Communication System (4G)', and so on.</p>
-<p>See <a href="https://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf">'X.690 (07/2002)'</a> for details.</p>
-<h1 id="feature-of-bsn1" class="section-header"><a href="#feature-of-bsn1">Feature of <code>bsn1</code></a></h1>
-<p><code>bsn1</code> treats user defined data as well as universal data types; while most other rust
-crates can treat only universal data.</p>
-<p>To be accurate, there are 4 classes in ASN.1; universal class, application class, context
-specific class, and private class. <code>bsn1</code> knows all of them.</p>
+<p>ASN.1 has been used all over the world for a long time and it is very stable. For example,
+‘Transport Layer Security (TLS, SSL)’, ‘Lightweight Directory Access Protocol (LDAP)’,
+‘4th Generation Mobile Communication System (4G)’, and so on.</p>
+<p>See <a href="https://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf">‘X.690 (07/2002)’</a> for details.</p>
 </div><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
 <table><tr class="module-item"><td><a class="mod" href="contents/index.html" title="bsn1::contents mod">contents</a></td><td class="docblock-short"><p>Provides functions to serialize/deserialize contents octets.</p>
 </td></tr></table><h2 id="macros" class="section-header"><a href="#macros">Macros</a></h2>
 <table><tr class="module-item"><td><a class="macro" href="macro.constructed_ber.html" title="bsn1::constructed_ber macro">constructed_ber</a></td><td class="docblock-short"><p>Builds a <code>Ber</code> instance representing Constructed BER effectively.</p>
-</td></tr><tr class="module-item"><td><a class="macro" href="macro.constructed_der.html" title="bsn1::constructed_der macro">constructed_der</a></td><td class="docblock-short"><p>Builds a <code>Der</code> instance representing 'Constructed DER' effectively.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.constructed_der.html" title="bsn1::constructed_der macro">constructed_der</a></td><td class="docblock-short"><p>Builds a <code>Der</code> instance representing ‘Constructed DER’ effectively.</p>
 </td></tr></table><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<table><tr class="module-item"><td><a class="struct" href="struct.Ber.html" title="bsn1::Ber struct">Ber</a></td><td class="docblock-short"><p><code>Ber</code> owns <code>BerRef</code> and represents a BER.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.BerBuilder.html" title="bsn1::BerBuilder struct">BerBuilder</a></td><td class="docblock-short"><p><code>BerBuilder</code> is a struct to build <code>Ber</code> effectively.</p>
+<table><tr class="module-item"><td><a class="struct" href="struct.Ber.html" title="bsn1::Ber struct">Ber</a></td><td class="docblock-short"><p><code>Ber</code> owns <a href="struct.BerRef.html"><code>BerRef</code></a> and represents a BER.</p>
 </td></tr><tr class="module-item"><td><a class="struct" href="struct.BerRef.html" title="bsn1::BerRef struct">BerRef</a></td><td class="docblock-short"><p><code>BerRef</code> is a wrapper of <code>[u8]</code> and represents a BER.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.Der.html" title="bsn1::Der struct">Der</a></td><td class="docblock-short"><p><code>Der</code> owns <code>DerRef</code> and represents DER.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.DerBuilder.html" title="bsn1::DerBuilder struct">DerBuilder</a></td><td class="docblock-short"><p><code>DerBuilder</code> is a struct to build <code>Der</code> effectively.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Der.html" title="bsn1::Der struct">Der</a></td><td class="docblock-short"><p><code>Der</code> owns <a href="struct.DerRef.html"><code>DerRef</code></a> and represents DER.</p>
 </td></tr><tr class="module-item"><td><a class="struct" href="struct.DerRef.html" title="bsn1::DerRef struct">DerRef</a></td><td class="docblock-short"><p><code>DerRef</code> is a wrapper of <code>[u8]</code> and represents DER.</p>
 </td></tr><tr class="module-item"><td><a class="struct" href="struct.Id.html" title="bsn1::Id struct">Id</a></td><td class="docblock-short"><p><code>Id</code> owns <code>IdRef</code> and represents Identifier.</p>
 </td></tr><tr class="module-item"><td><a class="struct" href="struct.IdRef.html" title="bsn1::IdRef struct">IdRef</a></td><td class="docblock-short"><p><code>IdRef</code> is a wrapper of <code>[u8]</code> represents Identifier.</p>
@@ -47,7 +44,5 @@ specific class, and private class. <code>bsn1</code> knows all of them.</p>
 </td></tr><tr class="module-item"><td><a class="enum" href="enum.Error.html" title="bsn1::Error enum">Error</a></td><td class="docblock-short"><p>Errors for this crate.</p>
 </td></tr><tr class="module-item"><td><a class="enum" href="enum.Length.html" title="bsn1::Length enum">Length</a></td><td class="docblock-short"><p><code>Length</code> represents ASN.1 length.</p>
 </td></tr><tr class="module-item"><td><a class="enum" href="enum.PCTag.html" title="bsn1::PCTag enum">PCTag</a></td><td class="docblock-short"><p><code>PCTag</code> represents Private/Constructed flag of identifier.</p>
-</td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
-<table><tr class="module-item"><td><a class="fn" href="fn.length_to_bytes.html" title="bsn1::length_to_bytes fn">length_to_bytes</a></td><td class="docblock-short"><p>Serializes <code>length</code> .</p>
-</td></tr><tr class="module-item"><td><a class="fn" href="fn.try_length_from.html" title="bsn1::try_length_from fn">try_length_from</a></td><td class="docblock-short"><p>Tries to parse <code>bytes</code> starting with 'length' and returns <code>Length</code> .</p>
-</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "bsn1";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="bsn1" data-search-js="../search-index.js"></div>
+    <script src="../main.js"></script></body></html>

@@ -1,7 +1,7 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ber.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ber.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ber.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ber.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../bsn1/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
-                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../bsn1/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -678,120 +678,6 @@
 <span id="675">675</span>
 <span id="676">676</span>
 <span id="677">677</span>
-<span id="678">678</span>
-<span id="679">679</span>
-<span id="680">680</span>
-<span id="681">681</span>
-<span id="682">682</span>
-<span id="683">683</span>
-<span id="684">684</span>
-<span id="685">685</span>
-<span id="686">686</span>
-<span id="687">687</span>
-<span id="688">688</span>
-<span id="689">689</span>
-<span id="690">690</span>
-<span id="691">691</span>
-<span id="692">692</span>
-<span id="693">693</span>
-<span id="694">694</span>
-<span id="695">695</span>
-<span id="696">696</span>
-<span id="697">697</span>
-<span id="698">698</span>
-<span id="699">699</span>
-<span id="700">700</span>
-<span id="701">701</span>
-<span id="702">702</span>
-<span id="703">703</span>
-<span id="704">704</span>
-<span id="705">705</span>
-<span id="706">706</span>
-<span id="707">707</span>
-<span id="708">708</span>
-<span id="709">709</span>
-<span id="710">710</span>
-<span id="711">711</span>
-<span id="712">712</span>
-<span id="713">713</span>
-<span id="714">714</span>
-<span id="715">715</span>
-<span id="716">716</span>
-<span id="717">717</span>
-<span id="718">718</span>
-<span id="719">719</span>
-<span id="720">720</span>
-<span id="721">721</span>
-<span id="722">722</span>
-<span id="723">723</span>
-<span id="724">724</span>
-<span id="725">725</span>
-<span id="726">726</span>
-<span id="727">727</span>
-<span id="728">728</span>
-<span id="729">729</span>
-<span id="730">730</span>
-<span id="731">731</span>
-<span id="732">732</span>
-<span id="733">733</span>
-<span id="734">734</span>
-<span id="735">735</span>
-<span id="736">736</span>
-<span id="737">737</span>
-<span id="738">738</span>
-<span id="739">739</span>
-<span id="740">740</span>
-<span id="741">741</span>
-<span id="742">742</span>
-<span id="743">743</span>
-<span id="744">744</span>
-<span id="745">745</span>
-<span id="746">746</span>
-<span id="747">747</span>
-<span id="748">748</span>
-<span id="749">749</span>
-<span id="750">750</span>
-<span id="751">751</span>
-<span id="752">752</span>
-<span id="753">753</span>
-<span id="754">754</span>
-<span id="755">755</span>
-<span id="756">756</span>
-<span id="757">757</span>
-<span id="758">758</span>
-<span id="759">759</span>
-<span id="760">760</span>
-<span id="761">761</span>
-<span id="762">762</span>
-<span id="763">763</span>
-<span id="764">764</span>
-<span id="765">765</span>
-<span id="766">766</span>
-<span id="767">767</span>
-<span id="768">768</span>
-<span id="769">769</span>
-<span id="770">770</span>
-<span id="771">771</span>
-<span id="772">772</span>
-<span id="773">773</span>
-<span id="774">774</span>
-<span id="775">775</span>
-<span id="776">776</span>
-<span id="777">777</span>
-<span id="778">778</span>
-<span id="779">779</span>
-<span id="780">780</span>
-<span id="781">781</span>
-<span id="782">782</span>
-<span id="783">783</span>
-<span id="784">784</span>
-<span id="785">785</span>
-<span id="786">786</span>
-<span id="787">787</span>
-<span id="788">788</span>
-<span id="789">789</span>
-<span id="790">790</span>
-<span id="791">791</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Shin Yoshida</span>
 <span class="comment">//</span>
@@ -846,7 +732,7 @@
 <span class="comment">// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
 <span class="comment">// POSSIBILITY OF SUCH DAMAGE.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">identifier</span>, <span class="ident">length</span>, <span class="ident">Buffer</span>, <span class="ident">Der</span>, <span class="ident">DerBuilder</span>, <span class="ident">DerRef</span>, <span class="ident">Error</span>, <span class="ident">IdRef</span>, <span class="ident">Length</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">identifier</span>, <span class="ident">length</span>, <span class="ident">Buffer</span>, <span class="ident">Der</span>, <span class="ident">DerRef</span>, <span class="ident">Error</span>, <span class="ident">IdRef</span>, <span class="ident">Length</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">convert</span>::<span class="ident">TryFrom</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ops</span>::<span class="ident">Deref</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">borrow</span>::<span class="ident">Borrow</span>;
@@ -1020,7 +906,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">BerRef</span> {
-    <span class="doccomment">/// Provides a reference to the `IdRef` of `self` .</span>
+    <span class="doccomment">/// Provides a reference to `IdRef` of `self` .</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">///</span>
@@ -1046,8 +932,8 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Warnings</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// `Length` stands for &#39;the length of the contents&#39; in BER.</span>
-    <span class="doccomment">/// The length of the total bytes is greater than the value.</span>
+    <span class="doccomment">/// `Length` stands for &#39;the length octets of the contents&#39; in BER.</span>
+    <span class="doccomment">/// The total bytes is greater than the value.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">///</span>
@@ -1068,7 +954,7 @@
         <span class="ident">length</span>::<span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>().<span class="number">0</span>
     }
 
-    <span class="doccomment">/// Provides a reference to the &#39;contents&#39; of `self` .</span>
+    <span class="doccomment">/// Provides a reference to the &#39;contents&#39; octets of `self` .</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">///</span>
@@ -1090,7 +976,9 @@
     }
 }
 
-<span class="doccomment">/// `Ber` owns `BerRef` and represents a BER.</span>
+<span class="doccomment">/// `Ber` owns [`BerRef`] and represents a BER.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`BerRef`]: struct.BerRef.html</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Ber</span> {
     <span class="ident">buffer</span>: <span class="ident">Buffer</span>,
@@ -1134,7 +1022,7 @@
 <span class="kw">impl</span> <span class="ident">Ber</span> {
     <span class="doccomment">/// Creates a new instance from `id` and `contents` with definite length.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Note that BER allows both definite and indefinite length, however, the length of return</span>
+    <span class="doccomment">/// Note that BER allows both definite and indefinite length, however, the length of the return</span>
     <span class="doccomment">/// value is always definite.</span>
     <span class="doccomment">/// (Generally speaking, the performance of definite length is better than that of indefinite</span>
     <span class="doccomment">/// length. Indefinite length is seldom used these days.)</span>
@@ -1150,6 +1038,104 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">IdRef</span>, <span class="ident">contents</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">der</span> <span class="op">=</span> <span class="ident">Der</span>::<span class="ident">new</span>(<span class="ident">id</span>, <span class="ident">contents</span>);
         <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">der</span>)
+    }
+
+    <span class="doccomment">/// Creates a new instance from `id` and `contents` .</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Examples</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// use bsn1::{Ber, IdRef};</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// let id = IdRef::sequence();</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// // Build instance using function &#39;from_id_iterator()&#39;.</span>
+    <span class="doccomment">/// let contents: &amp;[Ber] = &amp;[Ber::utf8_string(&quot;foo&quot;), Ber::integer(29)];</span>
+    <span class="doccomment">/// let ber = Ber::from_id_iterator(id, contents.iter());</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// // Build instance using function &#39;new()&#39;.</span>
+    <span class="doccomment">/// let contents: Vec&lt;u8&gt; = contents.iter()</span>
+    <span class="doccomment">///                         .map(|i| Vec::from(i.as_ref() as &amp;[u8]))</span>
+    <span class="doccomment">///                         .flatten().collect();</span>
+    <span class="doccomment">/// let expected = Ber::new(id, &amp;contents);</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// assert_eq!(expected, ber);</span>
+    <span class="doccomment">/// ```</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_id_iterator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">IdRef</span>, <span class="ident">contents</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>
+    <span class="kw">where</span>
+        <span class="ident">I</span>: <span class="ident">Iterator</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">I</span>::<span class="ident">Item</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
+    {
+        <span class="kw">let</span> <span class="ident">der</span> <span class="op">=</span> <span class="ident">Der</span>::<span class="ident">from_id_iterator</span>(<span class="ident">id</span>, <span class="ident">contents</span>);
+        <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">der</span>)
+    }
+
+    <span class="doccomment">/// Returns a new instance representing boolean.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Examples</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// use bsn1::{contents, Ber, IdRef};</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// let val = true;</span>
+    <span class="doccomment">/// let ber = Ber::boolean(val);</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// assert_eq!(IdRef::boolean(), ber.id());</span>
+    <span class="doccomment">/// assert_eq!(val, contents::to_bool_ber(ber.contents()).unwrap());</span>
+    <span class="doccomment">/// ```</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">boolean</span>(<span class="ident">val</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">Der</span>::<span class="ident">boolean</span>(<span class="ident">val</span>))
+    }
+
+    <span class="doccomment">/// Returns a new instance representing ingeger.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Examples</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// use bsn1::{contents, Ber, IdRef};</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// let val = 39;</span>
+    <span class="doccomment">/// let ber = Ber::integer(val);</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// assert_eq!(IdRef::integer(), ber.id());</span>
+    <span class="doccomment">/// assert_eq!(val, contents::to_integer(ber.contents()).unwrap());</span>
+    <span class="doccomment">/// ```</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">integer</span>(<span class="ident">val</span>: <span class="ident">i128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">Der</span>::<span class="ident">integer</span>(<span class="ident">val</span>))
+    }
+
+    <span class="doccomment">/// Returns a new instance representing utf8_string.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Examples</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// use bsn1::{Ber, IdRef};</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// let val = &amp;&quot;foo&quot;;</span>
+    <span class="doccomment">/// let ber = Ber::utf8_string(val);</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// assert_eq!(IdRef::utf8_string(), ber.id());</span>
+    <span class="doccomment">/// assert_eq!(val.as_bytes(), ber.contents());</span>
+    <span class="doccomment">/// ```</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">utf8_string</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">Der</span>::<span class="ident">utf8_string</span>(<span class="ident">val</span>))
+    }
+
+    <span class="doccomment">/// Returns a new instance representing octet_string.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Examples</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// use bsn1::{Ber, IdRef};</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// let val = &amp;[1, 2, 3];</span>
+    <span class="doccomment">/// let ber = Ber::octet_string(val);</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// assert_eq!(IdRef::octet_string(), ber.id());</span>
+    <span class="doccomment">/// assert_eq!(val, ber.contents());</span>
+    <span class="doccomment">/// ```</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">octet_string</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">Der</span>::<span class="ident">octet_string</span>(<span class="ident">val</span>))
     }
 }
 
@@ -1314,7 +1300,7 @@
             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">IdRef</span>::<span class="ident">sequence</span>();
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">from</span>(<span class="ident">id</span>.<span class="ident">as_ref</span>() <span class="kw">as</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]);
 
-            <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">length</span>::<span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">Length</span>::<span class="ident">Indefinite</span>).<span class="ident">as_ref</span>());
+            <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">Length</span>::<span class="ident">Indefinite</span>.<span class="ident">to_bytes</span>().<span class="ident">as_ref</span>());
 
             <span class="kw">for</span> <span class="ident">ber</span> <span class="kw">in</span> <span class="ident">bers</span>[<span class="number">0</span>..<span class="ident">i</span>].<span class="ident">iter</span>() {
                 <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">ber</span>.<span class="ident">as_ref</span>() <span class="kw">as</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]);
@@ -1358,7 +1344,7 @@
             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">IdRef</span>::<span class="ident">sequence</span>();
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">from</span>(<span class="ident">id</span>.<span class="ident">as_ref</span>() <span class="kw">as</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]);
 
-            <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">length</span>::<span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">Length</span>::<span class="ident">Indefinite</span>).<span class="ident">as_ref</span>());
+            <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">Length</span>::<span class="ident">Indefinite</span>.<span class="ident">to_bytes</span>().<span class="ident">as_ref</span>());
 
             <span class="kw">for</span> <span class="ident">ber</span> <span class="kw">in</span> <span class="ident">bers</span>[<span class="number">0</span>..<span class="ident">i</span>].<span class="ident">iter</span>() {
                 <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">ber</span>.<span class="ident">as_ref</span>() <span class="kw">as</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]);
@@ -1370,219 +1356,6 @@
         }
     }
 }
-
-<span class="kw">enum</span> <span class="ident">InnerBuilder</span> {
-    <span class="ident">Definite</span>(<span class="ident">DerBuilder</span>),
-    <span class="ident">Indefinite</span>(<span class="ident">Buffer</span>),
-}
-
-<span class="doccomment">/// `BerBuilder` is a struct to build `Ber` effectively.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Definite length and empty contents.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use bsn1::{Ber, BerBuilder, IdRef, Length};</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let id = IdRef::octet_string();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let expected = Ber::new(IdRef::octet_string(), &amp;[]);</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // Because the contents is empty, do not need to call method &#39;extend_contents()&#39;.</span>
-<span class="doccomment">/// let mut builder = BerBuilder::new(id, Length::Definite(0));</span>
-<span class="doccomment">/// let ber = builder.finish();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// assert_eq!(expected, ber);</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Indefinite length and empty contents.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use bsn1::{Ber, BerBuilder, IdRef, Length};</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let id = IdRef::octet_string();</span>
-<span class="doccomment">/// let eoc = Ber::new(IdRef::eoc(), &amp;[]);</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // Because the contents is empty, do not need to call method &#39;extend_contents()&#39;.</span>
-<span class="doccomment">/// // Function &#39;finish()&#39; will adds the last &#39;EOC.&#39;</span>
-<span class="doccomment">/// let mut builder = BerBuilder::new(id, Length::Indefinite);</span>
-<span class="doccomment">/// let ber = builder.finish();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// assert_eq!(id, ber.id());</span>
-<span class="doccomment">/// assert_eq!(Length::Indefinite, ber.length());</span>
-<span class="doccomment">/// assert_eq!(eoc.as_ref() as &amp;[u8], ber.contents());</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Definite length and not empty contents.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use bsn1::{Ber, BerBuilder, IdRef, Length};</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let id = IdRef::octet_string();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let contents = &amp;[0, 1, 2, 3, 4];</span>
-<span class="doccomment">/// let expected = Ber::new(IdRef::octet_string(), contents);</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // Append &#39;contents&#39; at once.</span>
-<span class="doccomment">/// {</span>
-<span class="doccomment">///     let length = Length::Definite(contents.len());</span>
-<span class="doccomment">///     let mut builder = BerBuilder::new(id, length);</span>
-<span class="doccomment">///     unsafe { builder.extend_contents(contents) };</span>
-<span class="doccomment">///     let ber = builder.finish();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     assert_eq!(expected, ber);</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // Split contents into 2 pieces and append them one by one.</span>
-<span class="doccomment">/// {</span>
-<span class="doccomment">///     let length = Length::Definite(contents.len());</span>
-<span class="doccomment">///     let mut builder = BerBuilder::new(id, length);</span>
-<span class="doccomment">///     unsafe {</span>
-<span class="doccomment">///         builder.extend_contents(&amp;contents[..2]);</span>
-<span class="doccomment">///         builder.extend_contents(&amp;contents[2..]);</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">///     let ber = builder.finish();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     assert_eq!(expected, ber);</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Indefinite length and not empty contents.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use bsn1::{Ber, BerBuilder, IdRef, Length};</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let id = IdRef::octet_string();</span>
-<span class="doccomment">/// let contents: &amp;[u8] = &amp;[0, 1, 2, 3, 4];</span>
-<span class="doccomment">/// let eoc = Ber::new(IdRef::eoc(), &amp;[]);</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // Append &#39;contents&#39; at once.</span>
-<span class="doccomment">/// {</span>
-<span class="doccomment">///     let length = Length::Indefinite;</span>
-<span class="doccomment">///     let mut builder = BerBuilder::new(id, length);</span>
-<span class="doccomment">///     unsafe { builder.extend_contents(contents) };</span>
-<span class="doccomment">///     let ber = builder.finish();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     assert_eq!(id, ber.id());</span>
-<span class="doccomment">///     assert_eq!(Length::Indefinite, ber.length());</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     let mut bytes = Vec::from(contents);</span>
-<span class="doccomment">///     bytes.extend(eoc.as_ref() as &amp;[u8]);</span>
-<span class="doccomment">///     let bytes: &amp;[u8] = bytes.as_ref();</span>
-<span class="doccomment">///     assert_eq!(bytes, ber.contents());</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // Split contents into 2 pieces and append them one by one.</span>
-<span class="doccomment">/// {</span>
-<span class="doccomment">///     let length = Length::Indefinite;</span>
-<span class="doccomment">///     let mut builder = BerBuilder::new(id, length);</span>
-<span class="doccomment">///     unsafe {</span>
-<span class="doccomment">///         builder.extend_contents(&amp;contents[..2]);</span>
-<span class="doccomment">///         builder.extend_contents(&amp;contents[2..]);</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">///     let ber = builder.finish();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     assert_eq!(id, ber.id());</span>
-<span class="doccomment">///     assert_eq!(Length::Indefinite, ber.length());</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     let mut bytes = Vec::from(contents);</span>
-<span class="doccomment">///     bytes.extend(eoc.as_ref() as &amp;[u8]);</span>
-<span class="doccomment">///     let bytes: &amp;[u8] = bytes.as_ref();</span>
-<span class="doccomment">///     assert_eq!(bytes, ber.contents());</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BerBuilder</span> {
-    <span class="ident">builder</span>: <span class="ident">InnerBuilder</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">BerBuilder</span> {
-    <span class="doccomment">/// Creates a new instance to build `Der` with `id` and contents whose length equals to</span>
-    <span class="doccomment">/// `contents_len` .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// See examples for the [`struct`] .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`struct`]: struct.BerBuilder.html</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">IdRef</span>, <span class="ident">contents_len</span>: <span class="ident">Length</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">builder</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">contents_len</span> {
-            <span class="ident">Length</span>::<span class="ident">Definite</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">InnerBuilder</span>::<span class="ident">Definite</span>(<span class="ident">DerBuilder</span>::<span class="ident">new</span>(<span class="ident">id</span>, <span class="ident">contents_len</span>)),
-            <span class="ident">Length</span>::<span class="ident">Indefinite</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">Buffer</span>::<span class="ident">new</span>();
-                <span class="ident">buffer</span>.<span class="ident">extend_from_slice</span>(<span class="ident">id</span>.<span class="ident">as_ref</span>());
-
-                <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">length</span>::<span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">Length</span>::<span class="ident">Indefinite</span>);
-                <span class="ident">buffer</span>.<span class="ident">extend_from_slice</span>(<span class="ident">length</span>.<span class="ident">as_ref</span>());
-                <span class="ident">InnerBuilder</span>::<span class="ident">Indefinite</span>(<span class="ident">buffer</span>)
-            }
-        };
-
-        <span class="self">Self</span> { <span class="ident">builder</span> }
-    }
-
-    <span class="doccomment">/// Appends `bytes` to the end of the DER contents to be build.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Warnings</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The user must not adds &#39;EOC&#39; if `Length::Indefinite` was passed to the constructor</span>
-    <span class="doccomment">/// funciton [`new`] .</span>
-    <span class="doccomment">/// Function [`finish`] will adds the last &#39;EOC.&#39;</span>
-    <span class="doccomment">/// (Indefinite length BER must include one and only one &#39;EOC&#39; in the contents.)</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The behavior is undefined if user appends &#39;EOC&#39; to a Indefinite length builder instance.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Panics</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Panics if `Length::Definite` was passed to the constructor [`new`] ,</span>
-    <span class="doccomment">/// and if the accumerated length of the &#39;contents&#39; will exceed that value.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// See examples for the [`struct`] .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`new`]: #method.new</span>
-    <span class="doccomment">/// [`finish`]: #method.finish</span>
-    <span class="doccomment">/// [`struct`]: struct.BerBuilder.html</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">extend_contents</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">bytes</span>: <span class="ident">B</span>)
-    <span class="kw">where</span>
-        <span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-    {
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">builder</span> {
-            <span class="ident">InnerBuilder</span>::<span class="ident">Definite</span>(<span class="ident">der_builder</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">der_builder</span>.<span class="ident">extend_contents</span>(<span class="ident">bytes</span>),
-            <span class="ident">InnerBuilder</span>::<span class="ident">Indefinite</span>(<span class="ident">buffer</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">buffer</span>.<span class="ident">extend_from_slice</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()),
-        }
-    }
-
-    <span class="doccomment">/// Consumes `self` , building a new `Ber` instance.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If `Length::Indefinite` was passed to the constructor [`new`] , this method adds &#39;EOC&#39;</span>
-    <span class="doccomment">/// to the end of contents of a building `Ber` .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Panics</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Panics if `Length::Definite` was passed to the constructor [`new`] ,</span>
-    <span class="doccomment">/// and if the accumerated length of the &#39;contents&#39; does not equal to that value.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// See examples for the [`struct`] .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`new`]: #method.new</span>
-    <span class="doccomment">/// [`struct`]: struct.BerBuilder.html</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ber</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">builder</span> {
-            <span class="ident">InnerBuilder</span>::<span class="ident">Definite</span>(<span class="ident">der_builder</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Ber</span>::<span class="ident">from</span>(<span class="ident">der_builder</span>.<span class="ident">finish</span>()),
-            <span class="ident">InnerBuilder</span>::<span class="ident">Indefinite</span>(<span class="kw-2">mut</span> <span class="ident">buffer</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">eoc</span> <span class="op">=</span> <span class="ident">Ber</span>::<span class="ident">new</span>(<span class="ident">IdRef</span>::<span class="ident">eoc</span>(), <span class="kw-2">&amp;</span>[]);
-                <span class="ident">buffer</span>.<span class="ident">extend_from_slice</span>(<span class="ident">eoc</span>.<span class="ident">as_ref</span>());
-                <span class="ident">Ber</span> { <span class="ident">buffer</span> }
-            }
-        }
-    }
-}
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "bsn1";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bsn1" data-search-js="../../search-index.js"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>
