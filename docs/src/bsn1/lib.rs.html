@@ -1,7 +1,7 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../bsn1/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
-                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../bsn1/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -137,11 +137,6 @@
 <span id="134">134</span>
 <span id="135">135</span>
 <span id="136">136</span>
-<span id="137">137</span>
-<span id="138">138</span>
-<span id="139">139</span>
-<span id="140">140</span>
-<span id="141">141</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Shin Yoshida</span>
 <span class="comment">//</span>
@@ -198,42 +193,39 @@
 
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">missing_docs</span>)]</span>
 
-<span class="doccomment">//! `bsn1` treats &#39;ASN.1.&#39;</span>
+<span class="doccomment">//! `bsn1` is a rust library to serialize/deserialize in &#39;ASN.1&#39; format.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Unlike to other crates, `bsn.1` is able to treat class &#39;Application&#39;, &#39;Context-specific&#39;,</span>
+<span class="doccomment">//! and &#39;Private&#39; as well as &#39;Universal&#39;.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! # What is ASN.1?</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! ASN.1 stands for &#39;Abstruct Syntax Notation One&#39; and X.690 is an &#39;ITU-T&#39; standard specifying</span>
-<span class="doccomment">//! the following ASN.1 encording formats.</span>
+<span class="doccomment">//! ASN.1 stands for &#39;Abstract Syntax Notation One&#39; and X.690 is an &#39;ITU-T&#39; standard specifying</span>
+<span class="doccomment">//! the following ASN.1 encoding formats.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! - Basic Encoding Rules (BER)</span>
 <span class="doccomment">//! - Canonical Encoding Rules (CER)</span>
 <span class="doccomment">//! - Distinguished Encoding Rules (DER)</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! This crate supports BER and DER so far.</span>
+<span class="doccomment">//! This crate supports BER and DER for now.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! ASN.1 formats resembles &#39;JSON&#39; in some ways, because they both are about serializing</span>
-<span class="doccomment">//! structured data, however, they differs in the following points.</span>
+<span class="doccomment">//! ASN.1 resembles &#39;JSON&#39; in some ways because they both are about serializing structured data,</span>
+<span class="doccomment">//! however, they differ in the following points.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! - JSON are easy for human to read, on the other hand, ASN.1 is readable for a computer.</span>
-<span class="doccomment">//!   i.e. ASN.1 consumes less computer resources and less CPU time than JSON does.</span>
-<span class="doccomment">//! - ASN.1 defines types &#39;Integer&#39;, &#39;Boolean&#39;, &#39;String&#39;, &#39;Sequence&#39;, and so on universally like</span>
-<span class="doccomment">//!   JSON. What is more, ASN.1 allows for users to define a new data type.</span>
+<span class="doccomment">//! - JSON is easy for a human to read, on the other hand, ASN.1 is readable for a computer.</span>
+<span class="doccomment">//!   i.e. ASN.1 consumes less computer resource like CPU time than JSON does.</span>
+<span class="doccomment">//! - There are 4 classes in ASN.1 formats, &#39;Universal&#39;, &#39;Application&#39;, &#39;Context-specific&#39;,</span>
+<span class="doccomment">//!   and &#39;Private&#39;.</span>
+<span class="doccomment">//!   Class &#39;Universal&#39; defines types like &#39;Integer&#39;, &#39;Boolean&#39;, &#39;String&#39;, &#39;Sequence&#39; and so on</span>
+<span class="doccomment">//!   like JSON. What is more, ASN.1 allows users to define a new data type using other classes.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! ASN.1 has been used all over the world for a long time and very stable. For example,</span>
+<span class="doccomment">//! ASN.1 has been used all over the world for a long time and it is very stable. For example,</span>
 <span class="doccomment">//! &#39;Transport Layer Security (TLS, SSL)&#39;, &#39;Lightweight Directory Access Protocol (LDAP)&#39;,</span>
 <span class="doccomment">//! &#39;4th Generation Mobile Communication System (4G)&#39;, and so on.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! See [&#39;X.690 (07/2002)&#39;] for details.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! [&#39;X.690 (07/2002)&#39;]: https://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! # Feature of `bsn1`</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! `bsn1` treats user defined data as well as universal data types; while most other rust</span>
-<span class="doccomment">//! crates can treat only universal data.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! To be accurate, there are 4 classes in ASN.1; universal class, application class, context</span>
-<span class="doccomment">//! specific class, and private class. `bsn1` knows all of them.</span>
 
 <span class="kw">mod</span> <span class="ident">ber</span>;
 <span class="kw">mod</span> <span class="ident">buffer</span>;
@@ -242,12 +234,10 @@
 <span class="kw">mod</span> <span class="ident">identifier</span>;
 <span class="kw">mod</span> <span class="ident">length</span>;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ber</span>::{<span class="ident">Ber</span>, <span class="ident">BerBuilder</span>, <span class="ident">BerRef</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ber</span>::{<span class="ident">Ber</span>, <span class="ident">BerRef</span>};
 <span class="kw">use</span> <span class="ident">buffer</span>::{<span class="ident">Buffer</span>, <span class="ident">StackBuffer</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">der</span>::{<span class="ident">Der</span>, <span class="ident">DerBuilder</span>, <span class="ident">DerRef</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">der</span>::{<span class="ident">Der</span>, <span class="ident">DerRef</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">identifier</span>::{<span class="ident">ClassTag</span>, <span class="ident">Id</span>, <span class="ident">IdRef</span>, <span class="ident">PCTag</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">length</span>::<span class="ident">to_bytes</span> <span class="kw">as</span> <span class="ident">length_to_bytes</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">length</span>::<span class="ident">try_from</span> <span class="kw">as</span> <span class="ident">try_length_from</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">length</span>::<span class="ident">Length</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
 
@@ -285,4 +275,5 @@
 
 <span class="kw">impl</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="kw">for</span> <span class="ident">Error</span> {}
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "bsn1";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bsn1" data-search-js="../../search-index.js"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>
