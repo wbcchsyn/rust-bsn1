@@ -310,6 +310,20 @@ impl Der {
     /// such an identifier.
     /// For example, 'Octet String' must be primitive in DER, but this function will construct a
     /// new instance even if `id` represenets constructed 'Octet String.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents: &[u8] = &[10, 20, 30];
+    ///
+    /// let der = Der::new(id, contents);
+    ///
+    /// assert_eq!(id, der.id());
+    /// assert_eq!(contents, der.contents());
+    /// ```
     pub fn new(id: &IdRef, contents: &[u8]) -> Self {
         let len = Length::Definite(contents.len());
         let len = len.to_bytes();
@@ -629,6 +643,67 @@ mod tests {
             assert_eq!(id, der.id());
             assert_eq!(Length::Definite(bytes.len()), der.length());
             assert_eq!(bytes, der.contents());
+        }
+    }
+
+    #[test]
+    fn from_id_iterator() {
+        let id = IdRef::octet_string();
+
+        // Empty contents
+        {
+            let contents: &[&[u8]] = &[];
+            let der = Der::from_id_iterator(id, contents.iter());
+            let expected = Der::new(id, &[]);
+            assert_eq!(expected, der);
+        }
+
+        // Single slice of empty bytes.
+        {
+            let contents: &[&[u8]] = &[&[]];
+            let der = Der::from_id_iterator(id, contents.iter());
+            let expected = Der::new(id, &[]);
+            assert_eq!(expected, der);
+        }
+
+        // Single slice of not empty bytes.
+        {
+            let contents: &[&[u8]] = &[&[1, 2, 3]];
+            let der = Der::from_id_iterator(id, contents.iter());
+            let expected = Der::new(id, &[1, 2, 3]);
+            assert_eq!(expected, der);
+        }
+
+        // 2 elements slice.
+        // Both elements are empty.
+        {
+            let contents: &[&[u8]] = &[&[], &[]];
+            let der = Der::from_id_iterator(id, contents.iter());
+            let expected = Der::new(id, &[]);
+            assert_eq!(expected, der);
+        }
+
+        // 2 elements slice.
+        // One of the elements is empty
+        {
+            let contents: &[&[u8]] = &[&[], &[1, 2]];
+            let der = Der::from_id_iterator(id, contents.iter());
+            let expected = Der::new(id, &[1, 2]);
+            assert_eq!(expected, der);
+
+            let contents: &[&[u8]] = &[&[3], &[]];
+            let der = Der::from_id_iterator(id, contents.iter());
+            let expected = Der::new(id, &[3]);
+            assert_eq!(expected, der);
+        }
+
+        // 2 elements slice.
+        // Neither element is empty
+        {
+            let contents: &[&[u8]] = &[&[1, 2], &[3]];
+            let der = Der::from_id_iterator(id, contents.iter());
+            let expected = Der::new(id, &[1, 2, 3]);
+            assert_eq!(expected, der);
         }
     }
 
