@@ -310,6 +310,20 @@ impl Der {
     /// such an identifier.
     /// For example, 'Octet String' must be primitive in DER, but this function will construct a
     /// new instance even if `id` represenets constructed 'Octet String.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents: &[u8] = &[10, 20, 30];
+    ///
+    /// let der = Der::new(id, contents);
+    ///
+    /// assert_eq!(id, der.id());
+    /// assert_eq!(contents, der.contents());
+    /// ```
     pub fn new(id: &IdRef, contents: &[u8]) -> Self {
         let len = Length::Definite(contents.len());
         let len = len.to_bytes();
