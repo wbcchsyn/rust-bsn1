@@ -312,7 +312,7 @@ impl Der {
     /// new instance even if `id` represenets constructed 'Octet String.'
     pub fn new(id: &IdRef, contents: &[u8]) -> Self {
         let len = Length::Definite(contents.len());
-        let len = length::to_bytes(&len);
+        let len = len.to_bytes();
 
         let total_len = id.as_ref().len() + len.as_ref().len() + contents.len();
         let mut buffer = Buffer::with_capacity(total_len);
@@ -546,7 +546,7 @@ impl DerBuilder {
     ///
     /// [`struct`]: struct.DerBuilder.html
     pub fn new(id: &IdRef, contents_len: Length) -> Self {
-        let length = length::to_bytes(&contents_len);
+        let length = contents_len.to_bytes();
         let contents_len = match contents_len {
             Length::Definite(len) => len,
             Length::Indefinite => panic!("Indefinite length is specified to DerBuilder."),
@@ -699,7 +699,7 @@ macro_rules! __bsn1__expand_constructed_der {
     }};
 
     (($id_1:expr, $contents_1:expr) $(, ($id_n:expr, $contents_n:expr))* ; $id:tt $($acc:tt)*) => {{
-        use bsn1::{length_to_bytes, Length};
+        use bsn1::Length;
 
         let id_1 = $id_1;
         let id_1: &[u8] = id_1.as_ref();
@@ -708,7 +708,7 @@ macro_rules! __bsn1__expand_constructed_der {
         let contents_1: &[u8] = contents_1.as_ref();
 
         let length_1 = Length::Definite(contents_1.len());
-        let length_1 = length_to_bytes(&length_1);
+        let length_1 = length_1.to_bytes();
         let length_1: &[u8] = length_1.as_ref();
 
         __bsn1__expand_constructed_der!(

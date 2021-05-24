@@ -54,6 +54,7 @@
 //! functions and enum about 'Length' octet of 'ASN.1.'
 
 use crate::{Error, StackBuffer};
+use core::convert::TryFrom;
 use core::mem::size_of;
 
 /// `Length` represents ASN.1 length.
@@ -71,27 +72,73 @@ pub enum Length {
     Definite(usize),
 }
 
+impl TryFrom<&[u8]> for Length {
+    type Error = Error;
+
+    /// Parses `bytes` starting with length octets and returns a `Length` .
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
+        try_from(bytes).map(|(length, _rest)| length)
+    }
+}
+
 impl Length {
     const LONG_FLAG: u8 = 0x80;
     const MAX_SHORT: u8 = Self::LONG_FLAG - 1;
     const INDEFINITE: u8 = 0x80;
 }
 
+impl Length {
+    /// Serializes `length` .
+    ///
+    /// This function won't allocate heap memory.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Length;
+    /// use core::convert::TryFrom;
+    ///
+    /// let length = Length::Definite(3);
+    /// let bytes = length.to_bytes();
+    ///
+    /// let deserialized = Length::try_from(bytes.as_ref()).unwrap();
+    /// assert_eq!(length, deserialized);
+    /// ```
+    #[inline]
+    pub fn to_bytes(&self) -> impl AsRef<[u8]> {
+        let mut buffer = StackBuffer::new();
+
+        match *self {
+            Length::Indefinite => unsafe { buffer.push(Length::INDEFINITE) },
+            Length::Definite(mut val) => {
+                if val <= Length::MAX_SHORT as usize {
+                    // Short form
+                    unsafe { buffer.push(val as u8) };
+                } else {
+                    // Long form
+                    let len = (8 * size_of::<usize>() - (val.leading_zeros() as usize) + 7) / 8 + 1;
+                    unsafe { buffer.set_len(len) };
+                    buffer[0] = Length::LONG_FLAG + (len - 1) as u8;
+
+                    for i in (1..len).rev() {
+                        debug_assert!(0 < val);
+                        buffer[i] = val as u8;
+                        val >>= 8;
+                    }
+                    debug_assert_eq!(0, val);
+                }
+            }
+        }
+
+        buffer
+    }
+}
+
 /// Tries to parse `bytes` starting with 'length' and returns `(Length, octets_after_length)` .
 ///
 /// This function ignores extra octets at the end of `bytes` .
-///
-/// # Examples
-///
-/// ```
-/// use bsn1::{length_to_bytes, try_length_from, Length};
-///
-/// let length = Length::Definite(3);
-/// let bytes = length_to_bytes(&length);
-///
-/// let deserialized = try_length_from(bytes.as_ref()).unwrap();
-/// assert_eq!(length, deserialized.0);
-/// ```
 #[inline]
 pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
     let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
@@ -125,50 +172,6 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
         let bytes = &bytes[followings_count..];
         Ok((Length::Definite(len), bytes))
     }
-}
-
-/// Serializes `length` .
-///
-/// This function won't allocate heap memory.
-///
-/// # Examples
-///
-/// ```
-/// use bsn1::{length_to_bytes, try_length_from, Length};
-///
-/// let length = Length::Definite(3);
-/// let bytes = length_to_bytes(&length);
-///
-/// let deserialized = try_length_from(bytes.as_ref()).unwrap();
-/// assert_eq!(length, deserialized.0);
-/// ```
-#[inline]
-pub fn to_bytes(length: &Length) -> impl AsRef<[u8]> {
-    let mut buffer = StackBuffer::new();
-
-    match *length {
-        Length::Indefinite => unsafe { buffer.push(Length::INDEFINITE) },
-        Length::Definite(mut val) => {
-            if val <= Length::MAX_SHORT as usize {
-                // Short form
-                unsafe { buffer.push(val as u8) };
-            } else {
-                // Long form
-                let len = (8 * size_of::<usize>() - (val.leading_zeros() as usize) + 7) / 8 + 1;
-                unsafe { buffer.set_len(len) };
-                buffer[0] = Length::LONG_FLAG + (len - 1) as u8;
-
-                for i in (1..len).rev() {
-                    debug_assert!(0 < val);
-                    buffer[i] = val as u8;
-                    val >>= 8;
-                }
-                debug_assert_eq!(0, val);
-            }
-        }
-    }
-
-    buffer
 }
 
 #[cfg(test)]
@@ -368,19 +371,19 @@ mod tests {
     }
 
     #[test]
-    fn to_bytes_length() {
+    fn to_bytes() {
         let empty: &[u8] = &[];
 
         // Indefinite
         {
-            let bytes = to_bytes(&Length::Indefinite);
+            let bytes = Length::Indefinite.to_bytes();
             let length = try_from(bytes.as_ref()).unwrap();
             assert_eq!((Length::Indefinite, empty), length);
         }
 
         // Definite
         for &len in &[0, 1, 0x7f, 0x80, 0xff, 0x0100, 0xffff, usize::MAX] {
-            let bytes = to_bytes(&Length::Definite(len));
+            let bytes = Length::Definite(len).to_bytes();
             let length = try_from(bytes.as_ref()).unwrap();
             assert_eq!((Length::Definite(len), empty), length);
         }
