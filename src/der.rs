@@ -735,16 +735,8 @@ macro_rules! constructed_der {
 #[macro_export]
 macro_rules! __bsn1__expand_constructed_der {
     (; $id:tt $($contents:tt)*) => {{
-        use bsn1::{DerBuilder, Length};
-
         let contents: &[&[u8]] = &[$($contents),*];
-        let contents_len = contents.iter().fold(0, |acc, &bytes| acc + bytes.len());
-
-        let mut builder = DerBuilder::new($id, Length::Definite(contents_len));
-        for &bytes in contents {
-            builder.extend_contents(bytes);
-        }
-        builder.finish()
+        bsn1::Der::from_id_iterator($id, contents.iter())
     }};
 
     (($id_1:expr, $contents_1:expr) $(, ($id_n:expr, $contents_n:expr))* ; $id:tt $($acc:tt)*) => {{
