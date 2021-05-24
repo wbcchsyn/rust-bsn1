@@ -94,7 +94,7 @@ mod der;
 mod identifier;
 mod length;
 
-pub use ber::{Ber, BerBuilder, BerRef};
+pub use ber::{Ber, BerRef};
 use buffer::{Buffer, StackBuffer};
 pub use der::{Der, DerBuilder, DerRef};
 pub use identifier::{ClassTag, Id, IdRef, PCTag};
