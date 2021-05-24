@@ -333,6 +333,55 @@ impl Der {
         Self { buffer }
     }
 
+    /// Creates a new instance from `id` and `contents` .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function will construct a
+    /// new instance even if `id` represenets constructed 'Octet String.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let id = IdRef::sequence();
+    ///
+    /// // Build instance using function 'from_id_iterator()'.
+    /// let contents: &[Der] = &[Der::utf8_string("foo"), Der::integer(29)];
+    /// let der = Der::from_id_iterator(id, contents.iter());
+    ///
+    /// // Build instance using function 'new()'.
+    /// let contents: Vec<u8> = contents.iter()
+    ///                         .map(|i| Vec::from(i.as_ref() as &[u8]))
+    ///                         .flatten().collect();
+    /// let expected = Der::new(id, &contents);
+    ///
+    /// assert_eq!(expected, der);
+    /// ```
+    pub fn from_id_iterator<I>(id: &IdRef, contents: I) -> Self
+    where
+        I: Iterator + Clone,
+        I::Item: AsRef<[u8]>,
+    {
+        let length = contents
+            .clone()
+            .fold(0, |acc, item| acc + item.as_ref().len());
+        let length_bytes = Length::Definite(length).to_bytes();
+        let total_len = id.as_ref().len() + length_bytes.as_ref().len() + length;
+
+        let mut buffer = Buffer::with_capacity(total_len);
+        buffer.extend_from_slice(id.as_ref());
+        buffer.extend_from_slice(length_bytes.as_ref());
+        for c in contents {
+            buffer.extend_from_slice(c.as_ref());
+        }
+
+        Self { buffer }
+    }
+
     /// Returns a new instance representing boolean.
     ///
     /// # Examples
@@ -465,155 +514,6 @@ pub fn disassemble_der(der: Der) -> Buffer {
     der.buffer
 }
 
-/// `DerBuilder` is a struct to build [`Der`] effectively.
-///
-/// [`Der`]: struct.Der.html
-///
-/// # Examples
-///
-/// Empty contents.
-///
-/// ```
-/// use bsn1::{Der, DerBuilder, IdRef, Length};
-///
-/// let id = IdRef::octet_string();
-///
-/// let expected = Der::new(IdRef::octet_string(), &[]);
-///
-/// // Because the contents is empty, do not need to call method 'extend_contents()'.
-/// let builder = DerBuilder::new(id, Length::Definite(0));
-/// let der = builder.finish();
-///
-/// assert_eq!(expected, der);
-/// ```
-///
-/// Not empty contents
-///
-/// ```
-/// use bsn1::{Der, DerBuilder, IdRef, Length};
-///
-/// let id = IdRef::octet_string();
-///
-/// let contents = &[0, 1, 2, 3, 4];
-/// let expected = Der::new(IdRef::octet_string(), contents);
-///
-/// // Append 'contents' at once.
-/// {
-///     let length = Length::Definite(contents.len());
-///     let mut builder = DerBuilder::new(id, length);
-///     builder.extend_contents(contents);
-///     let der = builder.finish();
-///
-///     assert_eq!(expected, der);
-/// }
-///
-/// // Split contents into 2 pieces and append them one by one.
-/// {
-///     let length = Length::Definite(contents.len());
-///     let mut builder = DerBuilder::new(id, length);
-///     builder.extend_contents(&contents[..2]);
-///     builder.extend_contents(&contents[2..]);
-///     let der = builder.finish();
-///
-///     assert_eq!(expected, der);
-/// }
-/// ```
-pub struct DerBuilder {
-    buffer: Buffer,
-    cursor: usize,
-}
-
-impl DerBuilder {
-    /// Creates a new instance to build `Der` with `id` and contents whose length equals to
-    /// `contents_len` .
-    ///
-    /// `contents_len` must be `Length::Definite` because DER does not allow indefinite length.
-    ///
-    /// # Warnings
-    ///
-    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
-    /// such an identifier.
-    /// For example, 'Octet String' must be primitive in DER, but this function will construct a
-    /// new instance even if `id` represenets constructed 'Octet String.'
-    ///
-    /// # Panics
-    ///
-    /// Panics if `contents_len` equals `Length::Indefinite` .
-    ///
-    /// # Examples
-    ///
-    /// See examples for the [`struct`] .
-    ///
-    /// [`struct`]: struct.DerBuilder.html
-    pub fn new(id: &IdRef, contents_len: Length) -> Self {
-        let length = contents_len.to_bytes();
-        let contents_len = match contents_len {
-            Length::Definite(len) => len,
-            Length::Indefinite => panic!("Indefinite length is specified to DerBuilder."),
-        };
-
-        let total_len = id.as_ref().len() + length.as_ref().len() + contents_len;
-        let mut buffer = Buffer::with_capacity(total_len);
-        unsafe { buffer.set_len(total_len) };
-
-        let mut ret = Self { buffer, cursor: 0 };
-        ret.extend_contents(id);
-        ret.extend_contents(length);
-
-        ret
-    }
-
-    /// Appends `bytes` to the end of the DER contents to be build.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the accumerated length of the 'contents' exceeds `contents_len` passed to
-    /// the constructor function [`new`] as the argument.
-    ///
-    /// # Examples
-    ///
-    /// See examples for the [`struct`] .
-    ///
-    /// [`new`]: #method.new
-    /// [`struct`]: struct.DerBuilder.html
-    #[inline]
-    pub fn extend_contents<B>(&mut self, bytes: B)
-    where
-        B: AsRef<[u8]>,
-    {
-        let bytes = bytes.as_ref();
-        assert!(self.cursor + bytes.len() <= self.buffer.len());
-
-        unsafe {
-            let ptr = self.buffer.as_mut_ptr().add(self.cursor);
-            ptr.copy_from_nonoverlapping(bytes.as_ptr(), bytes.len());
-            self.cursor += bytes.len();
-        }
-    }
-
-    /// Consumes `self` , building a new `Der` .
-    ///
-    /// # Panics
-    ///
-    /// Panics if the accumerated length of the 'contents' differs from `contents_len` passed
-    /// to the constructor function [`new`] as the argument.
-    ///
-    /// # Examples
-    ///
-    /// See examples for the [`struct`] .
-    ///
-    /// [`new`]: #method.new
-    /// [`struct`]: struct.DerBuilder.html
-    #[inline]
-    pub fn finish(self) -> Der {
-        assert_eq!(self.cursor, self.buffer.len());
-
-        Der {
-            buffer: self.buffer,
-        }
-    }
-}
-
 /// Builds a `Der` instance representing 'Constructed DER' effectively.
 ///
 /// # Formula
@@ -686,16 +586,8 @@ macro_rules! constructed_der {
 #[macro_export]
 macro_rules! __bsn1__expand_constructed_der {
     (; $id:tt $($contents:tt)*) => {{
-        use bsn1::{DerBuilder, Length};
-
         let contents: &[&[u8]] = &[$($contents),*];
-        let contents_len = contents.iter().fold(0, |acc, &bytes| acc + bytes.len());
-
-        let mut builder = DerBuilder::new($id, Length::Definite(contents_len));
-        for &bytes in contents {
-            builder.extend_contents(bytes);
-        }
-        builder.finish()
+        bsn1::Der::from_id_iterator($id, contents.iter())
     }};
 
     (($id_1:expr, $contents_1:expr) $(, ($id_n:expr, $contents_n:expr))* ; $id:tt $($acc:tt)*) => {{
