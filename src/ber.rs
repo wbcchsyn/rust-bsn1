@@ -359,6 +359,36 @@ impl Ber {
         Self::from(der)
     }
 
+    /// Creates a new instance from `id` and `contents` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, IdRef};
+    ///
+    /// let id = IdRef::sequence();
+    ///
+    /// // Build instance using function 'from_id_iterator()'.
+    /// let contents: &[Ber] = &[Ber::utf8_string("foo"), Ber::integer(29)];
+    /// let ber = Ber::from_id_iterator(id, contents.iter());
+    ///
+    /// // Build instance using function 'new()'.
+    /// let contents: Vec<u8> = contents.iter()
+    ///                         .map(|i| Vec::from(i.as_ref() as &[u8]))
+    ///                         .flatten().collect();
+    /// let expected = Ber::new(id, &contents);
+    ///
+    /// assert_eq!(expected, ber);
+    /// ```
+    pub fn from_id_iterator<I>(id: &IdRef, contents: I) -> Self
+    where
+        I: Iterator + Clone,
+        I::Item: AsRef<[u8]>,
+    {
+        let der = Der::from_id_iterator(id, contents);
+        Self::from(der)
+    }
+
     /// Returns a new instance representing boolean.
     ///
     /// # Examples
