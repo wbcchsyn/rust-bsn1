@@ -333,6 +333,55 @@ impl Der {
         Self { buffer }
     }
 
+    /// Creates a new instance from `id` and `contents` .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function will construct a
+    /// new instance even if `id` represenets constructed 'Octet String.'
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let id = IdRef::sequence();
+    ///
+    /// // Build instance using function 'from_id_iterator()'.
+    /// let contents: &[Der] = &[Der::utf8_string("foo"), Der::integer(29)];
+    /// let der = Der::from_id_iterator(id, contents.iter());
+    ///
+    /// // Build instance using function 'new()'.
+    /// let contents: Vec<u8> = contents.iter()
+    ///                         .map(|i| Vec::from(i.as_ref() as &[u8]))
+    ///                         .flatten().collect();
+    /// let expected = Der::new(id, &contents);
+    ///
+    /// assert_eq!(expected, der);
+    /// ```
+    pub fn from_id_iterator<I>(id: &IdRef, contents: I) -> Self
+    where
+        I: Iterator + Clone,
+        I::Item: AsRef<[u8]>,
+    {
+        let length = contents
+            .clone()
+            .fold(0, |acc, item| acc + item.as_ref().len());
+        let length_bytes = Length::Definite(length).to_bytes();
+        let total_len = id.as_ref().len() + length_bytes.as_ref().len() + length;
+
+        let mut buffer = Buffer::with_capacity(total_len);
+        buffer.extend_from_slice(id.as_ref());
+        buffer.extend_from_slice(length_bytes.as_ref());
+        for c in contents {
+            buffer.extend_from_slice(c.as_ref());
+        }
+
+        Self { buffer }
+    }
+
     /// Returns a new instance representing boolean.
     ///
     /// # Examples
