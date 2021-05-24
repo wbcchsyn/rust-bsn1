@@ -97,13 +97,14 @@ impl Length {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{try_length_from, Length};
+    /// use bsn1::Length;
+    /// use core::convert::TryFrom;
     ///
     /// let length = Length::Definite(3);
     /// let bytes = length.to_bytes();
     ///
-    /// let deserialized = try_length_from(bytes.as_ref()).unwrap();
-    /// assert_eq!(length, deserialized.0);
+    /// let deserialized = Length::try_from(bytes.as_ref()).unwrap();
+    /// assert_eq!(length, deserialized);
     /// ```
     #[inline]
     pub fn to_bytes(&self) -> impl AsRef<[u8]> {
@@ -138,18 +139,6 @@ impl Length {
 /// Tries to parse `bytes` starting with 'length' and returns `(Length, octets_after_length)` .
 ///
 /// This function ignores extra octets at the end of `bytes` .
-///
-/// # Examples
-///
-/// ```
-/// use bsn1::{try_length_from, Length};
-///
-/// let length = Length::Definite(3);
-/// let bytes = length.to_bytes();
-///
-/// let deserialized = try_length_from(bytes.as_ref()).unwrap();
-/// assert_eq!(length, deserialized.0);
-/// ```
 #[inline]
 pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
     let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
