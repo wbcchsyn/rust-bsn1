@@ -1614,7 +1614,17 @@ mod tests {
     fn new() {
         for &cl in CLASSES {
             for &pc in PCS {
-                for &num in &[0, 30, 31, 0x7f, 0x80, 0x3fff, 0x8000, 0x1fffff, std::u128::MAX] {
+                for &num in &[
+                    0,
+                    30,
+                    31,
+                    0x7f,
+                    0x80,
+                    0x3fff,
+                    0x8000,
+                    0x1fffff,
+                    std::u128::MAX,
+                ] {
                     let id = Id::new(cl, pc, num);
                     let idref = <&IdRef>::try_from(id.as_ref() as &[u8]).unwrap();
                     assert_eq!(idref.as_ref(), id.as_ref() as &[u8]);
