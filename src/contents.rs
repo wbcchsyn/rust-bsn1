@@ -218,7 +218,7 @@ mod tests {
             {
                 let bytes: &mut [u8] = &mut [0x00; size_of::<i128>()];
                 bytes[0] = 0x80;
-                assert_eq!(bytes, from_integer(i128::MIN).as_ref());
+                assert_eq!(bytes, from_integer(std::i128::MIN).as_ref());
             }
         }
         // 0
@@ -243,7 +243,7 @@ mod tests {
             {
                 let bytes: &mut [u8] = &mut [0xff; size_of::<i128>()];
                 bytes[0] = 0x7f;
-                assert_eq!(bytes, from_integer(i128::MAX).as_ref());
+                assert_eq!(bytes, from_integer(std::i128::MAX).as_ref());
             }
         }
     }
@@ -270,7 +270,7 @@ mod tests {
             {
                 let bytes: &mut [u8] = &mut [0x00; size_of::<i128>()];
                 bytes[0] = 0x80;
-                assert_eq!(i128::MIN, to_integer(bytes).unwrap());
+                assert_eq!(std::i128::MIN, to_integer(bytes).unwrap());
             }
         }
         // 0
@@ -295,7 +295,7 @@ mod tests {
             {
                 let bytes: &mut [u8] = &mut [0xff; size_of::<i128>()];
                 bytes[0] = 0x7f;
-                assert_eq!(i128::MAX, to_integer(bytes).unwrap());
+                assert_eq!(std::i128::MAX, to_integer(bytes).unwrap());
             }
         }
     }

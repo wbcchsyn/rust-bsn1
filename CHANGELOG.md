@@ -28,3 +28,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 ## Removed
 - struct 'DerBuilder' and 'BerBuilder'. 'Der::from\_id\_iterator()' and 'Ber::from\_id\_iterator()' can usually be used instead.
 - Function 'try\_length\_from()'. Use 'Length::try\_from()' instead.
+
+## 0.3.1 - 2022-02-24
+## Changed
+- Update for rust the latest version.

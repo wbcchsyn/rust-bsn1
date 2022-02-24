@@ -227,7 +227,7 @@ mod tests {
             let mut bytes: [u8; size_of::<usize>() + 1] = [0xff; size_of::<usize>() + 1];
             bytes[0] = 0x80 + (size_of::<usize>() as u8);
             let res = try_from(&bytes).unwrap();
-            assert_eq!((Length::Definite(usize::MAX), empty), res);
+            assert_eq!((Length::Definite(std::usize::MAX), empty), res);
         }
     }
 
@@ -289,7 +289,7 @@ mod tests {
             let mut bytes = Vec::from(&bytes as &[u8]);
             bytes.extend(extra);
             let res = try_from(&bytes).unwrap();
-            assert_eq!((Length::Definite(usize::MAX), extra), res);
+            assert_eq!((Length::Definite(std::usize::MAX), extra), res);
         }
     }
 
@@ -382,7 +382,7 @@ mod tests {
         }
 
         // Definite
-        for &len in &[0, 1, 0x7f, 0x80, 0xff, 0x0100, 0xffff, usize::MAX] {
+        for &len in &[0, 1, 0x7f, 0x80, 0xff, 0x0100, 0xffff, std::usize::MAX] {
             let bytes = Length::Definite(len).to_bytes();
             let length = try_from(bytes.as_ref()).unwrap();
             assert_eq!((Length::Definite(len), empty), length);
