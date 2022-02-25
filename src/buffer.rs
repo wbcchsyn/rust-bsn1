@@ -60,13 +60,13 @@ use std::borrow::Borrow;
 use std::fmt;
 
 #[repr(C)]
-pub struct Buffer1 {
+pub struct Buffer {
     len_: isize,
     data_: *mut u8,
     cap_: usize,
 }
 
-impl Drop for Buffer1 {
+impl Drop for Buffer {
     #[inline]
     fn drop(&mut self) {
         if self.is_stack() {
@@ -80,13 +80,13 @@ impl Drop for Buffer1 {
     }
 }
 
-impl Clone for Buffer1 {
+impl Clone for Buffer {
     fn clone(&self) -> Self {
         Self::from(self.as_ref())
     }
 }
 
-impl From<&[u8]> for Buffer1 {
+impl From<&[u8]> for Buffer {
     fn from(vals: &[u8]) -> Self {
         let mut ret = Self::with_capacity(vals.len());
         ret.extend_from_slice(vals);
@@ -94,7 +94,7 @@ impl From<&[u8]> for Buffer1 {
     }
 }
 
-impl Buffer1 {
+impl Buffer {
     pub const fn new() -> Self {
         Self {
             len_: 0,
@@ -126,33 +126,33 @@ impl Buffer1 {
     }
 }
 
-impl AsRef<[u8]> for Buffer1 {
+impl AsRef<[u8]> for Buffer {
     #[inline]
     fn as_ref(&self) -> &[u8] {
         unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
     }
 }
 
-impl AsMut<[u8]> for Buffer1 {
+impl AsMut<[u8]> for Buffer {
     fn as_mut(&mut self) -> &mut [u8] {
         unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
     }
 }
 
-impl fmt::Debug for Buffer1 {
+impl fmt::Debug for Buffer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let contents: &[u8] = self.as_ref();
         f.debug_tuple("Buffer").field(&contents).finish()
     }
 }
 
-impl Borrow<[u8]> for Buffer1 {
+impl Borrow<[u8]> for Buffer {
     fn borrow(&self) -> &[u8] {
         self.as_ref()
     }
 }
 
-impl Hash for Buffer1 {
+impl Hash for Buffer {
     fn hash<H>(&self, hasher: &mut H)
     where
         H: Hasher,
@@ -162,20 +162,20 @@ impl Hash for Buffer1 {
     }
 }
 
-impl Index<usize> for Buffer1 {
+impl Index<usize> for Buffer {
     type Output = u8;
     fn index(&self, i: usize) -> &u8 {
         &self.as_ref()[i]
     }
 }
 
-impl IndexMut<usize> for Buffer1 {
+impl IndexMut<usize> for Buffer {
     fn index_mut(&mut self, i: usize) -> &mut u8 {
         &mut self.as_mut()[i]
     }
 }
 
-impl<T> PartialEq<T> for Buffer1
+impl<T> PartialEq<T> for Buffer
 where
     T: Borrow<[u8]>,
 {
@@ -186,9 +186,9 @@ where
     }
 }
 
-impl Eq for Buffer1 {}
+impl Eq for Buffer {}
 
-impl<T> PartialOrd<T> for Buffer1
+impl<T> PartialOrd<T> for Buffer
 where
     T: Borrow<[u8]>,
 {
@@ -199,7 +199,7 @@ where
     }
 }
 
-impl Ord for Buffer1 {
+impl Ord for Buffer {
     fn cmp(&self, other: &Self) -> Ordering {
         let this: &[u8] = self.borrow();
         let other: &[u8] = other.borrow();
@@ -207,7 +207,7 @@ impl Ord for Buffer1 {
     }
 }
 
-impl Buffer1 {
+impl Buffer {
     /// # Safety
     ///
     /// The behavior is undefined if the length will exceeds the capacity.
@@ -311,7 +311,7 @@ impl Buffer1 {
         0 <= self.len_
     }
 
-    fn into_vec(mut self) -> Vec<u8> {
+    pub fn into_vec(mut self) -> Vec<u8> {
         if self.is_stack() {
             Vec::from(self.as_ref())
         } else {
@@ -324,231 +324,10 @@ impl Buffer1 {
     }
 }
 
-#[derive(Clone)]
-pub enum Buffer {
-    Heap(Vec<u8>),
-    Stack(StackBuffer),
-}
-
-impl From<&[u8]> for Buffer {
-    fn from(vals: &[u8]) -> Self {
-        match StackBuffer::from_bytes(vals) {
-            None => Buffer::Heap(Vec::from(vals)),
-            Some(s) => Buffer::Stack(s),
-        }
-    }
-}
-
-impl Buffer {
-    pub const fn new() -> Self {
-        Self::Stack(StackBuffer::new())
-    }
-
-    pub fn with_capacity(capacity: usize) -> Self {
-        let mut ret = Self::new();
-        ret.reserve(capacity);
-        ret
-    }
-}
-
-impl AsRef<[u8]> for Buffer {
-    #[inline]
-    fn as_ref(&self) -> &[u8] {
-        unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len()) }
-    }
-}
-
-impl AsMut<[u8]> for Buffer {
-    #[inline]
-    fn as_mut(&mut self) -> &mut [u8] {
-        unsafe { core::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
-    }
-}
-
-impl fmt::Debug for Buffer {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let contents: &[u8] = self.as_ref();
-        f.debug_tuple("Buffer").field(&contents).finish()
-    }
-}
-
-impl Borrow<[u8]> for Buffer {
-    #[inline]
-    fn borrow(&self) -> &[u8] {
-        unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len()) }
-    }
-}
-
-impl Hash for Buffer {
-    #[inline]
-    fn hash<H>(&self, hasher: &mut H)
-    where
-        H: Hasher,
-    {
-        let this: &[u8] = self.borrow();
-        this.hash(hasher);
-    }
-}
-
-impl Index<usize> for Buffer {
-    type Output = u8;
-
-    #[inline]
-    fn index(&self, index: usize) -> &Self::Output {
-        unsafe {
-            let ptr = self.as_ptr().add(index);
-            &*ptr
-        }
-    }
-}
-
-impl IndexMut<usize> for Buffer {
-    #[inline]
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        unsafe {
-            let ptr = self.as_mut_ptr().add(index);
-            &mut *ptr
-        }
-    }
-}
-
-impl<T> PartialEq<T> for Buffer
-where
-    T: Borrow<[u8]>,
-{
-    #[inline]
-    fn eq(&self, other: &T) -> bool {
-        let this: &[u8] = self.borrow();
-        let other: &[u8] = other.borrow();
-        this == other
-    }
-}
-
-impl Eq for Buffer {}
-
-impl<T> PartialOrd<T> for Buffer
-where
-    T: Borrow<[u8]>,
-{
-    #[inline]
-    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
-        let this: &[u8] = self.borrow();
-        let other: &[u8] = other.borrow();
-        this.partial_cmp(other)
-    }
-}
-
-impl Ord for Buffer {
-    #[inline]
-    fn cmp(&self, other: &Self) -> Ordering {
-        let this: &[u8] = self.borrow();
-        let other: &[u8] = other.borrow();
-        this.cmp(other)
-    }
-}
-
-impl Buffer {
-    /// # Safety
-    ///
-    /// The behavior is undefined if the length will exceeds the capacity.
-    #[inline]
-    pub unsafe fn push(&mut self, val: u8) {
-        debug_assert!(self.len() < self.capacity());
-
-        match self {
-            Self::Heap(v) => v.push(val),
-            Self::Stack(s) => s.push(val),
-        }
-    }
-
-    #[inline]
-    pub fn extend_from_slice(&mut self, vals: &[u8]) {
-        self.reserve(vals.len());
-        match self {
-            Self::Heap(v) => v.extend_from_slice(vals),
-            Self::Stack(s) => unsafe { s.extend_from_slice(vals) },
-        }
-    }
-
-    #[inline]
-    pub fn as_ptr(&self) -> *const u8 {
-        match self {
-            Self::Heap(v) => v.as_ptr(),
-            Self::Stack(s) => s.as_ptr(),
-        }
-    }
-
-    #[inline]
-    pub fn as_mut_ptr(&mut self) -> *mut u8 {
-        match self {
-            Self::Heap(v) => v.as_mut_ptr(),
-            Self::Stack(s) => s.as_mut_ptr(),
-        }
-    }
-
-    #[inline]
-    pub fn capacity(&self) -> usize {
-        match self {
-            Self::Heap(v) => v.capacity(),
-            Self::Stack(s) => s.capacity(),
-        }
-    }
-
-    #[inline]
-    pub fn len(&self) -> usize {
-        match self {
-            Self::Heap(v) => v.len(),
-            Self::Stack(s) => s.len(),
-        }
-    }
-
-    #[inline]
-    pub unsafe fn set_len(&mut self, new_len: usize) {
-        debug_assert!(new_len <= self.capacity());
-
-        match self {
-            Self::Heap(v) => v.set_len(new_len),
-            Self::Stack(s) => s.set_len(new_len),
-        }
-    }
-
-    pub fn reserve(&mut self, additional: usize) {
-        match self {
-            Self::Heap(v) => v.reserve(additional),
-            Self::Stack(s) => {
-                if s.len() + additional <= s.capacity() {
-                    return;
-                } else {
-                    let mut v = Vec::with_capacity(s.len() + additional);
-                    v.extend_from_slice(s.as_ref());
-                    *self = Self::Heap(v)
-                }
-            }
-        }
-    }
-
-    #[inline]
-    pub fn into_vec(self) -> Vec<u8> {
-        match self {
-            Self::Heap(v) => v,
-            Self::Stack(s) => Vec::from(s.as_ref()),
-        }
-    }
-}
-
 #[cfg(test)]
 mod buffer_tests {
     use super::*;
     use core::alloc::Layout;
-
-    #[test]
-    fn size_align() {
-        let layout = Layout::new::<Buffer>();
-        let vec_layout = Layout::new::<Vec<u8>>();
-
-        assert_eq!(vec_layout.align(), layout.align());
-        assert_eq!(vec_layout.size() + layout.align(), layout.size());
-    }
 
     #[test]
     fn new() {
