@@ -84,6 +84,16 @@ impl Buffer1 {
         }
     }
 
+    pub fn as_mut_ptr(&mut self) -> *mut u8 {
+        if self.is_stack() {
+            let data: *mut *mut u8 = &mut self.data_;
+            let data = data as *mut u8;
+            data
+        } else {
+            self.data_
+        }
+    }
+
     fn is_stack(&self) -> bool {
         0 <= self.len_
     }
