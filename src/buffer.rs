@@ -92,6 +92,15 @@ impl Buffer1 {
         }
     }
 
+    pub unsafe fn set_len(&mut self, new_len: usize) {
+        debug_assert!(new_len <= self.capacity());
+        if self.is_stack() {
+            self.len_ = new_len as isize;
+        } else {
+            self.len_ = std::isize::MIN + new_len as isize
+        }
+    }
+
     pub fn as_mut_ptr(&mut self) -> *mut u8 {
         if self.is_stack() {
             let data: *mut *mut u8 = &mut self.data_;
