@@ -162,6 +162,17 @@ impl Ord for Buffer1 {
 }
 
 impl Buffer1 {
+    /// # Safety
+    ///
+    /// The behavior is undefined if the length will exceeds the capacity.
+    pub unsafe fn push(&mut self, v: u8) {
+        let old_len = self.len();
+
+        debug_assert!(old_len < self.capacity());
+        self.set_len(old_len + 1);
+        self.as_mut()[old_len] = v;
+    }
+
     pub fn len(&self) -> usize {
         if 0 <= self.len_ {
             self.len_ as usize
