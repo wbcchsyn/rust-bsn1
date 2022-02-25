@@ -153,6 +153,14 @@ where
     }
 }
 
+impl Ord for Buffer1 {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let this: &[u8] = self.borrow();
+        let other: &[u8] = other.borrow();
+        this.cmp(other)
+    }
+}
+
 impl Buffer1 {
     pub fn len(&self) -> usize {
         if 0 <= self.len_ {
