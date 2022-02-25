@@ -107,6 +107,40 @@ impl Buffer1 {
         }
     }
 
+    pub fn reserve(&mut self, additional: usize) {
+        let new_cap = self.len() + additional;
+
+        if new_cap <= self.capacity() {
+            return;
+        }
+
+        if self.is_stack() {
+            let layout = Layout::array::<u8>(new_cap).unwrap();
+            unsafe {
+                let data = alloc::alloc(layout);
+                if data.is_null() {
+                    alloc::handle_alloc_error(layout);
+                }
+
+                data.copy_from_nonoverlapping(self.as_ptr(), self.capacity());
+                self.len_ += std::isize::MIN;
+                self.cap_ = new_cap;
+                self.data_ = data;
+            }
+        } else {
+            unsafe {
+                let layout = Layout::from_size_align_unchecked(self.capacity(), align_of::<u8>());
+                let data = alloc::realloc(self.as_mut_ptr(), layout, new_cap);
+                if data.is_null() {
+                    let layout = Layout::from_size_align_unchecked(new_cap, align_of::<u8>());
+                    alloc::handle_alloc_error(layout);
+                }
+                self.data_ = data;
+                self.cap_ = new_cap;
+            }
+        }
+    }
+
     pub unsafe fn set_len(&mut self, new_len: usize) {
         debug_assert!(new_len <= self.capacity());
         if self.is_stack() {
