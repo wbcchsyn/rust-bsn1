@@ -80,6 +80,13 @@ impl Drop for Buffer1 {
     }
 }
 
+impl AsRef<[u8]> for Buffer1 {
+    #[inline]
+    fn as_ref(&self) -> &[u8] {
+        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
+    }
+}
+
 impl Buffer1 {
     pub fn len(&self) -> usize {
         if 0 <= self.len_ {
