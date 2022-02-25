@@ -409,8 +409,7 @@ pub struct StackBuffer {
 }
 
 impl StackBuffer {
-    // The size of 'Buffer' will be 'size_of::<Vec<u8>>() + align_of::<Vec<u8>>()'.
-    const CAPACITY: usize = size_of::<Vec<u8>>() + align_of::<Vec<u8>>() - 2;
+    const CAPACITY: usize = size_of::<i128>() + 1;
 }
 
 impl StackBuffer {
