@@ -88,6 +88,28 @@ impl Buffer1 {
             cap_: 0,
         }
     }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        // Don't call method reserve() to skip method copy_from_nonoverlapping().
+        if capacity <= Self::new().capacity() {
+            return Self::new();
+        }
+
+        let layout = Layout::array::<u8>(capacity).unwrap();
+        let data = unsafe {
+            let data = alloc::alloc(layout);
+            if data.is_null() {
+                alloc::handle_alloc_error(layout);
+            }
+            data
+        };
+
+        Self {
+            len_: std::isize::MIN,
+            data_: data,
+            cap_: capacity,
+        }
+    }
 }
 
 impl AsRef<[u8]> for Buffer1 {
