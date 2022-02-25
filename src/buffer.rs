@@ -123,6 +123,12 @@ impl Index<usize> for Buffer1 {
     }
 }
 
+impl IndexMut<usize> for Buffer1 {
+    fn index_mut(&mut self, i: usize) -> &mut u8 {
+        &mut self.as_mut()[i]
+    }
+}
+
 impl Buffer1 {
     pub fn len(&self) -> usize {
         if 0 <= self.len_ {
