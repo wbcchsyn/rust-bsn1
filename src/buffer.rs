@@ -87,6 +87,12 @@ impl AsRef<[u8]> for Buffer1 {
     }
 }
 
+impl AsMut<[u8]> for Buffer1 {
+    fn as_mut(&mut self) -> &mut [u8] {
+        unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
+    }
+}
+
 impl Buffer1 {
     pub fn len(&self) -> usize {
         if 0 <= self.len_ {
