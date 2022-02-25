@@ -65,6 +65,16 @@ pub struct Buffer1 {
     cap_: usize,
 }
 
+impl Buffer1 {
+    pub fn len(&self) -> usize {
+        if 0 <= self.len_ {
+            self.len_ as usize
+        } else {
+            (self.len_ - std::isize::MIN) as usize
+        }
+    }
+}
+
 #[derive(Clone)]
 pub enum Buffer {
     Heap(Vec<u8>),
