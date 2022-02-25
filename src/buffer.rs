@@ -116,6 +116,13 @@ impl Hash for Buffer1 {
     }
 }
 
+impl Index<usize> for Buffer1 {
+    type Output = u8;
+    fn index(&self, i: usize) -> &u8 {
+        &self.as_ref()[i]
+    }
+}
+
 impl Buffer1 {
     pub fn len(&self) -> usize {
         if 0 <= self.len_ {
