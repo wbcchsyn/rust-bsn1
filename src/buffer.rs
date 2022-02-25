@@ -173,6 +173,15 @@ impl Buffer1 {
         self.as_mut()[old_len] = v;
     }
 
+    pub fn extend_from_slice(&mut self, vals: &[u8]) {
+        self.reserve(vals.len());
+        unsafe {
+            let ptr = self.as_mut_ptr().add(self.len());
+            ptr.copy_from_nonoverlapping(vals.as_ptr(), vals.len());
+            self.set_len(self.len() + vals.len());
+        }
+    }
+
     pub fn len(&self) -> usize {
         if 0 <= self.len_ {
             self.len_ as usize
