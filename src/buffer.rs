@@ -73,6 +73,10 @@ impl Buffer1 {
             (self.len_ - std::isize::MIN) as usize
         }
     }
+
+    fn is_stack(&self) -> bool {
+        0 <= self.len_
+    }
 }
 
 #[derive(Clone)]
