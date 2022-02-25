@@ -327,7 +327,7 @@ impl Buffer {
 #[cfg(test)]
 mod buffer_tests {
     use super::*;
-    use core::alloc::Layout;
+    use core::iter::FromIterator;
 
     #[test]
     fn new() {
@@ -344,21 +344,45 @@ mod buffer_tests {
             assert_eq!(0, buffer.len());
             assert!(i <= buffer.capacity());
         }
+
+        let v = vec![1];
+        let mut buffer = Buffer::from(v.as_ref());
+        for i in 0..40 {
+            buffer.reserve(i);
+            assert_eq!(&v, buffer.as_ref());
+            assert!(i <= buffer.capacity());
+        }
+
+        let v = Vec::from_iter(0..200);
+        let mut buffer = Buffer::from(v.as_ref());
+        for i in 0..40 {
+            buffer.reserve(i);
+            assert_eq!(&v, buffer.as_ref());
+            assert!(i <= buffer.capacity());
+        }
     }
 
     #[test]
     fn push() {
-        const LENGTH: usize = 40;
+        for i in 0..Buffer::new().capacity() {
+            let v = Vec::from_iter(0..i as u8);
 
-        let mut buffer = Buffer::with_capacity(LENGTH);
-        let mut vec = Vec::new();
+            let mut buffer = Buffer::new();
+            for &c in v.iter() {
+                unsafe { buffer.push(c) };
+            }
 
-        for i in 0..LENGTH {
-            unsafe { buffer.push(i as u8) };
-            vec.push(i as u8);
+            assert_eq!(&v, buffer.as_ref());
+        }
 
-            let expected: &[u8] = vec.as_ref();
-            assert_eq!(expected, buffer.as_ref());
+        for i in 0..100 {
+            let v = Vec::from_iter(0..i);
+            let mut buffer = Buffer::with_capacity(v.len());
+            for &c in v.iter() {
+                unsafe { buffer.push(c) };
+            }
+
+            assert_eq!(&v, buffer.as_ref());
         }
     }
 
