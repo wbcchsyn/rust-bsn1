@@ -93,6 +93,13 @@ impl AsMut<[u8]> for Buffer1 {
     }
 }
 
+impl fmt::Debug for Buffer1 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let contents: &[u8] = self.as_ref();
+        f.debug_tuple("Buffer").field(&contents).finish()
+    }
+}
+
 impl Buffer1 {
     pub fn len(&self) -> usize {
         if 0 <= self.len_ {
