@@ -53,7 +53,7 @@
 
 use core::cmp::Ordering;
 use core::hash::{Hash, Hasher};
-use core::mem::{align_of, size_of};
+use core::mem::{align_of, size_of, size_of_val};
 use core::ops::{Index, IndexMut};
 use std::borrow::Borrow;
 use std::fmt;
@@ -71,6 +71,14 @@ impl Buffer1 {
             self.len_ as usize
         } else {
             (self.len_ - std::isize::MIN) as usize
+        }
+    }
+
+    pub fn capacity(&self) -> usize {
+        if self.is_stack() {
+            (size_of_val(&self.data_) + size_of_val(&self.cap_)) / size_of::<u8>()
+        } else {
+            self.cap_
         }
     }
 
