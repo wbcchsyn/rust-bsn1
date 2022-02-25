@@ -264,6 +264,18 @@ impl Buffer1 {
     fn is_stack(&self) -> bool {
         0 <= self.len_
     }
+
+    fn into_vec(mut self) -> Vec<u8> {
+        if self.is_stack() {
+            Vec::from(self.as_ref())
+        } else {
+            unsafe {
+                let ret = Vec::from_raw_parts(self.as_mut_ptr(), self.len(), self.capacity());
+                std::mem::forget(self);
+                ret
+            }
+        }
+    }
 }
 
 #[derive(Clone)]
