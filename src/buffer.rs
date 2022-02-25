@@ -80,6 +80,14 @@ impl Drop for Buffer1 {
     }
 }
 
+impl From<&[u8]> for Buffer1 {
+    fn from(vals: &[u8]) -> Self {
+        let mut ret = Self::with_capacity(vals.len());
+        ret.extend_from_slice(vals);
+        ret
+    }
+}
+
 impl Buffer1 {
     pub const fn new() -> Self {
         Self {
