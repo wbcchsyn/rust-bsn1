@@ -100,6 +100,12 @@ impl fmt::Debug for Buffer1 {
     }
 }
 
+impl Borrow<[u8]> for Buffer1 {
+    fn borrow(&self) -> &[u8] {
+        self.as_ref()
+    }
+}
+
 impl Buffer1 {
     pub fn len(&self) -> usize {
         if 0 <= self.len_ {
