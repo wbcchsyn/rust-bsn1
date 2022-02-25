@@ -106,6 +106,16 @@ impl Borrow<[u8]> for Buffer1 {
     }
 }
 
+impl Hash for Buffer1 {
+    fn hash<H>(&self, hasher: &mut H)
+    where
+        H: Hasher,
+    {
+        let this: &[u8] = self.borrow();
+        this.hash(hasher);
+    }
+}
+
 impl Buffer1 {
     pub fn len(&self) -> usize {
         if 0 <= self.len_ {
