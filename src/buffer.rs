@@ -142,6 +142,17 @@ where
 
 impl Eq for Buffer1 {}
 
+impl<T> PartialOrd<T> for Buffer1
+where
+    T: Borrow<[u8]>,
+{
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        let this: &[u8] = self.borrow();
+        let other: &[u8] = other.borrow();
+        this.partial_cmp(other)
+    }
+}
+
 impl Buffer1 {
     pub fn len(&self) -> usize {
         if 0 <= self.len_ {
