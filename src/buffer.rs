@@ -80,6 +80,16 @@ impl Drop for Buffer1 {
     }
 }
 
+impl Buffer1 {
+    pub const fn new() -> Self {
+        Self {
+            len_: 0,
+            data_: core::ptr::null_mut(),
+            cap_: 0,
+        }
+    }
+}
+
 impl AsRef<[u8]> for Buffer1 {
     #[inline]
     fn as_ref(&self) -> &[u8] {
