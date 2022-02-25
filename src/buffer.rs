@@ -409,8 +409,7 @@ pub struct StackBuffer {
 }
 
 impl StackBuffer {
-    // The size of 'Buffer' will be 'size_of::<Vec<u8>>() + align_of::<Vec<u8>>()'.
-    const CAPACITY: usize = size_of::<Vec<u8>>() + align_of::<Vec<u8>>() - 2;
+    const CAPACITY: usize = size_of::<i128>() + 1;
 }
 
 impl StackBuffer {
@@ -418,16 +417,6 @@ impl StackBuffer {
         Self {
             buffer: [0; Self::CAPACITY],
             len_: 0,
-        }
-    }
-
-    pub fn from_bytes(vals: &[u8]) -> Option<Self> {
-        if vals.len() <= Self::CAPACITY {
-            let mut ret = Self::new();
-            unsafe { ret.extend_from_slice(vals) };
-            Some(ret)
-        } else {
-            None
         }
     }
 }
@@ -442,7 +431,6 @@ impl AsRef<[u8]> for StackBuffer {
 impl Index<usize> for StackBuffer {
     type Output = u8;
 
-    #[inline]
     fn index(&self, index: usize) -> &Self::Output {
         unsafe {
             let ptr = self.as_ptr().add(index);
@@ -452,7 +440,6 @@ impl Index<usize> for StackBuffer {
 }
 
 impl IndexMut<usize> for StackBuffer {
-    #[inline]
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         unsafe {
             let ptr = self.as_mut_ptr().add(index);
@@ -465,7 +452,6 @@ impl StackBuffer {
     /// # Safety
     ///
     /// The behavior is undefined if the length will exceeds the capacity.
-    #[inline]
     pub unsafe fn push(&mut self, val: u8) {
         debug_assert!(self.len() < self.capacity());
 
@@ -473,41 +459,24 @@ impl StackBuffer {
         self.len_ += 1;
     }
 
-    /// # Safety
-    ///
-    /// The behavior is undefined if the length will exceeds the capacity.
-    #[inline]
-    pub unsafe fn extend_from_slice(&mut self, vals: &[u8]) {
-        debug_assert!(self.len() + vals.len() <= self.capacity());
-
-        let ptr = self.as_mut_ptr().add(self.len());
-        ptr.copy_from_nonoverlapping(vals.as_ptr(), vals.len());
-        self.len_ += vals.len() as u8;
-    }
-
-    #[inline]
     pub fn as_ptr(&self) -> *const u8 {
         self.buffer.as_ptr()
     }
 
-    #[inline]
     pub fn as_mut_ptr(&mut self) -> *mut u8 {
         self.buffer.as_mut_ptr()
     }
 
-    #[inline]
     pub const fn len(&self) -> usize {
         self.len_ as usize
     }
 
-    #[inline]
     pub unsafe fn set_len(&mut self, new_len: usize) {
         debug_assert!(new_len <= self.capacity());
 
         self.len_ = new_len as u8
     }
 
-    #[inline]
     pub const fn capacity(&self) -> usize {
         Self::CAPACITY
     }
@@ -538,18 +507,5 @@ mod stack_buffer_tests {
         }
 
         assert_eq!(buffer.capacity(), buffer.len());
-    }
-
-    #[test]
-    fn extend_from_slice() {
-        let mut buffer = StackBuffer::new();
-        let mut v = Vec::new();
-
-        for i in 0..(StackBuffer::CAPACITY / 2) {
-            let bytes: &[u8] = &[i as u8, i as u8];
-            v.extend_from_slice(bytes);
-            unsafe { buffer.extend_from_slice(bytes) };
-            assert_eq!(v.as_ref() as &[u8], buffer.as_ref());
-        }
     }
 }
