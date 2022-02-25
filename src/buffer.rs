@@ -58,6 +58,13 @@ use core::ops::{Index, IndexMut};
 use std::borrow::Borrow;
 use std::fmt;
 
+#[repr(C)]
+pub struct Buffer1 {
+    len_: isize,
+    data_: *mut u8,
+    cap_: usize,
+}
+
 #[derive(Clone)]
 pub enum Buffer {
     Heap(Vec<u8>),
