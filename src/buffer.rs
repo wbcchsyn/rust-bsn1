@@ -129,6 +129,19 @@ impl IndexMut<usize> for Buffer1 {
     }
 }
 
+impl<T> PartialEq<T> for Buffer1
+where
+    T: Borrow<[u8]>,
+{
+    fn eq(&self, other: &T) -> bool {
+        let this: &[u8] = self.borrow();
+        let other: &[u8] = other.borrow();
+        this == other
+    }
+}
+
+impl Eq for Buffer1 {}
+
 impl Buffer1 {
     pub fn len(&self) -> usize {
         if 0 <= self.len_ {
