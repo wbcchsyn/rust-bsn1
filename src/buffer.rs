@@ -55,6 +55,7 @@ use core::cmp::Ordering;
 use core::hash::{Hash, Hasher};
 use core::mem::{align_of, size_of, size_of_val};
 use core::ops::{Index, IndexMut};
+use std::alloc::{self, Layout};
 use std::borrow::Borrow;
 use std::fmt;
 
@@ -63,6 +64,20 @@ pub struct Buffer1 {
     len_: isize,
     data_: *mut u8,
     cap_: usize,
+}
+
+impl Drop for Buffer1 {
+    #[inline]
+    fn drop(&mut self) {
+        if self.is_stack() {
+            return;
+        }
+
+        unsafe {
+            let layout = Layout::from_size_align_unchecked(self.capacity(), align_of::<u8>());
+            alloc::dealloc(self.as_mut_ptr(), layout);
+        }
+    }
 }
 
 impl Buffer1 {
