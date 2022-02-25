@@ -80,6 +80,12 @@ impl Drop for Buffer1 {
     }
 }
 
+impl Clone for Buffer1 {
+    fn clone(&self) -> Self {
+        Self::from(self.as_ref())
+    }
+}
+
 impl From<&[u8]> for Buffer1 {
     fn from(vals: &[u8]) -> Self {
         let mut ret = Self::with_capacity(vals.len());
