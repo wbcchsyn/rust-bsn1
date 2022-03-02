@@ -54,6 +54,7 @@
 use crate::{contents, identifier, length, Buffer, Error, IdRef, Length};
 use core::convert::TryFrom;
 use core::ops::Deref;
+use num::PrimInt;
 use std::borrow::Borrow;
 
 /// `DerRef` is a wrapper of `[u8]` and represents DER.
@@ -413,7 +414,9 @@ impl Der {
         Self::new(IdRef::boolean(), contents::from_bool(val).as_ref())
     }
 
-    /// Returns a new instance representing ingeger.
+    /// Returns a new instance representing integer.
+    ///
+    /// Type `T` should be the builtin primitive integer types (e.g., u8, u32, isize, i128, ...)
     ///
     /// # Examples
     ///
@@ -426,7 +429,10 @@ impl Der {
     /// assert_eq!(IdRef::integer(), der.id());
     /// assert_eq!(val, contents::to_integer(der.contents()).unwrap());
     /// ```
-    pub fn integer(val: i128) -> Self {
+    pub fn integer<T>(val: T) -> Self
+    where
+        T: PrimInt,
+    {
         Self::new(IdRef::integer(), contents::from_integer(val).as_ref())
     }
 
