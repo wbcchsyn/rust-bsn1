@@ -55,6 +55,7 @@
 
 use crate::{Error, StackBuffer};
 use core::mem::{size_of, size_of_val};
+use num::PrimInt;
 
 /// Serializes integer as contents octets.
 ///
@@ -71,17 +72,59 @@ pub fn from_integer(val: i128) -> impl AsRef<[u8]> {
     }
 }
 
-fn from_integer_positive(val: i128) -> StackBuffer {
-    debug_assert!(0 <= val);
-
-    let len = (8 * size_of_val(&val) - val.leading_zeros() as usize) / 8 + 1;
+fn from_integer_positive<T>(val: T) -> StackBuffer
+where
+    T: PrimInt,
+{
     let mut buffer = StackBuffer::new();
-    unsafe { buffer.set_len(len) };
 
-    let mut val = val;
-    for i in (0..len).rev() {
-        buffer[i] = val as u8;
-        val >>= 8;
+    if val == T::zero() {
+        // val == 0.
+        unsafe { buffer.push(0x00) };
+    } else if val.leading_zeros() == 0 {
+        // T is unsigned type and the most significant bit is 1.
+        // We must add 0x00 at first.
+        let val = val.to_be();
+
+        unsafe {
+            buffer.set_len(size_of::<T>() + 1);
+
+            let src = (&val as *const T) as *const u8;
+
+            debug_assert_eq!(0, *buffer.as_ptr());
+            let dst = buffer.as_mut_ptr().add(1);
+
+            dst.copy_from_nonoverlapping(src, size_of::<T>());
+        }
+    } else {
+        // The most significant bit is 0.
+        // We must skip the first 0x00 bytes to copy.
+        let val = val.to_be();
+        unsafe {
+            let dst = buffer.as_mut_ptr();
+
+            let mut src = (&val as *const T) as *const u8;
+            let mut len = size_of::<T>();
+
+            // This loop must finish.
+            // (Remember 0 < val.)
+            loop {
+                if *src == 0 {
+                    src = src.add(1);
+                    len -= 1;
+                } else {
+                    break;
+                }
+            }
+
+            if *src & 0x80 != 0 {
+                src = src.sub(1);
+                len += 1;
+            }
+
+            buffer.set_len(len);
+            dst.copy_from_nonoverlapping(src, len);
+        }
     }
 
     buffer
