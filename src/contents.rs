@@ -54,7 +54,7 @@
 //! Provides functions to serialize/deserialize contents octets.
 
 use crate::{Error, StackBuffer};
-use core::mem::{size_of, size_of_val};
+use core::mem::size_of;
 use num::PrimInt;
 
 /// Serializes integer as contents octets.
@@ -133,26 +133,35 @@ where
 /// # Wargnings
 ///
 /// This function assumes that the CPU adopt 2's complement to represent negative value.
-fn from_integer_negative(val: i128) -> StackBuffer {
-    debug_assert!(val < 0);
-
-    // I don't think the behavior is not defined to shift negative value, however, 'ISO/IEC
-    // 1539:1991 (C99)' defines the spec of the division and reminder.
-    //
-    // In short, if the numerator is nagative and the divisor is positive,
-    //
-    // - The reminder equals to 0 or less than 0.
-    // - The result of division is truncated towards 0.
-    let shift = |v: i128| -> (i128, u8) { ((v + 1) / 256 - 1, (v % 256 + 256) as u8) };
-
-    let len = (8 * size_of_val(&val) - val.leading_ones() as usize) / 8 + 1;
+fn from_integer_negative<T>(val: T) -> StackBuffer
+where
+    T: PrimInt,
+{
     let mut buffer = StackBuffer::new();
-    unsafe { buffer.set_len(len) };
+    let val = val.to_be();
 
-    let mut val = val;
-    for i in (0..len).rev() {
-        buffer[i] = shift(val).1;
-        val = shift(val).0;
+    unsafe {
+        let mut src = (&val as *const T) as *const u8;
+        let mut len = size_of::<T>();
+
+        for _ in 0..size_of::<T>() {
+            if *src == 0xff {
+                src = src.add(1);
+                len -= 1;
+            } else {
+                break;
+            }
+        }
+
+        if len == 0 || *src & 0x80 == 0 {
+            src = src.sub(1);
+            len += 1;
+        }
+
+        buffer.set_len(len);
+
+        let dst = buffer.as_mut_ptr();
+        dst.copy_from_nonoverlapping(src, len);
     }
 
     buffer
