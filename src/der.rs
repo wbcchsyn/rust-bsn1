@@ -160,7 +160,7 @@ impl DerRef {
         let id = identifier::shrink_to_fit_unchecked(bytes);
         let parsing = &bytes[id.len()..];
 
-        let (len, parsing) = match length::try_from(parsing).unwrap() {
+        let (len, parsing) = match length::from_bytes_starts_with_unchecked(parsing) {
             (Length::Definite(len), parsing) => (len, parsing),
             _ => panic!("{}", Error::IndefiniteLength),
         };
@@ -243,7 +243,7 @@ impl DerRef {
     pub fn length(&self) -> Length {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
-        length::try_from(bytes).unwrap().0
+        unsafe { length::from_bytes_starts_with_unchecked(bytes).0 }
     }
 
     /// Returns a reference to the contents octets of `self` .
@@ -264,7 +264,7 @@ impl DerRef {
     pub fn contents(&self) -> &[u8] {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
-        length::try_from(bytes).unwrap().1
+        unsafe { length::from_bytes_starts_with_unchecked(bytes).1 }
     }
 }
 
