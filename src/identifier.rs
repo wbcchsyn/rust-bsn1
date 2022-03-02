@@ -70,7 +70,7 @@ pub enum ClassTag {
     Private = 0xc0,
 }
 
-/// `PCTag` represents Private/Constructed flag of identifier.
+/// `PCTag` represents Primitive/Constructed flag of identifier.
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PCTag {
@@ -1290,8 +1290,6 @@ impl TryFrom<&[u8]> for Id {
     /// Parses `bytes` starts with identifier octets and tries to build a new instance.
     ///
     /// This function ignores the extra octet(s) at the end if any.
-    ///
-    /// # Warnings
     ///
     /// # Warnings
     ///
