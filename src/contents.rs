@@ -59,13 +59,18 @@ use num::PrimInt;
 
 /// Serializes integer as contents octets.
 ///
+/// Type `T` should be the builtin primitive integer types (e.g., u8, u32, isize, i128, ...)
+///
 /// This function is common for BER, DER, and CER.
 ///
 /// # Wargnings
 ///
 /// This function assumes that the CPU adopts 2's complement to represent negative value.
-pub fn from_integer(val: i128) -> impl AsRef<[u8]> {
-    if val < 0 {
+pub fn from_integer<T>(val: T) -> impl AsRef<[u8]>
+where
+    T: PrimInt,
+{
+    if val < T::zero() {
         from_integer_negative(val)
     } else {
         from_integer_positive(val)
