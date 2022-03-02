@@ -54,7 +54,7 @@
 //! Provides functions to serialize/deserialize contents octets.
 
 use crate::{Error, StackBuffer};
-use core::mem::size_of;
+use core::mem::{size_of, MaybeUninit};
 use num::PrimInt;
 
 /// Serializes integer as contents octets.
@@ -174,30 +174,52 @@ where
 
 /// Parses `bytes` as a contents of Integer.
 ///
+/// Type `T` should be the builtin primitive integer types (e.g., u8, u32, isize, i128, ...)
+///
 /// This function is common for BER, DER, and CER.
 ///
 /// # Wargnings
 ///
 /// This function assumes that the CPU adopts 2's complement to represent negative value.
-#[inline]
-pub fn to_integer(bytes: &[u8]) -> Result<i128, Error> {
-    if size_of::<i128>() < bytes.len() {
-        Err(Error::OverFlow)
-    } else if bytes.is_empty() {
-        Err(Error::UnTerminatedBytes)
-    } else {
-        if 1 < bytes.len() {
-            if (bytes[0] == 0) && (bytes[1] & 0x80 == 0x00) {
-                return Err(Error::RedundantBytes);
-            }
-            if (bytes[0] == 0xff) && (bytes[1] & 0x80 == 0x80) {
-                return Err(Error::RedundantBytes);
-            }
-        }
+pub fn to_integer<T>(bytes: &[u8]) -> Result<T, Error>
+where
+    T: PrimInt,
+{
+    if bytes.is_empty() {
+        return Err(Error::UnTerminatedBytes);
+    }
 
-        let init: i128 = if bytes[0] & 0x80 == 0x80 { -1 } else { 0 };
-        let ret = bytes.iter().fold(init, |acc, &o| (acc * 256) + (o as i128));
-        Ok(ret)
+    if 1 < bytes.len() {
+        if (bytes[0] == 0) && (bytes[1] & 0x80 == 0x00) {
+            return Err(Error::RedundantBytes);
+        }
+        if (bytes[0] == 0xff) && (bytes[1] & 0x80 == 0x80) {
+            return Err(Error::RedundantBytes);
+        }
+    }
+
+    let filler = if bytes[0] & 0x80 == 0 { 0x00 } else { 0xff };
+
+    let bytes = match bytes[0] {
+        0x00 => &bytes[1..],
+        0xff => &bytes[1..],
+        _ => bytes,
+    };
+
+    if size_of::<T>() < bytes.len() {
+        return Err(Error::OverFlow);
+    }
+
+    unsafe {
+        let mut be = MaybeUninit::<T>::uninit();
+        be.as_mut_ptr().write_bytes(filler, 1);
+
+        let dst = be.as_mut_ptr() as *mut u8;
+        let dst = dst.add(size_of::<T>() - bytes.len());
+
+        dst.copy_from_nonoverlapping(bytes.as_ptr(), bytes.len());
+
+        Ok(T::from_be(be.assume_init()))
     }
 }
 
