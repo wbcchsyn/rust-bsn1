@@ -252,56 +252,99 @@ pub fn to_bool_der(bytes: &[u8]) -> Result<bool, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use num::cast::AsPrimitive;
 
     #[test]
     fn test_from_integer() {
-        // Negative
+        // i8
+        for i in i8::MIN..=i8::MAX {
+            assert_eq!(&[i as u8], from_integer(i).as_ref());
+        }
+
+        // u8
         {
-            // -1
-            assert_eq!(&[0xff], from_integer(-1).as_ref());
-            // -0x80
-            assert_eq!(&[0x80], from_integer(-0x80).as_ref());
-            // -0x81
-            assert_eq!(&[0xff, 0x7f], from_integer(-0x81).as_ref());
-            // -0x0100
-            assert_eq!(&[0xff, 0x00], from_integer(-0x0100).as_ref());
-            // -0x0101
-            assert_eq!(&[0xfe, 0xff], from_integer(-0x0101).as_ref());
-            // -0x8000
-            assert_eq!(&[0x80, 0x00], from_integer(-0x8000).as_ref());
-            // -0x8001
-            assert_eq!(&[0xff, 0x7f, 0xff], from_integer(-0x8001).as_ref());
-            // i128::MIN
-            {
-                let bytes: &mut [u8] = &mut [0x00; size_of::<i128>()];
-                bytes[0] = 0x80;
-                assert_eq!(bytes, from_integer(std::i128::MIN).as_ref());
+            for i in 0..=0x7f {
+                assert_eq!(&[i as u8], from_integer(i).as_ref());
+            }
+            for i in 0x80..=0xff {
+                assert_eq!(&[0x00, i as u8], from_integer(i).as_ref());
             }
         }
-        // 0
-        assert_eq!(&[0x00], from_integer(0).as_ref());
-        // Positive
+
+        // i16
         {
-            // 1
-            assert_eq!(&[0x01], from_integer(1).as_ref());
-            // 0x7f
-            assert_eq!(&[0x7f], from_integer(0x7f).as_ref());
-            // 0x80
-            assert_eq!(&[0x00, 0x80], from_integer(0x80).as_ref());
-            // 0xff
-            assert_eq!(&[0x00, 0xff], from_integer(0xff).as_ref());
-            // 0x0100
-            assert_eq!(&[0x01, 0x00], from_integer(0x0100).as_ref());
-            // 0x7fff
-            assert_eq!(&[0x7f, 0xff], from_integer(0x7fff).as_ref());
-            // 0x8000
-            assert_eq!(&[0x00, 0x80, 0x00], from_integer(0x8000).as_ref());
-            // i128::MAX
-            {
-                let bytes: &mut [u8] = &mut [0xff; size_of::<i128>()];
-                bytes[0] = 0x7f;
-                assert_eq!(bytes, from_integer(std::i128::MAX).as_ref());
+            assert_eq!(&[0x80, 0x00], from_integer(i16::MIN).as_ref());
+
+            for i in i16::MIN..(i8::MIN as i16) {
+                let f: u8 = i.unsigned_shr(8).as_();
+                let s: u8 = i.as_();
+                assert_eq!(&[f, s], from_integer(i).as_ref());
             }
+
+            for i in (i8::MIN as i16)..=(i8::MAX as i16) {
+                assert_eq!(&[i as u8], from_integer(i).as_ref());
+            }
+
+            for i in 0x80..=i16::MAX {
+                let f: u8 = i.unsigned_shr(8).as_();
+                let s: u8 = i.as_();
+                assert_eq!(&[f, s], from_integer(i).as_ref());
+            }
+
+            assert_eq!(&[0x7f, 0xff], from_integer(i16::MAX).as_ref());
+        }
+
+        // u16
+        {
+            assert_eq!(&[0x00], from_integer(u16::MIN).as_ref());
+
+            for i in 0x00..=0x7f_u16 {
+                assert_eq!(&[i as u8], from_integer(i).as_ref());
+            }
+
+            for i in 0x80..=0xff_u16 {
+                assert_eq!(&[0x00, i as u8], from_integer(i).as_ref());
+            }
+
+            for i in 0x0100..=0x7fff_u16 {
+                let f: u8 = i.unsigned_shr(8).as_();
+                let s: u8 = i.as_();
+                assert_eq!(&[f, s], from_integer(i).as_ref());
+            }
+
+            for i in 0x8000..=u16::MAX {
+                let f: u8 = i.unsigned_shr(8).as_();
+                let s: u8 = i.as_();
+                assert_eq!(&[0x00, f, s], from_integer(i).as_ref());
+            }
+
+            assert_eq!(&[0x00, 0xff, 0xff], from_integer(u16::MAX).as_ref());
+        }
+
+        // i128::MIN
+        {
+            let mut expected = [0x00; 16];
+            expected[0] = 0x80;
+            assert_eq!(&expected, from_integer(i128::MIN).as_ref());
+        }
+
+        // i128::MAX
+        {
+            let mut expected = [0xff; 16];
+            expected[0] = 0x7f;
+            assert_eq!(&expected, from_integer(i128::MAX).as_ref());
+        }
+
+        // 0_u128
+        {
+            assert_eq!(&[0x00], from_integer(0_u128).as_ref());
+        }
+
+        // u128::MAX
+        {
+            let mut expected = [0xff; 17];
+            expected[0] = 0x00;
+            assert_eq!(&expected, from_integer(u128::MAX).as_ref());
         }
     }
 
