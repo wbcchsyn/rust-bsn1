@@ -174,6 +174,32 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
     }
 }
 
+/// Parse `bytes` starting with 'length' and returns `(Length, octets_after_length)` .
+///
+/// # Safety
+///
+/// The behavior is undefined if `bytes` does not start with Length octet(s).
+pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> (Length, &[u8]) {
+    let first = bytes[0];
+    let bytes = &bytes[1..];
+
+    if first == Length::INDEFINITE {
+        // Indefinite
+        (Length::Indefinite, bytes)
+    } else if first & Length::LONG_FLAG != Length::LONG_FLAG {
+        // Short form
+        (Length::Definite(first as usize), bytes)
+    } else {
+        // Long form
+        let followings_count = (first & !Length::LONG_FLAG) as usize;
+        let len = bytes[..followings_count]
+            .iter()
+            .fold(0, |acc, o| (acc << 8) + (*o as usize));
+        let bytes = &bytes[followings_count..];
+        (Length::Definite(len), bytes)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

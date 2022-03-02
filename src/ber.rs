@@ -180,7 +180,7 @@ impl BerRef {
         let id = identifier::shrink_to_fit_unchecked(bytes);
         let parsing = &bytes[id.len()..];
 
-        let total_len = match length::try_from(parsing).unwrap() {
+        let total_len = match length::from_bytes_starts_with_unchecked(parsing) {
             (Length::Definite(len), parsing) => bytes.len() - parsing.len() + len,
             (Length::Indefinite, parsing) => {
                 let mut total_len = bytes.len() - parsing.len();
@@ -270,7 +270,7 @@ impl BerRef {
     pub fn length(&self) -> Length {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
-        length::try_from(bytes).unwrap().0
+        unsafe { length::from_bytes_starts_with_unchecked(bytes).0 }
     }
 
     /// Provides a reference to the 'contents' octets of `self` .
@@ -291,7 +291,7 @@ impl BerRef {
     pub fn contents(&self) -> &[u8] {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
-        length::try_from(bytes).unwrap().1
+        unsafe { length::from_bytes_starts_with_unchecked(bytes).1 }
     }
 }
 
