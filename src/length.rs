@@ -112,7 +112,7 @@ impl Length {
 
         match *self {
             Length::Indefinite => unsafe { buffer.push(Length::INDEFINITE) },
-            Length::Definite(mut val) => {
+            Length::Definite(val) => {
                 if val <= Length::MAX_SHORT as usize {
                     // Short form
                     unsafe { buffer.push(val as u8) };
@@ -122,12 +122,15 @@ impl Length {
                     unsafe { buffer.set_len(len) };
                     buffer[0] = Length::LONG_FLAG + (len - 1) as u8;
 
-                    for i in (1..len).rev() {
-                        debug_assert!(0 < val);
-                        buffer[i] = val as u8;
-                        val >>= 8;
+                    unsafe {
+                        let val = val.to_be();
+                        let src = &val as *const usize;
+                        let src = src as *const u8;
+                        let src = src.add(size_of::<usize>() + 1 - len);
+
+                        let dst = buffer.as_mut_ptr().add(1);
+                        dst.copy_from_nonoverlapping(src, len - 1);
                     }
-                    debug_assert_eq!(0, val);
                 }
             }
         }
