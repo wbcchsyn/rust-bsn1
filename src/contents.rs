@@ -223,6 +223,44 @@ where
     }
 }
 
+/// Parses `bytes` as a contents of Integer without any sanitization.
+///
+/// Type `T` should be the builtin primitive integer types (e.g., u8, u32, isize, i128, ...)
+///
+/// This function is common for BER, DER, and CER.
+///
+/// # Wargnings
+///
+/// This function assumes that the CPU adopts 2's complement to represent negative value.
+///
+/// # Safety
+///
+/// The behavior is undefined in the following cases.
+///
+/// - `bytes` is not formatted as the contents of ANS.1 integer.
+/// - The result is too large or too small to be represented by type `T` .
+pub unsafe fn to_integer_unchecked<T>(bytes: &[u8]) -> T
+where
+    T: PrimInt,
+{
+    let filler = if bytes[0] & 0x80 == 0 { 0x00 } else { 0xff };
+    let bytes = match bytes[0] {
+        0x00 => &bytes[1..],
+        0xff => &bytes[1..],
+        _ => bytes,
+    };
+
+    let mut be = MaybeUninit::<T>::uninit();
+    be.as_mut_ptr().write_bytes(filler, 1);
+
+    let dst = be.as_mut_ptr() as *mut u8;
+    let dst = dst.add(size_of::<T>() - bytes.len());
+
+    dst.copy_from_nonoverlapping(bytes.as_ptr(), bytes.len());
+
+    T::from_be(be.assume_init())
+}
+
 /// Serializes boolean as contents octets.
 ///
 /// This function is common for BER, DER, and CER.
@@ -418,6 +456,59 @@ mod tests {
         {
             let contents = from_integer(u128::MAX);
             assert_eq!(Ok(u128::MAX), to_integer(contents.as_ref()));
+        }
+    }
+
+    #[test]
+    fn test_to_integer_unchecked() {
+        unsafe {
+            // i8
+            for i in i8::MIN..=i8::MAX {
+                let contents = from_integer(i);
+                assert_eq!(i, to_integer_unchecked(contents.as_ref()));
+            }
+
+            // u8
+            for i in u8::MIN..=u8::MAX {
+                let contents = from_integer(i);
+                assert_eq!(i, to_integer_unchecked(contents.as_ref()));
+            }
+
+            // i16
+            for i in i16::MIN..=i16::MAX {
+                let contents = from_integer(i);
+                assert_eq!(i, to_integer_unchecked(contents.as_ref()));
+            }
+
+            // u16
+            for i in u16::MIN..=u16::MAX {
+                let contents = from_integer(i);
+                assert_eq!(i, to_integer_unchecked(contents.as_ref()));
+            }
+
+            // i128::MIN
+            {
+                let contents = from_integer(i128::MIN);
+                assert_eq!(i128::MIN, to_integer_unchecked(contents.as_ref()));
+            }
+
+            // i128::MAX
+            {
+                let contents = from_integer(i128::MAX);
+                assert_eq!(i128::MAX, to_integer_unchecked(contents.as_ref()));
+            }
+
+            // u128::MIN
+            {
+                let contents = from_integer(u128::MIN);
+                assert_eq!(u128::MIN, to_integer_unchecked(contents.as_ref()));
+            }
+
+            // u128::MAX
+            {
+                let contents = from_integer(u128::MAX);
+                assert_eq!(u128::MAX, to_integer_unchecked(contents.as_ref()));
+            }
         }
     }
 }
