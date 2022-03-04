@@ -112,7 +112,7 @@ impl Length {
 
         match *self {
             Length::Indefinite => unsafe { buffer.push(Length::INDEFINITE) },
-            Length::Definite(mut val) => {
+            Length::Definite(val) => {
                 if val <= Length::MAX_SHORT as usize {
                     // Short form
                     unsafe { buffer.push(val as u8) };
@@ -122,12 +122,15 @@ impl Length {
                     unsafe { buffer.set_len(len) };
                     buffer[0] = Length::LONG_FLAG + (len - 1) as u8;
 
-                    for i in (1..len).rev() {
-                        debug_assert!(0 < val);
-                        buffer[i] = val as u8;
-                        val >>= 8;
+                    unsafe {
+                        let val = val.to_be();
+                        let src = &val as *const usize;
+                        let src = src as *const u8;
+                        let src = src.add(size_of::<usize>() + 1 - len);
+
+                        let dst = buffer.as_mut_ptr().add(1);
+                        dst.copy_from_nonoverlapping(src, len - 1);
                     }
-                    debug_assert_eq!(0, val);
                 }
             }
         }
@@ -166,9 +169,15 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
             return Err(Error::OverFlow);
         }
 
-        let len = bytes[..followings_count]
-            .iter()
-            .fold(0, |acc, o| (acc << 8) + (*o as usize));
+        let mut len: usize = 0;
+        unsafe {
+            let src = bytes.as_ptr();
+            let dst = (&mut len as *mut usize) as *mut u8;
+            let dst = dst.add(size_of::<usize>() - followings_count);
+            dst.copy_from_nonoverlapping(src, followings_count);
+        }
+        let len = usize::from_be(len);
+
         let bytes = &bytes[followings_count..];
         Ok((Length::Definite(len), bytes))
     }
@@ -192,9 +201,14 @@ pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> (Length, &[u8]) 
     } else {
         // Long form
         let followings_count = (first & !Length::LONG_FLAG) as usize;
-        let len = bytes[..followings_count]
-            .iter()
-            .fold(0, |acc, o| (acc << 8) + (*o as usize));
+
+        let mut len: usize = 0;
+        let src = bytes.as_ptr();
+        let dst = (&mut len as *mut usize) as *mut u8;
+        let dst = dst.add(size_of::<usize>() - followings_count);
+        dst.copy_from_nonoverlapping(src, followings_count);
+
+        let len = usize::from_be(len);
         let bytes = &bytes[followings_count..];
         (Length::Definite(len), bytes)
     }
