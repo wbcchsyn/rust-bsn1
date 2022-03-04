@@ -277,8 +277,7 @@ pub fn from_bool(val: bool) -> impl AsRef<[u8]> {
 ///
 /// This function is valid only for the contents of BER, and not applied to the contents of
 /// DER nor CER.
-#[inline]
-pub fn to_bool_ber(bytes: &[u8]) -> Result<bool, Error> {
+pub const fn to_bool_ber(bytes: &[u8]) -> Result<bool, Error> {
     if bytes.is_empty() {
         Err(Error::UnTerminatedBytes)
     } else if 1 < bytes.len() {
@@ -294,8 +293,7 @@ pub fn to_bool_ber(bytes: &[u8]) -> Result<bool, Error> {
 ///
 /// This function is valid only for the contents of DER, and not applied to the contents of
 /// 'CER' nor 'BER.'
-#[inline]
-pub fn to_bool_der(bytes: &[u8]) -> Result<bool, Error> {
+pub const fn to_bool_der(bytes: &[u8]) -> Result<bool, Error> {
     if bytes.is_empty() {
         Err(Error::UnTerminatedBytes)
     } else if 1 < bytes.len() {
