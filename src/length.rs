@@ -169,9 +169,15 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
             return Err(Error::OverFlow);
         }
 
-        let len = bytes[..followings_count]
-            .iter()
-            .fold(0, |acc, o| (acc << 8) + (*o as usize));
+        let mut len: usize = 0;
+        unsafe {
+            let src = bytes.as_ptr();
+            let dst = (&mut len as *mut usize) as *mut u8;
+            let dst = dst.add(size_of::<usize>() - followings_count);
+            dst.copy_from_nonoverlapping(src, followings_count);
+        }
+        let len = usize::from_be(len);
+
         let bytes = &bytes[followings_count..];
         Ok((Length::Definite(len), bytes))
     }
