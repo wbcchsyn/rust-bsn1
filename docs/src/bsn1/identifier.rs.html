@@ -1624,6 +1624,14 @@
 <span id="1623">1623</span>
 <span id="1624">1624</span>
 <span id="1625">1625</span>
+<span id="1626">1626</span>
+<span id="1627">1627</span>
+<span id="1628">1628</span>
+<span id="1629">1629</span>
+<span id="1630">1630</span>
+<span id="1631">1631</span>
+<span id="1632">1632</span>
+<span id="1633">1633</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2021 Shin Yoshida</span>
 <span class="comment">//</span>
 <span class="comment">// &quot;LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause&quot;</span>
@@ -1696,7 +1704,7 @@
     <span class="ident">Private</span> <span class="op">=</span> <span class="number">0xc0</span>,
 }
 
-<span class="doccomment">/// `PCTag` represents Private/Constructed flag of identifier.</span>
+<span class="doccomment">/// `PCTag` represents Primitive/Constructed flag of identifier.</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u8</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PCTag</span> {
@@ -2919,8 +2927,6 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Warnings</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Warnings</span>
-    <span class="doccomment">///</span>
     <span class="doccomment">/// ASN.1 reserves some universal identifier numbers and they should not be used, however,</span>
     <span class="doccomment">/// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this</span>
     <span class="doccomment">/// functions returns `Ok` .</span>
@@ -3240,7 +3246,17 @@
     <span class="kw">fn</span> <span class="ident">new</span>() {
         <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">cl</span> <span class="kw">in</span> <span class="ident">CLASSES</span> {
             <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">pc</span> <span class="kw">in</span> <span class="ident">PCS</span> {
-                <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">num</span> <span class="kw">in</span> <span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">30</span>, <span class="number">31</span>, <span class="number">0x7f</span>, <span class="number">0x80</span>, <span class="number">0x3fff</span>, <span class="number">0x8000</span>, <span class="number">0x1fffff</span>, <span class="ident">std::u128::MAX</span>] {
+                <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">num</span> <span class="kw">in</span> <span class="kw-2">&amp;</span>[
+                    <span class="number">0</span>,
+                    <span class="number">30</span>,
+                    <span class="number">31</span>,
+                    <span class="number">0x7f</span>,
+                    <span class="number">0x80</span>,
+                    <span class="number">0x3fff</span>,
+                    <span class="number">0x8000</span>,
+                    <span class="number">0x1fffff</span>,
+                    <span class="ident">std::u128::MAX</span>,
+                ] {
                     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id::new</span>(<span class="ident">cl</span>, <span class="ident">pc</span>, <span class="ident">num</span>);
                     <span class="kw">let</span> <span class="ident">idref</span> <span class="op">=</span> <span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">IdRef</span><span class="op">&gt;</span><span class="ident">::try_from</span>(<span class="ident">id</span>.<span class="ident">as_ref</span>() <span class="kw">as</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]).<span class="ident">unwrap</span>();
                     <span class="macro">assert_eq!</span>(<span class="ident">idref</span>.<span class="ident">as_ref</span>(), <span class="ident">id</span>.<span class="ident">as_ref</span>() <span class="kw">as</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]);

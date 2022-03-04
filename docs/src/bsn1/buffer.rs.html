@@ -485,6 +485,31 @@
 <span id="484">484</span>
 <span id="485">485</span>
 <span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2021 Shin Yoshida</span>
 <span class="comment">//</span>
 <span class="comment">// &quot;LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause&quot;</span>
@@ -540,49 +565,89 @@
 
 <span class="kw">use</span> <span class="ident">core::cmp::Ordering</span>;
 <span class="kw">use</span> <span class="ident">core::hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>};
-<span class="kw">use</span> <span class="ident">core::mem</span>::{<span class="ident">align_of</span>, <span class="ident">size_of</span>};
+<span class="kw">use</span> <span class="ident">core::mem</span>::{<span class="ident">align_of</span>, <span class="ident">size_of</span>, <span class="ident">size_of_val</span>};
 <span class="kw">use</span> <span class="ident">core::ops</span>::{<span class="ident">Index</span>, <span class="ident">IndexMut</span>};
+<span class="kw">use</span> <span class="ident">std::alloc</span>::{<span class="self">self</span>, <span class="ident">Layout</span>};
 <span class="kw">use</span> <span class="ident">std::borrow::Borrow</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Buffer</span> {
-    <span class="ident">Heap</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>),
-    <span class="ident">Stack</span>(<span class="ident">StackBuffer</span>),
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Buffer</span> {
+    <span class="ident">len_</span>: <span class="ident">isize</span>,
+    <span class="ident">data_</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>,
+    <span class="ident">cap_</span>: <span class="ident">usize</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Buffer</span> {
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_stack</span>() {
+            <span class="kw">return</span>;
+        }
+
+        <span class="kw">unsafe</span> {
+            <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">Layout::from_size_align_unchecked</span>(<span class="self">self</span>.<span class="ident">capacity</span>(), <span class="ident">align_of</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>());
+            <span class="ident">alloc::dealloc</span>(<span class="self">self</span>.<span class="ident">as_mut_ptr</span>(), <span class="ident">layout</span>);
+        }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">Buffer</span> {
+    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
+        <span class="ident"><span class="self">Self</span>::from</span>(<span class="self">self</span>.<span class="ident">as_ref</span>())
+    }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Buffer</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">vals</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">StackBuffer::from_bytes</span>(<span class="ident">vals</span>) {
-            <span class="prelude-val">None</span> =&gt; <span class="ident">Buffer::Heap</span>(<span class="ident">Vec::from</span>(<span class="ident">vals</span>)),
-            <span class="prelude-val">Some</span>(<span class="ident">s</span>) =&gt; <span class="ident">Buffer::Stack</span>(<span class="ident">s</span>),
-        }
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::with_capacity</span>(<span class="ident">vals</span>.<span class="ident">len</span>());
+        <span class="ident">ret</span>.<span class="ident">extend_from_slice</span>(<span class="ident">vals</span>);
+        <span class="ident">ret</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Buffer</span> {
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::Stack</span>(<span class="ident">StackBuffer::new</span>())
+        <span class="self">Self</span> {
+            <span class="ident">len_</span>: <span class="number">0</span>,
+            <span class="ident">data_</span>: <span class="ident">core::ptr::null_mut</span>(),
+            <span class="ident">cap_</span>: <span class="number">0</span>,
+        }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_capacity</span>(<span class="ident">capacity</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::new</span>();
-        <span class="ident">ret</span>.<span class="ident">reserve</span>(<span class="ident">capacity</span>);
-        <span class="ident">ret</span>
+        <span class="comment">// Don&#39;t call method reserve() to skip method copy_from_nonoverlapping().</span>
+        <span class="kw">if</span> <span class="ident">capacity</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident"><span class="self">Self</span>::new</span>().<span class="ident">capacity</span>() {
+            <span class="kw">return</span> <span class="ident"><span class="self">Self</span>::new</span>();
+        }
+
+        <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">Layout::array</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>(<span class="ident">capacity</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="kw">unsafe</span> {
+            <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">alloc::alloc</span>(<span class="ident">layout</span>);
+            <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">is_null</span>() {
+                <span class="ident">alloc::handle_alloc_error</span>(<span class="ident">layout</span>);
+            }
+            <span class="ident">data</span>
+        };
+
+        <span class="self">Self</span> {
+            <span class="ident">len_</span>: <span class="ident">std::isize::MIN</span>,
+            <span class="ident">data_</span>: <span class="ident">data</span>,
+            <span class="ident">cap_</span>: <span class="ident">capacity</span>,
+        }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Buffer</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="kw">unsafe</span> { <span class="ident">core::slice::from_raw_parts</span>(<span class="self">self</span>.<span class="ident">as_ptr</span>(), <span class="self">self</span>.<span class="ident">len</span>()) }
+        <span class="kw">unsafe</span> { <span class="ident">std::slice::from_raw_parts</span>(<span class="self">self</span>.<span class="ident">as_ptr</span>(), <span class="self">self</span>.<span class="ident">len</span>()) }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">AsMut</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Buffer</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">as_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>] {
-        <span class="kw">unsafe</span> { <span class="ident">core::slice::from_raw_parts_mut</span>(<span class="self">self</span>.<span class="ident">as_mut_ptr</span>(), <span class="self">self</span>.<span class="ident">len</span>()) }
+        <span class="kw">unsafe</span> { <span class="ident">std::slice::from_raw_parts_mut</span>(<span class="self">self</span>.<span class="ident">as_mut_ptr</span>(), <span class="self">self</span>.<span class="ident">len</span>()) }
     }
 }
 
@@ -594,14 +659,12 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Borrow</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Buffer</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">borrow</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="kw">unsafe</span> { <span class="ident">core::slice::from_raw_parts</span>(<span class="self">self</span>.<span class="ident">as_ptr</span>(), <span class="self">self</span>.<span class="ident">len</span>()) }
+        <span class="self">self</span>.<span class="ident">as_ref</span>()
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Hash</span> <span class="kw">for</span> <span class="ident">Buffer</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">hasher</span>: <span class="kw-2">&amp;mut</span> <span class="ident">H</span>)
     <span class="kw">where</span>
         <span class="ident">H</span>: <span class="ident">Hasher</span>,
@@ -613,23 +676,14 @@
 
 <span class="kw">impl</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Buffer</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">u8</span>;
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_ptr</span>().<span class="ident">add</span>(<span class="ident">index</span>);
-            <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">ptr</span>
-        }
+    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">u8</span> {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">as_ref</span>()[<span class="ident">i</span>]
     }
 }
 
 <span class="kw">impl</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Buffer</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">add</span>(<span class="ident">index</span>);
-            <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">ptr</span>
-        }
+    <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">u8</span> {
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">as_mut</span>()[<span class="ident">i</span>]
     }
 }
 
@@ -637,7 +691,6 @@
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">Borrow</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
 {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">this</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="self">self</span>.<span class="ident">borrow</span>();
         <span class="kw">let</span> <span class="ident">other</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="ident">other</span>.<span class="ident">borrow</span>();
@@ -651,7 +704,6 @@
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">Borrow</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
 {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ordering</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">this</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="self">self</span>.<span class="ident">borrow</span>();
         <span class="kw">let</span> <span class="ident">other</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="ident">other</span>.<span class="ident">borrow</span>();
@@ -660,7 +712,6 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Ord</span> <span class="kw">for</span> <span class="ident">Buffer</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">Ordering</span> {
         <span class="kw">let</span> <span class="ident">this</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="self">self</span>.<span class="ident">borrow</span>();
         <span class="kw">let</span> <span class="ident">other</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="ident">other</span>.<span class="ident">borrow</span>();
@@ -672,87 +723,115 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The behavior is undefined if the length will exceeds the capacity.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident">u8</span>) {
-        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">capacity</span>());
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">u8</span>) {
+        <span class="kw">let</span> <span class="ident">old_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">len</span>();
 
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Heap</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">push</span>(<span class="ident">val</span>),
-            <span class="ident"><span class="self">Self</span>::Stack</span>(<span class="ident">s</span>) =&gt; <span class="ident">s</span>.<span class="ident">push</span>(<span class="ident">val</span>),
-        }
+        <span class="macro">debug_assert!</span>(<span class="ident">old_len</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">capacity</span>());
+        <span class="self">self</span>.<span class="ident">set_len</span>(<span class="ident">old_len</span> <span class="op">+</span> <span class="number">1</span>);
+        <span class="self">self</span>.<span class="ident">as_mut</span>()[<span class="ident">old_len</span>] <span class="op">=</span> <span class="ident">v</span>;
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vals</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
         <span class="self">self</span>.<span class="ident">reserve</span>(<span class="ident">vals</span>.<span class="ident">len</span>());
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Heap</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">extend_from_slice</span>(<span class="ident">vals</span>),
-            <span class="ident"><span class="self">Self</span>::Stack</span>(<span class="ident">s</span>) =&gt; <span class="kw">unsafe</span> { <span class="ident">s</span>.<span class="ident">extend_from_slice</span>(<span class="ident">vals</span>) },
+        <span class="kw">unsafe</span> {
+            <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">add</span>(<span class="self">self</span>.<span class="ident">len</span>());
+            <span class="ident">ptr</span>.<span class="ident">copy_from_nonoverlapping</span>(<span class="ident">vals</span>.<span class="ident">as_ptr</span>(), <span class="ident">vals</span>.<span class="ident">len</span>());
+            <span class="self">self</span>.<span class="ident">set_len</span>(<span class="self">self</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">vals</span>.<span class="ident">len</span>());
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_ptr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*const</span> <span class="ident">u8</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Heap</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">as_ptr</span>(),
-            <span class="ident"><span class="self">Self</span>::Stack</span>(<span class="ident">s</span>) =&gt; <span class="ident">s</span>.<span class="ident">as_ptr</span>(),
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_mut_ptr</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Heap</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">as_mut_ptr</span>(),
-            <span class="ident"><span class="self">Self</span>::Stack</span>(<span class="ident">s</span>) =&gt; <span class="ident">s</span>.<span class="ident">as_mut_ptr</span>(),
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">capacity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Heap</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">capacity</span>(),
-            <span class="ident"><span class="self">Self</span>::Stack</span>(<span class="ident">s</span>) =&gt; <span class="ident">s</span>.<span class="ident">capacity</span>(),
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Heap</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">len</span>(),
-            <span class="ident"><span class="self">Self</span>::Stack</span>(<span class="ident">s</span>) =&gt; <span class="ident">s</span>.<span class="ident">len</span>(),
+        <span class="kw">if</span> <span class="number">0</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">len_</span> {
+            <span class="self">self</span>.<span class="ident">len_</span> <span class="kw">as</span> <span class="ident">usize</span>
+        } <span class="kw">else</span> {
+            (<span class="self">self</span>.<span class="ident">len_</span> <span class="op">-</span> <span class="ident">std::isize::MIN</span>) <span class="kw">as</span> <span class="ident">usize</span>
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_len</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">new_len</span>: <span class="ident">usize</span>) {
-        <span class="macro">debug_assert!</span>(<span class="ident">new_len</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">capacity</span>());
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">capacity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_stack</span>() {
+            (<span class="ident">size_of_val</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">data_</span>) <span class="op">+</span> <span class="ident">size_of_val</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cap_</span>)) <span class="op">/</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>()
+        } <span class="kw">else</span> {
+            <span class="self">self</span>.<span class="ident">cap_</span>
+        }
+    }
 
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Heap</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">set_len</span>(<span class="ident">new_len</span>),
-            <span class="ident"><span class="self">Self</span>::Stack</span>(<span class="ident">s</span>) =&gt; <span class="ident">s</span>.<span class="ident">set_len</span>(<span class="ident">new_len</span>),
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_ptr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*const</span> <span class="ident">u8</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_stack</span>() {
+            <span class="kw">let</span> <span class="ident">data</span>: <span class="kw-2">*const</span> <span class="kw-2">*mut</span> <span class="ident">u8</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">data_</span>;
+            <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>;
+            <span class="ident">data</span>
+        } <span class="kw">else</span> {
+            <span class="self">self</span>.<span class="ident">data_</span>
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reserve</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">additional</span>: <span class="ident">usize</span>) {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Heap</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">reserve</span>(<span class="ident">additional</span>),
-            <span class="ident"><span class="self">Self</span>::Stack</span>(<span class="ident">s</span>) =&gt; {
-                <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">additional</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">s</span>.<span class="ident">capacity</span>() {
-                    <span class="kw">return</span>;
-                } <span class="kw">else</span> {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">s</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">additional</span>);
-                    <span class="ident">v</span>.<span class="ident">extend_from_slice</span>(<span class="ident">s</span>.<span class="ident">as_ref</span>());
-                    <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::Heap</span>(<span class="ident">v</span>)
+        <span class="kw">let</span> <span class="ident">new_cap</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">additional</span>;
+
+        <span class="kw">if</span> <span class="ident">new_cap</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">capacity</span>() {
+            <span class="kw">return</span>;
+        }
+
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_stack</span>() {
+            <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">Layout::array</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>(<span class="ident">new_cap</span>).<span class="ident">unwrap</span>();
+            <span class="kw">unsafe</span> {
+                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">alloc::alloc</span>(<span class="ident">layout</span>);
+                <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">is_null</span>() {
+                    <span class="ident">alloc::handle_alloc_error</span>(<span class="ident">layout</span>);
                 }
+
+                <span class="ident">data</span>.<span class="ident">copy_from_nonoverlapping</span>(<span class="self">self</span>.<span class="ident">as_ptr</span>(), <span class="self">self</span>.<span class="ident">capacity</span>());
+                <span class="self">self</span>.<span class="ident">len_</span> <span class="op">+</span><span class="op">=</span> <span class="ident">std::isize::MIN</span>;
+                <span class="self">self</span>.<span class="ident">cap_</span> <span class="op">=</span> <span class="ident">new_cap</span>;
+                <span class="self">self</span>.<span class="ident">data_</span> <span class="op">=</span> <span class="ident">data</span>;
+            }
+        } <span class="kw">else</span> {
+            <span class="kw">unsafe</span> {
+                <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">Layout::from_size_align_unchecked</span>(<span class="self">self</span>.<span class="ident">capacity</span>(), <span class="ident">align_of</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>());
+                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">alloc::realloc</span>(<span class="self">self</span>.<span class="ident">as_mut_ptr</span>(), <span class="ident">layout</span>, <span class="ident">new_cap</span>);
+                <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">is_null</span>() {
+                    <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">Layout::from_size_align_unchecked</span>(<span class="ident">new_cap</span>, <span class="ident">align_of</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>());
+                    <span class="ident">alloc::handle_alloc_error</span>(<span class="ident">layout</span>);
+                }
+                <span class="self">self</span>.<span class="ident">data_</span> <span class="op">=</span> <span class="ident">data</span>;
+                <span class="self">self</span>.<span class="ident">cap_</span> <span class="op">=</span> <span class="ident">new_cap</span>;
             }
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_vec</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Heap</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>,
-            <span class="ident"><span class="self">Self</span>::Stack</span>(<span class="ident">s</span>) =&gt; <span class="ident">Vec::from</span>(<span class="ident">s</span>.<span class="ident">as_ref</span>()),
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_len</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">new_len</span>: <span class="ident">usize</span>) {
+        <span class="macro">debug_assert!</span>(<span class="ident">new_len</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">capacity</span>());
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_stack</span>() {
+            <span class="self">self</span>.<span class="ident">len_</span> <span class="op">=</span> <span class="ident">new_len</span> <span class="kw">as</span> <span class="ident">isize</span>;
+        } <span class="kw">else</span> {
+            <span class="self">self</span>.<span class="ident">len_</span> <span class="op">=</span> <span class="ident">std::isize::MIN</span> <span class="op">+</span> <span class="ident">new_len</span> <span class="kw">as</span> <span class="ident">isize</span>
+        }
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_mut_ptr</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_stack</span>() {
+            <span class="kw">let</span> <span class="ident">data</span>: <span class="kw-2">*mut</span> <span class="kw-2">*mut</span> <span class="ident">u8</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">data_</span>;
+            <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>;
+            <span class="ident">data</span>
+        } <span class="kw">else</span> {
+            <span class="self">self</span>.<span class="ident">data_</span>
+        }
+    }
+
+    <span class="kw">fn</span> <span class="ident">is_stack</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="number">0</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">len_</span>
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_vec</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_stack</span>() {
+            <span class="ident">Vec::from</span>(<span class="self">self</span>.<span class="ident">as_ref</span>())
+        } <span class="kw">else</span> {
+            <span class="kw">unsafe</span> {
+                <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">Vec::from_raw_parts</span>(<span class="self">self</span>.<span class="ident">as_mut_ptr</span>(), <span class="self">self</span>.<span class="ident">len</span>(), <span class="self">self</span>.<span class="ident">capacity</span>());
+                <span class="ident">std::mem::forget</span>(<span class="self">self</span>);
+                <span class="ident">ret</span>
+            }
         }
     }
 }
@@ -760,16 +839,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">buffer_tests</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">core::alloc::Layout</span>;
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">size_align</span>() {
-        <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">Layout::new</span>::<span class="op">&lt;</span><span class="ident">Buffer</span><span class="op">&gt;</span>();
-        <span class="kw">let</span> <span class="ident">vec_layout</span> <span class="op">=</span> <span class="ident">Layout::new</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">vec_layout</span>.<span class="ident">align</span>(), <span class="ident">layout</span>.<span class="ident">align</span>());
-        <span class="macro">assert_eq!</span>(<span class="ident">vec_layout</span>.<span class="ident">size</span>() <span class="op">+</span> <span class="ident">layout</span>.<span class="ident">align</span>(), <span class="ident">layout</span>.<span class="ident">size</span>());
-    }
+    <span class="kw">use</span> <span class="ident">core::iter::FromIterator</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">new</span>() {
@@ -786,21 +856,45 @@
             <span class="macro">assert_eq!</span>(<span class="number">0</span>, <span class="ident">buffer</span>.<span class="ident">len</span>());
             <span class="macro">assert!</span>(<span class="ident">i</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">capacity</span>());
         }
+
+        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">1</span>];
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">Buffer::from</span>(<span class="ident">v</span>.<span class="ident">as_ref</span>());
+        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">40</span> {
+            <span class="ident">buffer</span>.<span class="ident">reserve</span>(<span class="ident">i</span>);
+            <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">v</span>, <span class="ident">buffer</span>.<span class="ident">as_ref</span>());
+            <span class="macro">assert!</span>(<span class="ident">i</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">capacity</span>());
+        }
+
+        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Vec::from_iter</span>(<span class="number">0</span>..<span class="number">200</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">Buffer::from</span>(<span class="ident">v</span>.<span class="ident">as_ref</span>());
+        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">40</span> {
+            <span class="ident">buffer</span>.<span class="ident">reserve</span>(<span class="ident">i</span>);
+            <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">v</span>, <span class="ident">buffer</span>.<span class="ident">as_ref</span>());
+            <span class="macro">assert!</span>(<span class="ident">i</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">capacity</span>());
+        }
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">push</span>() {
-        <span class="kw">const</span> <span class="ident">LENGTH</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">40</span>;
+        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">Buffer::new</span>().<span class="ident">capacity</span>() {
+            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Vec::from_iter</span>(<span class="number">0</span>..<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u8</span>);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">Buffer::with_capacity</span>(<span class="ident">LENGTH</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">Buffer::new</span>();
+            <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">c</span> <span class="kw">in</span> <span class="ident">v</span>.<span class="ident">iter</span>() {
+                <span class="kw">unsafe</span> { <span class="ident">buffer</span>.<span class="ident">push</span>(<span class="ident">c</span>) };
+            }
 
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">LENGTH</span> {
-            <span class="kw">unsafe</span> { <span class="ident">buffer</span>.<span class="ident">push</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u8</span>) };
-            <span class="ident">vec</span>.<span class="ident">push</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u8</span>);
+            <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">v</span>, <span class="ident">buffer</span>.<span class="ident">as_ref</span>());
+        }
 
-            <span class="kw">let</span> <span class="ident">expected</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="ident">vec</span>.<span class="ident">as_ref</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">expected</span>, <span class="ident">buffer</span>.<span class="ident">as_ref</span>());
+        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">100</span> {
+            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Vec::from_iter</span>(<span class="number">0</span>..<span class="ident">i</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">Buffer::with_capacity</span>(<span class="ident">v</span>.<span class="ident">len</span>());
+            <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">c</span> <span class="kw">in</span> <span class="ident">v</span>.<span class="ident">iter</span>() {
+                <span class="kw">unsafe</span> { <span class="ident">buffer</span>.<span class="ident">push</span>(<span class="ident">c</span>) };
+            }
+
+            <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">v</span>, <span class="ident">buffer</span>.<span class="ident">as_ref</span>());
         }
     }
 
@@ -827,8 +921,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">StackBuffer</span> {
-    <span class="comment">// The size of &#39;Buffer&#39; will be &#39;size_of::&lt;Vec&lt;u8&gt;&gt;() + align_of::&lt;Vec&lt;u8&gt;&gt;()&#39;.</span>
-    <span class="kw">const</span> <span class="ident">CAPACITY</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="ident">align_of</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>() <span class="op">-</span> <span class="number">2</span>;
+    <span class="kw">const</span> <span class="ident">CAPACITY</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">i128</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="number">1</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">StackBuffer</span> {
@@ -836,16 +929,6 @@
         <span class="self">Self</span> {
             <span class="ident">buffer</span>: [<span class="number">0</span>; <span class="ident"><span class="self">Self</span>::CAPACITY</span>],
             <span class="ident">len_</span>: <span class="number">0</span>,
-        }
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes</span>(<span class="ident">vals</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">vals</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="ident"><span class="self">Self</span>::CAPACITY</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::new</span>();
-            <span class="kw">unsafe</span> { <span class="ident">ret</span>.<span class="ident">extend_from_slice</span>(<span class="ident">vals</span>) };
-            <span class="prelude-val">Some</span>(<span class="ident">ret</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
         }
     }
 }
@@ -860,7 +943,6 @@
 <span class="kw">impl</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">StackBuffer</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">u8</span>;
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="kw">unsafe</span> {
             <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_ptr</span>().<span class="ident">add</span>(<span class="ident">index</span>);
@@ -870,7 +952,6 @@
 }
 
 <span class="kw">impl</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">StackBuffer</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="kw">unsafe</span> {
             <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">add</span>(<span class="ident">index</span>);
@@ -883,7 +964,6 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The behavior is undefined if the length will exceeds the capacity.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident">u8</span>) {
         <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">capacity</span>());
 
@@ -891,41 +971,24 @@
         <span class="self">self</span>.<span class="ident">len_</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
     }
 
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The behavior is undefined if the length will exceeds the capacity.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vals</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
-        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">vals</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">capacity</span>());
-
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">add</span>(<span class="self">self</span>.<span class="ident">len</span>());
-        <span class="ident">ptr</span>.<span class="ident">copy_from_nonoverlapping</span>(<span class="ident">vals</span>.<span class="ident">as_ptr</span>(), <span class="ident">vals</span>.<span class="ident">len</span>());
-        <span class="self">self</span>.<span class="ident">len_</span> <span class="op">+</span><span class="op">=</span> <span class="ident">vals</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u8</span>;
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_ptr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*const</span> <span class="ident">u8</span> {
         <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">as_ptr</span>()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_mut_ptr</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
         <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">as_mut_ptr</span>()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="self">self</span>.<span class="ident">len_</span> <span class="kw">as</span> <span class="ident">usize</span>
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_len</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">new_len</span>: <span class="ident">usize</span>) {
         <span class="macro">debug_assert!</span>(<span class="ident">new_len</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">capacity</span>());
 
         <span class="self">self</span>.<span class="ident">len_</span> <span class="op">=</span> <span class="ident">new_len</span> <span class="kw">as</span> <span class="ident">u8</span>
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">capacity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="ident"><span class="self">Self</span>::CAPACITY</span>
     }
@@ -956,19 +1019,6 @@
         }
 
         <span class="macro">assert_eq!</span>(<span class="ident">buffer</span>.<span class="ident">capacity</span>(), <span class="ident">buffer</span>.<span class="ident">len</span>());
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">extend_from_slice</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">StackBuffer::new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="ident">StackBuffer::CAPACITY</span> <span class="op">/</span> <span class="number">2</span>) {
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u8</span>, <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u8</span>];
-            <span class="ident">v</span>.<span class="ident">extend_from_slice</span>(<span class="ident">bytes</span>);
-            <span class="kw">unsafe</span> { <span class="ident">buffer</span>.<span class="ident">extend_from_slice</span>(<span class="ident">bytes</span>) };
-            <span class="macro">assert_eq!</span>(<span class="ident">v</span>.<span class="ident">as_ref</span>() <span class="kw">as</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">buffer</span>.<span class="ident">as_ref</span>());
-        }
     }
 }
 </code></pre></div>
