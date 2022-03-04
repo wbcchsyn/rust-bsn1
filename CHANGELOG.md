@@ -32,3 +32,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 ## 0.3.1 - 2022-02-24
 ## Changed
 - Update for rust the latest version.
+
+## 0.4.0 - 2022-03-03
+## Added
+- Function 'contents::to\_integer\_unchecked()'
+
+## Changed
+- The following functions are made generic and take builtin primitive integer types as the argument.
+    - 'contents::from\_integer()'
+    - 'contents::to\_integer()'
+- The following functions are made const.
+    - 'contents::to\_bool\_ber()'
+    - 'contents::to\_bool\_der()'
