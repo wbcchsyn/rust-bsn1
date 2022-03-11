@@ -676,6 +676,12 @@
 <span id="675">675</span>
 <span id="676">676</span>
 <span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2021 Shin Yoshida</span>
 <span class="comment">//</span>
 <span class="comment">// &quot;LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause&quot;</span>
@@ -732,6 +738,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">identifier</span>, <span class="ident">length</span>, <span class="ident">Buffer</span>, <span class="ident">Der</span>, <span class="ident">DerRef</span>, <span class="ident">Error</span>, <span class="ident">IdRef</span>, <span class="ident">Length</span>};
 <span class="kw">use</span> <span class="ident">core::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">core::ops::Deref</span>;
+<span class="kw">use</span> <span class="ident">num::PrimInt</span>;
 <span class="kw">use</span> <span class="ident">std::borrow::Borrow</span>;
 
 <span class="doccomment">/// `BerRef` is a wrapper of `[u8]` and represents a BER.</span>
@@ -858,7 +865,7 @@
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">identifier::shrink_to_fit_unchecked</span>(<span class="ident">bytes</span>);
         <span class="kw">let</span> <span class="ident">parsing</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="ident">id</span>.<span class="ident">len</span>()..];
 
-        <span class="kw">let</span> <span class="ident">total_len</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">length::try_from</span>(<span class="ident">parsing</span>).<span class="ident">unwrap</span>() {
+        <span class="kw">let</span> <span class="ident">total_len</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">length::from_bytes_starts_with_unchecked</span>(<span class="ident">parsing</span>) {
             (<span class="ident">Length::Definite</span>(<span class="ident">len</span>), <span class="ident">parsing</span>) =&gt; <span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">parsing</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">len</span>,
             (<span class="ident">Length::Indefinite</span>, <span class="ident">parsing</span>) =&gt; {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_len</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">parsing</span>.<span class="ident">len</span>();
@@ -948,7 +955,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">length</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Length</span> {
         <span class="kw">let</span> <span class="ident">id_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>().<span class="ident">as_ref</span>().<span class="ident">len</span>();
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bytes</span>[<span class="ident">id_len</span>..];
-        <span class="ident">length::try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>().<span class="number">0</span>
+        <span class="kw">unsafe</span> { <span class="ident">length::from_bytes_starts_with_unchecked</span>(<span class="ident">bytes</span>).<span class="number">0</span> }
     }
 
     <span class="doccomment">/// Provides a reference to the &#39;contents&#39; octets of `self` .</span>
@@ -969,7 +976,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contents</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
         <span class="kw">let</span> <span class="ident">id_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>().<span class="ident">as_ref</span>().<span class="ident">len</span>();
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bytes</span>[<span class="ident">id_len</span>..];
-        <span class="ident">length::try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>().<span class="number">1</span>
+        <span class="kw">unsafe</span> { <span class="ident">length::from_bytes_starts_with_unchecked</span>(<span class="ident">bytes</span>).<span class="number">1</span> }
     }
 }
 
@@ -1084,7 +1091,9 @@
         <span class="ident"><span class="self">Self</span>::from</span>(<span class="ident">Der::boolean</span>(<span class="ident">val</span>))
     }
 
-    <span class="doccomment">/// Returns a new instance representing ingeger.</span>
+    <span class="doccomment">/// Returns a new instance representing integer.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Type `T` should be the builtin primitive integer types (e.g., u8, u32, isize, i128, ...)</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">///</span>
@@ -1097,7 +1106,10 @@
     <span class="doccomment">/// assert_eq!(IdRef::integer(), ber.id());</span>
     <span class="doccomment">/// assert_eq!(val, contents::to_integer(ber.contents()).unwrap());</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">integer</span>(<span class="ident">val</span>: <span class="ident">i128</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">integer</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span>
+    <span class="kw">where</span>
+        <span class="ident">T</span>: <span class="ident">PrimInt</span>,
+    {
         <span class="ident"><span class="self">Self</span>::from</span>(<span class="ident">Der::integer</span>(<span class="ident">val</span>))
     }
 
