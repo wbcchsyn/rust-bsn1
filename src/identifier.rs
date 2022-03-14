@@ -101,6 +101,10 @@ impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
+    /// This function is same to [`IdRef::from_bytes`] .
+    ///
+    /// [`IdRef::from_bytes`]: #method.from_bytes
+    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
@@ -192,13 +196,14 @@ impl IdRef {
     /// `bytes` must not include any extra octets.
     ///
     /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
-    /// implementation instead.
+    /// implementation or [`from_bytes`] instead.
     ///
     /// # Safety
     ///
     /// The behavior is undefined if the format of `bytes` is not right.
     ///
     /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    /// [`from_bytes`]: #method.from_bytes
     ///
     /// # Examples
     ///
