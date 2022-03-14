@@ -99,6 +99,25 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
 }
 
 impl DerRef {
+    /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a reference to `DerRef` .
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`<&DerRef>::try_from`] .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function will accept
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
+    /// constructed Octet String DER.
+    ///
+    /// [`<&DerRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    #[inline]
+    pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
+        <&Self>::try_from(bytes)
+    }
+
     /// Provides a reference from `bytes` without any sanitization.
     ///
     /// `bytes` must not include any extra octet.
