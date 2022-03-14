@@ -160,6 +160,34 @@ pub unsafe fn shrink_to_fit_unchecked(bytes: &[u8]) -> &[u8] {
 }
 
 impl IdRef {
+    /// Parses `bytes` starts with identifier and tries to build a new instance.
+    ///
+    /// This function ignores the extra octet(s) at the end if any.
+    ///
+    /// This function is same to [`<&IdRef>::try_from`] .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
+    /// functions returns `Ok` .
+    ///
+    /// [`<&IdRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    ///
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// let idref = IdRef::from_bytes(id.as_ref() as &[u8]).unwrap();
+    /// assert_eq!(id.as_ref() as &IdRef, idref);
+    /// ```
+    #[inline]
+    pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
+        <&Self>::try_from(bytes)
+    }
+
     /// Provides a reference from `bytes` without any sanitize.
     /// `bytes` must not include any extra octets.
     ///
