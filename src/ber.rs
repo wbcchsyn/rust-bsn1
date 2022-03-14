@@ -115,6 +115,17 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
 }
 
 impl BerRef {
+    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a reference to `BerRef` .
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`<&BerRef>::try_from`] .
+    ///
+    /// [`<&BerRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
+        <&Self>::try_from(bytes)
+    }
+
     /// Provides a reference from `bytes` without any sanitization.
     ///
     /// `bytes` must be BER octets and must not include any extra octet.
