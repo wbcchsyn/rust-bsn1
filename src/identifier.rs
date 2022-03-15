@@ -1120,6 +1120,13 @@ impl ToOwned for IdRef {
     }
 }
 
+impl PartialEq<Id> for IdRef {
+    #[inline]
+    fn eq(&self, other: &Id) -> bool {
+        self == other.as_ref() as &IdRef
+    }
+}
+
 impl IdRef {
     /// Returns `ClassTag` of `self` .
     ///
