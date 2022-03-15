@@ -115,14 +115,28 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
 }
 
 impl BerRef {
+    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a reference to `BerRef` .
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`<&BerRef>::try_from`] .
+    ///
+    /// [`<&BerRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
+        <&Self>::try_from(bytes)
+    }
+
     /// Provides a reference from `bytes` without any sanitization.
     ///
     /// `bytes` must be BER octets and must not include any extra octet.
     ///
-    /// If it is sure that `bytes` starts with BER octets, but if some extra octet(s) may added
-    /// after that, use [`from_bytes_starts_with_unchecked`] instead.
-    /// If it is not sure whether `bytes` starts with BER octets or not, use [`TryFrom`]
-    /// implementation.
+    /// If it is not sure whether `bytes` are valid octets as an 'BER' or not, use [`TryFrom`]
+    /// implementation or [`from_bytes`].
+    ///
+    /// The difference from [`from_bytes_starts_with_unchecked`] is that
+    /// [`from_bytes_starts_with_unchecked`] checks the 'LENGTH' octets and excludes extra
+    /// octet(s) at the end if any while this method does not check at all (i.e.
+    /// [`from_bytes_starts_with_unchecked`] allows extra octets at the end.)
     ///
     /// # Safety
     ///
@@ -130,6 +144,7 @@ impl BerRef {
     ///
     /// [`from_bytes_starts_with_unchecked`]: #method.from_bytes_starts_with_unchecked
     /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    /// [`from_bytes`]: #method.from_bytes
     ///
     /// # Examples
     ///
@@ -155,13 +170,19 @@ impl BerRef {
     /// `bytes` may include some extra octet(s) at the end.
     ///
     /// If it is not sure whether `bytes` starts with BER octets or not, use [`TryFrom`]
-    /// implementation.
+    /// implementation or [`from_bytes`].
+    ///
+    /// The difference from [`from_bytes_unchecked`] is that this function checks the 'LENGTH'
+    /// octets and excludes extra octet(s) at the end if any, while [`from_bytes_unchecked`]
+    /// does not check at all.
     ///
     /// # Safety
     ///
     /// The behavior is undefined if `bytes` does not start with BER octets.
     ///
     /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    /// [`from_bytes_unchecked`]: #method.from_bytes_unchecked
+    /// [`from_bytes`]: #method.from_bytes
     ///
     /// # Examples
     ///
