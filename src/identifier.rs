@@ -1331,12 +1331,15 @@ impl TryFrom<&[u8]> for Id {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
+    /// This function is same to [`from_bytes`] .
+    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok` .
     ///
+    /// [`from_bytes`]: #method.from_bytes
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         <&IdRef>::try_from(bytes).map(|idref| idref.to_owned())
     }
