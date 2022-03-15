@@ -1120,6 +1120,13 @@ impl ToOwned for IdRef {
     }
 }
 
+impl PartialEq<Id> for IdRef {
+    #[inline]
+    fn eq(&self, other: &Id) -> bool {
+        self == other.as_ref() as &IdRef
+    }
+}
+
 impl IdRef {
     /// Returns `ClassTag` of `self` .
     ///
@@ -1413,6 +1420,13 @@ impl Deref for Id {
     #[inline]
     fn deref(&self) -> &Self::Target {
         unsafe { IdRef::from_bytes_unchecked(self.buffer.as_ref()) }
+    }
+}
+
+impl PartialEq<IdRef> for Id {
+    #[inline]
+    fn eq(&self, other: &IdRef) -> bool {
+        self.as_ref() as &IdRef == other
     }
 }
 

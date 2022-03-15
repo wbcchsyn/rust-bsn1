@@ -224,6 +224,13 @@ impl ToOwned for DerRef {
     }
 }
 
+impl PartialEq<Der> for DerRef {
+    #[inline]
+    fn eq(&self, other: &Der) -> bool {
+        self == other.as_ref() as &DerRef
+    }
+}
+
 impl DerRef {
     /// Returns a reference to `IdRef` of `self` .
     ///
@@ -537,6 +544,13 @@ impl Deref for Der {
     }
 }
 
+impl PartialEq<DerRef> for Der {
+    #[inline]
+    fn eq(&self, other: &DerRef) -> bool {
+        self.as_ref() as &DerRef == other
+    }
+}
+
 impl Der {
     /// Consumes `self` , returning `Vec` .
     ///
@@ -768,7 +782,7 @@ mod tests {
                 bytes.extend(extra);
 
                 let der_ref = unsafe { DerRef::from_bytes_starts_with_unchecked(bytes.as_ref()) };
-                assert_eq!(der_ref, der.as_ref());
+                assert_eq!(der_ref, &der);
             }
         }
     }
