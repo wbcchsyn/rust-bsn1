@@ -537,6 +537,13 @@ impl Deref for Der {
     }
 }
 
+impl PartialEq<DerRef> for Der {
+    #[inline]
+    fn eq(&self, other: &DerRef) -> bool {
+        self.as_ref() as &DerRef == other
+    }
+}
+
 impl Der {
     /// Consumes `self` , returning `Vec` .
     ///
