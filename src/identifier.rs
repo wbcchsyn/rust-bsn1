@@ -1405,6 +1405,23 @@ impl Id {
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
         Self::try_from(bytes)
     }
+
+    /// Provides a reference from `bytes` without any sanitize.
+    /// `bytes` must not include any extra octets.
+    ///
+    /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
+    /// implementation or [`from_bytes`] instead.
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if the format of `bytes` is not right.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27_%20%5Bu8%5D%3E
+    /// [`from_bytes`]: #method.from_bytes
+    #[inline]
+    pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
+        IdRef::from_bytes_unchecked(bytes).to_owned()
+    }
 }
 
 impl AsRef<[u8]> for Id {
