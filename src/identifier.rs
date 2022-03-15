@@ -1423,6 +1423,13 @@ impl Deref for Id {
     }
 }
 
+impl PartialEq<IdRef> for Id {
+    #[inline]
+    fn eq(&self, other: &IdRef) -> bool {
+        self.as_ref() as &IdRef == other
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
