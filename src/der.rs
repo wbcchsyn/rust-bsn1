@@ -437,6 +437,52 @@ impl Der {
         }
     }
 
+    /// Builds a new instance from `bytes` that starts with 'DER' octets.
+    ///
+    /// `bytes` may include some extra octet(s) at the end.
+    ///
+    /// If it is not sure whether `bytes` starts with DER octets or not, use [`TryFrom`]
+    /// implementation or [`from_bytes`] .
+    ///
+    /// The difference from [`from_bytes_unchecked`] is that this function checks the 'LENGTH'
+    /// octets and excludes extra octet(s) at the end if any, while [`from_bytes_unchecked`]
+    /// does not check at all.
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if `bytes` does not start with 'ASN.1 DER' octets.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    /// [`from_bytes_unchecked`]: #method.from_bytes_unchecked
+    /// [`from_bytes`]: #method.from_bytes
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let der0 = Der::new(IdRef::octet_string(), &[]);
+    /// let mut bytes = Vec::from(der0.as_ref() as &[u8]);
+    /// bytes.extend(&[1, 2, 3]);
+    ///
+    /// let der1 = unsafe { Der::from_bytes_starts_with_unchecked(bytes.as_ref()) };
+    /// assert_eq!(der0, der1);
+    /// ```
+    #[inline]
+    pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> Self {
+        let id = identifier::shrink_to_fit_unchecked(bytes);
+        let parsing = &bytes[id.len()..];
+
+        let (len, parsing) = match length::from_bytes_starts_with_unchecked(parsing) {
+            (Length::Definite(len), parsing) => (len, parsing),
+            _ => panic!("{}", Error::IndefiniteLength),
+        };
+
+        let total_len = bytes.len() - parsing.len() + len;
+        let bytes = &bytes[..total_len];
+        Self::from_bytes_unchecked(bytes)
+    }
+
     /// Creates a new instance from `id` and `contents` .
     ///
     /// # Warnings
