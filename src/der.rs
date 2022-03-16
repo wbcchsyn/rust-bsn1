@@ -326,12 +326,16 @@ impl TryFrom<&[u8]> for Der {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
+    /// This function is same to [`from_bytes`] .
+    ///
     /// # Warnings
     ///
     /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
     /// such an identifier.
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
+    ///
+    /// [`from_bytes`]: #method.from_bytes
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         let der_ref = <&DerRef>::try_from(bytes)?;
         Ok(der_ref.to_owned())
