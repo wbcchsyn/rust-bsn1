@@ -407,6 +407,36 @@ impl Der {
         Self::try_from(bytes)
     }
 
+    /// Builds a new instance holding `bytes` without any sanitization.
+    ///
+    /// `bytes` must not include any extra octet.
+    ///
+    /// If it is not sure whether `bytes` are valid octets as an 'DER' or not, use [`TryFrom`]
+    /// implementation or [`from_bytes`].
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    /// [`from_bytes`]: #method.from_bytes
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if `bytes` is not formatted as a DER.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let der0 = Der::new(IdRef::octet_string(), &[]);
+    /// let der1 = unsafe { Der::from_bytes_unchecked(der0.as_ref()) };
+    /// assert_eq!(der0, der1);
+    /// ```
+    #[inline]
+    pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
+        Self {
+            buffer: Buffer::from(bytes),
+        }
+    }
+
     /// Creates a new instance from `id` and `contents` .
     ///
     /// # Warnings
