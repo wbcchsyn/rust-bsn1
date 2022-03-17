@@ -388,6 +388,25 @@ impl Ber {
         Self::from(der)
     }
 
+    /// Parses `bytes` starting with BER octets and builds a new instance.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`TryFrom::try_from`] .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for BER, however, this function accepts
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
+    /// constructed Octet String BER.
+    ///
+    /// [`TryFrom::try_from`]: #impl-TryFrom%3C%26%27_%20%5Bu8%5D%3E
+    #[inline]
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
+        Self::try_from(bytes)
+    }
+
     /// Creates a new instance from `id` and `contents` .
     ///
     /// # Examples
