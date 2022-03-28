@@ -1316,6 +1316,21 @@ impl IdRef {
             Ok(num)
         }
     }
+
+    /// Provides a reference to the inner slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::IdRef;
+    ///
+    /// let id = IdRef::integer();
+    /// assert_eq!(&[0x02], id.as_bytes());
+    /// ```
+    #[inline]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
 }
 
 /// `Id` owns `IdRef` and represents Identifier.
