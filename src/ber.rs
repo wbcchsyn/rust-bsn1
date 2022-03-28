@@ -361,6 +361,10 @@ impl TryFrom<&[u8]> for Ber {
     /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`from_bytes`] .
+    ///
+    /// [`from_bytes`]: #method.from_bytes
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         let ber_ref = <&BerRef>::try_from(bytes)?;
         Ok(ber_ref.to_owned())
@@ -386,6 +390,107 @@ impl Ber {
     pub fn new(id: &IdRef, contents: &[u8]) -> Self {
         let der = Der::new(id, contents);
         Self::from(der)
+    }
+
+    /// Parses `bytes` starting with BER octets and builds a new instance.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`TryFrom::try_from`] .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for BER, however, this function accepts
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
+    /// constructed Octet String BER.
+    ///
+    /// [`TryFrom::try_from`]: #impl-TryFrom%3C%26%27_%20%5Bu8%5D%3E
+    #[inline]
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
+        Self::try_from(bytes)
+    }
+
+    /// Builds a new instance holding `bytes` without any sanitization.
+    ///
+    /// `bytes` must not include any extra octet.
+    ///
+    /// If it is not sure whether `bytes` are valid octets as an 'BER' or not, use [`TryFrom`]
+    /// implementation or [`from_bytes`].
+    ///
+    /// The difference from [`from_bytes_starts_with_unchecked`] is that
+    /// [`from_bytes_starts_with_unchecked`] checks the 'LENGTH' octets and excludes extra
+    /// octet(s) at the end if any while this method does not check at all (i.e.
+    /// [`from_bytes_starts_with_unchecked`] allows extra octets at the end.)
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27_%20%5Bu8%5D%3E
+    /// [`from_bytes`]: #method.from_bytes
+    /// [`from_bytes_starts_with_unchecked`]: #method.from_bytes_starts_with_unchecked
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if `bytes` is not formatted as a BER.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, IdRef};
+    ///
+    /// let ber0 = Ber::new(IdRef::octet_string(), &[]);
+    /// let ber1 = unsafe { Ber::from_bytes_unchecked(ber0.as_ref()) };
+    /// assert_eq!(ber0, ber1);
+    /// ```
+    #[inline]
+    pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
+        Self {
+            buffer: Buffer::from(bytes),
+        }
+    }
+
+    /// Builds a new instance from `bytes` that starts with 'BER' octets.
+    ///
+    /// `bytes` may include some extra octet(s) at the end.
+    ///
+    /// If it is not sure whether `bytes` starts with DER octets or not, use [`TryFrom`]
+    /// implementation or [`from_bytes`] .
+    ///
+    /// The difference from [`from_bytes_unchecked`] is that this function checks the 'LENGTH'
+    /// octets and excludes extra octet(s) at the end if any, while [`from_bytes_unchecked`]
+    /// does not check at all.
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if `bytes` does not start with 'ASN.1 BER' octets.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27_%20%5Bu8%5D%3E
+    /// [`from_bytes_unchecked`]: #method.from_bytes_unchecked
+    /// [`from_bytes`]: #method.from_bytes
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, IdRef};
+    ///
+    /// let ber0 = Ber::new(IdRef::octet_string(), &[]);
+    /// let mut bytes = Vec::from(ber0.as_ref() as &[u8]);
+    /// bytes.extend(&[1, 2, 3]);
+    ///
+    /// let ber1 = unsafe { Ber::from_bytes_starts_with_unchecked(bytes.as_ref()) };
+    /// assert_eq!(ber0, ber1);
+    /// ```
+    #[inline]
+    pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> Self {
+        let id = identifier::shrink_to_fit_unchecked(bytes);
+        let parsing = &bytes[id.len()..];
+
+        let (len, parsing) = match length::from_bytes_starts_with_unchecked(parsing) {
+            (Length::Definite(len), parsing) => (len, parsing),
+            _ => panic!("{}", Error::IndefiniteLength),
+        };
+
+        let total_len = bytes.len() - parsing.len() + len;
+        let bytes = &bytes[..total_len];
+        Self::from_bytes_unchecked(bytes)
     }
 
     /// Creates a new instance from `id` and `contents` .

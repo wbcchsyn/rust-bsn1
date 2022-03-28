@@ -1331,12 +1331,15 @@ impl TryFrom<&[u8]> for Id {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
+    /// This function is same to [`from_bytes`] .
+    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok` .
     ///
+    /// [`from_bytes`]: #method.from_bytes
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         <&IdRef>::try_from(bytes).map(|idref| idref.to_owned())
     }
@@ -1383,6 +1386,41 @@ impl Id {
         }
 
         Self { buffer }
+    }
+
+    /// Parses `bytes` starts with identifier and tries to build a new instance.
+    ///
+    /// This function ignores the extra octet(s) at the end if any.
+    ///
+    /// This function is same to [`TryFrom::try_from`] .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
+    /// functions returns `Ok` .
+    ///
+    /// [`TryFrom::try_from`]: #impl-TryFrom%3C%26%27_%20%5Bu8%5D%3E
+    #[inline]
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
+        Self::try_from(bytes)
+    }
+
+    /// Provides a reference from `bytes` without any sanitize.
+    /// `bytes` must not include any extra octets.
+    ///
+    /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
+    /// implementation or [`from_bytes`] instead.
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if the format of `bytes` is not right.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27_%20%5Bu8%5D%3E
+    /// [`from_bytes`]: #method.from_bytes
+    #[inline]
+    pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
+        IdRef::from_bytes_unchecked(bytes).to_owned()
     }
 }
 
