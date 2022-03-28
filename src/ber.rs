@@ -361,6 +361,10 @@ impl TryFrom<&[u8]> for Ber {
     /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`from_bytes`] .
+    ///
+    /// [`from_bytes`]: #method.from_bytes
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         let ber_ref = <&BerRef>::try_from(bytes)?;
         Ok(ber_ref.to_owned())
