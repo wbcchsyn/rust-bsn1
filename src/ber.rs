@@ -322,6 +322,23 @@ impl BerRef {
         let bytes = &self.bytes[id_len..];
         unsafe { length::from_bytes_starts_with_unchecked(bytes).1 }
     }
+
+    /// Provides a reference to the inner slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::BerRef;
+    ///
+    /// // This octets represents '3' as integer.
+    /// let bytes = vec![0x02, 0x01, 0x03];
+    ///
+    /// let ber = unsafe { BerRef::from_bytes_unchecked(&bytes) };
+    /// assert_eq!(&bytes, ber.as_bytes());
+    /// ```
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
 }
 
 /// `Ber` owns [`BerRef`] and represents a BER.
