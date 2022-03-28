@@ -418,8 +418,14 @@ impl Ber {
     /// If it is not sure whether `bytes` are valid octets as an 'BER' or not, use [`TryFrom`]
     /// implementation or [`from_bytes`].
     ///
+    /// The difference from [`from_bytes_starts_with_unchecked`] is that
+    /// [`from_bytes_starts_with_unchecked`] checks the 'LENGTH' octets and excludes extra
+    /// octet(s) at the end if any while this method does not check at all (i.e.
+    /// [`from_bytes_starts_with_unchecked`] allows extra octets at the end.)
+    ///
     /// [`TryFrom`]: #impl-TryFrom%3C%26%27_%20%5Bu8%5D%3E
     /// [`from_bytes`]: #method.from_bytes
+    /// [`from_bytes_starts_with_unchecked`]: #method.from_bytes_starts_with_unchecked
     ///
     /// # Safety
     ///
