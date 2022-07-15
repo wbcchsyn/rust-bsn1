@@ -54,7 +54,7 @@
 //! Public module `contents` is deprecated.
 //! This module is private and will be renamed as `contents` after current `contents` is deleted.
 
-use core::ops::Deref;
+use core::ops::{Deref, DerefMut};
 
 /// `ContentsRef` is a wrapper of [u8] and represents contents octets of ASN.1.
 ///
@@ -71,5 +71,11 @@ impl Deref for ContentsRef {
 
     fn deref(&self) -> &Self::Target {
         &self.bytes
+    }
+}
+
+impl DerefMut for ContentsRef {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.bytes
     }
 }
