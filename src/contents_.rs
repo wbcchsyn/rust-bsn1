@@ -54,6 +54,7 @@
 //! Public module `contents` is deprecated.
 //! This module is private and will be renamed as `contents` after current `contents` is deleted.
 
+use core::borrow::Borrow;
 use core::mem;
 use core::ops::{Deref, DerefMut};
 
@@ -102,6 +103,12 @@ impl AsRef<[u8]> for ContentsRef {
 
 impl AsMut<[u8]> for ContentsRef {
     fn as_mut(&mut self) -> &mut [u8] {
+        self
+    }
+}
+
+impl Borrow<[u8]> for ContentsRef {
+    fn borrow(&self) -> &[u8] {
         self
     }
 }
