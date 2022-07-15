@@ -77,6 +77,7 @@ impl<'a> From<&'a [u8]> for &'a ContentsRef {
 }
 
 impl<'a> From<&'a mut [u8]> for &'a mut ContentsRef {
+    /// This function is same to `ContentsRef::from_bytes_mut`.
     fn from(bytes: &'a mut [u8]) -> Self {
         unsafe { mem::transmute(bytes) }
     }
@@ -99,6 +100,24 @@ impl ContentsRef {
     /// ```
     pub fn from_bytes(bytes: &[u8]) -> &Self {
         <&ContentsRef>::from(bytes)
+    }
+
+    /// Creates a mutable reference to `ContentsRef` holding `bytes`.
+    ///
+    /// This function is same to `<&mut ContentsRef>::from`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::ContentsRef;
+    ///
+    /// let bytes: &mut [u8] = &mut [1, 2, 3];
+    /// let contents = ContentsRef::from_bytes(bytes);
+    ///
+    /// assert_eq!(contents as &[u8], &[1, 2, 3]);
+    /// ```
+    pub fn from_bytes_mut(bytes: &mut [u8]) -> &mut Self {
+        <&mut ContentsRef>::from(bytes)
     }
 }
 
