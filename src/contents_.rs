@@ -54,6 +54,8 @@
 //! Public module `contents` is deprecated.
 //! This module is private and will be renamed as `contents` after current `contents` is deleted.
 
+use core::ops::Deref;
+
 /// `ContentsRef` is a wrapper of [u8] and represents contents octets of ASN.1.
 ///
 /// The user can access to the inner bytes via `Deref` and `DerefMut` implementation.
@@ -62,4 +64,12 @@
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ContentsRef {
     bytes: [u8],
+}
+
+impl Deref for ContentsRef {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        &self.bytes
+    }
 }
