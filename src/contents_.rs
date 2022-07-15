@@ -54,6 +54,7 @@
 //! Public module `contents` is deprecated.
 //! This module is private and will be renamed as `contents` after current `contents` is deleted.
 
+use crate::Buffer;
 use core::borrow::{Borrow, BorrowMut};
 use core::mem;
 use core::ops::{Deref, DerefMut};
@@ -131,4 +132,10 @@ impl DerefMut for ContentsRef {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.bytes
     }
+}
+
+/// `Contents` owns `ContentsRef` and represents contents octets of ASN.1.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Contents {
+    buffer: Buffer,
 }
