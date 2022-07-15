@@ -172,3 +172,9 @@ impl Deref for Contents {
         ContentsRef::from_bytes(self.buffer.as_ref())
     }
 }
+
+impl DerefMut for Contents {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        ContentsRef::from_bytes_mut(self.buffer.as_mut())
+    }
+}
