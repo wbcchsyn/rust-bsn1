@@ -97,6 +97,7 @@ mod length;
 
 pub use ber::{Ber, BerRef};
 use buffer::{Buffer, StackBuffer};
+pub use contents_::ContentsRef;
 pub use der::{Der, DerRef};
 pub use identifier::{ClassTag, Id, IdRef, PCTag};
 pub use length::Length;
