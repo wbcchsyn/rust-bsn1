@@ -36,7 +36,7 @@ check_license() {
     done
 
     cargo fmt -- --check || exit "$?"
-    cargo test || exit "$?"
+    cargo test --lib || exit "$?"
 
     exit 0
 )
