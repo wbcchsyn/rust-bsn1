@@ -68,8 +68,29 @@ pub struct ContentsRef {
 }
 
 impl<'a> From<&'a [u8]> for &'a ContentsRef {
+    /// This function is same to `ContentsRef::from_bytes`.
     fn from(bytes: &'a [u8]) -> Self {
         unsafe { mem::transmute(bytes) }
+    }
+}
+
+impl ContentsRef {
+    /// Creates a reference to `ContentsRef` holding `bytes`.
+    ///
+    /// This function is same to `<&ContentsRef>::from`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::ContentsRef;
+    ///
+    /// let bytes: &[u8] = &[1, 2, 3];
+    /// let contents = ContentsRef::from_bytes(bytes);
+    ///
+    /// assert_eq!(contents as &[u8], bytes);
+    /// ```
+    pub fn from_bytes(bytes: &[u8]) -> &Self {
+        <&ContentsRef>::from(bytes)
     }
 }
 
