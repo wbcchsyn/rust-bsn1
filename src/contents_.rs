@@ -94,6 +94,12 @@ impl ContentsRef {
     }
 }
 
+impl AsRef<[u8]> for ContentsRef {
+    fn as_ref(&self) -> &[u8] {
+        self
+    }
+}
+
 impl Deref for ContentsRef {
     type Target = [u8];
 
