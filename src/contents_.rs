@@ -54,6 +54,7 @@
 //! Public module `contents` is deprecated.
 //! This module is private and will be renamed as `contents` after current `contents` is deleted.
 
+use core::mem;
 use core::ops::{Deref, DerefMut};
 
 /// `ContentsRef` is a wrapper of [u8] and represents contents octets of ASN.1.
@@ -64,6 +65,12 @@ use core::ops::{Deref, DerefMut};
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ContentsRef {
     bytes: [u8],
+}
+
+impl<'a> From<&'a [u8]> for &'a ContentsRef {
+    fn from(bytes: &'a [u8]) -> Self {
+        unsafe { mem::transmute(bytes) }
+    }
 }
 
 impl Deref for ContentsRef {
