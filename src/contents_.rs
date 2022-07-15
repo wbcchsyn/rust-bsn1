@@ -165,6 +165,12 @@ pub struct Contents {
     buffer: Buffer,
 }
 
+impl AsRef<[u8]> for Contents {
+    fn as_ref(&self) -> &[u8] {
+        self
+    }
+}
+
 impl Deref for Contents {
     type Target = ContentsRef;
 
