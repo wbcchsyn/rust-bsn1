@@ -177,6 +177,12 @@ impl AsRef<ContentsRef> for Contents {
     }
 }
 
+impl AsMut<[u8]> for Contents {
+    fn as_mut(&mut self) -> &mut [u8] {
+        self
+    }
+}
+
 impl Deref for Contents {
     type Target = ContentsRef;
 
