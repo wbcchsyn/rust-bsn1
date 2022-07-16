@@ -165,6 +165,26 @@ pub struct Contents {
     buffer: Buffer,
 }
 
+impl Contents {
+    /// Creates a new instance.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Contents;
+    ///
+    /// let bytes: &[u8] = &[1, 2, 3];
+    /// let contents = Contents::from_bytes(bytes);
+    ///
+    /// assert_eq!(&contents as &[u8], bytes);
+    /// ```
+    pub fn from_bytes(bytes: &[u8]) -> Self {
+        Self {
+            buffer: Buffer::from(bytes),
+        }
+    }
+}
+
 impl AsRef<[u8]> for Contents {
     fn as_ref(&self) -> &[u8] {
         self
