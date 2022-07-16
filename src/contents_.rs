@@ -54,12 +54,13 @@
 //! Public module `contents` is deprecated.
 //! This module is private and will be renamed as `contents` after current `contents` is deleted.
 
-use crate::Buffer;
+use crate::{Buffer, Error};
 use core::borrow::{Borrow, BorrowMut};
 use core::mem;
 use core::ops::{Deref, DerefMut};
 use num::PrimInt;
 use std::borrow::ToOwned;
+use std::mem::MaybeUninit;
 
 /// `ContentsRef` is a wrapper of [u8] and represents contents octets of ASN.1.
 ///
@@ -166,6 +167,62 @@ impl ToOwned for ContentsRef {
 
     fn to_owned(&self) -> Self::Owned {
         Contents::from_bytes(self)
+    }
+}
+
+impl ContentsRef {
+    /// Parses `self` as the ASN.1 contents of integer.
+    ///
+    /// Type `T` should be the builtin primitive integer types (e.g., u8, i32, isize, i128...)
+    pub fn to_integer<T>(&self) -> Result<T, Error>
+    where
+        T: PrimInt,
+    {
+        if self.is_empty() {
+            return Err(Error::UnTerminatedBytes);
+        }
+
+        if 1 < self.len() {
+            if (self[0] == 0) && (self[1] & 0x80 == 0x00) {
+                return Err(Error::RedundantBytes);
+            }
+            if (self[0] == 0xff) && (self[1] & 0x80 == 0x80) {
+                return Err(Error::RedundantBytes);
+            }
+        }
+
+        // If 'T' is Unsigned type and the first octet is 0x00,
+        // We can ignore the first byte 0x00.
+        let bytes = if self[0] == 0x00 { &self[1..] } else { self };
+        if mem::size_of::<T>() < bytes.len() {
+            return Err(Error::OverFlow);
+        }
+
+        let filler = if self[0] & 0x80 == 0x00 { 0x00 } else { 0xff };
+
+        let v = unsafe {
+            let mut be: MaybeUninit<T> = MaybeUninit::uninit();
+            be.as_mut_ptr().write_bytes(filler, 1);
+
+            let dst = be.as_mut_ptr() as *mut u8;
+            let dst = dst.add(mem::size_of::<T>() - bytes.len());
+
+            dst.copy_from_nonoverlapping(bytes.as_ptr(), bytes.len());
+
+            T::from_be(be.assume_init())
+        };
+
+        if filler == 0x00 {
+            if v < T::zero() {
+                return Err(Error::OverFlow);
+            }
+        } else {
+            if T::zero() <= v {
+                return Err(Error::OverFlow);
+            }
+        }
+
+        Ok(v)
     }
 }
 
@@ -458,6 +515,217 @@ mod tests {
             expected[0] = 0x00;
 
             assert_eq!(&contents as &[u8], expected);
+        }
+    }
+
+    #[test]
+    fn contents_to_i16_ok() {
+        for i in i16::MIN..=i16::MAX {
+            let contents = Contents::from_integer(i);
+            assert_eq!(Ok(i), contents.to_integer());
+        }
+    }
+
+    #[test]
+    fn contents_to_u16_ok() {
+        for i in u16::MIN..=u16::MAX {
+            let contents = Contents::from_integer(i);
+            assert_eq!(Ok(i), contents.to_integer());
+        }
+    }
+
+    #[test]
+    fn contents_to_i32_ok() {
+        // i32::MIN
+        {
+            const I: i32 = i32::MIN;
+            let contents: Contents = Contents::from_integer(I);
+            assert_eq!(Ok(I), contents.to_integer());
+        }
+        // i16::MIN - 1
+        {
+            const I: i32 = i16::MIN as i32 - 1;
+            let contents: Contents = Contents::from_integer(I);
+            assert_eq!(Ok(I), contents.to_integer());
+        }
+        // i16::MAX + 1
+        {
+            const I: i32 = i16::MAX as i32 + 1;
+            let contents: Contents = Contents::from_integer(I);
+            assert_eq!(Ok(I), contents.to_integer());
+        }
+        // i32::MAX
+        {
+            const I: i32 = i32::MAX;
+            let contents: Contents = Contents::from_integer(I);
+            assert_eq!(Ok(I), contents.to_integer());
+        }
+    }
+
+    #[test]
+    fn contents_to_u32_ok() {
+        // i32::MAX + 1
+        {
+            const I: u32 = i32::MAX as u32 + 1;
+            let contents: Contents = Contents::from_integer(I);
+            assert_eq!(Ok(I), contents.to_integer());
+        }
+        // u32::MAX
+        {
+            const I: u32 = u32::MAX;
+            let contents: Contents = Contents::from_integer(I);
+            assert_eq!(Ok(I), contents.to_integer());
+        }
+    }
+
+    #[test]
+    fn contents_to_i128_ok() {
+        // i128::MIN
+        {
+            const I: i128 = i128::MIN;
+            let contents: Contents = Contents::from_integer(I);
+            assert_eq!(Ok(I), contents.to_integer());
+        }
+        // i64::MIN - 1
+        {
+            const I: i128 = i64::MIN as i128 - 1;
+            let contents: Contents = Contents::from_integer(I);
+            assert_eq!(Ok(I), contents.to_integer());
+        }
+        // i64::MIN
+        {
+            const I: i128 = i64::MIN as i128;
+            let contents: Contents = Contents::from_integer(I);
+            assert_eq!(Ok(I), contents.to_integer());
+        }
+        // i64::MAX
+        {
+            const I: i128 = i64::MAX as i128;
+            let contents: Contents = Contents::from_integer(I);
+            assert_eq!(Ok(I), contents.to_integer());
+        }
+        // i64::MAX + 1
+        {
+            const I: i128 = i64::MAX as i128 + 1;
+            let contents: Contents = Contents::from_integer(I);
+            assert_eq!(Ok(I), contents.to_integer());
+        }
+        // i128::MAX
+        {
+            const I: i128 = i128::MAX;
+            let contents: Contents = Contents::from_integer(I);
+            assert_eq!(Ok(I), contents.to_integer());
+        }
+    }
+
+    #[test]
+    fn contents_to_u128_ok() {
+        // i128::MAX + 1
+        {
+            const I: u128 = i128::MAX as u128 + 1;
+            let contents: Contents = Contents::from_integer(I);
+            assert_eq!(Ok(I), contents.to_integer());
+        }
+
+        // u128::MAX
+        {
+            const I: u128 = u128::MAX;
+            let contents: Contents = Contents::from_integer(I);
+            assert_eq!(Ok(I), contents.to_integer());
+        }
+    }
+
+    #[test]
+    fn empty_contents_to_integer() {
+        let contents = Contents::from_bytes(&[]);
+        assert!(contents.to_integer::<i32>().is_err());
+    }
+
+    #[test]
+    fn redundant_contents_to_integer() {
+        let contents = Contents::from_bytes(&[0x00, 0x00]);
+        assert!(contents.to_integer::<i32>().is_err());
+
+        let contents = Contents::from_bytes(&[0x00, 0x7f]);
+        assert!(contents.to_integer::<i32>().is_err());
+
+        let contents = Contents::from_bytes(&[0x00, 0x80]);
+        assert!(contents.to_integer::<i32>().is_ok());
+
+        let contents = Contents::from_bytes(&[0x00, 0xff]);
+        assert!(contents.to_integer::<i32>().is_ok());
+
+        let contents = Contents::from_bytes(&[0xff, 0xff]);
+        assert!(contents.to_integer::<i32>().is_err());
+
+        let contents = Contents::from_bytes(&[0xff, 0x80]);
+        assert!(contents.to_integer::<i32>().is_err());
+
+        let contents = Contents::from_bytes(&[0xff, 0x7f]);
+        assert!(contents.to_integer::<i32>().is_ok());
+
+        let contents = Contents::from_bytes(&[0xff, 0x00]);
+        assert!(contents.to_integer::<i32>().is_ok());
+    }
+
+    #[test]
+    fn overflow_contents_to_integer() {
+        // i32::MIN - 1
+        {
+            let mut bytes = [0xff; 5];
+            bytes[1] = 0x7f;
+
+            let contents = ContentsRef::from_bytes(&bytes);
+            assert!(contents.to_integer::<i32>().is_err());
+            assert!(contents.to_integer::<u32>().is_err());
+        }
+
+        // i32::MIN
+        {
+            let mut bytes = [0x00; 4];
+            bytes[0] = 0x80;
+
+            let contents = ContentsRef::from_bytes(&bytes);
+            assert!(contents.to_integer::<i32>().is_ok());
+            assert!(contents.to_integer::<u32>().is_err());
+        }
+
+        // -1
+        {
+            let bytes = [0xff];
+
+            let contents = ContentsRef::from_bytes(&bytes);
+            assert!(contents.to_integer::<i32>().is_ok());
+            assert!(contents.to_integer::<u32>().is_err());
+        }
+
+        // 0
+        {
+            let bytes = [0x00];
+
+            let contents = ContentsRef::from_bytes(&bytes);
+            assert!(contents.to_integer::<i32>().is_ok());
+            assert!(contents.to_integer::<u32>().is_ok());
+        }
+
+        // i32::MAX
+        {
+            let mut bytes = [0xff; 4];
+            bytes[0] = 0x7f;
+
+            let contents = ContentsRef::from_bytes(&bytes);
+            assert!(contents.to_integer::<i32>().is_ok());
+            assert!(contents.to_integer::<u32>().is_ok());
+        }
+
+        // i32::MAX + 1
+        {
+            let mut bytes = [0x00; 5];
+            bytes[1] = 0x80;
+
+            let contents = ContentsRef::from_bytes(&bytes);
+            assert!(contents.to_integer::<i32>().is_err());
+            assert!(contents.to_integer::<u32>().is_ok());
         }
     }
 }
