@@ -207,6 +207,12 @@ impl BorrowMut<[u8]> for Contents {
     }
 }
 
+impl BorrowMut<ContentsRef> for Contents {
+    fn borrow_mut(&mut self) -> &mut ContentsRef {
+        self
+    }
+}
+
 impl Deref for Contents {
     type Target = ContentsRef;
 
