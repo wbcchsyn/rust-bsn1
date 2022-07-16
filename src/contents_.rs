@@ -174,6 +174,21 @@ impl ContentsRef {
     /// Parses `self` as the ASN.1 contents of integer.
     ///
     /// Type `T` should be the builtin primitive integer types (e.g., u8, i32, isize, i128...)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Contents, ContentsRef};
+    ///
+    /// let contents = Contents::from_integer(17);
+    /// assert_eq!(Ok(17_i32), contents.to_integer::<i32>());
+    ///
+    /// let contents = Contents::from_integer(i32::MAX);
+    /// assert!(contents.to_integer::<i16>().is_err());
+    ///
+    /// let contents = Contents::from_integer(-5);
+    /// assert!(contents.to_integer::<u32>().is_err());
+    /// ```
     pub fn to_integer<T>(&self) -> Result<T, Error>
     where
         T: PrimInt,
@@ -263,6 +278,15 @@ impl Contents {
     /// Serializes integer and creates a new instance.
     ///
     /// type `T` should be the builtin primitive integer types (e.g., u8, i32, isize, u128, ...)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Contents, ContentsRef};
+    ///
+    /// let contents = Contents::from_integer(35);
+    /// assert_eq!(Ok(35), contents.to_integer());
+    /// ```
     pub fn from_integer<T>(val: T) -> Self
     where
         T: PrimInt,
