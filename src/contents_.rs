@@ -213,21 +213,9 @@ impl ContentsRef {
             return Err(Error::OverFlow);
         }
 
-        let filler = if self[0] & 0x80 == 0x00 { 0x00 } else { 0xff };
+        let v = unsafe { self.to_integer_unchecked() };
 
-        let v = unsafe {
-            let mut be: MaybeUninit<T> = MaybeUninit::uninit();
-            be.as_mut_ptr().write_bytes(filler, 1);
-
-            let dst = be.as_mut_ptr() as *mut u8;
-            let dst = dst.add(mem::size_of::<T>() - bytes.len());
-
-            dst.copy_from_nonoverlapping(bytes.as_ptr(), bytes.len());
-
-            T::from_be(be.assume_init())
-        };
-
-        if filler == 0x00 {
+        if self[0] & 0x80 == 0x00 {
             if v < T::zero() {
                 return Err(Error::OverFlow);
             }
