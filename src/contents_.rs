@@ -242,6 +242,42 @@ impl Contents {
 
         Self { buffer }
     }
+
+    fn from_negative<T>(val: T) -> Self
+    where
+        T: PrimInt,
+    {
+        debug_assert!(val < T::zero());
+
+        let val = val.to_be();
+
+        let (src, len) = unsafe {
+            let mut src = (&val as *const T) as *const u8;
+            let mut len = mem::size_of::<T>();
+
+            while 1 < len && *src == 0xff {
+                src = src.add(1);
+                len -= 1;
+            }
+
+            if *src & 0x80 == 0 {
+                src = src.sub(1);
+                len += 1;
+            }
+
+            (src, len)
+        };
+
+        let mut buffer = Buffer::with_capacity(len);
+        let dst = buffer.as_mut_ptr();
+
+        unsafe {
+            buffer.set_len(len);
+            dst.copy_from_nonoverlapping(src, len);
+        }
+
+        Self { buffer }
+    }
 }
 
 impl AsRef<[u8]> for Contents {
