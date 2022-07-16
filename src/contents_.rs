@@ -195,6 +195,12 @@ impl Borrow<[u8]> for Contents {
     }
 }
 
+impl Borrow<ContentsRef> for Contents {
+    fn borrow(&self) -> &ContentsRef {
+        self
+    }
+}
+
 impl Deref for Contents {
     type Target = ContentsRef;
 
