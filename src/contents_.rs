@@ -58,6 +58,7 @@ use crate::Buffer;
 use core::borrow::{Borrow, BorrowMut};
 use core::mem;
 use core::ops::{Deref, DerefMut};
+use num::PrimInt;
 use std::borrow::ToOwned;
 
 /// `ContentsRef` is a wrapper of [u8] and represents contents octets of ASN.1.
@@ -205,6 +206,40 @@ impl Contents {
     fn from_zero() -> Self {
         let bytes: &[u8] = &[0x00];
         let buffer = Buffer::from(bytes);
+        Self { buffer }
+    }
+
+    fn from_positive<T>(val: T) -> Self
+    where
+        T: PrimInt,
+    {
+        debug_assert!(T::zero() < val);
+
+        let vals = [T::zero(), val.to_be()];
+        let (src, len) = unsafe {
+            let mut src = (&vals[1] as *const T) as *const u8;
+            let mut len = mem::size_of::<T>();
+
+            // This loop must be finished because 0 < val.
+            while *src == 0 {
+                src = src.add(1);
+                len -= 1;
+            }
+            if *src & 0x80 == 0x80 {
+                src = src.sub(1);
+                len += 1;
+            }
+
+            (src, len)
+        };
+
+        let mut buffer = Buffer::with_capacity(len);
+        let dst = buffer.as_mut_ptr();
+        unsafe {
+            buffer.set_len(len);
+            dst.copy_from_nonoverlapping(src, len);
+        }
+
         Self { buffer }
     }
 }
