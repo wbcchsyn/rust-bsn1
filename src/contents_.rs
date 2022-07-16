@@ -201,6 +201,12 @@ impl Contents {
             buffer: Buffer::from(bytes),
         }
     }
+
+    fn from_zero() -> Self {
+        let bytes: &[u8] = &[0x00];
+        let buffer = Buffer::from(bytes);
+        Self { buffer }
+    }
 }
 
 impl AsRef<[u8]> for Contents {
