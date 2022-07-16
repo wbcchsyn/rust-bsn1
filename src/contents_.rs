@@ -203,6 +203,22 @@ impl Contents {
         }
     }
 
+    /// Serializes integer and creates a new instance.
+    ///
+    /// type `T` should be the builtin primitive integer types (e.g., u8, i32, isize, u128, ...)
+    pub fn from_integer<T>(val: T) -> Self
+    where
+        T: PrimInt,
+    {
+        if val < T::zero() {
+            Self::from_negative(val)
+        } else if val == T::zero() {
+            Self::from_zero()
+        } else {
+            Self::from_positive(val)
+        }
+    }
+
     fn from_zero() -> Self {
         let bytes: &[u8] = &[0x00];
         let buffer = Buffer::from(bytes);
@@ -339,5 +355,109 @@ impl Deref for Contents {
 impl DerefMut for Contents {
     fn deref_mut(&mut self) -> &mut Self::Target {
         ContentsRef::from_bytes_mut(self.buffer.as_mut())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn contents_from_i8() {
+        for i in i8::MIN..=i8::MAX {
+            let contents = Contents::from_integer(i);
+            let expected: &[u8] = &[i as u8];
+
+            assert_eq!(&contents as &[u8], expected);
+        }
+    }
+
+    #[test]
+    fn contents_from_u8() {
+        for i in 0..0x80 {
+            let contents = Contents::from_integer(i as u8);
+            let expected: &[u8] = &[i as u8];
+            assert_eq!(&contents as &[u8], expected);
+        }
+
+        for i in 0x80..=u8::MAX {
+            let contents = Contents::from_integer(i as u8);
+            let expected: &[u8] = &[0x00, i];
+            assert_eq!(&contents as &[u8], expected);
+        }
+    }
+
+    #[test]
+    fn contents_from_i16() {
+        for i in i16::MIN..=i16::MAX {
+            if (i8::MIN as i16) <= i && i <= (i8::MAX as i16) {
+                continue;
+            }
+
+            let contents = Contents::from_integer(i);
+            let f = i.unsigned_shr(8) as u8;
+            let s = i as u8;
+            let expected = &[f, s];
+            assert_eq!(&contents as &[u8], expected);
+        }
+    }
+
+    #[test]
+    fn contents_from_u16() {
+        for i in (i16::MAX as u16 + 1)..=u16::MAX {
+            let contents = Contents::from_integer(i);
+
+            let f = i.unsigned_shr(8) as u8;
+            let s = i as u8;
+            let expected: &[u8] = &[0, f, s];
+
+            assert_eq!(&contents as &[u8], expected);
+        }
+    }
+
+    #[test]
+    fn contents_from_i128() {
+        // i128::MIN
+        {
+            let contents = Contents::from_integer(i128::MIN);
+
+            let mut expected: [u8; 16] = [0x00; 16];
+            expected[0] = 0x80;
+
+            assert_eq!(&contents as &[u8], expected);
+        }
+
+        // i128::MAX
+        {
+            let contents = Contents::from_integer(i128::MAX);
+
+            let mut expected: [u8; 16] = [0xff; 16];
+            expected[0] = 0x7f;
+
+            assert_eq!(&contents as &[u8], expected);
+        }
+    }
+
+    #[test]
+    fn contents_from_u128() {
+        // i128::MAX + 1
+        {
+            let contents = Contents::from_integer(i128::MAX as u128 + 1);
+
+            let mut expected: [u8; 17] = [0x00; 17];
+            expected[1] = 0x80;
+
+            assert_eq!(&contents as &[u8], expected);
+        }
+
+        // u128::MAX
+        {
+            let contents = Contents::from_integer(u128::MAX);
+
+            let mut expected: [u8; 17] = [0xff; 17];
+            expected[0] = 0x00;
+
+            assert_eq!(&contents as &[u8], expected);
+        }
     }
 }
