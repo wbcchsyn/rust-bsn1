@@ -189,6 +189,12 @@ impl AsMut<ContentsRef> for Contents {
     }
 }
 
+impl Borrow<[u8]> for Contents {
+    fn borrow(&self) -> &[u8] {
+        self
+    }
+}
+
 impl Deref for Contents {
     type Target = ContentsRef;
 
