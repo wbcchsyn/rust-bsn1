@@ -165,8 +165,17 @@ pub struct Contents {
     buffer: Buffer,
 }
 
+impl From<&[u8]> for Contents {
+    /// This function is same to `Contents::from_bytes`.
+    fn from(bytes: &[u8]) -> Self {
+        Self::from_bytes(bytes)
+    }
+}
+
 impl Contents {
     /// Creates a new instance.
+    ///
+    /// This function is same to `<Contents>::from`.
     ///
     /// # Examples
     ///
