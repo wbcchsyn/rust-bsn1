@@ -239,6 +239,36 @@ impl ContentsRef {
 
         Ok(v)
     }
+
+    /// Parses `self` as a contents of ASN.1 integer without any sanitization.
+    ///
+    /// Type `T` should be the builtin primitive integer type (e.g., u8, i32, isize, u128, ...)
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined in the following cases.
+    ///
+    /// - `self` is not formatted as the contents of ASN.1 integer.
+    /// - The value is greater than the max value of `T`, or less than the min value of `T`.
+    pub unsafe fn to_integer_unchecked<T>(&self) -> T
+    where
+        T: PrimInt,
+    {
+        // If 'T' is Unsigned type and the first octet is 0x00,
+        // We can ignore the first byte 0x00.
+        let bytes = if self[0] == 0x00 { &self[1..] } else { self };
+        let filler = if self[0] & 0x80 == 0x00 { 0x00 } else { 0xff };
+
+        let mut be: MaybeUninit<T> = MaybeUninit::uninit();
+        be.as_mut_ptr().write_bytes(filler, 1);
+
+        let dst = be.as_mut_ptr() as *mut u8;
+        let dst = dst.add(mem::size_of::<T>() - bytes.len());
+
+        dst.copy_from_nonoverlapping(bytes.as_ptr(), bytes.len());
+
+        T::from_be(be.assume_init())
+    }
 }
 
 /// `Contents` owns `ContentsRef` and represents contents octets of ASN.1.
@@ -750,6 +780,134 @@ mod tests {
             let contents = ContentsRef::from_bytes(&bytes);
             assert!(contents.to_integer::<i32>().is_err());
             assert!(contents.to_integer::<u32>().is_ok());
+        }
+    }
+
+    #[test]
+    fn contents_to_i8_unchecked() {
+        for i in i8::MIN..=i8::MAX {
+            let contents = Contents::from_integer(i);
+            unsafe { assert_eq!(i, contents.to_integer_unchecked()) };
+        }
+    }
+
+    #[test]
+    fn contents_to_u8_unchecked() {
+        for i in u8::MIN..=u8::MAX {
+            let contents = Contents::from_integer(i);
+            unsafe { assert_eq!(i, contents.to_integer_unchecked()) };
+        }
+    }
+
+    #[test]
+    fn contents_to_i16_unchecked() {
+        for i in i16::MIN..=i16::MAX {
+            let contents = Contents::from_integer(i);
+            unsafe { assert_eq!(i, contents.to_integer_unchecked()) };
+        }
+    }
+
+    #[test]
+    fn contents_to_u16_unchecked() {
+        for i in u16::MIN..=u16::MAX {
+            let contents = Contents::from_integer(i);
+            unsafe { assert_eq!(i, contents.to_integer_unchecked()) };
+        }
+    }
+
+    #[test]
+    fn contents_to_i32_unchecked() {
+        // i32::MIN
+        {
+            const I: i32 = i32::MIN;
+            let contents = Contents::from_integer(I);
+            unsafe { assert_eq!(I, contents.to_integer_unchecked()) };
+        }
+
+        // i16::MIN - 1
+        {
+            const I: i32 = i16::MIN as i32 - 1;
+            let contents = Contents::from_integer(I);
+            unsafe { assert_eq!(I, contents.to_integer_unchecked()) };
+        }
+
+        // i16::MAX + 1
+        {
+            const I: i32 = i16::MAX as i32 + 1;
+            let contents = Contents::from_integer(I);
+            unsafe { assert_eq!(I, contents.to_integer_unchecked()) };
+        }
+
+        // i32::MAX
+        {
+            const I: i32 = i32::MAX;
+            let contents = Contents::from_integer(I);
+            unsafe { assert_eq!(I, contents.to_integer_unchecked()) };
+        }
+    }
+
+    #[test]
+    fn contents_to_u32_unchecked() {
+        // i32::MAX + 1
+        {
+            const I: u32 = i32::MAX as u32 + 1;
+            let contents = Contents::from_integer(I);
+            unsafe { assert_eq!(I, contents.to_integer_unchecked()) };
+        }
+
+        // u32::MAX
+        {
+            const I: u32 = u32::MAX;
+            let contents = Contents::from_integer(I);
+            unsafe { assert_eq!(I, contents.to_integer_unchecked()) };
+        }
+    }
+
+    #[test]
+    fn contents_to_i128_unchecked() {
+        // i128::MIN
+        {
+            const I: i128 = i128::MIN;
+            let contents = Contents::from_integer(I);
+            unsafe { assert_eq!(I, contents.to_integer_unchecked()) };
+        }
+
+        // i64::MIN - 1
+        {
+            const I: i128 = i64::MIN as i128 - 1;
+            let contents = Contents::from_integer(I);
+            unsafe { assert_eq!(I, contents.to_integer_unchecked()) };
+        }
+
+        // i64::MAX + 1
+        {
+            const I: i128 = i64::MAX as i128 + 1;
+            let contents = Contents::from_integer(I);
+            unsafe { assert_eq!(I, contents.to_integer_unchecked()) };
+        }
+
+        // i128::MAX
+        {
+            const I: i128 = i128::MAX;
+            let contents = Contents::from_integer(I);
+            unsafe { assert_eq!(I, contents.to_integer_unchecked()) };
+        }
+    }
+
+    #[test]
+    fn contents_to_u128_unchecked() {
+        // i128::MAX + 1
+        {
+            const I: u128 = i128::MAX as u128 + 1;
+            let contents = Contents::from_integer(I);
+            unsafe { assert_eq!(I, contents.to_integer_unchecked()) };
+        }
+
+        // u128::MAX
+        {
+            const I: u128 = u128::MAX;
+            let contents = Contents::from_integer(I);
+            unsafe { assert_eq!(I, contents.to_integer_unchecked()) };
         }
     }
 }
