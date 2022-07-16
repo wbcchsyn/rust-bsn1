@@ -58,6 +58,7 @@ use crate::Buffer;
 use core::borrow::{Borrow, BorrowMut};
 use core::mem;
 use core::ops::{Deref, DerefMut};
+use std::borrow::ToOwned;
 
 /// `ContentsRef` is a wrapper of [u8] and represents contents octets of ASN.1.
 ///
@@ -156,6 +157,14 @@ impl Deref for ContentsRef {
 impl DerefMut for ContentsRef {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.bytes
+    }
+}
+
+impl ToOwned for ContentsRef {
+    type Owned = Contents;
+
+    fn to_owned(&self) -> Self::Owned {
+        Contents::from_bytes(self)
     }
 }
 
