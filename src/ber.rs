@@ -53,6 +53,7 @@
 
 use crate::{identifier, length, Buffer, Der, DerRef, Error, IdRef, Length};
 use core::convert::TryFrom;
+use core::mem;
 use core::ops::Deref;
 use num::PrimInt;
 use std::borrow::Borrow;
@@ -160,9 +161,7 @@ impl BerRef {
     /// ```
     #[inline]
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
-        let ptr = bytes as *const [u8];
-        let ptr = ptr as *const Self;
-        &*ptr
+        mem::transmute(bytes)
     }
 
     /// Provides a reference from `bytes` that starts with a BER octets.
