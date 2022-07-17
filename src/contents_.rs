@@ -445,8 +445,8 @@ impl Contents {
     }
 
     fn from_zero() -> Self {
-        let bytes: &[u8] = &[0x00];
-        let buffer = Buffer::from(bytes);
+        let mut buffer = Buffer::new();
+        unsafe { buffer.push(0x00) };
         Self { buffer }
     }
 
@@ -1109,6 +1109,21 @@ mod tests {
                 let contents = ContentsRef::from_bytes(bytes);
                 assert!(contents.to_bool_der().is_err());
             }
+        }
+    }
+
+    #[test]
+    fn contents_from_bool() {
+        // True
+        {
+            let contents = Contents::from_bool(true);
+            assert_eq!(&[0xff], &contents as &[u8]);
+        }
+
+        // false
+        {
+            let contents = Contents::from_bool(false);
+            assert_eq!(&[0x00], &contents as &[u8]);
         }
     }
 }
