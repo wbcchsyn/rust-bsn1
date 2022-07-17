@@ -1159,6 +1159,15 @@ impl Borrow<[u8]> for IdRef {
     }
 }
 
+impl Deref for IdRef {
+    type Target = [u8];
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.bytes
+    }
+}
+
 impl ToOwned for IdRef {
     type Owned = Id;
 
