@@ -54,7 +54,7 @@
 use crate::{Buffer, Error};
 use core::convert::TryFrom;
 use core::mem;
-use core::ops::Deref;
+use core::ops::{Deref, DerefMut};
 use num::cast::AsPrimitive;
 use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
@@ -1165,6 +1165,13 @@ impl Deref for IdRef {
     #[inline]
     fn deref(&self) -> &Self::Target {
         &self.bytes
+    }
+}
+
+impl DerefMut for IdRef {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.bytes
     }
 }
 
