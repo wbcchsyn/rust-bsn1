@@ -387,6 +387,17 @@ impl From<u8> for Contents {
     }
 }
 
+impl From<u16> for Contents {
+    /// This function is same to `Contents::from_integer::<u16>`.
+    fn from(val: u16) -> Self {
+        if val == 0 {
+            Self::from_zero()
+        } else {
+            Self::from_positive(val)
+        }
+    }
+}
+
 impl Contents {
     /// Creates a new instance.
     ///
