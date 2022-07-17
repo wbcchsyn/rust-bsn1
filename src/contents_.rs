@@ -86,6 +86,13 @@ impl<'a> From<&'a mut [u8]> for &'a mut ContentsRef {
     }
 }
 
+impl From<bool> for &'static ContentsRef {
+    /// This function is same to `ContentsRef::from_bool`.
+    fn from(val: bool) -> Self {
+        ContentsRef::from_bool(val)
+    }
+}
+
 impl ContentsRef {
     /// Creates a reference to `ContentsRef` holding `bytes`.
     ///
