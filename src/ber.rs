@@ -551,13 +551,13 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{contents, Ber, IdRef};
+    /// use bsn1::{Ber, IdRef};
     ///
     /// let val = true;
     /// let ber = Ber::boolean(val);
     ///
     /// assert_eq!(IdRef::boolean(), ber.id());
-    /// assert_eq!(val, contents::to_bool_ber(ber.contents()).unwrap());
+    /// assert_eq!(val, ber.contents().to_bool_ber().unwrap());
     /// ```
     pub fn boolean(val: bool) -> Self {
         Self::from(Der::boolean(val))
@@ -570,13 +570,13 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{contents, Ber, IdRef};
+    /// use bsn1::{Ber, IdRef};
     ///
     /// let val = 39;
     /// let ber = Ber::integer(val);
     ///
     /// assert_eq!(IdRef::integer(), ber.id());
-    /// assert_eq!(val, contents::to_integer(ber.contents()).unwrap());
+    /// assert_eq!(val, ber.contents().to_integer().unwrap());
     /// ```
     pub fn integer<T>(val: T) -> Self
     where
