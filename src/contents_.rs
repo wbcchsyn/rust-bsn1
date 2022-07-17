@@ -589,6 +589,12 @@ impl DerefMut for Contents {
     }
 }
 
+impl PartialEq<ContentsRef> for Contents {
+    fn eq(&self, other: &ContentsRef) -> bool {
+        self == other
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
