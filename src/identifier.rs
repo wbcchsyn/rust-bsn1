@@ -118,6 +118,27 @@ impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
     }
 }
 
+impl<'a> TryFrom<&'a mut [u8]> for &'a mut IdRef {
+    type Error = Error;
+
+    /// Parses `bytes` starts with identifier and tries to build a new instance.
+    ///
+    /// This function ignores the extra octet(s) at the end if any.
+    ///
+    /// This function is same to [`IdRef::from_bytes_mut`] .
+    ///
+    /// [`IdRef::from_bytes`]: #method.from_bytes_mut
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
+    /// functions returns `Ok` .
+    fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
+        IdRef::from_bytes_mut(bytes)
+    }
+}
+
 /// Ommits the extra octets at the end of `bytes` and returns octets just one 'ASN.1 Identifier.'
 ///
 /// # Safety
