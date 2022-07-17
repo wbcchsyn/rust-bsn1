@@ -86,6 +86,13 @@ impl<'a> From<&'a mut [u8]> for &'a mut ContentsRef {
     }
 }
 
+impl From<bool> for &'static ContentsRef {
+    /// This function is same to `ContentsRef::from_bool`.
+    fn from(val: bool) -> Self {
+        ContentsRef::from_bool(val)
+    }
+}
+
 impl ContentsRef {
     /// Creates a reference to `ContentsRef` holding `bytes`.
     ///
@@ -373,6 +380,121 @@ impl From<&[u8]> for Contents {
     /// This function is same to `Contents::from_bytes`.
     fn from(bytes: &[u8]) -> Self {
         Self::from_bytes(bytes)
+    }
+}
+
+impl From<u8> for Contents {
+    /// This function is same to `Contents::from_integer::<u8>`.
+    fn from(val: u8) -> Self {
+        if val == 0 {
+            Self::from_zero()
+        } else {
+            Self::from_positive(val)
+        }
+    }
+}
+
+impl From<u16> for Contents {
+    /// This function is same to `Contents::from_integer::<u16>`.
+    fn from(val: u16) -> Self {
+        if val == 0 {
+            Self::from_zero()
+        } else {
+            Self::from_positive(val)
+        }
+    }
+}
+
+impl From<u32> for Contents {
+    /// This function is same to `Contents::from_integer::<u32>`.
+    fn from(val: u32) -> Self {
+        if val == 0 {
+            Self::from_zero()
+        } else {
+            Self::from_positive(val)
+        }
+    }
+}
+
+impl From<u64> for Contents {
+    /// This function is same to `Contents::from_integer::<u64>`.
+    fn from(val: u64) -> Self {
+        if val == 0 {
+            Self::from_zero()
+        } else {
+            Self::from_positive(val)
+        }
+    }
+}
+
+impl From<u128> for Contents {
+    /// This function is same to `Contents::from_integer::<u128>`.
+    fn from(val: u128) -> Self {
+        if val == 0 {
+            Self::from_zero()
+        } else {
+            Self::from_positive(val)
+        }
+    }
+}
+
+impl From<usize> for Contents {
+    /// This function is same to `Contents::from_integer::<usize>`.
+    fn from(val: usize) -> Self {
+        if val == 0 {
+            Self::from_zero()
+        } else {
+            Self::from_positive(val)
+        }
+    }
+}
+
+impl From<i8> for Contents {
+    /// This function is same to `Contents::from_integer::<i8>`.
+    fn from(val: i8) -> Self {
+        Contents::from_integer(val)
+    }
+}
+
+impl From<i16> for Contents {
+    /// This function is same to `Contents::from_integer::<i16>`.
+    fn from(val: i16) -> Self {
+        Contents::from_integer(val)
+    }
+}
+
+impl From<i32> for Contents {
+    /// This function is same to `Contents::from_integer::<i32>`.
+    fn from(val: i32) -> Self {
+        Contents::from_integer(val)
+    }
+}
+
+impl From<i64> for Contents {
+    /// This function is same to `Contents::from_integer::<i64>`.
+    fn from(val: i64) -> Self {
+        Contents::from_integer(val)
+    }
+}
+
+impl From<i128> for Contents {
+    /// This function is same to `Contents::from_integer::<i128>`.
+    fn from(val: i128) -> Self {
+        Contents::from_integer(val)
+    }
+}
+
+impl From<isize> for Contents {
+    /// This function is same to `Contents::from_integer::<isize>`.
+    fn from(val: isize) -> Self {
+        Contents::from_integer(val)
+    }
+}
+
+impl From<bool> for Contents {
+    /// This function is same to `Contents::from_bool`.
+    fn from(val: bool) -> Self {
+        Contents::from_bool(val)
     }
 }
 
