@@ -60,7 +60,7 @@ use std::borrow::Borrow;
 /// `BerRef` is a wrapper of `[u8]` and represents a BER.
 ///
 /// This struct is 'Unsized', and user usually uses a reference to the instance.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct BerRef {
     bytes: [u8],
 }
