@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{identifier, length, Buffer, Der, DerRef, Error, IdRef, Length};
+use crate::{identifier, length, Buffer, ContentsRef, Der, DerRef, Error, IdRef, Length};
 use core::convert::TryFrom;
 use core::mem;
 use core::ops::Deref;
@@ -398,12 +398,13 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, IdRef};
+    /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let _ber = Ber::new(id, &[]);
+    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let _ber = Ber::new(id, contents);
     /// ```
-    pub fn new(id: &IdRef, contents: &[u8]) -> Self {
+    pub fn new(id: &IdRef, contents: &ContentsRef) -> Self {
         let der = Der::new(id, contents);
         Self::from(der)
     }
@@ -749,7 +750,8 @@ mod tests {
         let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
         let extras: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
         for &bytes in byteses {
-            let ber = Ber::new(id, bytes);
+            let contents = ContentsRef::from_bytes(bytes);
+            let ber = Ber::new(id, contents);
 
             for &extra in extras {
                 let mut bytes = Vec::from(ber.as_ref() as &[u8]);
@@ -765,7 +767,7 @@ mod tests {
     fn from_bytes_starts_with_unchecked_infinite() {
         let eoc = {
             let id = IdRef::eoc();
-            let contents: &[u8] = &[];
+            let contents = ContentsRef::from_bytes(&[]);
             Ber::new(id, contents)
         };
 
@@ -773,6 +775,7 @@ mod tests {
             .map(|i| {
                 let id = IdRef::octet_string();
                 let contents: &[u8] = &[i];
+                let contents = ContentsRef::from_bytes(contents);
                 Ber::new(id, contents)
             })
             .collect();
@@ -799,7 +802,8 @@ mod tests {
 
         let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
         for &bytes in byteses {
-            let ber = Ber::new(id, bytes);
+            let contents = ContentsRef::from_bytes(bytes);
+            let ber = Ber::new(id, contents);
             let ber_ref = <&BerRef>::try_from(ber.as_ref() as &[u8]).unwrap();
             assert_eq!(ber_ref, ber.as_ref() as &BerRef);
         }
@@ -810,6 +814,7 @@ mod tests {
         let eoc = {
             let id = IdRef::eoc();
             let contents: &[u8] = &[];
+            let contents = ContentsRef::from_bytes(contents);
             Ber::new(id, contents)
         };
 
@@ -817,6 +822,7 @@ mod tests {
             .map(|i| {
                 let id = IdRef::octet_string();
                 let contents: &[u8] = &[i];
+                let contents = ContentsRef::from_bytes(contents);
                 Ber::new(id, contents)
             })
             .collect();
