@@ -269,6 +269,33 @@ impl IdRef {
         mem::transmute(bytes)
     }
 
+    /// Provides a mutable reference from `bytes` without any sanitize.
+    /// `bytes` must not include any extra octets.
+    ///
+    /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
+    /// implementation or [`from_bytes_mut`] instead.
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if the format of `bytes` is not right.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E
+    /// [`from_bytes_mut`]: #method.from_bytes_mut
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    ///
+    /// let mut id0 = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
+    /// let mut id1 = id0.clone();
+    /// let idref = unsafe { IdRef::from_bytes_mut_unchecked(&mut id0 as &mut [u8]) };
+    /// assert_eq!(&id1 as &IdRef, idref);
+    /// ```
+    #[inline]
+    pub unsafe fn from_bytes_mut_unchecked(bytes: &mut [u8]) -> &mut Self {
+        mem::transmute(bytes)
+    }
     /// Provides a reference to `IdRef` representing 'Universal EOC.'
     ///
     /// # Examples
