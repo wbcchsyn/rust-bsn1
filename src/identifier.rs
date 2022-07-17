@@ -186,7 +186,7 @@ impl IdRef {
     /// ```
     /// use bsn1::{ClassTag, Id, IdRef, PCTag};
     ///
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
     /// let idref = IdRef::from_bytes(id.as_ref() as &[u8]).unwrap();
     /// assert_eq!(id.as_ref() as &IdRef, idref);
     /// ```
@@ -213,7 +213,7 @@ impl IdRef {
     /// ```
     /// use bsn1::{ClassTag, Id, IdRef, PCTag};
     ///
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
     /// let idref = unsafe { IdRef::from_bytes_unchecked(id.as_ref() as &[u8]) };
     /// assert_eq!(id.as_ref() as &IdRef, idref);
     /// ```
@@ -1139,16 +1139,16 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
     /// assert_eq!(ClassTag::Universal, id.class());
     ///
-    /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1);
+    /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1_u8);
     /// assert_eq!(ClassTag::Application, id.class());
     ///
-    /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 2);
+    /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 2_u8);
     /// assert_eq!(ClassTag::ContextSpecific, id.class());
     ///
-    /// let id = Id::new(ClassTag::Private, PCTag::Constructed, 3);
+    /// let id = Id::new(ClassTag::Private, PCTag::Constructed, 3_u8);
     /// assert_eq!(ClassTag::Private, id.class());
     /// ```
     #[inline]
@@ -1172,7 +1172,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
     /// assert_eq!(true, id.is_universal());
     /// ```
     #[inline]
@@ -1189,7 +1189,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 0_u8);
     /// assert_eq!(true, id.is_application());
     /// ```
     #[inline]
@@ -1206,7 +1206,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 0_u8);
     /// assert_eq!(true, id.is_context_specific());
     /// ```
     #[inline]
@@ -1223,7 +1223,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Private, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Private, PCTag::Primitive, 0_u8);
     /// assert_eq!(true, id.is_private());
     /// ```
     #[inline]
@@ -1240,10 +1240,10 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
     /// assert_eq!(PCTag::Primitive, id.pc());
     ///
-    /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1);
+    /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1_u8);
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// ```
     #[inline]
@@ -1263,7 +1263,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
     /// assert_eq!(true, id.is_primitive());
     /// ```
     #[inline]
@@ -1280,7 +1280,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Constructed, 0);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Constructed, 0_u8);
     /// assert_eq!(true, id.is_constructed());
     /// ```
     #[inline]
@@ -1297,7 +1297,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 49);
+    /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 49_u8);
     /// assert_eq!(49, id.number().unwrap());
     /// ```
     #[inline]
@@ -1381,7 +1381,7 @@ impl Id {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // Creates 'Universal Integer'
-    /// let _id = Id::new(ClassTag::Universal, PCTag::Primitive, 2);
+    /// let _id = Id::new(ClassTag::Universal, PCTag::Primitive, 2_u8);
     /// ```
     pub fn new<T>(class: ClassTag, pc: PCTag, number: T) -> Self
     where
