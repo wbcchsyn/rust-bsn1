@@ -127,6 +127,22 @@ impl ContentsRef {
     ///
     /// The rule of BER bool is different from that of DER and CER, however,
     /// the returned value is valid for all of them.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::ContentsRef;
+    ///
+    /// let true_contents = ContentsRef::from_bool(true);
+    ///
+    /// assert_eq!(Ok(true), true_contents.to_bool_ber());
+    /// assert_eq!(Ok(true), true_contents.to_bool_der());
+    ///
+    /// let false_contents = ContentsRef::from_bool(false);
+    ///
+    /// assert_eq!(Ok(false), false_contents.to_bool_ber());
+    /// assert_eq!(Ok(false), false_contents.to_bool_der());
+    /// ```
     pub fn from_bool(val: bool) -> &'static Self {
         if val {
             Self::from_bytes(&[0xff])
@@ -275,6 +291,23 @@ impl ContentsRef {
     /// # Warnings
     ///
     /// The rule of BER bool is different from that of DER and CER.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::ContentsRef;
+    ///
+    /// let true_contents = ContentsRef::from_bool(true);
+    /// assert_eq!(Ok(true), true_contents.to_bool_ber());
+    ///
+    /// let false_contents = ContentsRef::from_bool(false);
+    /// assert_eq!(Ok(false), false_contents.to_bool_ber());
+    ///
+    /// let bytes = &[0x03];
+    /// let ber_contents = ContentsRef::from_bytes(bytes);
+    /// assert!(ber_contents.to_bool_ber().is_ok());
+    /// assert!(ber_contents.to_bool_der().is_err());
+    /// ```
     pub fn to_bool_ber(&self) -> Result<bool, Error> {
         if self.is_empty() {
             Err(Error::UnTerminatedBytes)
@@ -292,6 +325,23 @@ impl ContentsRef {
     /// # Warnings
     ///
     /// The rule of BER bool is different from that of DER and CER.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::ContentsRef;
+    ///
+    /// let true_contents = ContentsRef::from_bool(true);
+    /// assert_eq!(Ok(true), true_contents.to_bool_der());
+    ///
+    /// let false_contents = ContentsRef::from_bool(false);
+    /// assert_eq!(Ok(false), false_contents.to_bool_der());
+    ///
+    /// let bytes = &[0x03];
+    /// let ber_contents = ContentsRef::from_bytes(bytes);
+    /// assert!(ber_contents.to_bool_ber().is_ok());
+    /// assert!(ber_contents.to_bool_der().is_err());
+    /// ```
     pub fn to_bool_der(&self) -> Result<bool, Error> {
         if self.is_empty() {
             Err(Error::UnTerminatedBytes)
