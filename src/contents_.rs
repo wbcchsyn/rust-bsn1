@@ -484,6 +484,13 @@ impl From<isize> for Contents {
     }
 }
 
+impl From<bool> for Contents {
+    /// This function is same to `Contents::from_bool`.
+    fn from(val: bool) -> Self {
+        Contents::from_bool(val)
+    }
+}
+
 impl Contents {
     /// Creates a new instance.
     ///
