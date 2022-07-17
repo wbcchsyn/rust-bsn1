@@ -219,11 +219,15 @@ impl IdRef {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
+    /// This function is same to [`<&mut IdRef>::try_from`] .
+    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
     /// functions returns `Ok` .
+    ///
+    /// [`<&mut IdRef>::try_from`]: #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E
     ///
     /// # Examples
     ///
