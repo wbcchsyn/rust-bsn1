@@ -53,7 +53,10 @@
 
 use crate::{Buffer, Error};
 use core::convert::TryFrom;
+use core::mem;
 use core::ops::Deref;
+use num::cast::AsPrimitive;
+use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
 
 /// `ClassTag` represents Tag class of identifier.
@@ -1363,6 +1366,9 @@ impl TryFrom<&[u8]> for Id {
 impl Id {
     /// Creates a new instance from `class` , `pc` , and `number` .
     ///
+    /// type `T` should be the builtin primitive unsigned integer types
+    /// (e.g., u8, u16, u32, u64, u128, usize.)
+    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
@@ -1377,15 +1383,17 @@ impl Id {
     /// // Creates 'Universal Integer'
     /// let _id = Id::new(ClassTag::Universal, PCTag::Primitive, 2);
     /// ```
-    #[inline]
-    pub fn new(class: ClassTag, pc: PCTag, number: u128) -> Self {
+    pub fn new<T>(class: ClassTag, pc: PCTag, number: T) -> Self
+    where
+        T: Unsigned + FromPrimitive + PrimInt + AsPrimitive<u8>,
+    {
         let mut buffer = Buffer::new();
 
-        if number <= IdRef::MAX_SHORT as u128 {
-            let o = class as u8 + pc as u8 + number as u8;
+        if number <= T::from_u8(IdRef::MAX_SHORT).unwrap() {
+            let o = class as u8 + pc as u8 + number.as_();
             unsafe { buffer.push(o) };
         } else {
-            let len = ((128 - number.leading_zeros() + 6) / 7 + 1) as usize;
+            let len = (mem::size_of::<T>() * 8 - number.leading_zeros() as usize + 6) / 7 + 1;
             buffer.reserve(len);
             unsafe { buffer.set_len(len) };
 
@@ -1393,9 +1401,9 @@ impl Id {
 
             let mut num = number;
             for i in (1..len).rev() {
-                let o = (num as u8) | IdRef::MORE_FLAG;
+                let o = num.as_() | IdRef::MORE_FLAG;
                 buffer[i] = o;
-                num >>= 7;
+                num = num.unsigned_shr(7);
             }
             buffer[len - 1] &= !(IdRef::MORE_FLAG);
         }
@@ -1726,6 +1734,131 @@ mod tests {
                     let id = Id::new(cl, pc, num);
                     let idref = <&IdRef>::try_from(id.as_ref() as &[u8]).unwrap();
                     assert_eq!(idref.as_ref(), id.as_ref() as &[u8]);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn id_new_u8() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                for i in 0..=IdRef::MAX_SHORT {
+                    let id = Id::new(cl, pc, i);
+                    let expected: &[u8] = &[cl as u8 + pc as u8 + i];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+                for i in (IdRef::MAX_SHORT + 1)..0x80 {
+                    let id = Id::new(cl, pc, i);
+                    let expected: &[u8] = &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, i];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+                for i in 0x80..=u8::MAX {
+                    let id = Id::new(cl, pc, i);
+                    let expected: &[u8] = &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x81, i - 0x80];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn id_new_u16() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                // Same to u8 (Check again.)
+                {
+                    for i in 0..=IdRef::MAX_SHORT {
+                        let id = Id::new(cl, pc, i as u16);
+                        let expected: &[u8] = &[cl as u8 + pc as u8 + i];
+                        assert_eq!(id.as_ref() as &[u8], expected);
+                    }
+                    for i in (IdRef::MAX_SHORT + 1)..0x80 {
+                        let id = Id::new(cl, pc, i as u16);
+                        let expected: &[u8] = &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, i];
+                        assert_eq!(id.as_ref() as &[u8], expected);
+                    }
+                    for i in 0x80..=u8::MAX {
+                        let id = Id::new(cl, pc, i as u16);
+                        let expected: &[u8] =
+                            &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x81, i - 0x80];
+                        assert_eq!(id.as_ref() as &[u8], expected);
+                    }
+                }
+
+                // u8::MAX + 1
+                {
+                    let i = u8::MAX as u16 + 1;
+                    let id = Id::new(cl, pc, i);
+                    let expected: &[u8] = &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x82, 0];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+
+                // i16::MAX
+                {
+                    let i = i16::MAX as u16;
+                    let id = Id::new(cl, pc, i);
+                    let expected: &[u8] =
+                        &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x81, 0xff, 0x7f];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+
+                // i16::MAX + 1
+                {
+                    let i = i16::MAX as u16 + 1;
+                    let id = Id::new(cl, pc, i);
+                    let expected: &[u8] =
+                        &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x82, 0x80, 0x00];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+
+                // u16::MAX
+                {
+                    let i = u16::MAX;
+                    let id = Id::new(cl, pc, i);
+                    let expected: &[u8] =
+                        &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x83, 0xff, 0x7f];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn id_new_u128() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                // u64::MAX
+                {
+                    let i = u64::MAX as u128;
+                    let id = Id::new(cl, pc, i);
+                    let expected: &mut [u8] = &mut [0xff; 11];
+                    expected[0] = cl as u8 + pc as u8 + IdRef::LONG_FLAG;
+                    expected[1] = 0x81;
+                    expected[10] = 0x7f;
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+
+                // u64::MAX + 1
+                {
+                    let i = u64::MAX as u128 + 1;
+                    let id = Id::new(cl, pc, i);
+                    let expected: &mut [u8] = &mut [0x80; 11];
+                    expected[0] = cl as u8 + pc as u8 + IdRef::LONG_FLAG;
+                    expected[1] = 0x82;
+                    expected[10] = 0x00;
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+
+                // u128::MAX
+                {
+                    let i = u128::MAX;
+                    let id = Id::new(cl, pc, i);
+                    let expected: &mut [u8] = &mut [0xff; 20];
+                    expected[0] = cl as u8 + pc as u8 + IdRef::LONG_FLAG;
+                    expected[1] = 0x83;
+                    expected[19] = 0x7f;
+                    assert_eq!(id.as_ref() as &[u8], expected);
                 }
             }
         }
