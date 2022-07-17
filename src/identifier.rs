@@ -114,34 +114,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
     /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
     /// functions returns `Ok` .
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
-        let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
-
-        if first & IdRef::LONG_FLAG != IdRef::LONG_FLAG {
-            // Short From
-            return Ok(unsafe { IdRef::from_bytes_unchecked(&bytes[0..1]) });
-        }
-
-        let second = *bytes.get(1).ok_or(Error::UnTerminatedBytes)?;
-
-        if second <= IdRef::MAX_SHORT {
-            // Short form will do.
-            return Err(Error::RedundantBytes);
-        }
-
-        if second == IdRef::MORE_FLAG {
-            // The second octet is not necessary.
-            return Err(Error::RedundantBytes);
-        }
-
-        // Find the last octet
-        for i in 1..bytes.len() {
-            if bytes[i] & IdRef::MORE_FLAG != IdRef::MORE_FLAG {
-                return Ok(unsafe { IdRef::from_bytes_unchecked(&bytes[0..=i]) });
-            }
-        }
-
-        // The last octet is not found.
-        Err(Error::UnTerminatedBytes)
+        IdRef::from_bytes(bytes)
     }
 }
 
@@ -190,9 +163,35 @@ impl IdRef {
     /// let idref = IdRef::from_bytes(id.as_ref() as &[u8]).unwrap();
     /// assert_eq!(id.as_ref() as &IdRef, idref);
     /// ```
-    #[inline]
     pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
-        <&Self>::try_from(bytes)
+        let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
+
+        if first & IdRef::LONG_FLAG != IdRef::LONG_FLAG {
+            // Short From
+            return Ok(unsafe { IdRef::from_bytes_unchecked(&bytes[0..1]) });
+        }
+
+        let second = *bytes.get(1).ok_or(Error::UnTerminatedBytes)?;
+
+        if second <= IdRef::MAX_SHORT {
+            // Short form will do.
+            return Err(Error::RedundantBytes);
+        }
+
+        if second == IdRef::MORE_FLAG {
+            // The second octet is not necessary.
+            return Err(Error::RedundantBytes);
+        }
+
+        // Find the last octet
+        for i in 1..bytes.len() {
+            if bytes[i] & IdRef::MORE_FLAG != IdRef::MORE_FLAG {
+                return Ok(unsafe { IdRef::from_bytes_unchecked(&bytes[0..=i]) });
+            }
+        }
+
+        // The last octet is not found.
+        Err(Error::UnTerminatedBytes)
     }
 
     /// Provides a reference from `bytes` without any sanitize.
