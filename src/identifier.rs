@@ -1545,6 +1545,13 @@ impl Deref for Id {
     }
 }
 
+impl DerefMut for Id {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { mem::transmute(self.buffer.as_mut()) }
+    }
+}
+
 impl PartialEq<IdRef> for Id {
     #[inline]
     fn eq(&self, other: &IdRef) -> bool {
