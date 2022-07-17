@@ -149,14 +149,12 @@ pub unsafe fn shrink_to_fit_unchecked(bytes: &[u8]) -> &[u8] {
     if bytes[0] & IdRef::LONG_FLAG != IdRef::LONG_FLAG {
         &bytes[0..1]
     } else {
-        let mut i = 1;
-        loop {
+        for i in 1.. {
             if bytes[i] & IdRef::MORE_FLAG != IdRef::MORE_FLAG {
-                return &bytes[..=i];
+                return &bytes[..=1];
             }
-
-            i += 1;
         }
+        unreachable!();
     }
 }
 
@@ -268,9 +266,7 @@ impl IdRef {
     /// ```
     #[inline]
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
-        let ptr = bytes as *const [u8];
-        let ptr = ptr as *const IdRef;
-        &*ptr
+        mem::transmute(bytes)
     }
 
     /// Provides a reference to `IdRef` representing 'Universal EOC.'
