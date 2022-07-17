@@ -190,6 +190,12 @@ impl DerefMut for ContentsRef {
     }
 }
 
+impl PartialEq<Contents> for ContentsRef {
+    fn eq(&self, other: &Contents) -> bool {
+        self == other
+    }
+}
+
 impl ToOwned for ContentsRef {
     type Owned = Contents;
 
@@ -580,6 +586,12 @@ impl Deref for Contents {
 impl DerefMut for Contents {
     fn deref_mut(&mut self) -> &mut Self::Target {
         ContentsRef::from_bytes_mut(self.buffer.as_mut())
+    }
+}
+
+impl PartialEq<ContentsRef> for Contents {
+    fn eq(&self, other: &ContentsRef) -> bool {
+        self == other
     }
 }
 
