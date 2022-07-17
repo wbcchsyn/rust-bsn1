@@ -391,6 +391,34 @@ impl Contents {
         }
     }
 
+    /// Serializes boolean and creates a new instance.
+    ///
+    /// The rule of bool is not common among BER, DER, and CER, however, the returned value is
+    /// valid for all of them.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Contents, ContentsRef};
+    ///
+    /// let true_contents = Contents::from_bool(true);
+    /// assert_eq!(Ok(true), true_contents.to_bool_ber());
+    /// assert_eq!(Ok(true), true_contents.to_bool_der());
+    ///
+    /// let false_contents = Contents::from_bool(false);
+    /// assert_eq!(Ok(false), false_contents.to_bool_ber());
+    /// assert_eq!(Ok(false), false_contents.to_bool_der());
+    /// ```
+    pub fn from_bool(val: bool) -> Self {
+        let mut buffer = Buffer::new();
+        if val {
+            unsafe { buffer.push(0xff) };
+        } else {
+            unsafe { buffer.push(0x00) };
+        }
+        Self { buffer }
+    }
+
     /// Serializes integer and creates a new instance.
     ///
     /// type `T` should be the builtin primitive integer types (e.g., u8, i32, isize, u128, ...)
