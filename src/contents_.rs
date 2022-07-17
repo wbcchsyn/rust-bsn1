@@ -122,6 +122,18 @@ impl ContentsRef {
     pub fn from_bytes_mut(bytes: &mut [u8]) -> &mut Self {
         <&mut ContentsRef>::from(bytes)
     }
+
+    /// Creates a reference to `ContentsRef` representing `val`.
+    ///
+    /// The rule of BER bool is different from that of DER and CER, however,
+    /// the returned value is valid for all of them.
+    pub fn from_bool(val: bool) -> &'static Self {
+        if val {
+            Self::from_bytes(&[0xff])
+        } else {
+            Self::from_bytes(&[0x00])
+        }
+    }
 }
 
 impl AsRef<[u8]> for ContentsRef {
@@ -896,6 +908,21 @@ mod tests {
             const I: u128 = u128::MAX;
             let contents = Contents::from_integer(I);
             unsafe { assert_eq!(I, contents.to_integer_unchecked()) };
+        }
+    }
+
+    #[test]
+    fn contents_ref_from_bool() {
+        // True
+        {
+            let contents = ContentsRef::from_bool(true);
+            assert_eq!(&[0xff], contents as &[u8]);
+        }
+
+        // false
+        {
+            let contents = ContentsRef::from_bool(false);
+            assert_eq!(&[0x00], contents as &[u8]);
         }
     }
 }
