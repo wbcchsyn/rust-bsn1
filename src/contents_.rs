@@ -456,6 +456,13 @@ impl From<i16> for Contents {
     }
 }
 
+impl From<i32> for Contents {
+    /// This function is same to `Contents::from_integer::<i32>`.
+    fn from(val: i32) -> Self {
+        Contents::from_integer(val)
+    }
+}
+
 impl Contents {
     /// Creates a new instance.
     ///
