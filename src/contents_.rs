@@ -420,6 +420,17 @@ impl From<u64> for Contents {
     }
 }
 
+impl From<u128> for Contents {
+    /// This function is same to `Contents::from_integer::<u128>`.
+    fn from(val: u128) -> Self {
+        if val == 0 {
+            Self::from_zero()
+        } else {
+            Self::from_positive(val)
+        }
+    }
+}
+
 impl Contents {
     /// Creates a new instance.
     ///
