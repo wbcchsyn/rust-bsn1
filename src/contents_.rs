@@ -190,6 +190,12 @@ impl DerefMut for ContentsRef {
     }
 }
 
+impl PartialEq<Contents> for ContentsRef {
+    fn eq(&self, other: &Contents) -> bool {
+        self == other
+    }
+}
+
 impl ToOwned for ContentsRef {
     type Owned = Contents;
 
