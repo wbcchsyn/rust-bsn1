@@ -470,6 +470,13 @@ impl From<i64> for Contents {
     }
 }
 
+impl From<i128> for Contents {
+    /// This function is same to `Contents::from_integer::<i128>`.
+    fn from(val: i128) -> Self {
+        Contents::from_integer(val)
+    }
+}
+
 impl Contents {
     /// Creates a new instance.
     ///
