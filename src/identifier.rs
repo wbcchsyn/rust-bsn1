@@ -194,6 +194,31 @@ impl IdRef {
         Err(Error::UnTerminatedBytes)
     }
 
+    /// Parses `bytes` starts with identifier and tries to build a new instance.
+    ///
+    /// This function ignores the extra octet(s) at the end if any.
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
+    /// functions returns `Ok` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    ///
+    /// let mut id0 = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
+    /// let id1 = id0.clone();
+    /// let idref = IdRef::from_bytes_mut(&mut id0).unwrap();
+    /// assert_eq!(&id1 as &IdRef, idref);
+    /// ```
+    pub fn from_bytes_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
+        let ret = Self::from_bytes(bytes)?;
+        let ptr = (ret as *const Self) as *mut Self;
+        unsafe { Ok(&mut *ptr) }
+    }
     /// Provides a reference from `bytes` without any sanitize.
     /// `bytes` must not include any extra octets.
     ///
