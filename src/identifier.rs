@@ -54,8 +54,10 @@
 use crate::{Buffer, Error};
 use core::convert::TryFrom;
 use core::mem;
+use core::ops::BitOrAssign;
 use core::ops::{Deref, DerefMut};
 use num::cast::AsPrimitive;
+use num::traits::CheckedMul;
 use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
 
@@ -1379,6 +1381,8 @@ impl IdRef {
 
     /// Returns the number of `self` unless overflow.
     ///
+    /// Type `T` should be the builtin primitive integer types (e.g., u8, i32, isize, i128...)
+    ///
     /// # Examples
     ///
     /// ```
@@ -1388,23 +1392,28 @@ impl IdRef {
     /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 49_u8);
     /// assert_eq!(49, id.number().unwrap());
     /// ```
-    #[inline]
-    pub fn number(&self) -> Result<u128, Error> {
+    pub fn number<T>(&self) -> Result<T, Error>
+    where
+        T: PrimInt + CheckedMul + BitOrAssign + FromPrimitive,
+    {
+        debug_assert!(0 < self.len());
+
         if self.bytes.len() == 1 {
             let ret = self.bytes[0] & Self::LONG_FLAG;
-            debug_assert!(ret != Self::LONG_FLAG);
-            Ok(ret as u128)
-        } else if 20 < self.bytes.len() {
-            Err(Error::OverFlow)
-        } else if self.bytes.len() == 20 && 0x83 < self.bytes[1] {
-            Err(Error::OverFlow)
+            Ok(T::from_u8(ret).unwrap())
         } else {
-            let num: u128 = self.bytes[1..].iter().fold(0, |acc, octet| {
-                let octet = octet & !Self::MORE_FLAG;
-                (acc << 7) + (octet as u128)
-            });
+            debug_assert_eq!(self.bytes[0] & Self::LONG_FLAG, Self::LONG_FLAG);
 
-            Ok(num)
+            let mask: u8 = !Self::MORE_FLAG;
+            let mut ret = T::from_u8(self[1] & mask).unwrap();
+
+            for &octet in self[2..].iter() {
+                let shft_mul = T::from_u8(128).ok_or(Error::OverFlow)?;
+                ret = ret.checked_mul(&shft_mul).ok_or(Error::OverFlow)?;
+                ret |= T::from_u8(octet & mask).unwrap();
+            }
+
+            Ok(ret)
         }
     }
 
@@ -1745,67 +1754,75 @@ mod tests {
     }
 
     #[test]
-    fn number() {
+    fn number_ok() {
         for &cl in CLASSES {
             for &pc in PCS {
-                // 1 byte
-                {
-                    let num: u128 = 0;
-                    let first = cl as u8 + pc as u8 + num as u8;
-                    let bytes: &[u8] = &[first];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(num, id.number().unwrap());
-
-                    let num: u128 = 30;
-                    let first = cl as u8 + pc as u8 + num as u8;
-                    let bytes: &[u8] = &[first];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(num, id.number().unwrap());
+                // i8
+                for i in 0..=i8::MAX {
+                    let id = Id::new(cl, pc, i as u8);
+                    assert_eq!(Ok(i), id.number());
                 }
-
-                let first = cl as u8 + pc as u8 + 31;
-
-                // 2 bytes
-                {
-                    let num: u128 = 0x1f;
-                    let bytes: &[u8] = &[first, num as u8];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(num, id.number().unwrap());
-
-                    let num: u128 = 0x7f;
-                    let bytes: &[u8] = &[first, num as u8];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(num, id.number().unwrap());
+                // u8
+                for i in 0..=u8::MAX {
+                    let id = Id::new(cl, pc, i);
+                    assert_eq!(Ok(i), id.number());
                 }
-
-                // 3 bytes
-                {
-                    let num: u128 = 0x80;
-                    let bytes: &[u8] = &[first, 0x81, 0x00];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(num, id.number().unwrap());
-
-                    let num: u128 = 0x3fff;
-                    let bytes: &[u8] = &[first, 0xff, 0x7f];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(num, id.number().unwrap());
+                // i16
+                for i in 0..=i16::MAX {
+                    let id = Id::new(cl, pc, i as u16);
+                    assert_eq!(Ok(i), id.number());
                 }
-
-                // max
+                // u16
+                for i in 0..=u16::MAX {
+                    let id = Id::new(cl, pc, i);
+                    assert_eq!(Ok(i), id.number());
+                }
+                // u128::MAX
                 {
-                    let mut bytes: [u8; 20] = [0xff; 20];
-                    bytes[0] = first;
-                    bytes[1] = 0x83;
-                    bytes[19] = 0x7f;
-                    let id = <&IdRef>::try_from(&bytes as &[u8]).unwrap();
-                    assert_eq!(std::u128::MAX, id.number().unwrap());
+                    let id = Id::new(cl, pc, u128::MAX);
+                    assert_eq!(Ok(u128::MAX), id.number());
+                }
+            }
+        }
+    }
 
-                    let mut bytes: [u8; 20] = [0x80; 20];
-                    bytes[0] = first;
+    #[test]
+    fn number_overflow() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                // i8
+                {
+                    let id = Id::new(cl, pc, i8::MAX as u128 + 1);
+                    assert!(id.number::<i8>().is_err());
+                }
+                // u8
+                {
+                    let id = Id::new(cl, pc, u8::MAX as u128 + 1);
+                    assert!(id.number::<u8>().is_err());
+                }
+                // i16
+                {
+                    let id = Id::new(cl, pc, i16::MAX as u128 + 1);
+                    assert!(id.number::<i16>().is_err());
+                }
+                // u16
+                {
+                    let id = Id::new(cl, pc, u16::MAX as u128 + 1);
+                    assert!(id.number::<u16>().is_err());
+                }
+                // i128
+                {
+                    let id = Id::new(cl, pc, i128::MAX as u128 + 1);
+                    assert!(id.number::<i128>().is_err());
+                }
+                // u128
+                {
+                    let mut bytes = [0x80; 20];
+                    bytes[0] = cl as u8 | pc as u8 | IdRef::LONG_FLAG;
                     bytes[1] = 0x84;
                     bytes[19] = 0x00;
-                    let id = <&IdRef>::try_from(&bytes as &[u8]).unwrap();
-                    assert_eq!(Error::OverFlow, id.number().unwrap_err());
+                    let id = Id::from_bytes(&bytes).unwrap();
+                    assert!(id.number::<u128>().is_err());
                 }
             }
         }
