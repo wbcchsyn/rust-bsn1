@@ -90,6 +90,30 @@ impl Length {
 }
 
 impl Length {
+    /// Parses `bytes` starting with length octets and tries to creates a new instance.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This method is same to `TryFrom::try_from`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Length;
+    ///
+    /// let mut bytes = vec![0x05]; // represents Definite(5).
+    /// let len = Length::from_bytes(&bytes).unwrap();
+    /// assert_eq!(Length::Definite(5), len);
+    ///
+    /// // Ignores the last extra octet 0x03.
+    /// bytes.push(0x03);
+    /// let len = Length::from_bytes(&bytes).unwrap();
+    /// assert_eq!(Length::Definite(5), len);
+    /// ```
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
+        try_from(bytes).map(|(length, _rest)| length)
+    }
+
     /// Serializes `length` .
     ///
     /// This function won't allocate heap memory.
