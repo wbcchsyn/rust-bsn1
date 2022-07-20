@@ -56,6 +56,7 @@
 use crate::{Error, StackBuffer};
 use core::convert::TryFrom;
 use core::mem::size_of;
+use core::ops::Deref;
 
 /// `Length` represents ASN.1 length.
 ///
@@ -131,7 +132,7 @@ impl Length {
     /// assert_eq!(length, deserialized);
     /// ```
     #[inline]
-    pub fn to_bytes(&self) -> impl AsRef<[u8]> {
+    pub fn to_bytes(&self) -> impl Deref<Target = [u8]> {
         let mut buffer = StackBuffer::new();
 
         match *self {
