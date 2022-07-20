@@ -1431,6 +1431,24 @@ impl IdRef {
     pub fn as_bytes(&self) -> &[u8] {
         &self.bytes
     }
+
+    /// Provides a mutable reference to the inner slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, PCTag, Id, IdRef};
+    ///
+    /// // 'Id' inplements 'Deref<Target = IdRef>'.
+    /// let mut id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
+    /// let bytes = id.as_bytes_mut();
+    /// bytes[0] |= 0x01;
+    /// assert_eq!(0x01, id.number().unwrap());
+    /// ```
+    #[inline]
+    pub fn as_bytes_mut(&mut self) -> &mut [u8] {
+        self
+    }
 }
 
 /// `Id` owns `IdRef` and represents Identifier.
