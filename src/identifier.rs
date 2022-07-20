@@ -1449,6 +1449,27 @@ impl IdRef {
     pub fn as_bytes_mut(&mut self) -> &mut [u8] {
         self
     }
+
+    /// Update the class tag of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    ///
+    /// let mut id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
+    /// assert_eq!(ClassTag::Universal, id.class());
+    ///
+    /// // 'Id' implements 'Deref<Target = IdRef>'.
+    /// id.set_class(ClassTag::Application);
+    /// assert_eq!(ClassTag::Application, id.class());
+    /// ```
+    #[inline]
+    pub fn set_class(&mut self, cls: ClassTag) {
+        const MASK: u8 = 0x3f;
+        self[0] &= MASK;
+        self[0] |= cls as u8;
+    }
 }
 
 /// `Id` owns `IdRef` and represents Identifier.
@@ -1989,6 +2010,24 @@ mod tests {
                     expected[1] = 0x83;
                     expected[19] = 0x7f;
                     assert_eq!(id.as_ref() as &[u8], expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn set_class() {
+        for &cl0 in CLASSES {
+            for &pc in PCS {
+                for &cl1 in CLASSES {
+                    for i in 0..=u16::MAX {
+                        let mut id = Id::new(cl0, pc, i);
+                        id.set_class(cl1);
+
+                        assert_eq!(cl1, id.class());
+                        assert_eq!(pc, id.pc());
+                        assert_eq!(Ok(i), id.number());
+                    }
                 }
             }
         }
