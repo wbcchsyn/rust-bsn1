@@ -53,7 +53,12 @@
 
 use crate::{Buffer, Error};
 use core::convert::TryFrom;
-use core::ops::Deref;
+use core::mem;
+use core::ops::BitOrAssign;
+use core::ops::{Deref, DerefMut};
+use num::cast::AsPrimitive;
+use num::traits::CheckedMul;
+use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
 
 /// `ClassTag` represents Tag class of identifier.
@@ -111,6 +116,75 @@ impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
     /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
     /// functions returns `Ok` .
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
+        IdRef::from_bytes(bytes)
+    }
+}
+
+impl<'a> TryFrom<&'a mut [u8]> for &'a mut IdRef {
+    type Error = Error;
+
+    /// Parses `bytes` starts with identifier and tries to build a new instance.
+    ///
+    /// This function ignores the extra octet(s) at the end if any.
+    ///
+    /// This function is same to [`IdRef::from_bytes_mut`] .
+    ///
+    /// [`IdRef::from_bytes`]: #method.from_bytes_mut
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
+    /// functions returns `Ok` .
+    fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
+        IdRef::from_bytes_mut(bytes)
+    }
+}
+
+/// Ommits the extra octets at the end of `bytes` and returns octets just one 'ASN.1 Identifier.'
+///
+/// # Safety
+///
+/// The behavior is undefined if `bytes` does not starts with 'ASN.1 Identifier.'
+#[inline]
+pub unsafe fn shrink_to_fit_unchecked(bytes: &[u8]) -> &[u8] {
+    if bytes[0] & IdRef::LONG_FLAG != IdRef::LONG_FLAG {
+        &bytes[0..1]
+    } else {
+        for i in 1.. {
+            if bytes[i] & IdRef::MORE_FLAG != IdRef::MORE_FLAG {
+                return &bytes[..=1];
+            }
+        }
+        unreachable!();
+    }
+}
+
+impl IdRef {
+    /// Parses `bytes` starts with identifier and tries to build a new instance.
+    ///
+    /// This function ignores the extra octet(s) at the end if any.
+    ///
+    /// This function is same to [`<&IdRef>::try_from`] .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
+    /// functions returns `Ok` .
+    ///
+    /// [`<&IdRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    ///
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
+    /// let idref = IdRef::from_bytes(id.as_ref() as &[u8]).unwrap();
+    /// assert_eq!(id.as_ref() as &IdRef, idref);
+    /// ```
+    pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
         let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
 
         if first & IdRef::LONG_FLAG != IdRef::LONG_FLAG {
@@ -140,35 +214,12 @@ impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
         // The last octet is not found.
         Err(Error::UnTerminatedBytes)
     }
-}
 
-/// Ommits the extra octets at the end of `bytes` and returns octets just one 'ASN.1 Identifier.'
-///
-/// # Safety
-///
-/// The behavior is undefined if `bytes` does not starts with 'ASN.1 Identifier.'
-#[inline]
-pub unsafe fn shrink_to_fit_unchecked(bytes: &[u8]) -> &[u8] {
-    if bytes[0] & IdRef::LONG_FLAG != IdRef::LONG_FLAG {
-        &bytes[0..1]
-    } else {
-        let mut i = 1;
-        loop {
-            if bytes[i] & IdRef::MORE_FLAG != IdRef::MORE_FLAG {
-                return &bytes[..=i];
-            }
-
-            i += 1;
-        }
-    }
-}
-
-impl IdRef {
     /// Parses `bytes` starts with identifier and tries to build a new instance.
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`<&IdRef>::try_from`] .
+    /// This function is same to [`<&mut IdRef>::try_from`] .
     ///
     /// # Warnings
     ///
@@ -176,22 +227,23 @@ impl IdRef {
     /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
     /// functions returns `Ok` .
     ///
-    /// [`<&IdRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    /// [`<&mut IdRef>::try_from`]: #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E
     ///
     /// # Examples
     ///
     /// ```
     /// use bsn1::{ClassTag, Id, IdRef, PCTag};
     ///
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
-    /// let idref = IdRef::from_bytes(id.as_ref() as &[u8]).unwrap();
-    /// assert_eq!(id.as_ref() as &IdRef, idref);
+    /// let mut id0 = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
+    /// let id1 = id0.clone();
+    /// let idref = IdRef::from_bytes_mut(&mut id0).unwrap();
+    /// assert_eq!(&id1 as &IdRef, idref);
     /// ```
-    #[inline]
-    pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
-        <&Self>::try_from(bytes)
+    pub fn from_bytes_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
+        let ret = Self::from_bytes(bytes)?;
+        let ptr = (ret as *const Self) as *mut Self;
+        unsafe { Ok(&mut *ptr) }
     }
-
     /// Provides a reference from `bytes` without any sanitize.
     /// `bytes` must not include any extra octets.
     ///
@@ -210,17 +262,42 @@ impl IdRef {
     /// ```
     /// use bsn1::{ClassTag, Id, IdRef, PCTag};
     ///
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
     /// let idref = unsafe { IdRef::from_bytes_unchecked(id.as_ref() as &[u8]) };
     /// assert_eq!(id.as_ref() as &IdRef, idref);
     /// ```
     #[inline]
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
-        let ptr = bytes as *const [u8];
-        let ptr = ptr as *const IdRef;
-        &*ptr
+        mem::transmute(bytes)
     }
 
+    /// Provides a mutable reference from `bytes` without any sanitize.
+    /// `bytes` must not include any extra octets.
+    ///
+    /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
+    /// implementation or [`from_bytes_mut`] instead.
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if the format of `bytes` is not right.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E
+    /// [`from_bytes_mut`]: #method.from_bytes_mut
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    ///
+    /// let mut id0 = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
+    /// let mut id1 = id0.clone();
+    /// let idref = unsafe { IdRef::from_bytes_mut_unchecked(&mut id0 as &mut [u8]) };
+    /// assert_eq!(&id1 as &IdRef, idref);
+    /// ```
+    #[inline]
+    pub unsafe fn from_bytes_mut_unchecked(bytes: &mut [u8]) -> &mut Self {
+        mem::transmute(bytes)
+    }
     /// Provides a reference to `IdRef` representing 'Universal EOC.'
     ///
     /// # Examples
@@ -1111,6 +1188,22 @@ impl Borrow<[u8]> for IdRef {
     }
 }
 
+impl Deref for IdRef {
+    type Target = [u8];
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.bytes
+    }
+}
+
+impl DerefMut for IdRef {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.bytes
+    }
+}
+
 impl ToOwned for IdRef {
     type Owned = Id;
 
@@ -1136,16 +1229,16 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
     /// assert_eq!(ClassTag::Universal, id.class());
     ///
-    /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1);
+    /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1_u8);
     /// assert_eq!(ClassTag::Application, id.class());
     ///
-    /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 2);
+    /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 2_u8);
     /// assert_eq!(ClassTag::ContextSpecific, id.class());
     ///
-    /// let id = Id::new(ClassTag::Private, PCTag::Constructed, 3);
+    /// let id = Id::new(ClassTag::Private, PCTag::Constructed, 3_u8);
     /// assert_eq!(ClassTag::Private, id.class());
     /// ```
     #[inline]
@@ -1169,7 +1262,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
     /// assert_eq!(true, id.is_universal());
     /// ```
     #[inline]
@@ -1186,7 +1279,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 0_u8);
     /// assert_eq!(true, id.is_application());
     /// ```
     #[inline]
@@ -1203,7 +1296,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 0_u8);
     /// assert_eq!(true, id.is_context_specific());
     /// ```
     #[inline]
@@ -1220,7 +1313,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Private, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Private, PCTag::Primitive, 0_u8);
     /// assert_eq!(true, id.is_private());
     /// ```
     #[inline]
@@ -1237,10 +1330,10 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
     /// assert_eq!(PCTag::Primitive, id.pc());
     ///
-    /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1);
+    /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1_u8);
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// ```
     #[inline]
@@ -1260,7 +1353,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
     /// assert_eq!(true, id.is_primitive());
     /// ```
     #[inline]
@@ -1277,7 +1370,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Constructed, 0);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Constructed, 0_u8);
     /// assert_eq!(true, id.is_constructed());
     /// ```
     #[inline]
@@ -1288,32 +1381,39 @@ impl IdRef {
 
     /// Returns the number of `self` unless overflow.
     ///
+    /// Type `T` should be the builtin primitive integer types (e.g., u8, i32, isize, i128...)
+    ///
     /// # Examples
     ///
     /// ```
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 49);
+    /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 49_u8);
     /// assert_eq!(49, id.number().unwrap());
     /// ```
-    #[inline]
-    pub fn number(&self) -> Result<u128, Error> {
+    pub fn number<T>(&self) -> Result<T, Error>
+    where
+        T: PrimInt + CheckedMul + BitOrAssign + FromPrimitive,
+    {
+        debug_assert!(0 < self.len());
+
         if self.bytes.len() == 1 {
             let ret = self.bytes[0] & Self::LONG_FLAG;
-            debug_assert!(ret != Self::LONG_FLAG);
-            Ok(ret as u128)
-        } else if 20 < self.bytes.len() {
-            Err(Error::OverFlow)
-        } else if self.bytes.len() == 20 && 0x83 < self.bytes[1] {
-            Err(Error::OverFlow)
+            Ok(T::from_u8(ret).unwrap())
         } else {
-            let num: u128 = self.bytes[1..].iter().fold(0, |acc, octet| {
-                let octet = octet & !Self::MORE_FLAG;
-                (acc << 7) + (octet as u128)
-            });
+            debug_assert_eq!(self.bytes[0] & Self::LONG_FLAG, Self::LONG_FLAG);
 
-            Ok(num)
+            let mask: u8 = !Self::MORE_FLAG;
+            let mut ret = T::from_u8(self[1] & mask).unwrap();
+
+            for &octet in self[2..].iter() {
+                let shft_mul = T::from_u8(128).ok_or(Error::OverFlow)?;
+                ret = ret.checked_mul(&shft_mul).ok_or(Error::OverFlow)?;
+                ret |= T::from_u8(octet & mask).unwrap();
+            }
+
+            Ok(ret)
         }
     }
 
@@ -1330,6 +1430,66 @@ impl IdRef {
     #[inline]
     pub fn as_bytes(&self) -> &[u8] {
         &self.bytes
+    }
+
+    /// Provides a mutable reference to the inner slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, PCTag, Id, IdRef};
+    ///
+    /// // 'Id' inplements 'Deref<Target = IdRef>'.
+    /// let mut id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
+    /// let bytes = id.as_bytes_mut();
+    /// bytes[0] |= 0x01;
+    /// assert_eq!(0x01, id.number().unwrap());
+    /// ```
+    #[inline]
+    pub fn as_bytes_mut(&mut self) -> &mut [u8] {
+        self
+    }
+
+    /// Update the class tag of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    ///
+    /// let mut id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
+    /// assert_eq!(ClassTag::Universal, id.class());
+    ///
+    /// // 'Id' implements 'Deref<Target = IdRef>'.
+    /// id.set_class(ClassTag::Application);
+    /// assert_eq!(ClassTag::Application, id.class());
+    /// ```
+    #[inline]
+    pub fn set_class(&mut self, cls: ClassTag) {
+        const MASK: u8 = 0x3f;
+        self[0] &= MASK;
+        self[0] |= cls as u8;
+    }
+
+    /// Update the PC tag of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    ///
+    /// let mut id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
+    /// assert_eq!(ClassTag::Universal, id.class());
+    ///
+    /// // 'Id' implements 'Deref<Target = IdRef>'.
+    /// id.set_pc(PCTag::Constructed);
+    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// ```
+    #[inline]
+    pub fn set_pc(&mut self, pc: PCTag) {
+        const MASK: u8 = 0xdf;
+        self[0] &= MASK;
+        self[0] |= pc as u8;
     }
 }
 
@@ -1363,6 +1523,9 @@ impl TryFrom<&[u8]> for Id {
 impl Id {
     /// Creates a new instance from `class` , `pc` , and `number` .
     ///
+    /// type `T` should be the builtin primitive unsigned integer types
+    /// (e.g., u8, u16, u32, u64, u128, usize.)
+    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
@@ -1375,17 +1538,19 @@ impl Id {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // Creates 'Universal Integer'
-    /// let _id = Id::new(ClassTag::Universal, PCTag::Primitive, 2);
+    /// let _id = Id::new(ClassTag::Universal, PCTag::Primitive, 2_u8);
     /// ```
-    #[inline]
-    pub fn new(class: ClassTag, pc: PCTag, number: u128) -> Self {
+    pub fn new<T>(class: ClassTag, pc: PCTag, number: T) -> Self
+    where
+        T: Unsigned + FromPrimitive + PrimInt + AsPrimitive<u8>,
+    {
         let mut buffer = Buffer::new();
 
-        if number <= IdRef::MAX_SHORT as u128 {
-            let o = class as u8 + pc as u8 + number as u8;
+        if number <= T::from_u8(IdRef::MAX_SHORT).unwrap() {
+            let o = class as u8 + pc as u8 + number.as_();
             unsafe { buffer.push(o) };
         } else {
-            let len = ((128 - number.leading_zeros() + 6) / 7 + 1) as usize;
+            let len = (mem::size_of::<T>() * 8 - number.leading_zeros() as usize + 6) / 7 + 1;
             buffer.reserve(len);
             unsafe { buffer.set_len(len) };
 
@@ -1393,9 +1558,9 @@ impl Id {
 
             let mut num = number;
             for i in (1..len).rev() {
-                let o = (num as u8) | IdRef::MORE_FLAG;
+                let o = num.as_() | IdRef::MORE_FLAG;
                 buffer[i] = o;
-                num >>= 7;
+                num = num.unsigned_shr(7);
             }
             buffer[len - 1] &= !(IdRef::MORE_FLAG);
         }
@@ -1473,6 +1638,13 @@ impl Deref for Id {
     #[inline]
     fn deref(&self) -> &Self::Target {
         unsafe { IdRef::from_bytes_unchecked(self.buffer.as_ref()) }
+    }
+}
+
+impl DerefMut for Id {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { mem::transmute(self.buffer.as_mut()) }
     }
 }
 
@@ -1642,67 +1814,75 @@ mod tests {
     }
 
     #[test]
-    fn number() {
+    fn number_ok() {
         for &cl in CLASSES {
             for &pc in PCS {
-                // 1 byte
-                {
-                    let num: u128 = 0;
-                    let first = cl as u8 + pc as u8 + num as u8;
-                    let bytes: &[u8] = &[first];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(num, id.number().unwrap());
-
-                    let num: u128 = 30;
-                    let first = cl as u8 + pc as u8 + num as u8;
-                    let bytes: &[u8] = &[first];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(num, id.number().unwrap());
+                // i8
+                for i in 0..=i8::MAX {
+                    let id = Id::new(cl, pc, i as u8);
+                    assert_eq!(Ok(i), id.number());
                 }
-
-                let first = cl as u8 + pc as u8 + 31;
-
-                // 2 bytes
-                {
-                    let num: u128 = 0x1f;
-                    let bytes: &[u8] = &[first, num as u8];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(num, id.number().unwrap());
-
-                    let num: u128 = 0x7f;
-                    let bytes: &[u8] = &[first, num as u8];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(num, id.number().unwrap());
+                // u8
+                for i in 0..=u8::MAX {
+                    let id = Id::new(cl, pc, i);
+                    assert_eq!(Ok(i), id.number());
                 }
-
-                // 3 bytes
-                {
-                    let num: u128 = 0x80;
-                    let bytes: &[u8] = &[first, 0x81, 0x00];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(num, id.number().unwrap());
-
-                    let num: u128 = 0x3fff;
-                    let bytes: &[u8] = &[first, 0xff, 0x7f];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(num, id.number().unwrap());
+                // i16
+                for i in 0..=i16::MAX {
+                    let id = Id::new(cl, pc, i as u16);
+                    assert_eq!(Ok(i), id.number());
                 }
-
-                // max
+                // u16
+                for i in 0..=u16::MAX {
+                    let id = Id::new(cl, pc, i);
+                    assert_eq!(Ok(i), id.number());
+                }
+                // u128::MAX
                 {
-                    let mut bytes: [u8; 20] = [0xff; 20];
-                    bytes[0] = first;
-                    bytes[1] = 0x83;
-                    bytes[19] = 0x7f;
-                    let id = <&IdRef>::try_from(&bytes as &[u8]).unwrap();
-                    assert_eq!(std::u128::MAX, id.number().unwrap());
+                    let id = Id::new(cl, pc, u128::MAX);
+                    assert_eq!(Ok(u128::MAX), id.number());
+                }
+            }
+        }
+    }
 
-                    let mut bytes: [u8; 20] = [0x80; 20];
-                    bytes[0] = first;
+    #[test]
+    fn number_overflow() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                // i8
+                {
+                    let id = Id::new(cl, pc, i8::MAX as u128 + 1);
+                    assert!(id.number::<i8>().is_err());
+                }
+                // u8
+                {
+                    let id = Id::new(cl, pc, u8::MAX as u128 + 1);
+                    assert!(id.number::<u8>().is_err());
+                }
+                // i16
+                {
+                    let id = Id::new(cl, pc, i16::MAX as u128 + 1);
+                    assert!(id.number::<i16>().is_err());
+                }
+                // u16
+                {
+                    let id = Id::new(cl, pc, u16::MAX as u128 + 1);
+                    assert!(id.number::<u16>().is_err());
+                }
+                // i128
+                {
+                    let id = Id::new(cl, pc, i128::MAX as u128 + 1);
+                    assert!(id.number::<i128>().is_err());
+                }
+                // u128
+                {
+                    let mut bytes = [0x80; 20];
+                    bytes[0] = cl as u8 | pc as u8 | IdRef::LONG_FLAG;
                     bytes[1] = 0x84;
                     bytes[19] = 0x00;
-                    let id = <&IdRef>::try_from(&bytes as &[u8]).unwrap();
-                    assert_eq!(Error::OverFlow, id.number().unwrap_err());
+                    let id = Id::from_bytes(&bytes).unwrap();
+                    assert!(id.number::<u128>().is_err());
                 }
             }
         }
@@ -1726,6 +1906,167 @@ mod tests {
                     let id = Id::new(cl, pc, num);
                     let idref = <&IdRef>::try_from(id.as_ref() as &[u8]).unwrap();
                     assert_eq!(idref.as_ref(), id.as_ref() as &[u8]);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn id_new_u8() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                for i in 0..=IdRef::MAX_SHORT {
+                    let id = Id::new(cl, pc, i);
+                    let expected: &[u8] = &[cl as u8 + pc as u8 + i];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+                for i in (IdRef::MAX_SHORT + 1)..0x80 {
+                    let id = Id::new(cl, pc, i);
+                    let expected: &[u8] = &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, i];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+                for i in 0x80..=u8::MAX {
+                    let id = Id::new(cl, pc, i);
+                    let expected: &[u8] = &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x81, i - 0x80];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn id_new_u16() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                // Same to u8 (Check again.)
+                {
+                    for i in 0..=IdRef::MAX_SHORT {
+                        let id = Id::new(cl, pc, i as u16);
+                        let expected: &[u8] = &[cl as u8 + pc as u8 + i];
+                        assert_eq!(id.as_ref() as &[u8], expected);
+                    }
+                    for i in (IdRef::MAX_SHORT + 1)..0x80 {
+                        let id = Id::new(cl, pc, i as u16);
+                        let expected: &[u8] = &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, i];
+                        assert_eq!(id.as_ref() as &[u8], expected);
+                    }
+                    for i in 0x80..=u8::MAX {
+                        let id = Id::new(cl, pc, i as u16);
+                        let expected: &[u8] =
+                            &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x81, i - 0x80];
+                        assert_eq!(id.as_ref() as &[u8], expected);
+                    }
+                }
+
+                // u8::MAX + 1
+                {
+                    let i = u8::MAX as u16 + 1;
+                    let id = Id::new(cl, pc, i);
+                    let expected: &[u8] = &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x82, 0];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+
+                // i16::MAX
+                {
+                    let i = i16::MAX as u16;
+                    let id = Id::new(cl, pc, i);
+                    let expected: &[u8] =
+                        &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x81, 0xff, 0x7f];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+
+                // i16::MAX + 1
+                {
+                    let i = i16::MAX as u16 + 1;
+                    let id = Id::new(cl, pc, i);
+                    let expected: &[u8] =
+                        &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x82, 0x80, 0x00];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+
+                // u16::MAX
+                {
+                    let i = u16::MAX;
+                    let id = Id::new(cl, pc, i);
+                    let expected: &[u8] =
+                        &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x83, 0xff, 0x7f];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn id_new_u128() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                // u64::MAX
+                {
+                    let i = u64::MAX as u128;
+                    let id = Id::new(cl, pc, i);
+                    let expected: &mut [u8] = &mut [0xff; 11];
+                    expected[0] = cl as u8 + pc as u8 + IdRef::LONG_FLAG;
+                    expected[1] = 0x81;
+                    expected[10] = 0x7f;
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+
+                // u64::MAX + 1
+                {
+                    let i = u64::MAX as u128 + 1;
+                    let id = Id::new(cl, pc, i);
+                    let expected: &mut [u8] = &mut [0x80; 11];
+                    expected[0] = cl as u8 + pc as u8 + IdRef::LONG_FLAG;
+                    expected[1] = 0x82;
+                    expected[10] = 0x00;
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+
+                // u128::MAX
+                {
+                    let i = u128::MAX;
+                    let id = Id::new(cl, pc, i);
+                    let expected: &mut [u8] = &mut [0xff; 20];
+                    expected[0] = cl as u8 + pc as u8 + IdRef::LONG_FLAG;
+                    expected[1] = 0x83;
+                    expected[19] = 0x7f;
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn set_class() {
+        for &cl0 in CLASSES {
+            for &pc in PCS {
+                for &cl1 in CLASSES {
+                    for i in 0..=u16::MAX {
+                        let mut id = Id::new(cl0, pc, i);
+                        id.set_class(cl1);
+
+                        assert_eq!(cl1, id.class());
+                        assert_eq!(pc, id.pc());
+                        assert_eq!(Ok(i), id.number());
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn set_pc() {
+        for &cl in CLASSES {
+            for &pc0 in PCS {
+                for &pc1 in PCS {
+                    for i in 0..=u16::MAX {
+                        let mut id = Id::new(cl, pc0, i);
+                        id.set_pc(pc1);
+
+                        assert_eq!(cl, id.class());
+                        assert_eq!(pc1, id.pc());
+                        assert_eq!(Ok(i), id.number());
+                    }
                 }
             }
         }
