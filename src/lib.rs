@@ -90,6 +90,7 @@
 mod ber;
 mod buffer;
 mod contents;
+mod contents_ref;
 mod der;
 mod identifier;
 mod length;
@@ -97,7 +98,8 @@ mod stack_buffer;
 
 pub use ber::{Ber, BerRef};
 use buffer::Buffer;
-pub use contents::{Contents, ContentsRef};
+pub use contents::Contents;
+pub use contents_ref::ContentsRef;
 pub use der::{Der, DerRef};
 pub use identifier::{ClassTag, Id, IdRef, PCTag};
 pub use length::Length;
