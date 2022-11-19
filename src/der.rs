@@ -297,7 +297,7 @@ impl DerRef {
     ///
     /// // 'DER' implements 'Deref<Target=DerRef>'
     /// let der = Der::new(id, contents);
-    /// assert_eq!(contents as &[u8], der.contents());
+    /// assert_eq!(contents, der.contents());
     /// ```
     #[inline]
     pub fn contents(&self) -> &ContentsRef {
@@ -383,7 +383,7 @@ impl Der {
     /// let der = Der::new(id, contents);
     ///
     /// assert_eq!(id, der.id());
-    /// assert_eq!(contents as &[u8], der.contents());
+    /// assert_eq!(contents, der.contents());
     /// ```
     pub fn new(id: &IdRef, contents: &ContentsRef) -> Self {
         let len = Length::Definite(contents.len());
@@ -605,13 +605,14 @@ impl Der {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, IdRef};
+    /// use bsn1::{Der, IdRef, ContentsRef};
     ///
     /// let val = &"foo";
+    /// let contents = ContentsRef::from_bytes(val.as_bytes());
     /// let der = Der::utf8_string(val);
     ///
     /// assert_eq!(IdRef::utf8_string(), der.id());
-    /// assert_eq!(val.as_bytes(), der.contents());
+    /// assert_eq!(contents, der.contents());
     /// ```
     pub fn utf8_string(val: &str) -> Self {
         Self::new(
@@ -625,13 +626,14 @@ impl Der {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, IdRef};
+    /// use bsn1::{Der, IdRef, ContentsRef};
     ///
     /// let val = &[1, 2, 3];
+    /// let contents = ContentsRef::from_bytes(val);
     /// let der = Der::octet_string(val);
     ///
     /// assert_eq!(IdRef::octet_string(), der.id());
-    /// assert_eq!(val, der.contents());
+    /// assert_eq!(contents, der.contents());
     /// ```
     pub fn octet_string(val: &[u8]) -> Self {
         Self::new(IdRef::octet_string(), ContentsRef::from_bytes(val))
@@ -743,20 +745,21 @@ pub fn disassemble_der(der: Der) -> Buffer {
 ///
 /// ```
 /// # #[macro_use] extern crate bsn1;
-/// use bsn1::{contents, DerRef, IdRef};
+/// use bsn1::{contents, Contents, ContentsRef, DerRef, IdRef};
 /// use std::convert::TryFrom;
 ///
 /// let id = IdRef::sequence();
 /// let id1 = IdRef::octet_string();
-/// let contents1: [u8; 3] = [1, 2, 3];
+/// let contents1 = ContentsRef::from_bytes(&[1, 2, 3]);
 /// let id2 = IdRef::integer();
-/// let contents2 = contents::from_integer(10);
+/// let contents2 = Contents::from_integer(10);
+/// let contents2: &ContentsRef = contents2.as_ref();
 ///
 /// let der = constructed_der!(id, (id1.to_owned(), contents1), (id2, &contents2));
 ///
 /// assert_eq!(id, der.id());
 ///
-/// let bytes = der.contents();
+/// let bytes = der.contents().as_ref();
 /// let der1 = <&DerRef>::try_from(bytes).unwrap();
 /// assert_eq!(id1, der1.id());
 /// assert_eq!(contents1, der1.contents());
@@ -764,7 +767,7 @@ pub fn disassemble_der(der: Der) -> Buffer {
 /// let bytes = &bytes[der1.as_ref().len()..];
 /// let der2 = <&DerRef>::try_from(bytes).unwrap();
 /// assert_eq!(id2, der2.id());
-/// assert_eq!(contents2.as_ref(), der2.contents());
+/// assert_eq!(contents2, der2.contents());
 /// ```
 #[macro_export]
 macro_rules! constructed_der {
