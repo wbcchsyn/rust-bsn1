@@ -162,6 +162,39 @@ impl Length {
 
         buffer
     }
+
+    /// Returns the byte count of the octets that `self` is serialized.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Length;
+    ///
+    /// // The length of INDEFINITE is always 1.
+    /// assert_eq!(Length::Indefinite.len(), 1);
+    ///
+    /// // The length is 1 if the value is less than or equals to 127.
+    /// assert_eq!(Length::Definite(0).len(), 1);
+    /// assert_eq!(Length::Definite(127).len(), 1);
+    ///
+    /// // If the length is greater than or equals to 128,
+    /// // one octet is added to store the length.
+    /// assert_eq!(Length::Definite(128).len(), 2);
+    /// assert_eq!(Length::Definite(std::usize::MAX).len(), std::mem::size_of::<usize>() + 1);
+    /// ```
+    #[inline]
+    pub const fn len(self) -> usize {
+        match self {
+            Length::Indefinite => 1,
+            Length::Definite(val) => {
+                if val <= Length::MAX_SHORT as usize {
+                    1
+                } else {
+                    (8 * size_of::<usize>() - (val.leading_zeros() as usize) + 7) / 8 + 1
+                }
+            }
+        }
+    }
 }
 
 /// Tries to parse `bytes` starting with 'length' and returns `(Length, octets_after_length)` .
@@ -452,5 +485,30 @@ mod tests {
             let length = try_from(bytes.as_ref()).unwrap();
             assert_eq!((Length::Definite(len), empty), length);
         }
+    }
+
+    #[test]
+    fn len() {
+        // Indefinite
+        assert_eq!(Length::Indefinite.len(), 1);
+
+        // Definite 1 byte
+        for i in 0..128 {
+            assert_eq!(Length::Definite(i).len(), 1);
+        }
+
+        // Definite 2 byte
+        assert_eq!(Length::Definite(128).len(), 2);
+        assert_eq!(Length::Definite(255).len(), 2);
+
+        // Definite 3 byte
+        assert_eq!(Length::Definite(257).len(), 3);
+        assert_eq!(Length::Definite(65535).len(), 3);
+
+        // Max
+        assert_eq!(
+            Length::Definite(std::usize::MAX).len(),
+            std::mem::size_of::<usize>() + 1
+        );
     }
 }
