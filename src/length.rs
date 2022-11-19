@@ -56,6 +56,7 @@
 use crate::{Error, StackBuffer};
 use core::convert::TryFrom;
 use core::mem::size_of;
+use core::ops::Deref;
 
 /// `Length` represents ASN.1 length.
 ///
@@ -90,6 +91,30 @@ impl Length {
 }
 
 impl Length {
+    /// Parses `bytes` starting with length octets and tries to creates a new instance.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This method is same to `TryFrom::try_from`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Length;
+    ///
+    /// let mut bytes = vec![0x05]; // represents Definite(5).
+    /// let len = Length::from_bytes(&bytes).unwrap();
+    /// assert_eq!(Length::Definite(5), len);
+    ///
+    /// // Ignores the last extra octet 0x03.
+    /// bytes.push(0x03);
+    /// let len = Length::from_bytes(&bytes).unwrap();
+    /// assert_eq!(Length::Definite(5), len);
+    /// ```
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
+        try_from(bytes).map(|(length, _rest)| length)
+    }
+
     /// Serializes `length` .
     ///
     /// This function won't allocate heap memory.
@@ -107,10 +132,10 @@ impl Length {
     /// assert_eq!(length, deserialized);
     /// ```
     #[inline]
-    pub fn to_bytes(&self) -> impl AsRef<[u8]> {
+    pub fn to_bytes(self) -> impl Deref<Target = [u8]> {
         let mut buffer = StackBuffer::new();
 
-        match *self {
+        match self {
             Length::Indefinite => unsafe { buffer.push(Length::INDEFINITE) },
             Length::Definite(val) => {
                 if val <= Length::MAX_SHORT as usize {
@@ -118,7 +143,7 @@ impl Length {
                     unsafe { buffer.push(val as u8) };
                 } else {
                     // Long form
-                    let len = (8 * size_of::<usize>() - (val.leading_zeros() as usize) + 7) / 8 + 1;
+                    let len = self.len();
                     unsafe { buffer.set_len(len) };
                     buffer[0] = Length::LONG_FLAG + (len - 1) as u8;
 
@@ -136,6 +161,39 @@ impl Length {
         }
 
         buffer
+    }
+
+    /// Returns the byte count of the octets that `self` is serialized.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Length;
+    ///
+    /// // The length of INDEFINITE is always 1.
+    /// assert_eq!(Length::Indefinite.len(), 1);
+    ///
+    /// // The length is 1 if the value is less than or equals to 127.
+    /// assert_eq!(Length::Definite(0).len(), 1);
+    /// assert_eq!(Length::Definite(127).len(), 1);
+    ///
+    /// // If the length is greater than or equals to 128,
+    /// // one octet is added to store the length.
+    /// assert_eq!(Length::Definite(128).len(), 2);
+    /// assert_eq!(Length::Definite(std::usize::MAX).len(), std::mem::size_of::<usize>() + 1);
+    /// ```
+    #[inline]
+    pub const fn len(self) -> usize {
+        match self {
+            Length::Indefinite => 1,
+            Length::Definite(val) => {
+                if val <= Length::MAX_SHORT as usize {
+                    1
+                } else {
+                    (8 * size_of::<usize>() - (val.leading_zeros() as usize) + 7) / 8 + 1
+                }
+            }
+        }
     }
 }
 
@@ -427,5 +485,30 @@ mod tests {
             let length = try_from(bytes.as_ref()).unwrap();
             assert_eq!((Length::Definite(len), empty), length);
         }
+    }
+
+    #[test]
+    fn len() {
+        // Indefinite
+        assert_eq!(Length::Indefinite.len(), 1);
+
+        // Definite 1 byte
+        for i in 0..128 {
+            assert_eq!(Length::Definite(i).len(), 1);
+        }
+
+        // Definite 2 byte
+        assert_eq!(Length::Definite(128).len(), 2);
+        assert_eq!(Length::Definite(255).len(), 2);
+
+        // Definite 3 byte
+        assert_eq!(Length::Definite(257).len(), 3);
+        assert_eq!(Length::Definite(65535).len(), 3);
+
+        // Max
+        assert_eq!(
+            Length::Definite(std::usize::MAX).len(),
+            std::mem::size_of::<usize>() + 1
+        );
     }
 }

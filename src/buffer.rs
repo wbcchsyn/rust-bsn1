@@ -54,6 +54,7 @@
 use core::cmp::Ordering;
 use core::hash::{Hash, Hasher};
 use core::mem::{align_of, size_of, size_of_val};
+use core::ops::Deref;
 use core::ops::{Index, IndexMut};
 use std::alloc::{self, Layout};
 use std::borrow::Borrow;
@@ -424,6 +425,14 @@ impl StackBuffer {
 impl AsRef<[u8]> for StackBuffer {
     #[inline]
     fn as_ref(&self) -> &[u8] {
+        unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len()) }
+    }
+}
+
+impl Deref for StackBuffer {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
         unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len()) }
     }
 }
