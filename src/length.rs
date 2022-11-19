@@ -143,7 +143,7 @@ impl Length {
                     unsafe { buffer.push(val as u8) };
                 } else {
                     // Long form
-                    let len = (8 * size_of::<usize>() - (val.leading_zeros() as usize) + 7) / 8 + 1;
+                    let len = self.len();
                     unsafe { buffer.set_len(len) };
                     buffer[0] = Length::LONG_FLAG + (len - 1) as u8;
 
