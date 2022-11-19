@@ -300,10 +300,11 @@ impl DerRef {
     /// assert_eq!(contents as &[u8], der.contents());
     /// ```
     #[inline]
-    pub fn contents(&self) -> &[u8] {
+    pub fn contents(&self) -> &ContentsRef {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
-        unsafe { length::from_bytes_starts_with_unchecked(bytes).1 }
+        let bytes = unsafe { length::from_bytes_starts_with_unchecked(bytes).1 };
+        ContentsRef::from_bytes(bytes)
     }
 
     /// Provides a reference to the inner slice.
@@ -823,7 +824,7 @@ mod tests {
             let der = Der::new(id, contents);
             assert_eq!(id, der.id());
             assert_eq!(Length::Definite(bytes.len()), der.length());
-            assert_eq!(bytes, der.contents());
+            assert_eq!(contents, der.contents());
         }
     }
 
