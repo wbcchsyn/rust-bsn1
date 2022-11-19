@@ -51,8 +51,9 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{identifier, length, Buffer, Der, DerRef, Error, IdRef, Length};
+use crate::{identifier, length, Buffer, ContentsRef, Der, DerRef, Error, IdRef, Length};
 use core::convert::TryFrom;
+use core::mem;
 use core::ops::Deref;
 use num::PrimInt;
 use std::borrow::Borrow;
@@ -60,7 +61,7 @@ use std::borrow::Borrow;
 /// `BerRef` is a wrapper of `[u8]` and represents a BER.
 ///
 /// This struct is 'Unsized', and user usually uses a reference to the instance.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct BerRef {
     bytes: [u8],
 }
@@ -149,10 +150,11 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, IdRef};
+    /// use bsn1::{Ber, BerRef, ContentsRef, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let ber = Ber::new(id, &[]);
+    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let ber = Ber::new(id, contents);
     ///
     /// let bytes: &[u8] = ber.as_ref();
     /// let deserialized = unsafe { BerRef::from_bytes_unchecked(bytes) };
@@ -160,9 +162,7 @@ impl BerRef {
     /// ```
     #[inline]
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
-        let ptr = bytes as *const [u8];
-        let ptr = ptr as *const Self;
-        &*ptr
+        mem::transmute(bytes)
     }
 
     /// Provides a reference from `bytes` that starts with a BER octets.
@@ -187,10 +187,11 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, IdRef};
+    /// use bsn1::{Ber, BerRef, ContentsRef, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let ber = Ber::new(id, &[]);
+    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let ber = Ber::new(id, contents);
     /// let mut bytes = Vec::from(ber.as_ref() as &[u8]);
     /// bytes.extend(&[1, 2, 3]);
     ///
@@ -259,10 +260,10 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, IdRef};
+    /// use bsn1::{Ber, BerRef, ContentsRef, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = &[1, 2, 3];
+    /// let contents = ContentsRef::from_bytes(&[1, 2, 3]);
     ///
     /// // 'Ber' implements 'Deref<Target=BerRef>.'
     /// let ber = Ber::new(id, contents);
@@ -286,10 +287,10 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, IdRef, Length};
+    /// use bsn1::{Ber, BerRef, ContentsRef, IdRef, Length};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = &[1, 2, 3];
+    /// let contents = ContentsRef::from_bytes(&[1, 2, 3]);
     ///
     /// // 'Ber' implements 'Deref<Target=BerRef>.'
     /// let ber = Ber::new(id, contents);
@@ -307,20 +308,21 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, IdRef};
+    /// use bsn1::{Ber, BerRef, ContentsRef, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = &[1, 2, 3];
+    /// let contents = ContentsRef::from_bytes(&[1, 2, 3]);
     ///
     /// // 'Ber' implements 'Deref<Target=BerRef>.'
     /// let ber = Ber::new(id, contents);
     /// assert_eq!(contents, ber.contents());
     /// ```
     #[inline]
-    pub fn contents(&self) -> &[u8] {
+    pub fn contents(&self) -> &ContentsRef {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
-        unsafe { length::from_bytes_starts_with_unchecked(bytes).1 }
+        let contents = unsafe { length::from_bytes_starts_with_unchecked(bytes).1 };
+        ContentsRef::from_bytes(contents)
     }
 
     /// Provides a reference to the inner slice.
@@ -399,12 +401,13 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, IdRef};
+    /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let _ber = Ber::new(id, &[]);
+    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let _ber = Ber::new(id, contents);
     /// ```
-    pub fn new(id: &IdRef, contents: &[u8]) -> Self {
+    pub fn new(id: &IdRef, contents: &ContentsRef) -> Self {
         let der = Der::new(id, contents);
         Self::from(der)
     }
@@ -451,9 +454,10 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, IdRef};
+    /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
-    /// let ber0 = Ber::new(IdRef::octet_string(), &[]);
+    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let ber0 = Ber::new(IdRef::octet_string(), contents);
     /// let ber1 = unsafe { Ber::from_bytes_unchecked(ber0.as_ref()) };
     /// assert_eq!(ber0, ber1);
     /// ```
@@ -486,9 +490,10 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, IdRef};
+    /// use bsn1::{Ber, ContentsRef,IdRef};
     ///
-    /// let ber0 = Ber::new(IdRef::octet_string(), &[]);
+    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let ber0 = Ber::new(IdRef::octet_string(), contents);
     /// let mut bytes = Vec::from(ber0.as_ref() as &[u8]);
     /// bytes.extend(&[1, 2, 3]);
     ///
@@ -515,19 +520,20 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, IdRef};
+    /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
     /// let id = IdRef::sequence();
     ///
     /// // Build instance using function 'from_id_iterator()'.
-    /// let contents: &[Ber] = &[Ber::utf8_string("foo"), Ber::integer(29)];
+    /// let contents: &[Ber] = &[Ber::utf8_string("foo"), Ber::integer(29_i32)];
     /// let ber = Ber::from_id_iterator(id, contents.iter());
     ///
     /// // Build instance using function 'new()'.
     /// let contents: Vec<u8> = contents.iter()
     ///                         .map(|i| Vec::from(i.as_ref() as &[u8]))
     ///                         .flatten().collect();
-    /// let expected = Ber::new(id, &contents);
+    /// let contents = ContentsRef::from_bytes(&contents);
+    /// let expected = Ber::new(id, contents);
     ///
     /// assert_eq!(expected, ber);
     /// ```
@@ -545,13 +551,13 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{contents, Ber, IdRef};
+    /// use bsn1::{Ber, IdRef};
     ///
     /// let val = true;
     /// let ber = Ber::boolean(val);
     ///
     /// assert_eq!(IdRef::boolean(), ber.id());
-    /// assert_eq!(val, contents::to_bool_ber(ber.contents()).unwrap());
+    /// assert_eq!(val, ber.contents().to_bool_ber().unwrap());
     /// ```
     pub fn boolean(val: bool) -> Self {
         Self::from(Der::boolean(val))
@@ -564,13 +570,13 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{contents, Ber, IdRef};
+    /// use bsn1::{Ber, IdRef};
     ///
     /// let val = 39;
     /// let ber = Ber::integer(val);
     ///
     /// assert_eq!(IdRef::integer(), ber.id());
-    /// assert_eq!(val, contents::to_integer(ber.contents()).unwrap());
+    /// assert_eq!(val, ber.contents().to_integer().unwrap());
     /// ```
     pub fn integer<T>(val: T) -> Self
     where
@@ -590,7 +596,7 @@ impl Ber {
     /// let ber = Ber::utf8_string(val);
     ///
     /// assert_eq!(IdRef::utf8_string(), ber.id());
-    /// assert_eq!(val.as_bytes(), ber.contents());
+    /// assert_eq!(val.as_bytes(), ber.contents() as &[u8]);
     /// ```
     pub fn utf8_string(val: &str) -> Self {
         Self::from(Der::utf8_string(val))
@@ -607,7 +613,7 @@ impl Ber {
     /// let ber = Ber::octet_string(val);
     ///
     /// assert_eq!(IdRef::octet_string(), ber.id());
-    /// assert_eq!(val, ber.contents());
+    /// assert_eq!(val, ber.contents() as &[u8]);
     /// ```
     pub fn octet_string(val: &[u8]) -> Self {
         Self::from(Der::octet_string(val))
@@ -664,10 +670,10 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, IdRef};
+    /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents: &[u8] = &[0, 1, 2, 3, 4];
+    /// let contents = ContentsRef::from_bytes(&[0, 1, 2, 3, 4]);
     ///
     /// let ber = Ber::new(id, contents);
     /// let v = ber.clone().into_vec();
@@ -693,10 +699,11 @@ impl Ber {
 ///
 /// ```
 /// # #[macro_use] extern crate bsn1;
-/// use bsn1::{Ber, IdRef};
+/// use bsn1::{Ber, ContentsRef, IdRef};
 ///
 /// let id = IdRef::sequence();
-/// let expected = Ber::new(id, &[]);
+/// let contents = ContentsRef::from_bytes(&[]);
+/// let expected = Ber::new(id, contents);
 /// let ber = constructed_ber!(id);
 ///
 /// assert_eq!(expected, ber);
@@ -706,20 +713,20 @@ impl Ber {
 ///
 /// ```
 /// # #[macro_use] extern crate bsn1;
-/// use bsn1::{contents, Ber, BerRef, IdRef};
+/// use bsn1::{Ber, BerRef, Contents, ContentsRef, IdRef};
 /// use std::convert::TryFrom;
 ///
 /// let id = IdRef::sequence();
 /// let id1 = IdRef::octet_string();
-/// let contents1: [u8; 3] = [1, 2, 3];
+/// let contents1 = ContentsRef::from_bytes(&[1, 2, 3]);
 /// let id2 = IdRef::integer();
-/// let contents2 = contents::from_integer(10);
+/// let contents2 = Contents::from_integer(10_i32);
 ///
 /// let ber = constructed_ber!(id, (id1.to_owned(), contents1), (id2, &contents2));
 ///
 /// assert_eq!(id, ber.id());
 ///
-/// let bytes = ber.contents();
+/// let bytes = ber.contents() as &[u8];
 /// let ber1 = <&BerRef>::try_from(bytes).unwrap();
 /// assert_eq!(id1, ber1.id());
 /// assert_eq!(contents1, ber1.contents());
@@ -727,7 +734,7 @@ impl Ber {
 /// let bytes = &bytes[ber1.as_ref().len()..];
 /// let ber2 = <&BerRef>::try_from(bytes).unwrap();
 /// assert_eq!(id2, ber2.id());
-/// assert_eq!(contents2.as_ref(), ber2.contents());
+/// assert_eq!(&contents2 as &ContentsRef, ber2.contents());
 /// ```
 #[macro_export]
 macro_rules! constructed_ber {
@@ -750,7 +757,8 @@ mod tests {
         let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
         let extras: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
         for &bytes in byteses {
-            let ber = Ber::new(id, bytes);
+            let contents = ContentsRef::from_bytes(bytes);
+            let ber = Ber::new(id, contents);
 
             for &extra in extras {
                 let mut bytes = Vec::from(ber.as_ref() as &[u8]);
@@ -766,7 +774,7 @@ mod tests {
     fn from_bytes_starts_with_unchecked_infinite() {
         let eoc = {
             let id = IdRef::eoc();
-            let contents: &[u8] = &[];
+            let contents = ContentsRef::from_bytes(&[]);
             Ber::new(id, contents)
         };
 
@@ -774,6 +782,7 @@ mod tests {
             .map(|i| {
                 let id = IdRef::octet_string();
                 let contents: &[u8] = &[i];
+                let contents = ContentsRef::from_bytes(contents);
                 Ber::new(id, contents)
             })
             .collect();
@@ -800,7 +809,8 @@ mod tests {
 
         let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
         for &bytes in byteses {
-            let ber = Ber::new(id, bytes);
+            let contents = ContentsRef::from_bytes(bytes);
+            let ber = Ber::new(id, contents);
             let ber_ref = <&BerRef>::try_from(ber.as_ref() as &[u8]).unwrap();
             assert_eq!(ber_ref, ber.as_ref() as &BerRef);
         }
@@ -811,6 +821,7 @@ mod tests {
         let eoc = {
             let id = IdRef::eoc();
             let contents: &[u8] = &[];
+            let contents = ContentsRef::from_bytes(contents);
             Ber::new(id, contents)
         };
 
@@ -818,6 +829,7 @@ mod tests {
             .map(|i| {
                 let id = IdRef::octet_string();
                 let contents: &[u8] = &[i];
+                let contents = ContentsRef::from_bytes(contents);
                 Ber::new(id, contents)
             })
             .collect();
