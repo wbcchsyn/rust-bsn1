@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{contents, identifier, length, Buffer, Error, IdRef, Length};
+use crate::{identifier, length, Buffer, Contents, ContentsRef, Error, IdRef, Length};
 use core::convert::TryFrom;
 use core::ops::Deref;
 use num::PrimInt;
@@ -141,9 +141,10 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, DerRef, IdRef};
+    /// use bsn1::{ContentsRef, Der, DerRef, IdRef};
     ///
-    /// let der = Der::new(IdRef::octet_string(), &[]);
+    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let der = Der::new(IdRef::octet_string(), contents);
     /// let der_ref = unsafe { DerRef::from_bytes_unchecked(der.as_ref()) };
     /// assert_eq!(der.as_ref() as &DerRef, der_ref);
     /// ```
@@ -176,9 +177,10 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, DerRef, IdRef};
+    /// use bsn1::{ContentsRef, Der, DerRef, IdRef};
     ///
-    /// let der = Der::new(IdRef::octet_string(), &[]);
+    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let der = Der::new(IdRef::octet_string(), contents);
     /// let mut bytes = Vec::from(der.as_ref() as &[u8]);
     /// bytes.extend(&[1, 2, 3]);
     ///
@@ -237,10 +239,10 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, IdRef};
+    /// use bsn1::{ContentsRef, Der, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = &[1, 2, 3];
+    /// let contents = ContentsRef::from_bytes(&[1, 2, 3]);
     ///
     /// // 'DER' implements 'Deref<Target=DerRef>'
     /// let der = Der::new(id, contents);
@@ -267,10 +269,10 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, IdRef, Length};
+    /// use bsn1::{ContentsRef, Der, IdRef, Length};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = &[1, 2, 3];
+    /// let contents = ContentsRef::from_bytes(&[1, 2, 3]);
     ///
     /// // 'DER' implements 'Deref<Target=DerRef>'
     /// let der = Der::new(id, contents);
@@ -288,20 +290,21 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, IdRef};
+    /// use bsn1::{ContentsRef, Der, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = &[1, 2, 3];
+    /// let contents = ContentsRef::from_bytes(&[1, 2, 3]);
     ///
     /// // 'DER' implements 'Deref<Target=DerRef>'
     /// let der = Der::new(id, contents);
     /// assert_eq!(contents, der.contents());
     /// ```
     #[inline]
-    pub fn contents(&self) -> &[u8] {
+    pub fn contents(&self) -> &ContentsRef {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
-        unsafe { length::from_bytes_starts_with_unchecked(bytes).1 }
+        let bytes = unsafe { length::from_bytes_starts_with_unchecked(bytes).1 };
+        ContentsRef::from_bytes(bytes)
     }
 
     /// Provides a reference to the inner slice.
@@ -372,17 +375,17 @@ impl Der {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, IdRef};
+    /// use bsn1::{ContentsRef, Der, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents: &[u8] = &[10, 20, 30];
+    /// let contents = ContentsRef::from_bytes(&[10, 20, 30]);
     ///
     /// let der = Der::new(id, contents);
     ///
     /// assert_eq!(id, der.id());
     /// assert_eq!(contents, der.contents());
     /// ```
-    pub fn new(id: &IdRef, contents: &[u8]) -> Self {
+    pub fn new(id: &IdRef, contents: &ContentsRef) -> Self {
         let len = Length::Definite(contents.len());
         let len = len.to_bytes();
 
@@ -447,9 +450,10 @@ impl Der {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, IdRef};
+    /// use bsn1::{ContentsRef, Der, IdRef};
     ///
-    /// let der0 = Der::new(IdRef::octet_string(), &[]);
+    /// let contents0 = ContentsRef::from_bytes(&[]);
+    /// let der0 = Der::new(IdRef::octet_string(), contents0);
     /// let der1 = unsafe { Der::from_bytes_unchecked(der0.as_ref()) };
     /// assert_eq!(der0, der1);
     /// ```
@@ -482,9 +486,10 @@ impl Der {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, IdRef};
+    /// use bsn1::{ContentsRef, Der, IdRef};
     ///
-    /// let der0 = Der::new(IdRef::octet_string(), &[]);
+    /// let contents0 = ContentsRef::from_bytes(&[]);
+    /// let der0 = Der::new(IdRef::octet_string(), contents0);
     /// let mut bytes = Vec::from(der0.as_ref() as &[u8]);
     /// bytes.extend(&[1, 2, 3]);
     ///
@@ -518,19 +523,20 @@ impl Der {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, IdRef};
+    /// use bsn1::{ContentsRef, Der, IdRef};
     ///
     /// let id = IdRef::sequence();
     ///
     /// // Build instance using function 'from_id_iterator()'.
-    /// let contents: &[Der] = &[Der::utf8_string("foo"), Der::integer(29)];
+    /// let contents: &[Der] = &[Der::utf8_string("foo"), Der::integer(29_i32)];
     /// let der = Der::from_id_iterator(id, contents.iter());
     ///
     /// // Build instance using function 'new()'.
     /// let contents: Vec<u8> = contents.iter()
     ///                         .map(|i| Vec::from(i.as_ref() as &[u8]))
     ///                         .flatten().collect();
-    /// let expected = Der::new(id, &contents);
+    /// let contents = ContentsRef::from_bytes(&contents);
+    /// let expected = Der::new(id, contents);
     ///
     /// assert_eq!(expected, der);
     /// ```
@@ -569,7 +575,7 @@ impl Der {
     /// assert_eq!(val, contents::to_bool_der(der.contents()).unwrap());
     /// ```
     pub fn boolean(val: bool) -> Self {
-        Self::new(IdRef::boolean(), contents::from_bool(val).as_ref())
+        Self::new(IdRef::boolean(), &Contents::from_bool(val))
     }
 
     /// Returns a new instance representing integer.
@@ -591,7 +597,7 @@ impl Der {
     where
         T: PrimInt,
     {
-        Self::new(IdRef::integer(), contents::from_integer(val).as_ref())
+        Self::new(IdRef::integer(), &Contents::from_integer(val))
     }
 
     /// Returns a new instance representing utf8_string.
@@ -599,16 +605,20 @@ impl Der {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, IdRef};
+    /// use bsn1::{Der, IdRef, ContentsRef};
     ///
     /// let val = &"foo";
+    /// let contents = ContentsRef::from_bytes(val.as_bytes());
     /// let der = Der::utf8_string(val);
     ///
     /// assert_eq!(IdRef::utf8_string(), der.id());
-    /// assert_eq!(val.as_bytes(), der.contents());
+    /// assert_eq!(contents, der.contents());
     /// ```
     pub fn utf8_string(val: &str) -> Self {
-        Self::new(IdRef::utf8_string(), val.as_bytes())
+        Self::new(
+            IdRef::utf8_string(),
+            ContentsRef::from_bytes(val.as_bytes()),
+        )
     }
 
     /// Returns a new instance representing octet_string.
@@ -616,16 +626,17 @@ impl Der {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, IdRef};
+    /// use bsn1::{Der, IdRef, ContentsRef};
     ///
     /// let val = &[1, 2, 3];
+    /// let contents = ContentsRef::from_bytes(val);
     /// let der = Der::octet_string(val);
     ///
     /// assert_eq!(IdRef::octet_string(), der.id());
-    /// assert_eq!(val, der.contents());
+    /// assert_eq!(contents, der.contents());
     /// ```
     pub fn octet_string(val: &[u8]) -> Self {
-        Self::new(IdRef::octet_string(), val)
+        Self::new(IdRef::octet_string(), ContentsRef::from_bytes(val))
     }
 }
 
@@ -679,10 +690,10 @@ impl Der {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, IdRef};
+    /// use bsn1::{ContentsRef, Der, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents: &[u8] = &[0, 1, 2, 3, 4];
+    /// let contents = ContentsRef::from_bytes(&[0, 1, 2, 3, 4]);
     ///
     /// let der = Der::new(id, contents);
     /// let v = der.clone().into_vec();
@@ -720,10 +731,11 @@ pub fn disassemble_der(der: Der) -> Buffer {
 ///
 /// ```
 /// # #[macro_use] extern crate bsn1;
-/// use bsn1::{Der, IdRef};
+/// use bsn1::{ContentsRef, Der, IdRef};
 ///
 /// let id = IdRef::sequence();
-/// let expected = Der::new(id, &[]);
+/// let contents = ContentsRef::from_bytes(&[]);
+/// let expected = Der::new(id, contents);
 /// let der = constructed_der!(id);
 ///
 /// assert_eq!(expected, der);
@@ -733,20 +745,21 @@ pub fn disassemble_der(der: Der) -> Buffer {
 ///
 /// ```
 /// # #[macro_use] extern crate bsn1;
-/// use bsn1::{contents, DerRef, IdRef};
+/// use bsn1::{contents, Contents, ContentsRef, DerRef, IdRef};
 /// use std::convert::TryFrom;
 ///
 /// let id = IdRef::sequence();
 /// let id1 = IdRef::octet_string();
-/// let contents1: [u8; 3] = [1, 2, 3];
+/// let contents1 = ContentsRef::from_bytes(&[1, 2, 3]);
 /// let id2 = IdRef::integer();
-/// let contents2 = contents::from_integer(10);
+/// let contents2 = Contents::from_integer(10);
+/// let contents2: &ContentsRef = contents2.as_ref();
 ///
 /// let der = constructed_der!(id, (id1.to_owned(), contents1), (id2, &contents2));
 ///
 /// assert_eq!(id, der.id());
 ///
-/// let bytes = der.contents();
+/// let bytes = der.contents().as_ref();
 /// let der1 = <&DerRef>::try_from(bytes).unwrap();
 /// assert_eq!(id1, der1.id());
 /// assert_eq!(contents1, der1.contents());
@@ -754,7 +767,7 @@ pub fn disassemble_der(der: Der) -> Buffer {
 /// let bytes = &bytes[der1.as_ref().len()..];
 /// let der2 = <&DerRef>::try_from(bytes).unwrap();
 /// assert_eq!(id2, der2.id());
-/// assert_eq!(contents2.as_ref(), der2.contents());
+/// assert_eq!(contents2, der2.contents());
 /// ```
 #[macro_export]
 macro_rules! constructed_der {
@@ -810,10 +823,11 @@ mod tests {
 
         let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
         for &bytes in byteses {
-            let der = Der::new(id, bytes);
+            let contents = ContentsRef::from_bytes(bytes);
+            let der = Der::new(id, contents);
             assert_eq!(id, der.id());
             assert_eq!(Length::Definite(bytes.len()), der.length());
-            assert_eq!(bytes, der.contents());
+            assert_eq!(contents, der.contents());
         }
     }
 
@@ -825,7 +839,7 @@ mod tests {
         {
             let contents: &[&[u8]] = &[];
             let der = Der::from_id_iterator(id, contents.iter());
-            let expected = Der::new(id, &[]);
+            let expected = Der::new(id, ContentsRef::from_bytes(&[]));
             assert_eq!(expected, der);
         }
 
@@ -833,7 +847,7 @@ mod tests {
         {
             let contents: &[&[u8]] = &[&[]];
             let der = Der::from_id_iterator(id, contents.iter());
-            let expected = Der::new(id, &[]);
+            let expected = Der::new(id, ContentsRef::from_bytes(&[]));
             assert_eq!(expected, der);
         }
 
@@ -841,7 +855,7 @@ mod tests {
         {
             let contents: &[&[u8]] = &[&[1, 2, 3]];
             let der = Der::from_id_iterator(id, contents.iter());
-            let expected = Der::new(id, &[1, 2, 3]);
+            let expected = Der::new(id, ContentsRef::from_bytes(&[1, 2, 3]));
             assert_eq!(expected, der);
         }
 
@@ -850,7 +864,7 @@ mod tests {
         {
             let contents: &[&[u8]] = &[&[], &[]];
             let der = Der::from_id_iterator(id, contents.iter());
-            let expected = Der::new(id, &[]);
+            let expected = Der::new(id, ContentsRef::from_bytes(&[]));
             assert_eq!(expected, der);
         }
 
@@ -859,12 +873,12 @@ mod tests {
         {
             let contents: &[&[u8]] = &[&[], &[1, 2]];
             let der = Der::from_id_iterator(id, contents.iter());
-            let expected = Der::new(id, &[1, 2]);
+            let expected = Der::new(id, ContentsRef::from_bytes(&[1, 2]));
             assert_eq!(expected, der);
 
             let contents: &[&[u8]] = &[&[3], &[]];
             let der = Der::from_id_iterator(id, contents.iter());
-            let expected = Der::new(id, &[3]);
+            let expected = Der::new(id, ContentsRef::from_bytes(&[3]));
             assert_eq!(expected, der);
         }
 
@@ -873,7 +887,7 @@ mod tests {
         {
             let contents: &[&[u8]] = &[&[1, 2], &[3]];
             let der = Der::from_id_iterator(id, contents.iter());
-            let expected = Der::new(id, &[1, 2, 3]);
+            let expected = Der::new(id, ContentsRef::from_bytes(&[1, 2, 3]));
             assert_eq!(expected, der);
         }
     }
@@ -884,7 +898,8 @@ mod tests {
 
         let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
         for &bytes in byteses {
-            let der = Der::new(id, bytes);
+            let contents = ContentsRef::from_bytes(bytes);
+            let der = Der::new(id, contents);
             let der_ref = <&DerRef>::try_from(der.as_ref() as &[u8]).unwrap();
             assert_eq!(der_ref, der.as_ref() as &DerRef);
         }
@@ -897,7 +912,8 @@ mod tests {
         let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
         let extras: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
         for &bytes in byteses {
-            let der = Der::new(id, bytes);
+            let contents = ContentsRef::from_bytes(bytes);
+            let der = Der::new(id, contents);
 
             for &extra in extras {
                 let mut bytes = Vec::from(der.as_ref() as &[u8]);
