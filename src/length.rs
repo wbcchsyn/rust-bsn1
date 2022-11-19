@@ -132,10 +132,10 @@ impl Length {
     /// assert_eq!(length, deserialized);
     /// ```
     #[inline]
-    pub fn to_bytes(&self) -> impl Deref<Target = [u8]> {
+    pub fn to_bytes(self) -> impl Deref<Target = [u8]> {
         let mut buffer = StackBuffer::new();
 
-        match *self {
+        match self {
             Length::Indefinite => unsafe { buffer.push(Length::INDEFINITE) },
             Length::Definite(val) => {
                 if val <= Length::MAX_SHORT as usize {
