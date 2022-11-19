@@ -566,13 +566,13 @@ impl Der {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{contents, Der, IdRef};
+    /// use bsn1::{Der, IdRef};
     ///
     /// let val = true;
     /// let der = Der::boolean(val);
     ///
     /// assert_eq!(IdRef::boolean(), der.id());
-    /// assert_eq!(val, contents::to_bool_der(der.contents()).unwrap());
+    /// assert_eq!(val, der.contents().to_bool_der().unwrap());
     /// ```
     pub fn boolean(val: bool) -> Self {
         Self::new(IdRef::boolean(), &Contents::from_bool(val))
@@ -585,13 +585,13 @@ impl Der {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{contents, Der, IdRef};
+    /// use bsn1::{Der, IdRef};
     ///
     /// let val = 39;
     /// let der = Der::integer(val);
     ///
     /// assert_eq!(IdRef::integer(), der.id());
-    /// assert_eq!(val, contents::to_integer(der.contents()).unwrap());
+    /// assert_eq!(val, der.contents().to_integer().unwrap());
     /// ```
     pub fn integer<T>(val: T) -> Self
     where
@@ -745,7 +745,7 @@ pub fn disassemble_der(der: Der) -> Buffer {
 ///
 /// ```
 /// # #[macro_use] extern crate bsn1;
-/// use bsn1::{contents, Contents, ContentsRef, DerRef, IdRef};
+/// use bsn1::{Contents, ContentsRef, DerRef, IdRef};
 /// use std::convert::TryFrom;
 ///
 /// let id = IdRef::sequence();
