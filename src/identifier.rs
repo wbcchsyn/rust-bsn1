@@ -61,9 +61,14 @@ use num::traits::CheckedMul;
 use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
 
-/// `IdRef` is a wrapper of `[u8]` represents Identifier.
+/// `IdRef` is a wrapper of `[u8]` representing Identifier.
+///
+/// User can access to the inner slice via [`Deref`] or [`DerefMut`] implementation.
 ///
 /// This struct is `Unsized` , and user will usually use a reference to it.
+///
+/// [`Deref`]: #impl-Deref-for-IdRef
+/// [`DerefMut`]: #impl-DerefMut-for-IdRef
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct IdRef {
     bytes: [u8],
@@ -80,19 +85,19 @@ impl IdRef {
 impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
     type Error = Error;
 
-    /// Parses `bytes` starts with identifier and tries to build a new instance.
+    /// Parses `bytes` starting with identifier, and tries to provide a reference to `IdRef`.
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`IdRef::from_bytes`] .
+    /// This function is same to [`IdRef::from_bytes`].
     ///
     /// [`IdRef::from_bytes`]: #method.from_bytes
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
-    /// functions returns `Ok` .
+    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
+    /// functions returns `Ok`.
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         IdRef::from_bytes(bytes)
     }
@@ -101,19 +106,19 @@ impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
 impl<'a> TryFrom<&'a mut [u8]> for &'a mut IdRef {
     type Error = Error;
 
-    /// Parses `bytes` starts with identifier and tries to build a new instance.
+    /// Parses `bytes` starting with identifier, and tries to provide a reference to `IdRef`.
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`IdRef::from_bytes_mut`] .
+    /// This function is same to [`IdRef::from_bytes_mut`].
     ///
     /// [`IdRef::from_bytes`]: #method.from_bytes_mut
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
-    /// functions returns `Ok` .
+    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
+    /// functions returns `Ok`.
     fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
         IdRef::from_bytes_mut(bytes)
     }
@@ -139,28 +144,34 @@ pub unsafe fn shrink_to_fit_unchecked(bytes: &[u8]) -> &[u8] {
 }
 
 impl IdRef {
-    /// Parses `bytes` starts with identifier and tries to build a new instance.
+    /// Parses `bytes` starting with identifier and tries to provide a reference to `IdRef`.
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`<&IdRef>::try_from`] .
+    /// This function is same to [`<&IdRef>::try_from`].
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
-    /// functions returns `Ok` .
+    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
+    /// functions returns `Ok.
     ///
-    /// [`<&IdRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    /// [`<&IdRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20IdRef
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    /// use bsn1::IdRef;
     ///
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
-    /// let idref = IdRef::from_bytes(id.as_ref() as &[u8]).unwrap();
-    /// assert_eq!(id.as_ref() as &IdRef, idref);
+    /// // &[0] represents 'EOC'.
+    /// let bytes: &[u8] = &[0];
+    /// let idref = IdRef::from_bytes(bytes).unwrap();
+    /// assert_eq!(IdRef::eoc(), idref);
+    ///
+    /// // The result is not changed if (an) extra octet(s) is added at the end.
+    /// let bytes: &[u8] = &[0, 1, 2];
+    /// let idref = IdRef::from_bytes(bytes).unwrap();
+    /// assert_eq!(IdRef::eoc(), idref);
     /// ```
     pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
         let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
@@ -193,36 +204,53 @@ impl IdRef {
         Err(Error::UnTerminatedBytes)
     }
 
-    /// Parses `bytes` starts with identifier and tries to build a new instance.
+    /// Parses `bytes` starting with identifier, and tries to provide a reference to `IdRef`.
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`<&mut IdRef>::try_from`] .
+    /// This function is same to [`<&mut IdRef>::try_from`].
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
-    /// functions returns `Ok` .
+    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
+    /// functions returns `Ok`.
     ///
-    /// [`<&mut IdRef>::try_from`]: #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E
+    /// [`<&mut IdRef>::try_from`]:
+    ///   #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20IdRef
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    /// use bsn1::IdRef;
     ///
-    /// let mut id0 = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
-    /// let id1 = id0.clone();
-    /// let idref = IdRef::from_bytes_mut(&mut id0).unwrap();
-    /// assert_eq!(&id1 as &IdRef, idref);
+    /// let bytes: &mut [u8] = &mut [0];
+    ///
+    /// {
+    ///     let idref = IdRef::from_bytes_mut(bytes).unwrap();
+    ///
+    ///     // [0] represents 'EOC'.
+    ///     assert_eq!(IdRef::eoc(), idref);
+    ///
+    ///     // [1] represents 'BOOL'.
+    ///     idref[0] = 1;
+    ///     assert_eq!(IdRef::boolean(), idref);
+    /// }
+    ///
+    /// // 'bytes' is updcated as well.
+    /// assert_eq!(bytes[0], 1);
+    ///
+    /// // The result is not changed if (an) extra octet(s) is added at the end.
+    /// let bytes: &mut [u8] = &mut [0, 1, 2, 3];
+    /// let idref = IdRef::from_bytes_mut(bytes).unwrap();
+    /// assert_eq!(IdRef::eoc(), idref);
     /// ```
     pub fn from_bytes_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
         let ret = Self::from_bytes(bytes)?;
         let ptr = (ret as *const Self) as *mut Self;
         unsafe { Ok(&mut *ptr) }
     }
-    /// Provides a reference from `bytes` without any sanitize.
+    /// Provides a reference from `bytes` without any check.
     /// `bytes` must not include any extra octets.
     ///
     /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
@@ -232,25 +260,26 @@ impl IdRef {
     ///
     /// The behavior is undefined if the format of `bytes` is not right.
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20IdRef
     /// [`from_bytes`]: #method.from_bytes
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    /// use bsn1::IdRef;
     ///
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
-    /// let idref = unsafe { IdRef::from_bytes_unchecked(id.as_ref() as &[u8]) };
-    /// assert_eq!(id.as_ref() as &IdRef, idref);
+    /// // '&[0]' represents 'EOC'.
+    /// let bytes: &[u8] = &[0];
+    /// let idref = unsafe { IdRef::from_bytes_unchecked(bytes) };
+    /// assert_eq!(IdRef::eoc(), idref);
     /// ```
     #[inline]
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         mem::transmute(bytes)
     }
 
-    /// Provides a mutable reference from `bytes` without any sanitize.
-    /// `bytes` must not include any extra octets.
+    /// Provides a mutable reference from `bytes` without any check.
+    /// `bytes` must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
     /// implementation or [`from_bytes_mut`] instead.
@@ -259,24 +288,34 @@ impl IdRef {
     ///
     /// The behavior is undefined if the format of `bytes` is not right.
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20IdRef
     /// [`from_bytes_mut`]: #method.from_bytes_mut
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    /// use bsn1::IdRef;
     ///
-    /// let mut id0 = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
-    /// let mut id1 = id0.clone();
-    /// let idref = unsafe { IdRef::from_bytes_mut_unchecked(&mut id0 as &mut [u8]) };
-    /// assert_eq!(&id1 as &IdRef, idref);
+    /// let bytes: &mut [u8] = &mut [0];
+    ///
+    /// {
+    ///     // '&[0]' represents 'EOC'.
+    ///     let idref = unsafe { IdRef::from_bytes_mut_unchecked(bytes) };
+    ///     assert_eq!(IdRef::eoc(), idref);
+    ///
+    ///     // '&[1]' represents 'BOOL'.
+    ///     idref[0] = 1;
+    ///     assert_eq!(IdRef::boolean(), idref);
+    /// }
+    ///
+    /// // 'bytes' is updated as well.
+    /// assert_eq!(bytes[0], 1);
     /// ```
     #[inline]
     pub unsafe fn from_bytes_mut_unchecked(bytes: &mut [u8]) -> &mut Self {
         mem::transmute(bytes)
     }
-    /// Provides a reference to `IdRef` representing 'Universal EOC.'
+    /// Provides a reference to `IdRef` representing 'Universal EOC'.
     ///
     /// # Examples
     ///
@@ -295,7 +334,7 @@ impl IdRef {
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Provides a reference to `IdRef` representing 'Universal Boolean.'
+    /// Provides a reference to `IdRef` representing 'Universal Boolean'.
     ///
     /// # Examples
     ///
@@ -314,7 +353,7 @@ impl IdRef {
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Provides a reference to `IdRef` representing 'Universal Integer.'
+    /// Provides a reference to `IdRef` representing 'Universal Integer'.
     ///
     /// # Examples
     ///
@@ -409,7 +448,7 @@ impl IdRef {
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Provides a reference to `IdRef` representing 'Universal Null.'
+    /// Provides a reference to `IdRef` representing 'Universal Null'.
     ///
     /// # Examples
     ///
@@ -428,7 +467,7 @@ impl IdRef {
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Provides a reference to `IdRef` representing 'Universal Object Identifier.'
+    /// Provides a reference to `IdRef` representing 'Universal Object Identifier'.
     ///
     /// # Examples
     ///
@@ -467,7 +506,7 @@ impl IdRef {
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Provides a reference to `IdRef` representing 'Universal External.'
+    /// Provides a reference to `IdRef` representing 'Universal External'.
     ///
     /// # Examples
     ///
@@ -486,7 +525,7 @@ impl IdRef {
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Provides a reference to `IdRef` representing 'Universal Real.'
+    /// Provides a reference to `IdRef` representing 'Universal Real'.
     ///
     /// # Examples
     ///
@@ -505,7 +544,7 @@ impl IdRef {
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Provides a reference to `IdRef` representing 'Universal Enumerated.'
+    /// Provides a reference to `IdRef` representing 'Universal Enumerated'.
     ///
     /// # Examples
     ///
@@ -524,7 +563,7 @@ impl IdRef {
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Provides a reference to `IdRef` representing 'Universal Embedded PDV.'
+    /// Provides a reference to `IdRef` representing 'Universal Embedded PDV'.
     ///
     /// # Examples
     ///
@@ -581,7 +620,7 @@ impl IdRef {
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Provides a reference to `IdRef` representing 'Universal UTF8 OID.'
+    /// Provides a reference to `IdRef` representing 'Universal UTF8 OID'.
     ///
     /// # Examples
     ///
@@ -620,7 +659,7 @@ impl IdRef {
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
 
-    /// Provides a reference to `IdRef` representing 'Universal Set' or 'Universal Set of.'
+    /// Provides a reference to `IdRef` representing 'Universal Set' or 'Universal Set of'.
     ///
     /// # Examples
     ///
@@ -1199,25 +1238,16 @@ impl PartialEq<Id> for IdRef {
 }
 
 impl IdRef {
-    /// Returns `ClassTag` of `self` .
+    /// Returns `ClassTag` of `self`.
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, IdRef};
     ///
-    /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
-    /// assert_eq!(ClassTag::Universal, id.class());
-    ///
-    /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1_u8);
-    /// assert_eq!(ClassTag::Application, id.class());
-    ///
-    /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 2_u8);
-    /// assert_eq!(ClassTag::ContextSpecific, id.class());
-    ///
-    /// let id = Id::new(ClassTag::Private, PCTag::Constructed, 3_u8);
-    /// assert_eq!(ClassTag::Private, id.class());
+    /// // 'EOC' is defined as Universal class.
+    /// let eoc = IdRef::eoc();
+    /// assert_eq!(ClassTag::Universal, eoc.class());
     /// ```
     #[inline]
     pub fn class(&self) -> ClassTag {
@@ -1232,7 +1262,7 @@ impl IdRef {
         }
     }
 
-    /// Returns `true` if `self` is 'Universal' class, or `false` .
+    /// Returns `true` if `self` is 'Universal' class, or `false`.
     ///
     /// # Examples
     ///
@@ -1249,7 +1279,7 @@ impl IdRef {
         first & Self::CLASS_MASK == ClassTag::Universal as u8
     }
 
-    /// Returns `true` if `self` is 'Application' class, or `false` .
+    /// Returns `true` if `self` is 'Application' class, or `false`.
     ///
     /// # Examples
     ///
@@ -1266,7 +1296,7 @@ impl IdRef {
         first & Self::CLASS_MASK == ClassTag::Application as u8
     }
 
-    /// Returns `true` if `self` is 'Context Specific' class, or `false` .
+    /// Returns `true` if `self` is 'Context Specific' class, or `false`.
     ///
     /// # Examples
     ///
@@ -1283,7 +1313,7 @@ impl IdRef {
         first & Self::CLASS_MASK == ClassTag::ContextSpecific as u8
     }
 
-    /// Returns `true` if `self` is 'Private' class, or `false` .
+    /// Returns `true` if `self` is 'Private' class, or `false`.
     ///
     /// # Examples
     ///
@@ -1300,7 +1330,7 @@ impl IdRef {
         first & Self::CLASS_MASK == ClassTag::Private as u8
     }
 
-    /// Returns the Primitive/Constructed flag of `self` .
+    /// Returns the Primitive/Constructed flag of `self`.
     ///
     /// # Examples
     ///
@@ -1323,7 +1353,7 @@ impl IdRef {
         }
     }
 
-    /// Returns `true` if `self` is flagged as 'Primitive', or `false` .
+    /// Returns `true` if `self` is flagged as 'Primitive', or `false`.
     ///
     /// # Examples
     ///
@@ -1340,7 +1370,7 @@ impl IdRef {
         first & Self::PC_MASK == PCTag::Primitive as u8
     }
 
-    /// Returns `true` if `self` is flagged as 'Constructed', or `false` .
+    /// Returns `true` if `self` is flagged as 'Constructed', or `false`.
     ///
     /// # Examples
     ///
@@ -1364,11 +1394,12 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ClassTag, Id, PCTag};
+    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    /// use std::ops::Deref;
     ///
-    /// // 'Id' implements 'Deref<Target = IdRef>'.
     /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 49_u8);
-    /// assert_eq!(49, id.number().unwrap());
+    /// let idref: &IdRef = id.deref();
+    /// assert_eq!(49, idref.number().unwrap());
     /// ```
     pub fn number<T>(&self) -> Result<T, Error>
     where
@@ -1402,8 +1433,9 @@ impl IdRef {
     /// ```
     /// use bsn1::IdRef;
     ///
-    /// let id = IdRef::integer();
-    /// assert_eq!(&[0x02], id.as_bytes());
+    /// let bytes: &[u8] = &[3];
+    /// let idref = unsafe { IdRef::from_bytes_unchecked(bytes) };
+    /// assert_eq!(bytes, idref.as_bytes());
     /// ```
     #[inline]
     pub fn as_bytes(&self) -> &[u8] {
@@ -1415,32 +1447,41 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ClassTag, PCTag, Id, IdRef};
+    /// use bsn1::IdRef;
     ///
-    /// // 'Id' inplements 'Deref<Target = IdRef>'.
-    /// let mut id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
-    /// let bytes = id.as_bytes_mut();
-    /// bytes[0] |= 0x01;
-    /// assert_eq!(0x01, id.number().unwrap());
+    /// let bytes: &mut [u8] = &mut [5];
+    ///
+    /// {
+    ///     let idref = unsafe { IdRef::from_bytes_mut_unchecked(bytes) };
+    ///     assert_eq!(5, idref.as_bytes_mut()[0]);
+    ///
+    ///     idref.as_bytes_mut()[0] = 6;
+    ///     assert_eq!(6, idref.as_bytes_mut()[0]);
+    /// }
+    ///
+    /// // 'bytes' is updated as well.
+    /// assert_eq!(6, bytes[0]);
     /// ```
     #[inline]
     pub fn as_bytes_mut(&mut self) -> &mut [u8] {
         self
     }
 
-    /// Update the class tag of `self` .
+    /// Update the class tag of `self`.
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    /// use bsn1::{ClassTag, IdRef};
     ///
-    /// let mut id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
-    /// assert_eq!(ClassTag::Universal, id.class());
+    /// // Creates a '&mut IdRef' representing 'Universal Integer'.
+    /// let mut bytes = Vec::from(IdRef::integer().as_bytes());
+    /// let idref = IdRef::from_bytes_mut(&mut bytes).unwrap();
     ///
-    /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// id.set_class(ClassTag::Application);
-    /// assert_eq!(ClassTag::Application, id.class());
+    /// assert_eq!(ClassTag::Universal, idref.class());
+    ///
+    /// idref.set_class(ClassTag::Application);
+    /// assert_eq!(ClassTag::Application, idref.class());
     /// ```
     #[inline]
     pub fn set_class(&mut self, cls: ClassTag) {
@@ -1453,14 +1494,16 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ClassTag, Id, IdRef, PCTag};
+    /// use bsn1::{PCTag, IdRef};
     ///
-    /// let mut id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
-    /// assert_eq!(ClassTag::Universal, id.class());
+    /// // Creates a '&mut IdRef' representing 'Universal Integer'.
+    /// let mut bytes = Vec::from(IdRef::integer().as_bytes());
+    /// let idref = IdRef::from_bytes_mut(&mut bytes).unwrap();
     ///
-    /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// id.set_pc(PCTag::Constructed);
-    /// assert_eq!(PCTag::Constructed, id.pc());
+    /// assert_eq!(PCTag::Primitive, idref.pc());
+    ///
+    /// idref.set_pc(PCTag::Constructed);
+    /// assert_eq!(PCTag::Constructed, idref.pc());
     /// ```
     #[inline]
     pub fn set_pc(&mut self, pc: PCTag) {
@@ -1470,7 +1513,16 @@ impl IdRef {
     }
 }
 
-/// `Id` owns `IdRef` and represents Identifier.
+/// `Id` owns [`IdRef`] and represents 'Identifier'.
+///
+/// The structure of `Id` is similar to that of `Vec<u8>`.
+///
+/// User can access to the [`IdRef`] via the [`Deref`] and [`DerefMut`] implementations, and to
+/// the inner slice via [`IdRef`].
+///
+/// [`IdRef`]: struct.IdRef.html
+/// [`Deref`]: #impl-Deref-for-Id
+/// [`DerefMut`]: #impl-DerefMut-for-Id
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id {
     buffer: Buffer,
@@ -1479,17 +1531,17 @@ pub struct Id {
 impl TryFrom<&[u8]> for Id {
     type Error = Error;
 
-    /// Parses `bytes` starts with identifier octets and tries to build a new instance.
+    /// Parses `bytes` starting with identifier octets and tries to build a new instance.
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`from_bytes`] .
+    /// This function is same to [`from_bytes`].
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok` .
+    /// functions returns `Ok`.
     ///
     /// [`from_bytes`]: #method.from_bytes
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
@@ -1498,7 +1550,7 @@ impl TryFrom<&[u8]> for Id {
 }
 
 impl Id {
-    /// Creates a new instance from `class` , `pc` , and `number` .
+    /// Creates a new instance from `class` , `pc` , and `number`.
     ///
     /// type `T` should be the builtin primitive unsigned integer types
     /// (e.g., u8, u16, u32, u64, u128, usize.)
@@ -1506,16 +1558,17 @@ impl Id {
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
+    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// function accepts such a number.
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ClassTag, Id, PCTag};
+    /// use bsn1::{Id, IdRef};
     ///
-    /// // Creates 'Universal Integer'
-    /// let _id = Id::new(ClassTag::Universal, PCTag::Primitive, 2_u8);
+    /// let idref = IdRef::integer();
+    /// let id = Id::new(idref.class(), idref.pc(), idref.number::<u64>().unwrap());
+    /// assert_eq!(idref, &id);
     /// ```
     pub fn new<T>(class: ClassTag, pc: PCTag, number: T) -> Self
     where
@@ -1554,26 +1607,42 @@ impl Id {
         Self { buffer }
     }
 
-    /// Parses `bytes` starts with identifier and tries to build a new instance.
+    /// Parses `bytes` starting with identifier and tries to build a new instance.
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`TryFrom::try_from`] .
+    /// This function is same to [`TryFrom::try_from`].
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved so far, but this
-    /// functions returns `Ok` .
+    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
+    /// functions returns `Ok`.
     ///
-    /// [`TryFrom::try_from`]: #impl-TryFrom%3C%26%27_%20%5Bu8%5D%3E
+    /// [`TryFrom::try_from`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Id
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Id;
+    ///
+    /// // &[0] represents 'Univedrsal EOC'.
+    /// let bytes0: &[u8] = &[0];
+    /// let id0 = Id::from_bytes(bytes0).unwrap();
+    ///
+    /// // The extra octets at the end does not affect the result.
+    /// let bytes1: &[u8] = &[0, 1, 2];
+    /// let id1 = Id::from_bytes(bytes1).unwrap();
+    ///
+    /// assert_eq!(id0, id1);
+    /// ```
     #[inline]
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
         Self::try_from(bytes)
     }
 
-    /// Provides a reference from `bytes` without any sanitize.
-    /// `bytes` must not include any extra octets.
+    /// Provides a reference from `bytes` without any check.
+    /// `bytes` must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
     /// implementation or [`from_bytes`] instead.
@@ -1582,7 +1651,7 @@ impl Id {
     ///
     /// The behavior is undefined if the format of `bytes` is not right.
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27_%20%5Bu8%5D%3E
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Id
     /// [`from_bytes`]: #method.from_bytes
     #[inline]
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
