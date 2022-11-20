@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use core::mem::size_of;
+use crate::Length;
 use core::ops::Deref;
 use core::ops::{Index, IndexMut};
 
@@ -62,7 +62,7 @@ pub struct StackBuffer {
 }
 
 impl StackBuffer {
-    const CAPACITY: usize = size_of::<i128>() + 1;
+    const CAPACITY: usize = Length::Definite(std::usize::MAX).len();
 }
 
 impl StackBuffer {

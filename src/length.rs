@@ -55,7 +55,7 @@
 
 use crate::{Error, StackBuffer};
 use core::convert::TryFrom;
-use core::mem::size_of;
+use core::mem::{size_of, size_of_val};
 use core::ops::Deref;
 
 /// `Length` represents ASN.1 length.
@@ -143,18 +143,23 @@ impl Length {
                     unsafe { buffer.push(val as u8) };
                 } else {
                     // Long form
-                    let len = self.len();
-                    unsafe { buffer.set_len(len) };
-                    buffer[0] = Length::LONG_FLAG + (len - 1) as u8;
+                    const BITS_PER_BYTE: usize = 8;
+                    let bit_len =
+                        BITS_PER_BYTE * size_of::<usize>() - (val.leading_zeros() as usize);
+                    let byte_len = (bit_len + BITS_PER_BYTE - 1) / BITS_PER_BYTE;
+                    let flag = Length::LONG_FLAG + byte_len as u8;
 
                     unsafe {
+                        buffer.set_len(byte_len + size_of_val(&flag));
+                        buffer[0] = flag;
+
                         let val = val.to_be();
                         let src = &val as *const usize;
                         let src = src as *const u8;
-                        let src = src.add(size_of::<usize>() + 1 - len);
+                        let src = src.add(size_of::<usize>() - byte_len);
 
-                        let dst = buffer.as_mut_ptr().add(1);
-                        dst.copy_from_nonoverlapping(src, len - 1);
+                        let dst = buffer.as_mut_ptr().add(size_of_val(&flag));
+                        dst.copy_from_nonoverlapping(src, byte_len);
                     }
                 }
             }
@@ -190,7 +195,13 @@ impl Length {
                 if val <= Length::MAX_SHORT as usize {
                     1
                 } else {
-                    (8 * size_of::<usize>() - (val.leading_zeros() as usize) + 7) / 8 + 1
+                    const BITS_PER_BYTE: usize = 8;
+                    let bit_len =
+                        BITS_PER_BYTE * size_of::<usize>() - (val.leading_zeros() as usize);
+                    let byte_len = (bit_len + (BITS_PER_BYTE - 1)) / BITS_PER_BYTE;
+
+                    const FLAG_LEN: usize = 1;
+                    byte_len + FLAG_LEN
                 }
             }
         }
