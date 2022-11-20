@@ -73,6 +73,8 @@ impl IdRef {
     const LONG_FLAG: u8 = 0x1f;
     const MAX_SHORT: u8 = Self::LONG_FLAG - 1;
     const MORE_FLAG: u8 = 0x80;
+    const CLASS_MASK: u8 = 0xc0;
+    const PC_MASK: u8 = 0x20;
 }
 
 impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
@@ -1244,7 +1246,7 @@ impl IdRef {
     #[inline]
     pub fn is_universal(&self) -> bool {
         let first = self.bytes[0];
-        first & 0xc0 == ClassTag::Universal as u8
+        first & Self::CLASS_MASK == ClassTag::Universal as u8
     }
 
     /// Returns `true` if `self` is 'Application' class, or `false` .
@@ -1261,7 +1263,7 @@ impl IdRef {
     #[inline]
     pub fn is_application(&self) -> bool {
         let first = self.bytes[0];
-        first & 0xc0 == ClassTag::Application as u8
+        first & Self::CLASS_MASK == ClassTag::Application as u8
     }
 
     /// Returns `true` if `self` is 'Context Specific' class, or `false` .
@@ -1278,7 +1280,7 @@ impl IdRef {
     #[inline]
     pub fn is_context_specific(&self) -> bool {
         let first = self.bytes[0];
-        first & 0xc0 == ClassTag::ContextSpecific as u8
+        first & Self::CLASS_MASK == ClassTag::ContextSpecific as u8
     }
 
     /// Returns `true` if `self` is 'Private' class, or `false` .
@@ -1295,7 +1297,7 @@ impl IdRef {
     #[inline]
     pub fn is_private(&self) -> bool {
         let first = self.bytes[0];
-        first & 0xc0 == ClassTag::Private as u8
+        first & Self::CLASS_MASK == ClassTag::Private as u8
     }
 
     /// Returns the Primitive/Constructed flag of `self` .
@@ -1335,7 +1337,7 @@ impl IdRef {
     #[inline]
     pub fn is_primitive(&self) -> bool {
         let first = self.bytes[0];
-        first & 0x20 == PCTag::Primitive as u8
+        first & Self::PC_MASK == PCTag::Primitive as u8
     }
 
     /// Returns `true` if `self` is flagged as 'Constructed', or `false` .
@@ -1352,7 +1354,7 @@ impl IdRef {
     #[inline]
     pub fn is_constructed(&self) -> bool {
         let first = self.bytes[0];
-        first & 0x20 == PCTag::Constructed as u8
+        first & Self::PC_MASK == PCTag::Constructed as u8
     }
 
     /// Returns the number of `self` unless overflow.
@@ -1442,8 +1444,7 @@ impl IdRef {
     /// ```
     #[inline]
     pub fn set_class(&mut self, cls: ClassTag) {
-        const MASK: u8 = 0x3f;
-        self[0] &= MASK;
+        self[0] &= !Self::CLASS_MASK;
         self[0] |= cls as u8;
     }
 
@@ -1526,11 +1527,20 @@ impl Id {
             let o = class as u8 + pc as u8 + number.as_();
             unsafe { buffer.push(o) };
         } else {
-            let len = (mem::size_of::<T>() * 8 - number.leading_zeros() as usize + 6) / 7 + 1;
+            let long_flag = class as u8 + pc as u8 + IdRef::LONG_FLAG;
+
+            const BITS_PER_BYTES: usize = 8;
+            const BITS_BUT_MORE_FLAG_PER_BYTES: usize = 7;
+            let number_bits_len =
+                mem::size_of_val(&number) * BITS_PER_BYTES - number.leading_zeros() as usize;
+            let number_bytes_len =
+                (number_bits_len + BITS_BUT_MORE_FLAG_PER_BYTES - 1) / BITS_BUT_MORE_FLAG_PER_BYTES;
+
+            let len = number_bytes_len + mem::size_of_val(&long_flag);
             buffer.reserve(len);
             unsafe { buffer.set_len(len) };
 
-            buffer[0] = class as u8 + pc as u8 + IdRef::LONG_FLAG;
+            buffer[0] = long_flag;
 
             let mut num = number;
             for i in (1..len).rev() {
