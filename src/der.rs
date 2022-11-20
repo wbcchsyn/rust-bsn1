@@ -59,7 +59,7 @@ use std::borrow::Borrow;
 
 /// `DerRef` is a wrapper of `[u8]` and represents DER.
 ///
-/// This struct is 'Unsized', and user usually uses a reference to the instance.
+/// This struct is 'Unsized', and user will usually uses a reference.
 #[derive(Debug, PartialEq, Eq)]
 pub struct DerRef {
     bytes: [u8],
@@ -72,12 +72,16 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
+    /// This function is same to [`DerRef::from_bytes`].
+    ///
     /// # Warnings
     ///
     /// ASN.1 does not allow some universal identifier for DER, however, this function will accept
     /// such an identifier.
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
+    ///
+    /// [`DerRef::from_bytes`]: #method.from_bytes
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let id = <&IdRef>::try_from(bytes)?;
         let parsing = &bytes[id.as_ref().len()..];
@@ -99,11 +103,11 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
 }
 
 impl DerRef {
-    /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a reference to `DerRef` .
+    /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a reference to `DerRef`.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`<&DerRef>::try_from`] .
+    /// This function is same to [`<&DerRef>::try_from`].
     ///
     /// # Warnings
     ///
@@ -112,26 +116,40 @@ impl DerRef {
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
     ///
-    /// [`<&DerRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    /// [`<&DerRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20DerRef
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::DerRef;
+    ///
+    /// // Represents '8' as Integer.
+    /// let bytes0: &[u8] = &[0x02, 0x01, 0x08];
+    /// let der0 = DerRef::from_bytes(bytes0).unwrap();
+    ///
+    /// // The result is not changed even if extra octets are added to the end.
+    /// let bytes1: &[u8] = &[0x02, 0x01, 0x08, 0x00, 0xff];
+    /// let der1 = DerRef::from_bytes(bytes1).unwrap();
+    ///
+    /// assert_eq!(der0, der1);
+    /// ```
     #[inline]
     pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
         <&Self>::try_from(bytes)
     }
 
-    /// Provides a reference from `bytes` without any sanitization.
+    /// Provides a reference from `bytes` without any check.
     ///
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` are valid octets as an 'DER' or not, use [`TryFrom`]
+    /// If it is not sure whether `bytes` is valid octets as an 'DER' or not, use [`TryFrom`]
     /// implementation or [`from_bytes`].
     ///
-    /// The difference from [`from_bytes_starts_with_unchecked`] is that
-    /// [`from_bytes_starts_with_unchecked`] checks the 'LENGTH' octets and excludes extra
-    /// octet(s) at the end if any while this method does not check at all (i.e.
-    /// [`from_bytes_starts_with_unchecked`] allows extra octets at the end.)
+    /// If it is not sure whether `bytes` includes some extra octet(s) or not,
+    /// use [`from_bytes_starts_with_unchecked`]
     ///
     /// [`from_bytes_starts_with_unchecked`]: #method.from_bytes_starts_with_unchecked
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20DerRef
     /// [`from_bytes`]: #method.from_bytes
     ///
     /// # Safety
@@ -141,12 +159,10 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ContentsRef, Der, DerRef, IdRef};
+    /// use bsn1::DerRef;
     ///
-    /// let contents = ContentsRef::from_bytes(&[]);
-    /// let der = Der::new(IdRef::octet_string(), contents);
-    /// let der_ref = unsafe { DerRef::from_bytes_unchecked(der.as_ref()) };
-    /// assert_eq!(der.as_ref() as &DerRef, der_ref);
+    /// let bytes: &[u8] = &[0x02, 0x01, 0x08];  // Represents '8' as Integer.
+    /// let _der: &DerRef = unsafe { DerRef::from_bytes_unchecked(bytes) };
     /// ```
     #[inline]
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
@@ -162,30 +178,31 @@ impl DerRef {
     /// If it is not sure whether `bytes` starts with DER octets or not, use [`TryFrom`]
     /// implementation or [`from_bytes`] .
     ///
-    /// The difference from [`from_bytes_unchecked`] is that this function checks the 'LENGTH'
-    /// octets and excludes extra octet(s) at the end if any, while [`from_bytes_unchecked`]
-    /// does not check at all.
+    /// If it is sure that `bytes` does not include any extra octet(s) at the end and that
+    /// `bytes` is valid as a DER, use [`from_bytes_unchecked`].
     ///
     /// # Safety
     ///
     /// The behavior is undefined if `bytes` does not start with 'ASN.1 DER' octets.
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20DerRef
     /// [`from_bytes_unchecked`]: #method.from_bytes_unchecked
     /// [`from_bytes`]: #method.from_bytes
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ContentsRef, Der, DerRef, IdRef};
+    /// use bsn1::DerRef;
     ///
-    /// let contents = ContentsRef::from_bytes(&[]);
-    /// let der = Der::new(IdRef::octet_string(), contents);
-    /// let mut bytes = Vec::from(der.as_ref() as &[u8]);
-    /// bytes.extend(&[1, 2, 3]);
+    /// // Represents '8' as Integer.
+    /// let bytes0: &[u8] = &[0x02, 0x01, 0x08];
+    /// let der0 = unsafe { DerRef::from_bytes_starts_with_unchecked(bytes0) };
     ///
-    /// let der_ref = unsafe { DerRef::from_bytes_starts_with_unchecked(bytes.as_ref()) };
-    /// assert_eq!(der.as_ref() as &DerRef, der_ref);
+    /// // The result is not changed even if extra octets are added to the end.
+    /// let bytes1: &[u8] = &[0x02, 0x01, 0x08, 0x00, 0xff];
+    /// let der1 = unsafe { DerRef::from_bytes_starts_with_unchecked(bytes1) };
+    ///
+    /// assert_eq!(der0, der1);
     /// ```
     #[inline]
     pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> &Self {
@@ -234,19 +251,17 @@ impl PartialEq<Der> for DerRef {
 }
 
 impl DerRef {
-    /// Returns a reference to `IdRef` of `self` .
+    /// Returns a reference to the `IdRef` of `self` .
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ContentsRef, Der, IdRef};
+    /// use bsn1::{DerRef, IdRef};
     ///
-    /// let id = IdRef::octet_string();
-    /// let contents = ContentsRef::from_bytes(&[1, 2, 3]);
+    /// let bytes: &[u8] = &[0x02, 0x01, 0x04];  // Represents '4' as Integer.
+    /// let der = DerRef::from_bytes(bytes).unwrap();
     ///
-    /// // 'DER' implements 'Deref<Target=DerRef>'
-    /// let der = Der::new(id, contents);
-    /// assert_eq!(id, der.id());
+    /// assert_eq!(IdRef::integer(), der.id());
     /// ```
     #[inline]
     pub fn id(&self) -> &IdRef {
@@ -259,24 +274,22 @@ impl DerRef {
     /// Returns `Length` to represent the length of contents.
     ///
     /// Note that DER does not allow indefinite Length.
-    /// The return value must be `Length::Definite` .
+    /// The return value must be `Length::Definite`.
     ///
     /// # Warnings
     ///
-    /// `Length` stands for the length octets in DER.
-    /// The total bytes is greater than the value.
+    /// `Length` stands for the length octets in DER; i.e. the length of the contents.
+    /// The total byte count of the DER is greater than the value.
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ContentsRef, Der, IdRef, Length};
+    /// use bsn1::{DerRef, Length};
     ///
-    /// let id = IdRef::octet_string();
-    /// let contents = ContentsRef::from_bytes(&[1, 2, 3]);
+    /// let bytes: &[u8] = &[0x04, 0x02, 0x00, 0xff];  // Represents '[0x00, 0xff]' as Octet String
+    /// let der = DerRef::from_bytes(bytes).unwrap();
     ///
-    /// // 'DER' implements 'Deref<Target=DerRef>'
-    /// let der = Der::new(id, contents);
-    /// assert_eq!(Length::Definite(contents.len()), der.length());
+    /// assert_eq!(Length::Definite(2), der.length());
     /// ```
     #[inline]
     pub fn length(&self) -> Length {
@@ -290,13 +303,12 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ContentsRef, Der, IdRef};
+    /// use bsn1::{ContentsRef, DerRef};
     ///
-    /// let id = IdRef::octet_string();
-    /// let contents = ContentsRef::from_bytes(&[1, 2, 3]);
+    /// let bytes: &[u8] = &[0x04, 0x02, 0x00, 0xff];  // Represents '[0x00, 0xff]' as Octet String
+    /// let der = DerRef::from_bytes(bytes).unwrap();
+    /// let contents = ContentsRef::from_bytes(&bytes[2..]);
     ///
-    /// // 'DER' implements 'Deref<Target=DerRef>'
-    /// let der = Der::new(id, contents);
     /// assert_eq!(contents, der.contents());
     /// ```
     #[inline]
@@ -317,7 +329,7 @@ impl DerRef {
     /// // This octets represents `3` as integer.
     /// let bytes = vec![0x02, 0x01, 0x03];
     ///
-    /// let der = unsafe { DerRef::from_bytes_unchecked(&bytes) };
+    /// let der = DerRef::from_bytes(&bytes).unwrap();
     /// assert_eq!(&bytes, der.as_bytes());
     /// ```
     pub fn as_bytes(&self) -> &[u8] {
