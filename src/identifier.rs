@@ -129,7 +129,7 @@ pub unsafe fn shrink_to_fit_unchecked(bytes: &[u8]) -> &[u8] {
     } else {
         for i in 1.. {
             if bytes[i] & IdRef::MORE_FLAG != IdRef::MORE_FLAG {
-                return &bytes[..=1];
+                return &bytes[..=i];
             }
         }
         unreachable!();
