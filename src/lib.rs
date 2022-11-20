@@ -90,16 +90,22 @@
 mod ber;
 mod buffer;
 mod contents;
+mod contents_ref;
 mod der;
+mod id_tags;
 mod identifier;
 mod length;
+mod stack_buffer;
 
 pub use ber::{Ber, BerRef};
-use buffer::{Buffer, StackBuffer};
-pub use contents::{Contents, ContentsRef};
+use buffer::Buffer;
+pub use contents::Contents;
+pub use contents_ref::ContentsRef;
 pub use der::{Der, DerRef};
-pub use identifier::{ClassTag, Id, IdRef, PCTag};
+pub use id_tags::{ClassTag, PCTag};
+pub use identifier::{Id, IdRef};
 pub use length::Length;
+use stack_buffer::StackBuffer;
 use std::fmt;
 
 /// Errors for this crate.

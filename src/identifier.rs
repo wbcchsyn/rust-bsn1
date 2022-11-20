@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{Buffer, Error};
+use crate::{Buffer, ClassTag, Error, PCTag};
 use core::convert::TryFrom;
 use core::mem;
 use core::ops::BitOrAssign;
@@ -60,30 +60,6 @@ use num::cast::AsPrimitive;
 use num::traits::CheckedMul;
 use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
-
-/// `ClassTag` represents Tag class of identifier.
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum ClassTag {
-    /// Universal Tag
-    Universal = 0x00,
-    /// Application Tag
-    Application = 0x40,
-    /// Context-Specific Tag
-    ContextSpecific = 0x80,
-    /// Private Tag
-    Private = 0xc0,
-}
-
-/// `PCTag` represents Primitive/Constructed flag of identifier.
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum PCTag {
-    /// Primitive data type.
-    Primitive = 0x00,
-    /// Constructed data type.
-    Constructed = 0x20,
-}
 
 /// `IdRef` is a wrapper of `[u8]` represents Identifier.
 ///
