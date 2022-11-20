@@ -401,19 +401,18 @@ impl Der {
         let len = Length::Definite(contents.len());
         let len = len.to_bytes();
 
-        let total_len = id.as_ref().len() + len.as_ref().len() + contents.len();
+        let total_len = id.len() + len.len() + contents.len();
         let mut buffer = Buffer::with_capacity(total_len);
         unsafe { buffer.set_len(total_len) };
 
         unsafe {
             let ptr = buffer.as_mut_ptr();
-            let id = id.as_ref();
             ptr.copy_from_nonoverlapping(id.as_ptr(), id.len());
 
             let ptr = ptr.add(id.len());
-            ptr.copy_from_nonoverlapping(len.as_ref().as_ptr(), len.as_ref().len());
+            ptr.copy_from_nonoverlapping(len.as_ptr(), len.len());
 
-            let ptr = ptr.add(len.as_ref().len());
+            let ptr = ptr.add(len.len());
             ptr.copy_from_nonoverlapping(contents.as_ptr(), contents.len());
         }
 
@@ -561,7 +560,7 @@ impl Der {
             .clone()
             .fold(0, |acc, item| acc + item.as_ref().len());
         let length_bytes = Length::Definite(length).to_bytes();
-        let total_len = id.as_ref().len() + length_bytes.as_ref().len() + length;
+        let total_len = id.len() + length_bytes.len() + length;
 
         let mut buffer = Buffer::with_capacity(total_len);
         buffer.extend_from_slice(id.as_ref());
