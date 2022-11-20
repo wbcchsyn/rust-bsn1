@@ -51,30 +51,40 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-//! Public module `contents` is deprecated.
-//! This module is private and will be renamed as `contents` after current `contents` is deleted.
-
 use crate::{Buffer, ContentsRef};
 use core::borrow::{Borrow, BorrowMut};
 use core::mem;
 use core::ops::{Deref, DerefMut};
 use num::PrimInt;
 
-/// `Contents` owns `ContentsRef` and represents contents octets of ASN.1.
+/// `Contents` owns [`ContentsRef`] and represents contents octets of ASN.1.
+///
+/// The structure of `Contents` is similar to that of `Vec<u8>`.
+///
+/// User can access to the [`ContentsRef`] via the [`Deref`] and [`DerefMut`] implementations, and
+/// to the inner slice via the [`ContentsRef`].
+///
+/// [`ContentsRef`]: struct.ContentsRef.html
+/// [`Deref`]: #impl-Deref-for-Contents
+/// [`DerefMut`]: #impl-DerefMut-for-Contents
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Contents {
     buffer: Buffer,
 }
 
 impl From<&[u8]> for Contents {
-    /// This function is same to `Contents::from_bytes`.
+    /// This function is same to [`Contents::from_bytes`].
+    ///
+    /// [`Contents::from_bytes`]: #method.from_bytes
     fn from(bytes: &[u8]) -> Self {
         Self::from_bytes(bytes)
     }
 }
 
 impl From<u8> for Contents {
-    /// This function is same to `Contents::from_integer::<u8>`.
+    /// This function is same to [`Contents::from_integer::<u8>`].
+    ///
+    /// [`Contents::from_integer::<u8>`]: #method.from_integer
     fn from(val: u8) -> Self {
         if val == 0 {
             Self::from_zero()
@@ -85,7 +95,9 @@ impl From<u8> for Contents {
 }
 
 impl From<u16> for Contents {
-    /// This function is same to `Contents::from_integer::<u16>`.
+    /// This function is same to [`Contents::from_integer::<u16>`].
+    ///
+    /// [`Contents::from_integer::<u16>`]: #method.from_integer
     fn from(val: u16) -> Self {
         if val == 0 {
             Self::from_zero()
@@ -96,7 +108,9 @@ impl From<u16> for Contents {
 }
 
 impl From<u32> for Contents {
-    /// This function is same to `Contents::from_integer::<u32>`.
+    /// This function is same to [`Contents::from_integer::<u32>`].
+    ///
+    /// [`Contents::from_integer::<u16>`]: #method.from_integer
     fn from(val: u32) -> Self {
         if val == 0 {
             Self::from_zero()
@@ -107,7 +121,9 @@ impl From<u32> for Contents {
 }
 
 impl From<u64> for Contents {
-    /// This function is same to `Contents::from_integer::<u64>`.
+    /// This function is same to [`Contents::from_integer::<u64>`].
+    ///
+    /// [`Contents::from_integer::<u64>`]: #method.from_integer
     fn from(val: u64) -> Self {
         if val == 0 {
             Self::from_zero()
@@ -118,7 +134,9 @@ impl From<u64> for Contents {
 }
 
 impl From<u128> for Contents {
-    /// This function is same to `Contents::from_integer::<u128>`.
+    /// This function is same to [`Contents::from_integer::<u128>`].
+    ///
+    /// [`Contents::from_integer::<u128>`]: #method.from_integer
     fn from(val: u128) -> Self {
         if val == 0 {
             Self::from_zero()
@@ -129,7 +147,9 @@ impl From<u128> for Contents {
 }
 
 impl From<usize> for Contents {
-    /// This function is same to `Contents::from_integer::<usize>`.
+    /// This function is same to [`Contents::from_integer::<usize>`].
+    ///
+    /// [`Contents::from_integer::<usize>`]: #method.from_integer
     fn from(val: usize) -> Self {
         if val == 0 {
             Self::from_zero()
@@ -140,49 +160,63 @@ impl From<usize> for Contents {
 }
 
 impl From<i8> for Contents {
-    /// This function is same to `Contents::from_integer::<i8>`.
+    /// This function is same to [`Contents::from_integer::<i8>`].
+    ///
+    /// [`Contents::from_integer::<i8>`]: #method.from_integer
     fn from(val: i8) -> Self {
         Contents::from_integer(val)
     }
 }
 
 impl From<i16> for Contents {
-    /// This function is same to `Contents::from_integer::<i16>`.
+    /// This function is same to [`Contents::from_integer::<i16>`].
+    ///
+    /// [`Contents::from_integer::<i16>`]: #method.from_integer
     fn from(val: i16) -> Self {
         Contents::from_integer(val)
     }
 }
 
 impl From<i32> for Contents {
-    /// This function is same to `Contents::from_integer::<i32>`.
+    /// This function is same to [`Contents::from_integer::<i32>`].
+    ///
+    /// [`Contents::from_integer::<i32>`]: #method.from_integer
     fn from(val: i32) -> Self {
         Contents::from_integer(val)
     }
 }
 
 impl From<i64> for Contents {
-    /// This function is same to `Contents::from_integer::<i64>`.
+    /// This function is same to [`Contents::from_integer::<i64>`].
+    ///
+    /// [`Contents::from_integer::<i64>`]: #method.from_integer
     fn from(val: i64) -> Self {
         Contents::from_integer(val)
     }
 }
 
 impl From<i128> for Contents {
-    /// This function is same to `Contents::from_integer::<i128>`.
+    /// This function is same to [`Contents::from_integer::<i128>`].
+    ///
+    /// [`Contents::from_integer::<i128>`]: #method.from_integer
     fn from(val: i128) -> Self {
         Contents::from_integer(val)
     }
 }
 
 impl From<isize> for Contents {
-    /// This function is same to `Contents::from_integer::<isize>`.
+    /// This function is same to [`Contents::from_integer::<isize>`].
+    ///
+    /// [`Contents::from_integer::<isize>`]: #method.from_integer
     fn from(val: isize) -> Self {
         Contents::from_integer(val)
     }
 }
 
 impl From<bool> for Contents {
-    /// This function is same to `Contents::from_bool`.
+    /// This function is same to [`Contents::from_bool`].
+    ///
+    /// [`Contents::from_bool`]: #method.from_bool
     fn from(val: bool) -> Self {
         Contents::from_bool(val)
     }
@@ -191,7 +225,9 @@ impl From<bool> for Contents {
 impl Contents {
     /// Creates a new instance.
     ///
-    /// This function is same to `<Contents>::from`.
+    /// This function is same to [`<Contents>::from`].
+    ///
+    /// [`<Contents>::from`]: #impl-From%3C%26%5Bu8%5D%3E-for-Contents
     ///
     /// # Examples
     ///
@@ -211,8 +247,8 @@ impl Contents {
 
     /// Serializes boolean and creates a new instance.
     ///
-    /// The rule of bool is not common among BER, DER, and CER, however, the returned value is
-    /// valid for all of them.
+    /// The rule of bool is slightly different among BER, DER, and CER, however,
+    /// this function is valid for all of them.
     ///
     /// # Examples
     ///
@@ -244,7 +280,7 @@ impl Contents {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Contents, ContentsRef};
+    /// use bsn1::Contents;
     ///
     /// let contents = Contents::from_integer(35);
     /// assert_eq!(Ok(35), contents.to_integer());
