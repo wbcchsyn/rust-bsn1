@@ -338,14 +338,13 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, ContentsRef, IdRef};
+    /// use bsn1::BerRef;
     ///
-    /// let id = IdRef::octet_string();
-    /// let contents = ContentsRef::from_bytes(&[1, 2, 3]);
+    /// // Represents 'False' as a Boolean.
+    /// let bytes: &[u8] = &[0x01, 0x01, 0x00];
+    /// let ber = BerRef::from_bytes(bytes).unwrap();
     ///
-    /// // 'Ber' implements 'Deref<Target=BerRef>.'
-    /// let ber = Ber::new(id, contents);
-    /// assert_eq!(contents, ber.contents());
+    /// assert_eq!(ber.contents().to_bool_ber().unwrap(), false);
     /// ```
     #[inline]
     pub fn contents(&self) -> &ContentsRef {
@@ -374,6 +373,11 @@ impl BerRef {
 }
 
 /// `Ber` owns [`BerRef`] and represents a BER.
+///
+/// The structure of `Ber` is similar to that of `Vec<u8>`.
+///
+/// User can access to the [`BerRef`] via the [`Deref`] implementation, and to the inner slice via
+/// the [`BerRef`].
 ///
 /// [`BerRef`]: struct.BerRef.html
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -423,8 +427,8 @@ impl TryFrom<&[u8]> for Ber {
 impl Ber {
     /// Creates a new instance from `id` and `contents` with definite length.
     ///
-    /// Note that BER allows both definite and indefinite length, however, the length of the return
-    /// value is always definite.
+    /// Note that BER allows both definite and indefinite length, however, this function always
+    /// returns definite length value.
     /// (Generally speaking, the performance of definite length is better than that of indefinite
     /// length. Indefinite length is seldom used these days.)
     ///
@@ -435,7 +439,10 @@ impl Ber {
     ///
     /// let id = IdRef::octet_string();
     /// let contents = ContentsRef::from_bytes(&[]);
-    /// let _ber = Ber::new(id, contents);
+    /// let ber = Ber::new(id, contents);
+    ///
+    /// assert_eq!(ber.id(), id);
+    /// assert!(ber.contents().is_empty());
     /// ```
     pub fn new(id: &IdRef, contents: &ContentsRef) -> Self {
         let der = Der::new(id, contents);
@@ -450,30 +457,27 @@ impl Ber {
     ///
     /// # Warnings
     ///
-    /// ASN.1 does not allow some universal identifier for BER, however, this function accepts
-    /// such an identifier.
-    /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
-    /// constructed Octet String BER.
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
+    /// functions returns `Ok`.
     ///
-    /// [`TryFrom::try_from`]: #impl-TryFrom%3C%26%27_%20%5Bu8%5D%3E
+    /// [`TryFrom::try_from`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Ber
     #[inline]
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
         Self::try_from(bytes)
     }
 
-    /// Builds a new instance holding `bytes` without any sanitization.
+    /// Builds a new instance holding `bytes` without any check.
     ///
     /// `bytes` must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` are valid octets as an 'BER' or not, use [`TryFrom`]
     /// implementation or [`from_bytes`].
     ///
-    /// The difference from [`from_bytes_starts_with_unchecked`] is that
-    /// [`from_bytes_starts_with_unchecked`] checks the 'LENGTH' octets and excludes extra
-    /// octet(s) at the end if any while this method does not check at all (i.e.
-    /// [`from_bytes_starts_with_unchecked`] allows extra octets at the end.)
+    /// If it is not sure whether `bytes` includes any extra octet at the end or not, use
+    /// [`from_bytes_starts_with_unchecked`].
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27_%20%5Bu8%5D%3E
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Ber
     /// [`from_bytes`]: #method.from_bytes
     /// [`from_bytes_starts_with_unchecked`]: #method.from_bytes_starts_with_unchecked
     ///
@@ -505,15 +509,13 @@ impl Ber {
     /// If it is not sure whether `bytes` starts with DER octets or not, use [`TryFrom`]
     /// implementation or [`from_bytes`] .
     ///
-    /// The difference from [`from_bytes_unchecked`] is that this function checks the 'LENGTH'
-    /// octets and excludes extra octet(s) at the end if any, while [`from_bytes_unchecked`]
-    /// does not check at all.
+    /// If it is sure that `bytes` does not include any extra octet, use [`from_bytes_unchecked`].
     ///
     /// # Safety
     ///
     /// The behavior is undefined if `bytes` does not start with 'ASN.1 BER' octets.
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27_%20%5Bu8%5D%3E
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Ber
     /// [`from_bytes_unchecked`]: #method.from_bytes_unchecked
     /// [`from_bytes`]: #method.from_bytes
     ///
@@ -576,7 +578,7 @@ impl Ber {
         Self::from(der)
     }
 
-    /// Returns a new instance representing boolean.
+    /// Returns a new instance representing a boolean.
     ///
     /// # Examples
     ///
@@ -593,7 +595,7 @@ impl Ber {
         Self::from(Der::boolean(val))
     }
 
-    /// Returns a new instance representing integer.
+    /// Returns a new instance representing an integer.
     ///
     /// Type `T` should be the builtin primitive integer types (e.g., u8, u32, isize, i128, ...)
     ///
@@ -615,7 +617,7 @@ impl Ber {
         Self::from(Der::integer(val))
     }
 
-    /// Returns a new instance representing utf8_string.
+    /// Returns a new instance representing a utf8_string.
     ///
     /// # Examples
     ///
@@ -632,7 +634,7 @@ impl Ber {
         Self::from(Der::utf8_string(val))
     }
 
-    /// Returns a new instance representing octet_string.
+    /// Returns a new instance representing an octet_string.
     ///
     /// # Examples
     ///
@@ -715,7 +717,7 @@ impl Ber {
     }
 }
 
-/// Builds a `Ber` instance representing Constructed BER effectively.
+/// Builds a `Ber` instance representing a Constructed BER effectively.
 ///
 /// # Formula
 ///
