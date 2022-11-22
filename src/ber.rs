@@ -76,9 +76,19 @@ impl<'a> From<&'a DerRef> for &'a BerRef {
 impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
     type Error = Error;
 
-    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a reference to `BerRef` .
+    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a reference to `BerRef`.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`BerRef::from_bytes`].
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
+    /// functions returns `Ok`.
+    ///
+    /// [`BerRef::from_bytes`]: #method.from_bytes
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let id = <&IdRef>::try_from(bytes)?;
         let parsing = &bytes[id.as_ref().len()..];
@@ -122,43 +132,62 @@ impl BerRef {
     ///
     /// This function is same to [`<&BerRef>::try_from`] .
     ///
-    /// [`<&BerRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
+    /// functions returns `Ok`.
+    ///
+    /// [`<&BerRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20BerRef
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::BerRef;
+    ///
+    /// // Represents 'True' as Boolean.
+    /// let bytes: &[u8] = &[0x01, 0x01, 0xff];
+    /// let ber0 = BerRef::from_bytes(bytes).unwrap();
+    /// assert!(ber0.contents().to_bool_ber().unwrap());
+    ///
+    /// // The extra octets at the end does not affect to the result.
+    /// let bytes: &[u8] = &[0x01, 0x01, 0xff, 0x00];
+    /// let ber1 = BerRef::from_bytes(bytes).unwrap();
+    /// assert_eq!(ber0, ber1);
+    /// ```
     pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
         <&Self>::try_from(bytes)
     }
 
-    /// Provides a reference from `bytes` without any sanitization.
+    /// Provides a reference from `bytes` without any check.
     ///
     /// `bytes` must be BER octets and must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` are valid octets as an 'BER' or not, use [`TryFrom`]
     /// implementation or [`from_bytes`].
     ///
-    /// The difference from [`from_bytes_starts_with_unchecked`] is that
-    /// [`from_bytes_starts_with_unchecked`] checks the 'LENGTH' octets and excludes extra
-    /// octet(s) at the end if any while this method does not check at all (i.e.
-    /// [`from_bytes_starts_with_unchecked`] allows extra octets at the end.)
+    /// If it is sure not sure whether `bytes` includes any extra octet(s) or not, use
+    /// [`from_bytes_starts_with_unchecked`].
     ///
     /// # Safety
     ///
     /// The behavior is undefined if `bytes` is not formatted as a BER.
     ///
     /// [`from_bytes_starts_with_unchecked`]: #method.from_bytes_starts_with_unchecked
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20BerRef
     /// [`from_bytes`]: #method.from_bytes
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, ContentsRef, IdRef};
+    /// use bsn1::{BerRef, IdRef};
     ///
-    /// let id = IdRef::octet_string();
-    /// let contents = ContentsRef::from_bytes(&[]);
-    /// let ber = Ber::new(id, contents);
+    /// // Represents '0x34' as an Integer.
+    /// let bytes: &[u8] = &[0x02, 0x01, 0x34];
+    /// let ber = unsafe { BerRef::from_bytes_unchecked(bytes) };
     ///
-    /// let bytes: &[u8] = ber.as_ref();
-    /// let deserialized = unsafe { BerRef::from_bytes_unchecked(bytes) };
-    /// assert_eq!(ber.as_ref() as &BerRef, deserialized);
+    /// assert_eq!(ber.id(), IdRef::integer());
+    /// assert_eq!(ber.contents().to_integer::<i32>().unwrap(), 0x34);
     /// ```
     #[inline]
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
@@ -172,9 +201,8 @@ impl BerRef {
     /// If it is not sure whether `bytes` starts with BER octets or not, use [`TryFrom`]
     /// implementation or [`from_bytes`].
     ///
-    /// The difference from [`from_bytes_unchecked`] is that this function checks the 'LENGTH'
-    /// octets and excludes extra octet(s) at the end if any, while [`from_bytes_unchecked`]
-    /// does not check at all.
+    /// If it is sure that `bytes` does not include any extra octet at the end, use
+    /// [`from_bytes_unchecked`].
     ///
     /// # Safety
     ///
@@ -187,16 +215,18 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, ContentsRef, IdRef};
+    /// use bsn1::{BerRef, IdRef};
     ///
-    /// let id = IdRef::octet_string();
-    /// let contents = ContentsRef::from_bytes(&[]);
-    /// let ber = Ber::new(id, contents);
-    /// let mut bytes = Vec::from(ber.as_ref() as &[u8]);
-    /// bytes.extend(&[1, 2, 3]);
+    /// // Represents Integer '4'.
+    /// let bytes: &[u8] = &[0x02, 0x01, 0x04];
+    /// let ber0 = unsafe { BerRef::from_bytes_starts_with_unchecked(bytes) };
+    /// assert_eq!(ber0.id(), IdRef::integer());
+    /// assert_eq!(ber0.contents().to_integer::<u8>().unwrap(), 4);
     ///
-    /// let deserialized = unsafe { BerRef::from_bytes_starts_with_unchecked(bytes.as_ref()) };
-    /// assert_eq!(ber.as_ref() as &BerRef, deserialized);
+    /// // The extra octets at the end does not affect the result.
+    /// let bytes: &[u8] = &[0x02, 0x01, 0x04, 0x00, 0xff];
+    /// let ber1 = unsafe { BerRef::from_bytes_starts_with_unchecked(bytes) };
+    /// assert_eq!(ber0, ber1);
     /// ```
     #[inline]
     pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> &Self {
@@ -255,19 +285,20 @@ impl PartialEq<Ber> for BerRef {
 }
 
 impl BerRef {
-    /// Provides a reference to `IdRef` of `self` .
+    /// Provides a reference to [`IdRef`] of `self` .
+    ///
+    /// [`IdRef`]: struct.IdRef.html
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, ContentsRef, IdRef};
+    /// use bsn1::{BerRef, IdRef};
     ///
-    /// let id = IdRef::octet_string();
-    /// let contents = ContentsRef::from_bytes(&[1, 2, 3]);
+    /// // Represents '3' as an Integer.
+    /// let bytes: &[u8] = &[0x02, 0x01, 0x03];
+    /// let ber = BerRef::from_bytes(bytes).unwrap();
     ///
-    /// // 'Ber' implements 'Deref<Target=BerRef>.'
-    /// let ber = Ber::new(id, contents);
-    /// assert_eq!(id, ber.id());
+    /// assert_eq!(ber.id(), IdRef::integer());
     /// ```
     #[inline]
     pub fn id(&self) -> &IdRef {
@@ -277,24 +308,23 @@ impl BerRef {
         }
     }
 
-    /// Returns `Length` of `self` .
+    /// Returns `Length` of `self`.
     ///
     /// # Warnings
     ///
     /// `Length` stands for 'the length octets of the contents' in BER.
-    /// The total bytes is greater than the value.
+    /// The total byte count is greater than the value.
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, ContentsRef, IdRef, Length};
+    /// use bsn1::{BerRef, Length};
     ///
-    /// let id = IdRef::octet_string();
-    /// let contents = ContentsRef::from_bytes(&[1, 2, 3]);
+    /// // Represents 'False' as a Boolean.
+    /// let bytes: &[u8] = &[0x01, 0x01, 0x00];
+    /// let ber = BerRef::from_bytes(bytes).unwrap();
     ///
-    /// // 'Ber' implements 'Deref<Target=BerRef>.'
-    /// let ber = Ber::new(id, contents);
-    /// assert_eq!(Length::Definite(contents.len()), ber.length());
+    /// assert_eq!(ber.length(), Length::Definite(1));
     /// ```
     #[inline]
     pub fn length(&self) -> Length {
@@ -332,7 +362,7 @@ impl BerRef {
     /// ```
     /// use bsn1::BerRef;
     ///
-    /// // This octets represents '3' as integer.
+    /// // This octets represents '3' as an integer.
     /// let bytes = vec![0x02, 0x01, 0x03];
     ///
     /// let ber = unsafe { BerRef::from_bytes_unchecked(&bytes) };
