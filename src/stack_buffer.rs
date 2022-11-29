@@ -31,8 +31,8 @@
 // limitations under the License.
 
 use crate::Length;
-use core::ops::Deref;
-use core::ops::{Index, IndexMut};
+use std::ops::Deref;
+use std::ops::{Index, IndexMut};
 
 #[derive(Clone, Copy)]
 pub struct StackBuffer {
@@ -56,7 +56,7 @@ impl StackBuffer {
 impl AsRef<[u8]> for StackBuffer {
     #[inline]
     fn as_ref(&self) -> &[u8] {
-        unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len()) }
+        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
     }
 }
 
@@ -64,7 +64,7 @@ impl Deref for StackBuffer {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {
-        unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len()) }
+        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
     }
 }
 

@@ -31,10 +31,10 @@
 // limitations under the License.
 
 use crate::{identifier, length, Buffer, Contents, ContentsRef, Error, IdRef, Length};
-use core::convert::TryFrom;
-use core::ops::Deref;
 use num::PrimInt;
 use std::borrow::Borrow;
+use std::convert::TryFrom;
+use std::ops::Deref;
 
 /// `DerRef` is a wrapper of `[u8]` and represents DER.
 ///

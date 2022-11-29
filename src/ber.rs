@@ -31,11 +31,11 @@
 // limitations under the License.
 
 use crate::{identifier, length, Buffer, ContentsRef, Der, DerRef, Error, IdRef, Length};
-use core::convert::TryFrom;
-use core::mem;
-use core::ops::Deref;
 use num::PrimInt;
 use std::borrow::Borrow;
+use std::convert::TryFrom;
+use std::mem;
+use std::ops::Deref;
 
 /// `BerRef` is a wrapper of `[u8]` and represents a BER.
 ///

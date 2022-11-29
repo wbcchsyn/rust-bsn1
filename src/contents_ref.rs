@@ -31,12 +31,12 @@
 // limitations under the License.
 
 use crate::{Contents, Error};
-use core::borrow::{Borrow, BorrowMut};
-use core::mem;
-use core::ops::{Deref, DerefMut};
 use num::PrimInt;
 use std::borrow::ToOwned;
+use std::borrow::{Borrow, BorrowMut};
+use std::mem;
 use std::mem::MaybeUninit;
+use std::ops::{Deref, DerefMut};
 
 /// `ContentsRef` is a wrapper of [u8] and represents 'ASN.1 contents'.
 ///

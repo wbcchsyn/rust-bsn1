@@ -33,9 +33,9 @@
 //! functions and enum about 'Length' octet of 'ASN.1.'
 
 use crate::{Error, StackBuffer};
-use core::convert::TryFrom;
-use core::mem::{size_of, size_of_val};
-use core::ops::Deref;
+use std::convert::TryFrom;
+use std::mem::{size_of, size_of_val};
+use std::ops::Deref;
 
 /// `Length` represents ASN.1 length.
 ///

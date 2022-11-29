@@ -30,13 +30,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use core::cmp::Ordering;
-use core::hash::{Hash, Hasher};
-use core::mem::{align_of, size_of, size_of_val};
-use core::ops::{Index, IndexMut};
 use std::alloc::{self, Layout};
 use std::borrow::Borrow;
+use std::cmp::Ordering;
 use std::fmt;
+use std::hash::{Hash, Hasher};
+use std::mem::{align_of, size_of, size_of_val};
+use std::ops::{Index, IndexMut};
 
 #[repr(C)]
 pub struct Buffer {
@@ -80,7 +80,7 @@ impl Buffer {
     pub const fn new() -> Self {
         Self {
             len_: 0,
-            data_: core::ptr::null_mut(),
+            data_: std::ptr::null_mut(),
             cap_: 0,
         }
     }
@@ -309,7 +309,7 @@ impl Buffer {
 #[cfg(test)]
 mod buffer_tests {
     use super::*;
-    use core::iter::FromIterator;
+    use std::iter::FromIterator;
 
     #[test]
     fn new() {

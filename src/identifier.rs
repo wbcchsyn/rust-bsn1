@@ -31,14 +31,14 @@
 // limitations under the License.
 
 use crate::{Buffer, ClassTag, Error, PCTag};
-use core::convert::TryFrom;
-use core::mem;
-use core::ops::BitOrAssign;
-use core::ops::{Deref, DerefMut};
 use num::cast::AsPrimitive;
 use num::traits::CheckedMul;
 use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
+use std::convert::TryFrom;
+use std::mem;
+use std::ops::BitOrAssign;
+use std::ops::{Deref, DerefMut};
 
 /// `IdRef` is a wrapper of `[u8]` representing Identifier.
 ///
