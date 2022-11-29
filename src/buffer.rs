@@ -36,7 +36,7 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::mem::{align_of, size_of, size_of_val};
-use std::ops::{Deref, Index, IndexMut};
+use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 #[repr(C)]
 pub struct Buffer {
@@ -137,6 +137,12 @@ impl Deref for Buffer {
 
     fn deref(&self) -> &Self::Target {
         unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
+    }
+}
+
+impl DerefMut for Buffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
     }
 }
 
