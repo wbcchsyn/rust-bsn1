@@ -66,6 +66,9 @@ pub struct Buffer {
     cap_: usize,
 }
 
+unsafe impl Send for Buffer {}
+unsafe impl Sync for Buffer {}
+
 impl Drop for Buffer {
     #[inline]
     fn drop(&mut self) {
