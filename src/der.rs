@@ -112,7 +112,6 @@ impl DerRef {
     ///
     /// assert_eq!(der0, der1);
     /// ```
-    #[inline]
     pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
         <&Self>::try_from(bytes)
     }
@@ -143,7 +142,6 @@ impl DerRef {
     /// let bytes: &[u8] = &[0x02, 0x01, 0x08];  // Represents '8' as Integer.
     /// let _der: &DerRef = unsafe { DerRef::from_bytes_unchecked(bytes) };
     /// ```
-    #[inline]
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         let ptr = bytes as *const [u8];
         let ptr = ptr as *const Self;
@@ -183,7 +181,6 @@ impl DerRef {
     ///
     /// assert_eq!(der0, der1);
     /// ```
-    #[inline]
     pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> &Self {
         let id = identifier::shrink_to_fit_unchecked(bytes);
         let parsing = &bytes[id.len()..];
@@ -200,14 +197,12 @@ impl DerRef {
 }
 
 impl AsRef<[u8]> for DerRef {
-    #[inline]
     fn as_ref(&self) -> &[u8] {
         &self.bytes
     }
 }
 
 impl Borrow<[u8]> for DerRef {
-    #[inline]
     fn borrow(&self) -> &[u8] {
         &self.bytes
     }
@@ -223,7 +218,6 @@ impl ToOwned for DerRef {
 }
 
 impl PartialEq<Der> for DerRef {
-    #[inline]
     fn eq(&self, other: &Der) -> bool {
         self == other.as_ref() as &DerRef
     }
@@ -242,7 +236,6 @@ impl DerRef {
     ///
     /// assert_eq!(IdRef::integer(), der.id());
     /// ```
-    #[inline]
     pub fn id(&self) -> &IdRef {
         unsafe {
             let bytes = identifier::shrink_to_fit_unchecked(&self.bytes);
@@ -270,7 +263,6 @@ impl DerRef {
     ///
     /// assert_eq!(Length::Definite(2), der.length());
     /// ```
-    #[inline]
     pub fn length(&self) -> Length {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
@@ -290,7 +282,6 @@ impl DerRef {
     ///
     /// assert_eq!(contents, der.contents());
     /// ```
-    #[inline]
     pub fn contents(&self) -> &ContentsRef {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
@@ -433,7 +424,6 @@ impl Der {
     ///
     /// assert_eq!(der0, der1);
     /// ```
-    #[inline]
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
         Self::try_from(bytes)
     }
@@ -465,7 +455,6 @@ impl Der {
     /// let der = unsafe { Der::from_bytes_unchecked(bytes) };
     /// assert_eq!(bytes, der.as_bytes());
     /// ```
-    #[inline]
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
         Self {
             buffer: Buffer::from(bytes),
@@ -503,7 +492,6 @@ impl Der {
     ///
     /// assert_eq!(der0, der1);
     /// ```
-    #[inline]
     pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> Self {
         let id = identifier::shrink_to_fit_unchecked(bytes);
         let parsing = &bytes[id.len()..];
@@ -647,28 +635,24 @@ impl Der {
 }
 
 impl AsRef<[u8]> for Der {
-    #[inline]
     fn as_ref(&self) -> &[u8] {
         self.buffer.as_ref()
     }
 }
 
 impl AsRef<DerRef> for Der {
-    #[inline]
     fn as_ref(&self) -> &DerRef {
         self.deref()
     }
 }
 
 impl Borrow<[u8]> for Der {
-    #[inline]
     fn borrow(&self) -> &[u8] {
         self.buffer.borrow()
     }
 }
 
 impl Borrow<DerRef> for Der {
-    #[inline]
     fn borrow(&self) -> &DerRef {
         self.deref()
     }
@@ -677,14 +661,12 @@ impl Borrow<DerRef> for Der {
 impl Deref for Der {
     type Target = DerRef;
 
-    #[inline]
     fn deref(&self) -> &Self::Target {
         unsafe { DerRef::from_bytes_unchecked(self.buffer.as_ref()) }
     }
 }
 
 impl PartialEq<DerRef> for Der {
-    #[inline]
     fn eq(&self, other: &DerRef) -> bool {
         self.as_ref() as &DerRef == other
     }
@@ -708,7 +690,6 @@ impl Der {
     }
 }
 
-#[inline]
 pub fn disassemble_der(der: Der) -> Buffer {
     der.buffer
 }

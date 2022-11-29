@@ -49,7 +49,6 @@ unsafe impl Send for Buffer {}
 unsafe impl Sync for Buffer {}
 
 impl Drop for Buffer {
-    #[inline]
     fn drop(&mut self) {
         if self.is_stack() {
             return;
@@ -109,7 +108,6 @@ impl Buffer {
 }
 
 impl AsRef<[u8]> for Buffer {
-    #[inline]
     fn as_ref(&self) -> &[u8] {
         unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
     }
