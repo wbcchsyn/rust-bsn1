@@ -39,7 +39,7 @@ use std::borrow::Borrow;
 /// `DerRef` is a wrapper of `[u8]` and represents DER.
 ///
 /// This struct is 'Unsized', and user will usually uses a reference.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct DerRef {
     bytes: [u8],
 }
@@ -325,7 +325,7 @@ impl DerRef {
 ///
 /// [`DerRef`]: struct.DerRef.html
 /// [`Deref`]: #impl-Deref-for-Der
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Der {
     buffer: Buffer,
 }

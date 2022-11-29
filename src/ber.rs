@@ -359,7 +359,7 @@ impl BerRef {
 /// the [`BerRef`].
 ///
 /// [`BerRef`]: struct.BerRef.html
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Ber {
     buffer: Buffer,
 }
