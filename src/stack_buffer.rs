@@ -31,7 +31,7 @@
 // limitations under the License.
 
 use crate::Length;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::ops::{Index, IndexMut};
 
 #[derive(Clone, Copy)]
@@ -64,6 +64,12 @@ impl Deref for StackBuffer {
 
     fn deref(&self) -> &Self::Target {
         unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
+    }
+}
+
+impl DerefMut for StackBuffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
     }
 }
 
