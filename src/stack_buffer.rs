@@ -53,12 +53,6 @@ impl StackBuffer {
     }
 }
 
-impl AsRef<[u8]> for StackBuffer {
-    fn as_ref(&self) -> &[u8] {
-        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
-    }
-}
-
 impl Deref for StackBuffer {
     type Target = [u8];
 
