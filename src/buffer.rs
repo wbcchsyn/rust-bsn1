@@ -36,7 +36,7 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::mem::{align_of, size_of, size_of_val};
-use std::ops::{Index, IndexMut};
+use std::ops::{Deref, Index, IndexMut};
 
 #[repr(C)]
 pub struct Buffer {
@@ -129,6 +129,14 @@ impl fmt::Debug for Buffer {
 impl Borrow<[u8]> for Buffer {
     fn borrow(&self) -> &[u8] {
         self.as_ref()
+    }
+}
+
+impl Deref for Buffer {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
     }
 }
 
