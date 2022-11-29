@@ -76,9 +76,13 @@ pub enum Length {
 impl TryFrom<&[u8]> for Length {
     type Error = Error;
 
-    /// Parses `bytes` starting with length octets and returns a `Length` .
+    /// Parses `bytes` starting with length octets and tries to create a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`from_bytes`].
+    ///
+    /// [`from_bytes`]: #method.from_bytes
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         try_from(bytes).map(|(length, _rest)| length)
     }
@@ -95,7 +99,9 @@ impl Length {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This method is same to `TryFrom::try_from`.
+    /// This method is same to [`TryFrom`] implementation.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom-for-Length
     ///
     /// # Examples
     ///
@@ -117,13 +123,11 @@ impl Length {
 
     /// Serializes `length` .
     ///
-    /// This function won't allocate heap memory.
-    ///
     /// # Examples
     ///
     /// ```
     /// use bsn1::Length;
-    /// use core::convert::TryFrom;
+    /// use std::convert::TryFrom;
     ///
     /// let length = Length::Definite(3);
     /// let bytes = length.to_bytes();
@@ -182,10 +186,8 @@ impl Length {
     /// assert_eq!(Length::Definite(0).len(), 1);
     /// assert_eq!(Length::Definite(127).len(), 1);
     ///
-    /// // If the length is greater than or equals to 128,
-    /// // one octet is added to store the length.
+    /// // The length is 2 if the value is 128.
     /// assert_eq!(Length::Definite(128).len(), 2);
-    /// assert_eq!(Length::Definite(std::usize::MAX).len(), std::mem::size_of::<usize>() + 1);
     /// ```
     #[inline]
     pub const fn len(self) -> usize {
@@ -208,7 +210,7 @@ impl Length {
     }
 }
 
-/// Tries to parse `bytes` starting with 'length' and returns `(Length, octets_after_length)` .
+/// Tries to parse `bytes` starting with 'length' and returns `(Length, octets_after_length)`.
 ///
 /// This function ignores extra octets at the end of `bytes` .
 #[inline]

@@ -51,9 +51,6 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-//! Public module `contents` is deprecated.
-//! This module is private and will be renamed as `contents` after current `contents` is deleted.
-
 use crate::{Contents, Error};
 use core::borrow::{Borrow, BorrowMut};
 use core::mem;
@@ -62,32 +59,41 @@ use num::PrimInt;
 use std::borrow::ToOwned;
 use std::mem::MaybeUninit;
 
-/// `ContentsRef` is a wrapper of [u8] and represents contents octets of ASN.1.
+/// `ContentsRef` is a wrapper of [u8] and represents 'ASN.1 contents'.
 ///
-/// The user can access to the inner bytes via `Deref` and `DerefMut` implementation.
+/// User can access to the inner slice via [`Deref`] and [`DerefMut`] implementations.
 ///
-/// This struct is `Unsized`, and user will usually uses a reference to the instance.
+/// This struct is `Unsized`, and user will usually use a reference.
+///
+/// [`Deref`]: #impl-Deref-for-ContentsRef
+/// [`DerefMut`]: #impl-DerefMut-for-ContentsRef
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ContentsRef {
     bytes: [u8],
 }
 
 impl<'a> From<&'a [u8]> for &'a ContentsRef {
-    /// This function is same to `ContentsRef::from_bytes`.
+    /// This function is same to [`ContentsRef::from_bytes`].
+    ///
+    /// [`ContentsRef::from_bytes`]: #method.from_bytes
     fn from(bytes: &'a [u8]) -> Self {
         unsafe { mem::transmute(bytes) }
     }
 }
 
 impl<'a> From<&'a mut [u8]> for &'a mut ContentsRef {
-    /// This function is same to `ContentsRef::from_bytes_mut`.
+    /// This function is same to [`ContentsRef::from_bytes_mut`].
+    ///
+    /// [`ContentsRef::from_bytes_mut`]: #method.from_bytes_mut
     fn from(bytes: &'a mut [u8]) -> Self {
         unsafe { mem::transmute(bytes) }
     }
 }
 
 impl From<bool> for &'static ContentsRef {
-    /// This function is same to `ContentsRef::from_bool`.
+    /// This function is same to [`ContentsRef::from_bool`].
+    ///
+    /// [`ContentsRef::from_bool`]: #method.from_bool
     fn from(val: bool) -> Self {
         ContentsRef::from_bool(val)
     }
@@ -96,7 +102,9 @@ impl From<bool> for &'static ContentsRef {
 impl ContentsRef {
     /// Creates a reference to `ContentsRef` holding `bytes`.
     ///
-    /// This function is same to `<&ContentsRef>::from`.
+    /// This function is same to [`<&ContentsRef>::from`].
+    ///
+    /// [`<&ContentsRef>::from`]: #impl-From%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20ContentsRef
     ///
     /// # Examples
     ///
@@ -114,7 +122,10 @@ impl ContentsRef {
 
     /// Creates a mutable reference to `ContentsRef` holding `bytes`.
     ///
-    /// This function is same to `<&mut ContentsRef>::from`.
+    /// This function is same to [`<&mut ContentsRef>::from`].
+    ///
+    /// [`<&mut ContentsRef>::from`]:
+    ///     #impl-From%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20ContentsRef
     ///
     /// # Examples
     ///
@@ -122,9 +133,17 @@ impl ContentsRef {
     /// use bsn1::ContentsRef;
     ///
     /// let bytes: &mut [u8] = &mut [1, 2, 3];
-    /// let contents = ContentsRef::from_bytes(bytes);
     ///
-    /// assert_eq!(contents as &[u8], &[1, 2, 3]);
+    /// {
+    ///     let contents = ContentsRef::from_bytes_mut(bytes);
+    ///     assert_eq!(contents as &[u8], &[1, 2, 3]);
+    ///
+    ///     contents[0] = 10;
+    ///     assert_eq!(contents as &[u8], &[10, 2, 3]);
+    /// }
+    ///
+    /// // 'bytes' is updated as well.
+    /// assert_eq!(bytes, &[10, 2, 3]);
     /// ```
     pub fn from_bytes_mut(bytes: &mut [u8]) -> &mut Self {
         <&mut ContentsRef>::from(bytes)
@@ -132,8 +151,8 @@ impl ContentsRef {
 
     /// Creates a reference to `ContentsRef` representing `val`.
     ///
-    /// The rule of BER bool is different from that of DER and CER, however,
-    /// the returned value is valid for all of them.
+    /// The rule of 'ASN.1 bool' is slightly different among 'Ber', 'Der', and 'CER', however,
+    /// this function is valid for all of them.
     ///
     /// # Examples
     ///
@@ -224,9 +243,11 @@ impl ContentsRef {
     /// let contents = Contents::from_integer(17);
     /// assert_eq!(Ok(17_i32), contents.to_integer::<i32>());
     ///
+    /// // Overflow to convert i32::MAX into i16.
     /// let contents = Contents::from_integer(i32::MAX);
     /// assert!(contents.to_integer::<i16>().is_err());
     ///
+    /// // Cannot convert a negatibe value into unsigned type.
     /// let contents = Contents::from_integer(-5);
     /// assert!(contents.to_integer::<u32>().is_err());
     /// ```
@@ -269,7 +290,7 @@ impl ContentsRef {
         Ok(v)
     }
 
-    /// Parses `self` as a contents of ASN.1 integer without any sanitization.
+    /// Parses `self` as a contents of ASN.1 integer without any check.
     ///
     /// Type `T` should be the builtin primitive integer type (e.g., u8, i32, isize, u128, ...)
     ///
@@ -316,6 +337,8 @@ impl ContentsRef {
     /// let false_contents = ContentsRef::from_bool(false);
     /// assert_eq!(Ok(false), false_contents.to_bool_ber());
     ///
+    /// // 'BER' regards any octet except for 0x00 as 'True',
+    /// // while 'DER' regards octets except for 0x00 and 0xff as error.
     /// let bytes = &[0x03];
     /// let ber_contents = ContentsRef::from_bytes(bytes);
     /// assert!(ber_contents.to_bool_ber().is_ok());
@@ -350,6 +373,8 @@ impl ContentsRef {
     /// let false_contents = ContentsRef::from_bool(false);
     /// assert_eq!(Ok(false), false_contents.to_bool_der());
     ///
+    /// // 'BER' regards any octet except for 0x00 as 'True',
+    /// // while 'DER' regards octets except for 0x00 and 0xff as error.
     /// let bytes = &[0x03];
     /// let ber_contents = ContentsRef::from_bytes(bytes);
     /// assert!(ber_contents.to_bool_ber().is_ok());
