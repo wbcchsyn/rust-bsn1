@@ -71,19 +71,13 @@ impl Index<usize> for StackBuffer {
     type Output = u8;
 
     fn index(&self, index: usize) -> &Self::Output {
-        unsafe {
-            let ptr = self.as_ptr().add(index);
-            &*ptr
-        }
+        self.deref().index(index)
     }
 }
 
 impl IndexMut<usize> for StackBuffer {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        unsafe {
-            let ptr = self.as_mut_ptr().add(index);
-            &mut *ptr
-        }
+        self.deref_mut().index_mut(index)
     }
 }
 
