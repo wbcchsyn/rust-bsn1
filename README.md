@@ -31,4 +31,4 @@ See ['X.690 (07/2002)'] for details.
 
 ['X.690 (07/2002)']: https://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
 
-License: LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause
+License: LGPL-3.0-or-later OR Apache-2.0

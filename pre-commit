@@ -20,7 +20,7 @@ check_line_length() {
 
 check_license() {
     local path="$1"
-    if ! grep -q "LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause" "$path"; then
+    if ! grep -q "LGPL-3.0-or-later OR Apache-2.0" "$path"; then
         echo "$path" 'lacks of the license.' >&2
         exit 1
     fi
