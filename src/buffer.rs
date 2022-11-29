@@ -31,7 +31,6 @@
 // limitations under the License.
 
 use std::alloc::{self, Layout};
-use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
@@ -114,12 +113,6 @@ impl fmt::Debug for Buffer {
     }
 }
 
-impl Borrow<[u8]> for Buffer {
-    fn borrow(&self) -> &[u8] {
-        self.as_ref()
-    }
-}
-
 impl Deref for Buffer {
     type Target = [u8];
 
@@ -139,7 +132,7 @@ impl Hash for Buffer {
     where
         H: Hasher,
     {
-        let this: &[u8] = self.borrow();
+        let this: &[u8] = self;
         this.hash(hasher);
     }
 }
@@ -162,8 +155,8 @@ where
     T: Deref<Target = [u8]>,
 {
     fn eq(&self, other: &T) -> bool {
-        let this: &[u8] = self.borrow();
-        let other: &[u8] = other.borrow();
+        let this: &[u8] = self;
+        let other: &[u8] = other;
         this == other
     }
 }
@@ -175,16 +168,16 @@ where
     T: Deref<Target = [u8]>,
 {
     fn partial_cmp(&self, other: &T) -> Option<Ordering> {
-        let this: &[u8] = self.borrow();
-        let other: &[u8] = other.borrow();
+        let this: &[u8] = self;
+        let other: &[u8] = other;
         this.partial_cmp(other)
     }
 }
 
 impl Ord for Buffer {
     fn cmp(&self, other: &Self) -> Ordering {
-        let this: &[u8] = self.borrow();
-        let other: &[u8] = other.borrow();
+        let this: &[u8] = self;
+        let other: &[u8] = other;
         this.cmp(other)
     }
 }
