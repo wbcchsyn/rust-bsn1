@@ -748,7 +748,7 @@ pub fn disassemble_der(der: Der) -> Buffer {
 /// let bytes = &bytes[der1.as_ref().len()..];
 /// let der2 = DerRef::from_bytes(bytes).unwrap();
 /// assert_eq!(id2, der2.id());
-/// assert_eq!(contents2.as_ref() as &ContentsRef, der2.contents());
+/// assert_eq!(&contents2 as &ContentsRef, der2.contents());
 /// ```
 #[macro_export]
 macro_rules! constructed_der {
