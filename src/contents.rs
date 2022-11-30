@@ -372,12 +372,6 @@ impl AsMut<[u8]> for Contents {
     }
 }
 
-impl AsMut<ContentsRef> for Contents {
-    fn as_mut(&mut self) -> &mut ContentsRef {
-        self
-    }
-}
-
 impl Borrow<[u8]> for Contents {
     fn borrow(&self) -> &[u8] {
         self
