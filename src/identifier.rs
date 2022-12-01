@@ -68,9 +68,9 @@ impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`IdRef::from_bytes`].
+    /// This function is same to [`IdRef::try_from_bytes`].
     ///
-    /// [`IdRef::from_bytes`]: #method.from_bytes
+    /// [`IdRef::try_from_bytes`]: #method.try_from_bytes
     ///
     /// # Warnings
     ///
@@ -78,7 +78,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
-        IdRef::from_bytes(bytes)
+        IdRef::try_from_bytes(bytes)
     }
 }
 
@@ -143,15 +143,15 @@ impl IdRef {
     ///
     /// // &[0] represents 'EOC'.
     /// let bytes: &[u8] = &[0];
-    /// let idref = IdRef::from_bytes(bytes).unwrap();
+    /// let idref = IdRef::try_from_bytes(bytes).unwrap();
     /// assert_eq!(IdRef::eoc(), idref);
     ///
     /// // The result is not changed if (an) extra octet(s) is added at the end.
     /// let bytes: &[u8] = &[0, 1, 2];
-    /// let idref = IdRef::from_bytes(bytes).unwrap();
+    /// let idref = IdRef::try_from_bytes(bytes).unwrap();
     /// assert_eq!(IdRef::eoc(), idref);
     /// ```
-    pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
+    pub fn try_from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
         let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
 
         if first & IdRef::LONG_FLAG != IdRef::LONG_FLAG {
@@ -224,7 +224,7 @@ impl IdRef {
     /// assert_eq!(IdRef::eoc(), idref);
     /// ```
     pub fn from_bytes_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
-        let ret = Self::from_bytes(bytes)?;
+        let ret = Self::try_from_bytes(bytes)?;
         let ptr = (ret as *const Self) as *mut Self;
         unsafe { Ok(&mut *ptr) }
     }
@@ -232,14 +232,14 @@ impl IdRef {
     /// `bytes` must not include any extra octets.
     ///
     /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
-    /// implementation or [`from_bytes`] instead.
+    /// implementation or [`try_from_bytes`] instead.
     ///
     /// # Safety
     ///
     /// The behavior is undefined if the format of `bytes` is not right.
     ///
     /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20IdRef
-    /// [`from_bytes`]: #method.from_bytes
+    /// [`try_from_bytes`]: #method.try_from_bytes
     ///
     /// # Examples
     ///
