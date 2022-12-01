@@ -51,7 +51,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`DerRef::from_bytes`].
+    /// This function is same to [`DerRef::try_from_bytes`].
     ///
     /// # Warnings
     ///
@@ -60,7 +60,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
     ///
-    /// [`DerRef::from_bytes`]: #method.from_bytes
+    /// [`DerRef::try_from_bytes`]: #method.try_from_bytes
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let id = <&IdRef>::try_from(bytes)?;
         let parsing = &bytes[id.as_ref().len()..];
@@ -104,15 +104,15 @@ impl DerRef {
     ///
     /// // Represents '8' as Integer.
     /// let bytes0: &[u8] = &[0x02, 0x01, 0x08];
-    /// let der0 = DerRef::from_bytes(bytes0).unwrap();
+    /// let der0 = DerRef::try_from_bytes(bytes0).unwrap();
     ///
     /// // The result is not changed even if extra octets are added to the end.
     /// let bytes1: &[u8] = &[0x02, 0x01, 0x08, 0x00, 0xff];
-    /// let der1 = DerRef::from_bytes(bytes1).unwrap();
+    /// let der1 = DerRef::try_from_bytes(bytes1).unwrap();
     ///
     /// assert_eq!(der0, der1);
     /// ```
-    pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
+    pub fn try_from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
         <&Self>::try_from(bytes)
     }
 
@@ -121,10 +121,10 @@ impl DerRef {
     /// `bytes` must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` is valid octets as an 'DER' or not, use [`TryFrom`]
-    /// implementation or [`from_bytes`].
+    /// implementation or [`try_from_bytes`].
     ///
     /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20DerRef
-    /// [`from_bytes`]: #method.from_bytes
+    /// [`try_from_bytes`]: #method.try_from_bytes
     ///
     /// # Safety
     ///
@@ -181,7 +181,7 @@ impl DerRef {
     /// use bsn1::{DerRef, IdRef};
     ///
     /// let bytes: &[u8] = &[0x02, 0x01, 0x04];  // Represents '4' as Integer.
-    /// let der = DerRef::from_bytes(bytes).unwrap();
+    /// let der = DerRef::try_from_bytes(bytes).unwrap();
     ///
     /// assert_eq!(IdRef::integer(), der.id());
     /// ```
@@ -208,7 +208,7 @@ impl DerRef {
     /// use bsn1::{DerRef, Length};
     ///
     /// let bytes: &[u8] = &[0x04, 0x02, 0x00, 0xff];  // Represents '[0x00, 0xff]' as Octet String
-    /// let der = DerRef::from_bytes(bytes).unwrap();
+    /// let der = DerRef::try_from_bytes(bytes).unwrap();
     ///
     /// assert_eq!(Length::Definite(2), der.length());
     /// ```
@@ -226,7 +226,7 @@ impl DerRef {
     /// use bsn1::{ContentsRef, DerRef};
     ///
     /// let bytes: &[u8] = &[0x04, 0x02, 0x00, 0xff];  // Represents '[0x00, 0xff]' as Octet String
-    /// let der = DerRef::from_bytes(bytes).unwrap();
+    /// let der = DerRef::try_from_bytes(bytes).unwrap();
     /// let contents = ContentsRef::from_bytes(&bytes[2..]);
     ///
     /// assert_eq!(contents, der.contents());
@@ -248,7 +248,7 @@ impl DerRef {
     /// // This octets represents `3` as integer.
     /// let bytes = vec![0x02, 0x01, 0x03];
     ///
-    /// let der = DerRef::from_bytes(&bytes).unwrap();
+    /// let der = DerRef::try_from_bytes(&bytes).unwrap();
     /// assert_eq!(&bytes, der.as_bytes());
     /// ```
     pub fn as_bytes(&self) -> &[u8] {
@@ -635,12 +635,12 @@ pub fn disassemble_der(der: Der) -> Buffer {
 /// assert_eq!(id, der.id());
 ///
 /// let bytes = der.contents().as_ref();
-/// let der1 = DerRef::from_bytes(bytes).unwrap();
+/// let der1 = DerRef::try_from_bytes(bytes).unwrap();
 /// assert_eq!(id1, der1.id());
 /// assert_eq!(contents1, der1.contents().as_ref());
 ///
 /// let bytes = &bytes[der1.as_ref().len()..];
-/// let der2 = DerRef::from_bytes(bytes).unwrap();
+/// let der2 = DerRef::try_from_bytes(bytes).unwrap();
 /// assert_eq!(id2, der2.id());
 /// assert_eq!(&contents2 as &ContentsRef, der2.contents());
 /// ```
