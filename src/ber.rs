@@ -31,11 +31,11 @@
 // limitations under the License.
 
 use crate::{identifier, length, Buffer, ContentsRef, Der, DerRef, Error, IdRef, Length};
-use core::convert::TryFrom;
-use core::mem;
-use core::ops::Deref;
 use num::PrimInt;
 use std::borrow::Borrow;
+use std::convert::TryFrom;
+use std::mem;
+use std::ops::Deref;
 
 /// `BerRef` is a wrapper of `[u8]` and represents a BER.
 ///
@@ -46,7 +46,6 @@ pub struct BerRef {
 }
 
 impl<'a> From<&'a DerRef> for &'a BerRef {
-    #[inline]
     fn from(der: &'a DerRef) -> Self {
         unsafe { BerRef::from_bytes_unchecked(der.as_ref()) }
     }
@@ -168,7 +167,6 @@ impl BerRef {
     /// assert_eq!(ber.id(), IdRef::integer());
     /// assert_eq!(ber.contents().to_integer::<i32>().unwrap(), 0x34);
     /// ```
-    #[inline]
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         mem::transmute(bytes)
     }
@@ -207,7 +205,6 @@ impl BerRef {
     /// let ber1 = unsafe { BerRef::from_bytes_starts_with_unchecked(bytes) };
     /// assert_eq!(ber0, ber1);
     /// ```
-    #[inline]
     pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> &Self {
         let id = identifier::shrink_to_fit_unchecked(bytes);
         let parsing = &bytes[id.len()..];
@@ -234,14 +231,12 @@ impl BerRef {
 }
 
 impl AsRef<[u8]> for BerRef {
-    #[inline]
     fn as_ref(&self) -> &[u8] {
         &self.bytes
     }
 }
 
 impl Borrow<[u8]> for BerRef {
-    #[inline]
     fn borrow(&self) -> &[u8] {
         &self.bytes
     }
@@ -257,7 +252,6 @@ impl ToOwned for BerRef {
 }
 
 impl PartialEq<Ber> for BerRef {
-    #[inline]
     fn eq(&self, other: &Ber) -> bool {
         self == other.as_ref() as &BerRef
     }
@@ -279,7 +273,6 @@ impl BerRef {
     ///
     /// assert_eq!(ber.id(), IdRef::integer());
     /// ```
-    #[inline]
     pub fn id(&self) -> &IdRef {
         unsafe {
             let bytes = identifier::shrink_to_fit_unchecked(&self.bytes);
@@ -305,7 +298,6 @@ impl BerRef {
     ///
     /// assert_eq!(ber.length(), Length::Definite(1));
     /// ```
-    #[inline]
     pub fn length(&self) -> Length {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
@@ -325,7 +317,6 @@ impl BerRef {
     ///
     /// assert_eq!(ber.contents().to_bool_ber().unwrap(), false);
     /// ```
-    #[inline]
     pub fn contents(&self) -> &ContentsRef {
         let id_len = self.id().as_ref().len();
         let bytes = &self.bytes[id_len..];
@@ -359,20 +350,18 @@ impl BerRef {
 /// the [`BerRef`].
 ///
 /// [`BerRef`]: struct.BerRef.html
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Ber {
     buffer: Buffer,
 }
 
 impl From<&DerRef> for Ber {
-    #[inline]
     fn from(der: &DerRef) -> Self {
         <&BerRef>::from(der).to_owned()
     }
 }
 
 impl From<Der> for Ber {
-    #[inline]
     fn from(der: Der) -> Self {
         Self {
             buffer: crate::der::disassemble_der(der),
@@ -381,7 +370,6 @@ impl From<Der> for Ber {
 }
 
 impl From<&BerRef> for Ber {
-    #[inline]
     fn from(ber_ref: &BerRef) -> Self {
         ber_ref.to_owned()
     }
@@ -441,7 +429,6 @@ impl Ber {
     /// functions returns `Ok`.
     ///
     /// [`TryFrom::try_from`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Ber
-    #[inline]
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
         Self::try_from(bytes)
     }
@@ -474,7 +461,6 @@ impl Ber {
     /// let ber1 = unsafe { Ber::from_bytes_unchecked(ber0.as_ref()) };
     /// assert_eq!(ber0, ber1);
     /// ```
-    #[inline]
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
         Self {
             buffer: Buffer::from(bytes),
@@ -511,7 +497,6 @@ impl Ber {
     /// let ber1 = unsafe { Ber::from_bytes_starts_with_unchecked(bytes.as_ref()) };
     /// assert_eq!(ber0, ber1);
     /// ```
-    #[inline]
     pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> Self {
         let id = identifier::shrink_to_fit_unchecked(bytes);
         let parsing = &bytes[id.len()..];
@@ -632,28 +617,24 @@ impl Ber {
 }
 
 impl AsRef<[u8]> for Ber {
-    #[inline]
     fn as_ref(&self) -> &[u8] {
         self.buffer.as_ref()
     }
 }
 
 impl AsRef<BerRef> for Ber {
-    #[inline]
     fn as_ref(&self) -> &BerRef {
         self.deref()
     }
 }
 
 impl Borrow<[u8]> for Ber {
-    #[inline]
     fn borrow(&self) -> &[u8] {
         self.buffer.borrow()
     }
 }
 
 impl Borrow<BerRef> for Ber {
-    #[inline]
     fn borrow(&self) -> &BerRef {
         self.deref()
     }
@@ -662,14 +643,12 @@ impl Borrow<BerRef> for Ber {
 impl Deref for Ber {
     type Target = BerRef;
 
-    #[inline]
     fn deref(&self) -> &Self::Target {
         unsafe { BerRef::from_bytes_unchecked(self.buffer.as_ref()) }
     }
 }
 
 impl PartialEq<BerRef> for Ber {
-    #[inline]
     fn eq(&self, other: &BerRef) -> bool {
         self.as_ref() as &BerRef == other
     }

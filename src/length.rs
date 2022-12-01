@@ -33,9 +33,9 @@
 //! functions and enum about 'Length' octet of 'ASN.1.'
 
 use crate::{Error, StackBuffer};
-use core::convert::TryFrom;
-use core::mem::{size_of, size_of_val};
-use core::ops::Deref;
+use std::convert::TryFrom;
+use std::mem::{size_of, size_of_val};
+use std::ops::Deref;
 
 /// `Length` represents ASN.1 length.
 ///
@@ -114,7 +114,6 @@ impl Length {
     /// let deserialized = Length::try_from(bytes.as_ref()).unwrap();
     /// assert_eq!(length, deserialized);
     /// ```
-    #[inline]
     pub fn to_bytes(self) -> impl Deref<Target = [u8]> {
         let mut buffer = StackBuffer::new();
 
@@ -168,7 +167,6 @@ impl Length {
     /// // The length is 2 if the value is 128.
     /// assert_eq!(Length::Definite(128).len(), 2);
     /// ```
-    #[inline]
     pub const fn len(self) -> usize {
         match self {
             Length::Indefinite => 1,
@@ -192,7 +190,6 @@ impl Length {
 /// Tries to parse `bytes` starting with 'length' and returns `(Length, octets_after_length)`.
 ///
 /// This function ignores extra octets at the end of `bytes` .
-#[inline]
 pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
     let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
     let bytes = &bytes[1..];

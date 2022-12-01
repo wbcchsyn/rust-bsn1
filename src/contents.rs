@@ -31,10 +31,10 @@
 // limitations under the License.
 
 use crate::{Buffer, ContentsRef};
-use core::borrow::{Borrow, BorrowMut};
-use core::mem;
-use core::ops::{Deref, DerefMut};
 use num::PrimInt;
+use std::borrow::{Borrow, BorrowMut};
+use std::mem;
+use std::ops::{Deref, DerefMut};
 
 /// `Contents` owns [`ContentsRef`] and represents contents octets of ASN.1.
 ///
