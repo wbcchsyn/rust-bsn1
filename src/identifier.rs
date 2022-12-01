@@ -89,9 +89,9 @@ impl<'a> TryFrom<&'a mut [u8]> for &'a mut IdRef {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`IdRef::from_bytes_mut`].
+    /// This function is same to [`IdRef::try_from_mut_bytes`].
     ///
-    /// [`IdRef::from_bytes_mut`]: #method.from_bytes_mut
+    /// [`IdRef::try_from_mut_bytes`]: #method.try_from_mut_bytes
     ///
     /// # Warnings
     ///
@@ -99,7 +99,7 @@ impl<'a> TryFrom<&'a mut [u8]> for &'a mut IdRef {
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
     fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
-        IdRef::from_bytes_mut(bytes)
+        IdRef::try_from_mut_bytes(bytes)
     }
 }
 
@@ -205,7 +205,7 @@ impl IdRef {
     /// let bytes: &mut [u8] = &mut [0];
     ///
     /// {
-    ///     let idref = IdRef::from_bytes_mut(bytes).unwrap();
+    ///     let idref = IdRef::try_from_mut_bytes(bytes).unwrap();
     ///
     ///     // [0] represents 'EOC'.
     ///     assert_eq!(IdRef::eoc(), idref);
@@ -220,10 +220,10 @@ impl IdRef {
     ///
     /// // The result is not changed if (an) extra octet(s) is added at the end.
     /// let bytes: &mut [u8] = &mut [0, 1, 2, 3];
-    /// let idref = IdRef::from_bytes_mut(bytes).unwrap();
+    /// let idref = IdRef::try_from_mut_bytes(bytes).unwrap();
     /// assert_eq!(IdRef::eoc(), idref);
     /// ```
-    pub fn from_bytes_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
+    pub fn try_from_mut_bytes(bytes: &mut [u8]) -> Result<&mut Self, Error> {
         let ret = Self::try_from_bytes(bytes)?;
         let ptr = (ret as *const Self) as *mut Self;
         unsafe { Ok(&mut *ptr) }
@@ -259,14 +259,14 @@ impl IdRef {
     /// `bytes` must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
-    /// implementation or [`from_bytes_mut`] instead.
+    /// implementation or [`try_from_mut_bytes`] instead.
     ///
     /// # Safety
     ///
     /// The behavior is undefined if the format of `bytes` is not right.
     ///
     /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20IdRef
-    /// [`from_bytes_mut`]: #method.from_bytes_mut
+    /// [`try_from_mut_bytes`]: #method.try_from_mut_bytes
     ///
     /// # Examples
     ///
@@ -1392,7 +1392,7 @@ impl IdRef {
     ///
     /// // Creates a '&mut IdRef' representing 'Universal Integer'.
     /// let mut bytes = Vec::from(IdRef::integer().as_bytes());
-    /// let idref = IdRef::from_bytes_mut(&mut bytes).unwrap();
+    /// let idref = IdRef::try_from_mut_bytes(&mut bytes).unwrap();
     ///
     /// assert_eq!(ClassTag::Universal, idref.class());
     ///
@@ -1413,7 +1413,7 @@ impl IdRef {
     ///
     /// // Creates a '&mut IdRef' representing 'Universal Integer'.
     /// let mut bytes = Vec::from(IdRef::integer().as_bytes());
-    /// let idref = IdRef::from_bytes_mut(&mut bytes).unwrap();
+    /// let idref = IdRef::try_from_mut_bytes(&mut bytes).unwrap();
     ///
     /// assert_eq!(PCTag::Primitive, idref.pc());
     ///
