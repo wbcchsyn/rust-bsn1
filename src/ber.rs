@@ -144,14 +144,10 @@ impl BerRef {
     /// If it is not sure whether `bytes` are valid octets as an 'BER' or not, use [`TryFrom`]
     /// implementation or [`from_bytes`].
     ///
-    /// If it is sure not sure whether `bytes` includes any extra octet(s) or not, use
-    /// [`from_bytes_starts_with_unchecked`].
-    ///
     /// # Safety
     ///
     /// The behavior is undefined if `bytes` is not formatted as a BER.
     ///
-    /// [`from_bytes_starts_with_unchecked`]: #method.from_bytes_starts_with_unchecked
     /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20BerRef
     /// [`from_bytes`]: #method.from_bytes
     ///
@@ -169,64 +165,6 @@ impl BerRef {
     /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         mem::transmute(bytes)
-    }
-
-    /// Provides a reference from `bytes` that starts with a BER octets.
-    ///
-    /// `bytes` may include some extra octet(s) at the end.
-    ///
-    /// If it is not sure whether `bytes` starts with BER octets or not, use [`TryFrom`]
-    /// implementation or [`from_bytes`].
-    ///
-    /// If it is sure that `bytes` does not include any extra octet at the end, use
-    /// [`from_bytes_unchecked`].
-    ///
-    /// # Safety
-    ///
-    /// The behavior is undefined if `bytes` does not start with BER octets.
-    ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E
-    /// [`from_bytes_unchecked`]: #method.from_bytes_unchecked
-    /// [`from_bytes`]: #method.from_bytes
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{BerRef, IdRef};
-    ///
-    /// // Represents Integer '4'.
-    /// let bytes: &[u8] = &[0x02, 0x01, 0x04];
-    /// let ber0 = unsafe { BerRef::from_bytes_starts_with_unchecked(bytes) };
-    /// assert_eq!(ber0.id(), IdRef::integer());
-    /// assert_eq!(ber0.contents().to_integer::<u8>().unwrap(), 4);
-    ///
-    /// // The extra octets at the end does not affect the result.
-    /// let bytes: &[u8] = &[0x02, 0x01, 0x04, 0x00, 0xff];
-    /// let ber1 = unsafe { BerRef::from_bytes_starts_with_unchecked(bytes) };
-    /// assert_eq!(ber0, ber1);
-    /// ```
-    pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> &Self {
-        let id = identifier::shrink_to_fit_unchecked(bytes);
-        let parsing = &bytes[id.len()..];
-
-        let total_len = match length::from_bytes_starts_with_unchecked(parsing) {
-            (Length::Definite(len), parsing) => bytes.len() - parsing.len() + len,
-            (Length::Indefinite, parsing) => {
-                let mut total_len = bytes.len() - parsing.len();
-                let mut parsing = parsing;
-                while {
-                    let element = Self::from_bytes_starts_with_unchecked(parsing);
-                    total_len += element.as_ref().len();
-                    parsing = &parsing[element.as_ref().len()..];
-
-                    element.id() != IdRef::eoc()
-                } {}
-                total_len
-            }
-        };
-
-        let bytes = &bytes[..total_len];
-        Self::from_bytes_unchecked(bytes)
     }
 }
 
@@ -685,59 +623,6 @@ macro_rules! constructed_ber {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn from_bytes_starts_with_unchecked_definite() {
-        let id = IdRef::octet_string();
-
-        let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
-        let extras: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
-        for &bytes in byteses {
-            let contents = ContentsRef::from_bytes(bytes);
-            let ber = Ber::new(id, contents);
-
-            for &extra in extras {
-                let mut bytes = Vec::from(ber.as_ref() as &[u8]);
-                bytes.extend(extra);
-
-                let ber_ref = unsafe { BerRef::from_bytes_starts_with_unchecked(bytes.as_ref()) };
-                assert_eq!(ber_ref, &ber);
-            }
-        }
-    }
-
-    #[test]
-    fn from_bytes_starts_with_unchecked_infinite() {
-        let eoc = {
-            let id = IdRef::eoc();
-            let contents = ContentsRef::from_bytes(&[]);
-            Ber::new(id, contents)
-        };
-
-        let bers: Vec<Ber> = (0..10)
-            .map(|i| {
-                let id = IdRef::octet_string();
-                let contents: &[u8] = &[i];
-                let contents = ContentsRef::from_bytes(contents);
-                Ber::new(id, contents)
-            })
-            .collect();
-
-        for i in 0..10 {
-            let id = IdRef::sequence();
-            let mut bytes: Vec<u8> = Vec::from(id.as_ref() as &[u8]);
-
-            bytes.extend(Length::Indefinite.to_bytes().as_ref());
-
-            for ber in bers[0..i].iter() {
-                bytes.extend(ber.as_ref() as &[u8]);
-            }
-            bytes.extend(eoc.as_ref() as &[u8]);
-
-            let ber = unsafe { BerRef::from_bytes_starts_with_unchecked(bytes.as_ref()) };
-            assert_eq!(bytes.as_ref() as &[u8], ber.as_ref() as &[u8]);
-        }
-    }
 
     #[test]
     fn try_from_deinite() {
