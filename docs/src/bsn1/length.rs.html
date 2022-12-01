@@ -1,103 +1,102 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;length.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>length.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../bsn1/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
-<span id="2">  2</span>
-<span id="3">  3</span>
-<span id="4">  4</span>
-<span id="5">  5</span>
-<span id="6">  6</span>
-<span id="7">  7</span>
-<span id="8">  8</span>
-<span id="9">  9</span>
-<span id="10"> 10</span>
-<span id="11"> 11</span>
-<span id="12"> 12</span>
-<span id="13"> 13</span>
-<span id="14"> 14</span>
-<span id="15"> 15</span>
-<span id="16"> 16</span>
-<span id="17"> 17</span>
-<span id="18"> 18</span>
-<span id="19"> 19</span>
-<span id="20"> 20</span>
-<span id="21"> 21</span>
-<span id="22"> 22</span>
-<span id="23"> 23</span>
-<span id="24"> 24</span>
-<span id="25"> 25</span>
-<span id="26"> 26</span>
-<span id="27"> 27</span>
-<span id="28"> 28</span>
-<span id="29"> 29</span>
-<span id="30"> 30</span>
-<span id="31"> 31</span>
-<span id="32"> 32</span>
-<span id="33"> 33</span>
-<span id="34"> 34</span>
-<span id="35"> 35</span>
-<span id="36"> 36</span>
-<span id="37"> 37</span>
-<span id="38"> 38</span>
-<span id="39"> 39</span>
-<span id="40"> 40</span>
-<span id="41"> 41</span>
-<span id="42"> 42</span>
-<span id="43"> 43</span>
-<span id="44"> 44</span>
-<span id="45"> 45</span>
-<span id="46"> 46</span>
-<span id="47"> 47</span>
-<span id="48"> 48</span>
-<span id="49"> 49</span>
-<span id="50"> 50</span>
-<span id="51"> 51</span>
-<span id="52"> 52</span>
-<span id="53"> 53</span>
-<span id="54"> 54</span>
-<span id="55"> 55</span>
-<span id="56"> 56</span>
-<span id="57"> 57</span>
-<span id="58"> 58</span>
-<span id="59"> 59</span>
-<span id="60"> 60</span>
-<span id="61"> 61</span>
-<span id="62"> 62</span>
-<span id="63"> 63</span>
-<span id="64"> 64</span>
-<span id="65"> 65</span>
-<span id="66"> 66</span>
-<span id="67"> 67</span>
-<span id="68"> 68</span>
-<span id="69"> 69</span>
-<span id="70"> 70</span>
-<span id="71"> 71</span>
-<span id="72"> 72</span>
-<span id="73"> 73</span>
-<span id="74"> 74</span>
-<span id="75"> 75</span>
-<span id="76"> 76</span>
-<span id="77"> 77</span>
-<span id="78"> 78</span>
-<span id="79"> 79</span>
-<span id="80"> 80</span>
-<span id="81"> 81</span>
-<span id="82"> 82</span>
-<span id="83"> 83</span>
-<span id="84"> 84</span>
-<span id="85"> 85</span>
-<span id="86"> 86</span>
-<span id="87"> 87</span>
-<span id="88"> 88</span>
-<span id="89"> 89</span>
-<span id="90"> 90</span>
-<span id="91"> 91</span>
-<span id="92"> 92</span>
-<span id="93"> 93</span>
-<span id="94"> 94</span>
-<span id="95"> 95</span>
-<span id="96"> 96</span>
-<span id="97"> 97</span>
-<span id="98"> 98</span>
-<span id="99"> 99</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/length.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>length.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../bsn1/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../bsn1/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../bsn1/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
 <span id="100">100</span>
 <span id="101">101</span>
 <span id="102">102</span>
@@ -430,437 +429,580 @@
 <span id="429">429</span>
 <span id="430">430</span>
 <span id="431">431</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2021 Shin Yoshida</span>
-<span class="comment">//</span>
-<span class="comment">// &quot;LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause&quot;</span>
-<span class="comment">//</span>
-<span class="comment">// This is part of bsn1</span>
-<span class="comment">//</span>
-<span class="comment">//  bsn1 is free software: you can redistribute it and/or modify</span>
-<span class="comment">//  it under the terms of the GNU Lesser General Public License as published by</span>
-<span class="comment">//  the Free Software Foundation, either version 3 of the License, or</span>
-<span class="comment">//  (at your option) any later version.</span>
-<span class="comment">//</span>
-<span class="comment">//  bsn1 is distributed in the hope that it will be useful,</span>
-<span class="comment">//  but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
-<span class="comment">//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
-<span class="comment">//  GNU Lesser General Public License for more details.</span>
-<span class="comment">//</span>
-<span class="comment">//  You should have received a copy of the GNU Lesser General Public License</span>
-<span class="comment">//  along with bsn1.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
-<span class="comment">//</span>
-<span class="comment">//</span>
-<span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
-<span class="comment">// you may not use this file except in compliance with the License.</span>
-<span class="comment">// You may obtain a copy of the License at</span>
-<span class="comment">//</span>
-<span class="comment">//     http://www.apache.org/licenses/LICENSE-2.0</span>
-<span class="comment">//</span>
-<span class="comment">// Unless required by applicable law or agreed to in writing, software</span>
-<span class="comment">// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
-<span class="comment">// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
-<span class="comment">// See the License for the specific language governing permissions and</span>
-<span class="comment">// limitations under the License.</span>
-<span class="comment">//</span>
-<span class="comment">//</span>
-<span class="comment">// Redistribution and use in source and binary forms, with or without modification, are permitted</span>
-<span class="comment">// provided that the following conditions are met:</span>
-<span class="comment">//</span>
-<span class="comment">// 1. Redistributions of source code must retain the above copyright notice, this list of</span>
-<span class="comment">//    conditions and the following disclaimer.</span>
-<span class="comment">// 2. Redistributions in binary form must reproduce the above copyright notice, this</span>
-<span class="comment">//    list of conditions and the following disclaimer in the documentation and/or other</span>
-<span class="comment">//    materials provided with the distribution.</span>
-<span class="comment">//</span>
-<span class="comment">// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND</span>
-<span class="comment">// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED</span>
-<span class="comment">// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.</span>
-<span class="comment">// IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,</span>
-<span class="comment">// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT</span>
-<span class="comment">// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR</span>
-<span class="comment">// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,</span>
-<span class="comment">// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)</span>
-<span class="comment">// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
-<span class="comment">// POSSIBILITY OF SUCH DAMAGE.</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2021-2022 Shin Yoshida
+//
+// &quot;LGPL-3.0-or-later OR Apache-2.0&quot;
+//
+// This is part of bsn1
+//
+//  bsn1 is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU Lesser General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  bsn1 is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public License
+//  along with bsn1.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+//
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-<span class="doccomment">//! functions and enum about &#39;Length&#39; octet of &#39;ASN.1.&#39;</span>
+</span><span class="doccomment">//! functions and enum about &#39;Length&#39; octet of &#39;ASN.1.&#39;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Error</span>, <span class="ident">StackBuffer</span>};
-<span class="kw">use</span> <span class="ident">core::convert::TryFrom</span>;
-<span class="kw">use</span> <span class="ident">core::mem::size_of</span>;
+</span><span class="kw">use crate</span>::{Error, StackBuffer};
+<span class="kw">use </span>std::convert::TryFrom;
+<span class="kw">use </span>std::mem::{size_of, size_of_val};
+<span class="kw">use </span>std::ops::Deref;
 
-<span class="doccomment">/// `Length` represents ASN.1 length.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Note that `Length` represents the byte count of the contents in ASN.1.</span>
-<span class="doccomment">/// The total byte size of BER, DER, and CER is greater than that.</span>
-<span class="doccomment">/// (BER, DER, and CER are constituted of identifier, length, and contents.)</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Length</span> {
-    <span class="doccomment">/// Represents &#39;Indefinite&#39; length.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// &#39;Indefinite&#39; is only for &#39;BER&#39;, and the contents must end with &#39;EOC&#39; octets.</span>
-    <span class="ident">Indefinite</span>,
-    <span class="doccomment">/// &#39;Definite&#39; is for &#39;BER&#39;, &#39;DER&#39;, and &#39;CER&#39;, and represents the byte count of the contents.</span>
-    <span class="ident">Definite</span>(<span class="ident">usize</span>),
+<span class="doccomment">/// `Length` represents ASN.1 length.
+///
+/// Note that `Length` represents the byte count of the contents in ASN.1.
+/// The total byte size of BER, DER, and CER is greater than that.
+/// (BER, DER, and CER are constituted of identifier, length, and contents.)
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+</span><span class="kw">pub enum </span>Length {
+    <span class="doccomment">/// Represents &#39;Indefinite&#39; length.
+    ///
+    /// &#39;Indefinite&#39; is only for &#39;BER&#39;, and the contents must end with &#39;EOC&#39; octets.
+    </span>Indefinite,
+    <span class="doccomment">/// &#39;Definite&#39; is for &#39;BER&#39;, &#39;DER&#39;, and &#39;CER&#39;, and represents the byte count of the contents.
+    </span>Definite(usize),
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Length</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
+<span class="kw">impl </span>TryFrom&lt;<span class="kw-2">&amp;</span>[u8]&gt; <span class="kw">for </span>Length {
+    <span class="kw">type </span>Error = Error;
 
-    <span class="doccomment">/// Parses `bytes` starting with length octets and returns a `Length` .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function ignores extra octet(s) at the end of `bytes` if any.</span>
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">length</span>, <span class="ident">_rest</span>)<span class="op">|</span> <span class="ident">length</span>)
+    <span class="doccomment">/// Parses `bytes` starting with length octets and tries to create a new instance.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`from_bytes`].
+    ///
+    /// [`from_bytes`]: #method.from_bytes
+    </span><span class="kw">fn </span>try_from(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        try_from(bytes).map(|(length, _rest)| length)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Length</span> {
-    <span class="kw">const</span> <span class="ident">LONG_FLAG</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0x80</span>;
-    <span class="kw">const</span> <span class="ident">MAX_SHORT</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::LONG_FLAG</span> <span class="op">-</span> <span class="number">1</span>;
-    <span class="kw">const</span> <span class="ident">INDEFINITE</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0x80</span>;
+<span class="kw">impl </span>Length {
+    <span class="kw">const </span>LONG_FLAG: u8 = <span class="number">0x80</span>;
+    <span class="kw">const </span>MAX_SHORT: u8 = <span class="self">Self</span>::LONG_FLAG - <span class="number">1</span>;
+    <span class="kw">const </span>INDEFINITE: u8 = <span class="number">0x80</span>;
 }
 
-<span class="kw">impl</span> <span class="ident">Length</span> {
-    <span class="doccomment">/// Serializes `length` .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function won&#39;t allocate heap memory.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::Length;</span>
-    <span class="doccomment">/// use core::convert::TryFrom;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let length = Length::Definite(3);</span>
-    <span class="doccomment">/// let bytes = length.to_bytes();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let deserialized = Length::try_from(bytes.as_ref()).unwrap();</span>
-    <span class="doccomment">/// assert_eq!(length, deserialized);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">StackBuffer::new</span>();
+<span class="kw">impl </span>Length {
+    <span class="doccomment">/// Parses `bytes` starting with length octets and tries to creates a new instance.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This method is same to [`TryFrom`] implementation.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom-for-Length
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Length;
+    ///
+    /// let mut bytes = vec![0x05]; // represents Definite(5).
+    /// let len = Length::from_bytes(&amp;bytes).unwrap();
+    /// assert_eq!(Length::Definite(5), len);
+    ///
+    /// // Ignores the last extra octet 0x03.
+    /// bytes.push(0x03);
+    /// let len = Length::from_bytes(&amp;bytes).unwrap();
+    /// assert_eq!(Length::Definite(5), len);
+    /// ```
+    </span><span class="kw">pub fn </span>from_bytes(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
+        try_from(bytes).map(|(length, _rest)| length)
+    }
 
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">Length::Indefinite</span> =&gt; <span class="kw">unsafe</span> { <span class="ident">buffer</span>.<span class="ident">push</span>(<span class="ident">Length::INDEFINITE</span>) },
-            <span class="ident">Length::Definite</span>(<span class="ident">val</span>) =&gt; {
-                <span class="kw">if</span> <span class="ident">val</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">Length::MAX_SHORT</span> <span class="kw">as</span> <span class="ident">usize</span> {
-                    <span class="comment">// Short form</span>
-                    <span class="kw">unsafe</span> { <span class="ident">buffer</span>.<span class="ident">push</span>(<span class="ident">val</span> <span class="kw">as</span> <span class="ident">u8</span>) };
-                } <span class="kw">else</span> {
-                    <span class="comment">// Long form</span>
-                    <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> (<span class="number">8</span> <span class="op">*</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">-</span> (<span class="ident">val</span>.<span class="ident">leading_zeros</span>() <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">+</span> <span class="number">7</span>) <span class="op">/</span> <span class="number">8</span> <span class="op">+</span> <span class="number">1</span>;
-                    <span class="kw">unsafe</span> { <span class="ident">buffer</span>.<span class="ident">set_len</span>(<span class="ident">len</span>) };
-                    <span class="ident">buffer</span>[<span class="number">0</span>] <span class="op">=</span> <span class="ident">Length::LONG_FLAG</span> <span class="op">+</span> (<span class="ident">len</span> <span class="op">-</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">u8</span>;
+    <span class="doccomment">/// Serializes `length` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Length;
+    /// use std::convert::TryFrom;
+    ///
+    /// let length = Length::Definite(3);
+    /// let bytes = length.to_bytes();
+    ///
+    /// let deserialized = Length::try_from(bytes.as_ref()).unwrap();
+    /// assert_eq!(length, deserialized);
+    /// ```
+    </span><span class="kw">pub fn </span>to_bytes(<span class="self">self</span>) -&gt; <span class="kw">impl </span>Deref&lt;Target = [u8]&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>buffer = StackBuffer::new();
 
-                    <span class="kw">unsafe</span> {
-                        <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">val</span>.<span class="ident">to_be</span>();
-                        <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">val</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">usize</span>;
-                        <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="ident">src</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>;
-                        <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="ident">src</span>.<span class="ident">add</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="number">1</span> <span class="op">-</span> <span class="ident">len</span>);
+        <span class="kw">match </span><span class="self">self </span>{
+            Length::Indefinite =&gt; <span class="kw">unsafe </span>{ buffer.push(Length::INDEFINITE) },
+            Length::Definite(val) =&gt; {
+                <span class="kw">if </span>val &lt;= Length::MAX_SHORT <span class="kw">as </span>usize {
+                    <span class="comment">// Short form
+                    </span><span class="kw">unsafe </span>{ buffer.push(val <span class="kw">as </span>u8) };
+                } <span class="kw">else </span>{
+                    <span class="comment">// Long form
+                    </span><span class="kw">const </span>BITS_PER_BYTE: usize = <span class="number">8</span>;
+                    <span class="kw">let </span>bit_len =
+                        BITS_PER_BYTE * size_of::&lt;usize&gt;() - (val.leading_zeros() <span class="kw">as </span>usize);
+                    <span class="kw">let </span>byte_len = (bit_len + BITS_PER_BYTE - <span class="number">1</span>) / BITS_PER_BYTE;
+                    <span class="kw">let </span>flag = Length::LONG_FLAG + byte_len <span class="kw">as </span>u8;
 
-                        <span class="kw">let</span> <span class="ident">dst</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">add</span>(<span class="number">1</span>);
-                        <span class="ident">dst</span>.<span class="ident">copy_from_nonoverlapping</span>(<span class="ident">src</span>, <span class="ident">len</span> <span class="op">-</span> <span class="number">1</span>);
+                    <span class="kw">unsafe </span>{
+                        buffer.set_len(byte_len + size_of_val(<span class="kw-2">&amp;</span>flag));
+                        buffer[<span class="number">0</span>] = flag;
+
+                        <span class="kw">let </span>val = val.to_be();
+                        <span class="kw">let </span>src = <span class="kw-2">&amp;</span>val <span class="kw">as </span><span class="kw-2">*const </span>usize;
+                        <span class="kw">let </span>src = src <span class="kw">as </span><span class="kw-2">*const </span>u8;
+                        <span class="kw">let </span>src = src.add(size_of::&lt;usize&gt;() - byte_len);
+
+                        <span class="kw">let </span>dst = buffer.as_mut_ptr().add(size_of_val(<span class="kw-2">&amp;</span>flag));
+                        dst.copy_from_nonoverlapping(src, byte_len);
                     }
                 }
             }
         }
 
-        <span class="ident">buffer</span>
+        buffer
+    }
+
+    <span class="doccomment">/// Returns the byte count of the octets that `self` is serialized.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Length;
+    ///
+    /// // The length of INDEFINITE is always 1.
+    /// assert_eq!(Length::Indefinite.len(), 1);
+    ///
+    /// // The length is 1 if the value is less than or equals to 127.
+    /// assert_eq!(Length::Definite(0).len(), 1);
+    /// assert_eq!(Length::Definite(127).len(), 1);
+    ///
+    /// // The length is 2 if the value is 128.
+    /// assert_eq!(Length::Definite(128).len(), 2);
+    /// ```
+    </span><span class="kw">pub const fn </span>len(<span class="self">self</span>) -&gt; usize {
+        <span class="kw">match </span><span class="self">self </span>{
+            Length::Indefinite =&gt; <span class="number">1</span>,
+            Length::Definite(val) =&gt; {
+                <span class="kw">if </span>val &lt;= Length::MAX_SHORT <span class="kw">as </span>usize {
+                    <span class="number">1
+                </span>} <span class="kw">else </span>{
+                    <span class="kw">const </span>BITS_PER_BYTE: usize = <span class="number">8</span>;
+                    <span class="kw">let </span>bit_len =
+                        BITS_PER_BYTE * size_of::&lt;usize&gt;() - (val.leading_zeros() <span class="kw">as </span>usize);
+                    <span class="kw">let </span>byte_len = (bit_len + (BITS_PER_BYTE - <span class="number">1</span>)) / BITS_PER_BYTE;
+
+                    <span class="kw">const </span>FLAG_LEN: usize = <span class="number">1</span>;
+                    byte_len + FLAG_LEN
+                }
+            }
+        }
     }
 }
 
-<span class="doccomment">/// Tries to parse `bytes` starting with &#39;length&#39; and returns `(Length, octets_after_length)` .</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This function ignores extra octets at the end of `bytes` .</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Length</span>, <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]), <span class="ident">Error</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">first</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">bytes</span>.<span class="ident">get</span>(<span class="number">0</span>).<span class="ident">ok_or</span>(<span class="ident">Error::UnTerminatedBytes</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">1</span>..];
+<span class="doccomment">/// Tries to parse `bytes` starting with &#39;length&#39; and returns `(Length, octets_after_length)`.
+///
+/// This function ignores extra octets at the end of `bytes` .
+</span><span class="kw">pub fn </span>try_from(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;(Length, <span class="kw-2">&amp;</span>[u8]), Error&gt; {
+    <span class="kw">let </span>first = <span class="kw-2">*</span>bytes.get(<span class="number">0</span>).ok_or(Error::UnTerminatedBytes)<span class="question-mark">?</span>;
+    <span class="kw">let </span>bytes = <span class="kw-2">&amp;</span>bytes[<span class="number">1</span>..];
 
-    <span class="kw">if</span> <span class="ident">first</span> <span class="op">==</span> <span class="ident">Length::INDEFINITE</span> {
-        <span class="comment">// Indefinite</span>
-        <span class="prelude-val">Ok</span>((<span class="ident">Length::Indefinite</span>, <span class="ident">bytes</span>))
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">first</span> <span class="op">&amp;</span> <span class="ident">Length::LONG_FLAG</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Length::LONG_FLAG</span> {
-        <span class="comment">// Short form</span>
-        <span class="prelude-val">Ok</span>((<span class="ident">Length::Definite</span>(<span class="ident">first</span> <span class="kw">as</span> <span class="ident">usize</span>), <span class="ident">bytes</span>))
-    } <span class="kw">else</span> {
-        <span class="comment">// Long form</span>
-        <span class="kw">let</span> <span class="ident">second</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">bytes</span>.<span class="ident">get</span>(<span class="number">0</span>).<span class="ident">ok_or</span>(<span class="ident">Error::UnTerminatedBytes</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">second</span> <span class="op">==</span> <span class="number">0x00</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::RedundantBytes</span>);
+    <span class="kw">if </span>first == Length::INDEFINITE {
+        <span class="comment">// Indefinite
+        </span><span class="prelude-val">Ok</span>((Length::Indefinite, bytes))
+    } <span class="kw">else if </span>first &amp; Length::LONG_FLAG != Length::LONG_FLAG {
+        <span class="comment">// Short form
+        </span><span class="prelude-val">Ok</span>((Length::Definite(first <span class="kw">as </span>usize), bytes))
+    } <span class="kw">else </span>{
+        <span class="comment">// Long form
+        </span><span class="kw">let </span>second = <span class="kw-2">*</span>bytes.get(<span class="number">0</span>).ok_or(Error::UnTerminatedBytes)<span class="question-mark">?</span>;
+        <span class="kw">if </span>second == <span class="number">0x00 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::RedundantBytes);
         }
 
-        <span class="kw">let</span> <span class="ident">followings_count</span> <span class="op">=</span> (<span class="ident">first</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">Length::LONG_FLAG</span>) <span class="kw">as</span> <span class="ident">usize</span>;
-        <span class="kw">if</span> <span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">followings_count</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::UnTerminatedBytes</span>);
+        <span class="kw">let </span>followings_count = (first &amp; !Length::LONG_FLAG) <span class="kw">as </span>usize;
+        <span class="kw">if </span>bytes.len() &lt; followings_count {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnTerminatedBytes);
         }
 
-        <span class="kw">if</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">&lt;</span> <span class="ident">followings_count</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::OverFlow</span>);
+        <span class="kw">if </span>size_of::&lt;usize&gt;() &lt; followings_count {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::OverFlow);
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">len</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">as_ptr</span>();
-            <span class="kw">let</span> <span class="ident">dst</span> <span class="op">=</span> (<span class="kw-2">&amp;mut</span> <span class="ident">len</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">usize</span>) <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>;
-            <span class="kw">let</span> <span class="ident">dst</span> <span class="op">=</span> <span class="ident">dst</span>.<span class="ident">add</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">-</span> <span class="ident">followings_count</span>);
-            <span class="ident">dst</span>.<span class="ident">copy_from_nonoverlapping</span>(<span class="ident">src</span>, <span class="ident">followings_count</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>len: usize = <span class="number">0</span>;
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>src = bytes.as_ptr();
+            <span class="kw">let </span>dst = (<span class="kw-2">&amp;mut </span>len <span class="kw">as </span><span class="kw-2">*mut </span>usize) <span class="kw">as </span><span class="kw-2">*mut </span>u8;
+            <span class="kw">let </span>dst = dst.add(size_of::&lt;usize&gt;() - followings_count);
+            dst.copy_from_nonoverlapping(src, followings_count);
         }
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">usize::from_be</span>(<span class="ident">len</span>);
+        <span class="kw">let </span>len = usize::from_be(len);
 
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="ident">followings_count</span>..];
-        <span class="prelude-val">Ok</span>((<span class="ident">Length::Definite</span>(<span class="ident">len</span>), <span class="ident">bytes</span>))
+        <span class="kw">let </span>bytes = <span class="kw-2">&amp;</span>bytes[followings_count..];
+        <span class="prelude-val">Ok</span>((Length::Definite(len), bytes))
     }
 }
 
-<span class="doccomment">/// Parse `bytes` starting with &#39;length&#39; and returns `(Length, octets_after_length)` .</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Safety</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The behavior is undefined if `bytes` does not start with Length octet(s).</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_bytes_starts_with_unchecked</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; (<span class="ident">Length</span>, <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
-    <span class="kw">let</span> <span class="ident">first</span> <span class="op">=</span> <span class="ident">bytes</span>[<span class="number">0</span>];
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">1</span>..];
+<span class="doccomment">/// Parse `bytes` starting with &#39;length&#39; and returns `(Length, octets_after_length)` .
+///
+/// # Safety
+///
+/// The behavior is undefined if `bytes` does not start with Length octet(s).
+</span><span class="kw">pub unsafe fn </span>from_bytes_starts_with_unchecked(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; (Length, <span class="kw-2">&amp;</span>[u8]) {
+    <span class="kw">let </span>first = bytes[<span class="number">0</span>];
+    <span class="kw">let </span>bytes = <span class="kw-2">&amp;</span>bytes[<span class="number">1</span>..];
 
-    <span class="kw">if</span> <span class="ident">first</span> <span class="op">==</span> <span class="ident">Length::INDEFINITE</span> {
-        <span class="comment">// Indefinite</span>
-        (<span class="ident">Length::Indefinite</span>, <span class="ident">bytes</span>)
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">first</span> <span class="op">&amp;</span> <span class="ident">Length::LONG_FLAG</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Length::LONG_FLAG</span> {
-        <span class="comment">// Short form</span>
-        (<span class="ident">Length::Definite</span>(<span class="ident">first</span> <span class="kw">as</span> <span class="ident">usize</span>), <span class="ident">bytes</span>)
-    } <span class="kw">else</span> {
-        <span class="comment">// Long form</span>
-        <span class="kw">let</span> <span class="ident">followings_count</span> <span class="op">=</span> (<span class="ident">first</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">Length::LONG_FLAG</span>) <span class="kw">as</span> <span class="ident">usize</span>;
+    <span class="kw">if </span>first == Length::INDEFINITE {
+        <span class="comment">// Indefinite
+        </span>(Length::Indefinite, bytes)
+    } <span class="kw">else if </span>first &amp; Length::LONG_FLAG != Length::LONG_FLAG {
+        <span class="comment">// Short form
+        </span>(Length::Definite(first <span class="kw">as </span>usize), bytes)
+    } <span class="kw">else </span>{
+        <span class="comment">// Long form
+        </span><span class="kw">let </span>followings_count = (first &amp; !Length::LONG_FLAG) <span class="kw">as </span>usize;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">len</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">as_ptr</span>();
-        <span class="kw">let</span> <span class="ident">dst</span> <span class="op">=</span> (<span class="kw-2">&amp;mut</span> <span class="ident">len</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">usize</span>) <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>;
-        <span class="kw">let</span> <span class="ident">dst</span> <span class="op">=</span> <span class="ident">dst</span>.<span class="ident">add</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">-</span> <span class="ident">followings_count</span>);
-        <span class="ident">dst</span>.<span class="ident">copy_from_nonoverlapping</span>(<span class="ident">src</span>, <span class="ident">followings_count</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>len: usize = <span class="number">0</span>;
+        <span class="kw">let </span>src = bytes.as_ptr();
+        <span class="kw">let </span>dst = (<span class="kw-2">&amp;mut </span>len <span class="kw">as </span><span class="kw-2">*mut </span>usize) <span class="kw">as </span><span class="kw-2">*mut </span>u8;
+        <span class="kw">let </span>dst = dst.add(size_of::&lt;usize&gt;() - followings_count);
+        dst.copy_from_nonoverlapping(src, followings_count);
 
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">usize::from_be</span>(<span class="ident">len</span>);
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="ident">followings_count</span>..];
-        (<span class="ident">Length::Definite</span>(<span class="ident">len</span>), <span class="ident">bytes</span>)
+        <span class="kw">let </span>len = usize::from_be(len);
+        <span class="kw">let </span>bytes = <span class="kw-2">&amp;</span>bytes[followings_count..];
+        (Length::Definite(len), bytes)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">try_from_just</span>() {
-        <span class="kw">let</span> <span class="ident">empty</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[];
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>try_from_just() {
+        <span class="kw">let </span>empty: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[];
 
-        <span class="comment">// Indefinite</span>
-        {
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x80</span>];
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Indefinite</span>, <span class="ident">empty</span>), <span class="ident">res</span>);
+        <span class="comment">// Indefinite
+        </span>{
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x80</span>];
+            <span class="kw">let </span>res = try_from(bytes).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Indefinite, empty), res);
         }
 
-        <span class="comment">// Short form</span>
-        {
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x00</span>];
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="number">0</span>), <span class="ident">empty</span>), <span class="ident">res</span>);
+        <span class="comment">// Short form
+        </span>{
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x00</span>];
+            <span class="kw">let </span>res = try_from(bytes).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(<span class="number">0</span>), empty), res);
 
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x7f</span>];
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="number">0x7f</span>), <span class="ident">empty</span>), <span class="ident">res</span>);
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x7f</span>];
+            <span class="kw">let </span>res = try_from(bytes).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(<span class="number">0x7f</span>), empty), res);
         }
 
-        <span class="comment">// 2 bytes</span>
-        {
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x81</span>, <span class="number">0x80</span>];
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="number">0x80</span>), <span class="ident">empty</span>), <span class="ident">res</span>);
+        <span class="comment">// 2 bytes
+        </span>{
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x81</span>, <span class="number">0x80</span>];
+            <span class="kw">let </span>res = try_from(bytes).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(<span class="number">0x80</span>), empty), res);
 
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x81</span>, <span class="number">0xff</span>];
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="number">0xff</span>), <span class="ident">empty</span>), <span class="ident">res</span>);
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x81</span>, <span class="number">0xff</span>];
+            <span class="kw">let </span>res = try_from(bytes).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(<span class="number">0xff</span>), empty), res);
         }
 
-        <span class="comment">// 3 bytes</span>
-        {
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x82</span>, <span class="number">0x01</span>, <span class="number">0x00</span>];
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="number">0x0100</span>), <span class="ident">empty</span>), <span class="ident">res</span>);
+        <span class="comment">// 3 bytes
+        </span>{
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x82</span>, <span class="number">0x01</span>, <span class="number">0x00</span>];
+            <span class="kw">let </span>res = try_from(bytes).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(<span class="number">0x0100</span>), empty), res);
 
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x82</span>, <span class="number">0xff</span>, <span class="number">0xff</span>];
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="number">0xffff</span>), <span class="ident">empty</span>), <span class="ident">res</span>);
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x82</span>, <span class="number">0xff</span>, <span class="number">0xff</span>];
+            <span class="kw">let </span>res = try_from(bytes).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(<span class="number">0xffff</span>), empty), res);
         }
 
-        <span class="comment">// max</span>
-        {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="number">1</span>] <span class="op">=</span> [<span class="number">0xff</span>; <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="number">1</span>];
-            <span class="ident">bytes</span>[<span class="number">0</span>] <span class="op">=</span> <span class="number">0x80</span> <span class="op">+</span> (<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u8</span>);
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="ident">std::usize::MAX</span>), <span class="ident">empty</span>), <span class="ident">res</span>);
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">try_from_extra</span>() {
-        <span class="kw">let</span> <span class="ident">extra</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
-
-        <span class="comment">// Indefinite</span>
-        {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0x80</span>];
-            <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">extra</span>);
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Indefinite</span>, <span class="ident">extra</span>), <span class="ident">res</span>);
-        }
-
-        <span class="comment">// Short form</span>
-        {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0x00</span>];
-            <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">extra</span>);
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="number">0</span>), <span class="ident">extra</span>), <span class="ident">res</span>);
-
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0x7f</span>];
-            <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">extra</span>);
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="number">0x7f</span>), <span class="ident">extra</span>), <span class="ident">res</span>);
-        }
-
-        <span class="comment">// 2 bytes</span>
-        {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0x81</span>, <span class="number">0x80</span>];
-            <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">extra</span>);
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="number">0x80</span>), <span class="ident">extra</span>), <span class="ident">res</span>);
-
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0x81</span>, <span class="number">0xff</span>];
-            <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">extra</span>);
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="number">0xff</span>), <span class="ident">extra</span>), <span class="ident">res</span>);
-        }
-
-        <span class="comment">// 3 bytes</span>
-        {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0x82</span>, <span class="number">0x01</span>, <span class="number">0x00</span>];
-            <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">extra</span>);
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="number">0x0100</span>), <span class="ident">extra</span>), <span class="ident">res</span>);
-
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0x82</span>, <span class="number">0xff</span>, <span class="number">0xff</span>];
-            <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">extra</span>);
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="number">0xffff</span>), <span class="ident">extra</span>), <span class="ident">res</span>);
-        }
-
-        <span class="comment">// max</span>
-        {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="number">1</span>] <span class="op">=</span> [<span class="number">0xff</span>; <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="number">1</span>];
-            <span class="ident">bytes</span>[<span class="number">0</span>] <span class="op">=</span> <span class="number">0x80</span> <span class="op">+</span> (<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u8</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec::from</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span> <span class="kw">as</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]);
-            <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">extra</span>);
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="ident">std::usize::MAX</span>), <span class="ident">extra</span>), <span class="ident">res</span>);
+        <span class="comment">// max
+        </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>bytes: [u8; size_of::&lt;usize&gt;() + <span class="number">1</span>] = [<span class="number">0xff</span>; size_of::&lt;usize&gt;() + <span class="number">1</span>];
+            bytes[<span class="number">0</span>] = <span class="number">0x80 </span>+ (size_of::&lt;usize&gt;() <span class="kw">as </span>u8);
+            <span class="kw">let </span>res = try_from(<span class="kw-2">&amp;</span>bytes).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(std::usize::MAX), empty), res);
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">try_from_overflow</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="number">2</span>] <span class="op">=</span> [<span class="number">0x00</span>; <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="number">2</span>];
-        <span class="ident">bytes</span>[<span class="number">0</span>] <span class="op">=</span> <span class="number">0x80</span> <span class="op">+</span> (<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">+</span> <span class="number">1</span>;
-        <span class="ident">bytes</span>[<span class="number">1</span>] <span class="op">=</span> <span class="number">0x01</span>;
-        <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>).<span class="ident">unwrap_err</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">Error::OverFlow</span>, <span class="ident">e</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>try_from_extra() {
+        <span class="kw">let </span>extra: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec::from</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span> <span class="kw">as</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]);
-        <span class="ident">bytes</span>.<span class="ident">push</span>(<span class="number">0xff</span>);
-        <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>).<span class="ident">unwrap_err</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">Error::OverFlow</span>, <span class="ident">e</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">try_from_redundant</span>() {
-        <span class="comment">// 2 bytes</span>
-        {
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x81</span>, <span class="number">0x00</span>];
-            <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap_err</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">Error::RedundantBytes</span>, <span class="ident">e</span>);
+        <span class="comment">// Indefinite
+        </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>bytes = <span class="macro">vec!</span>[<span class="number">0x80</span>];
+            bytes.extend(extra);
+            <span class="kw">let </span>res = try_from(bytes.as_ref()).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Indefinite, extra), res);
         }
 
-        <span class="comment">// 3 bytes</span>
-        {
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x82</span>, <span class="number">0x00</span>, <span class="number">0x01</span>];
-            <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap_err</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">Error::RedundantBytes</span>, <span class="ident">e</span>);
+        <span class="comment">// Short form
+        </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>bytes = <span class="macro">vec!</span>[<span class="number">0x00</span>];
+            bytes.extend(extra);
+            <span class="kw">let </span>res = try_from(bytes.as_ref()).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(<span class="number">0</span>), extra), res);
 
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x82</span>, <span class="number">0x00</span>, <span class="number">0xff</span>];
-            <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap_err</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">Error::RedundantBytes</span>, <span class="ident">e</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>bytes = <span class="macro">vec!</span>[<span class="number">0x7f</span>];
+            bytes.extend(extra);
+            <span class="kw">let </span>res = try_from(bytes.as_ref()).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(<span class="number">0x7f</span>), extra), res);
         }
 
-        <span class="comment">// max</span>
-        {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="number">2</span>] <span class="op">=</span> [<span class="number">0xff</span>; <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="number">2</span>];
-            <span class="ident">bytes</span>[<span class="number">0</span>] <span class="op">=</span> <span class="number">0x80</span> <span class="op">+</span> (<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">+</span> <span class="number">1</span>;
-            <span class="ident">bytes</span>[<span class="number">1</span>] <span class="op">=</span> <span class="number">0x00</span>;
-            <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>).<span class="ident">unwrap_err</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">Error::RedundantBytes</span>, <span class="ident">e</span>);
-        }
-    }
+        <span class="comment">// 2 bytes
+        </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>bytes = <span class="macro">vec!</span>[<span class="number">0x81</span>, <span class="number">0x80</span>];
+            bytes.extend(extra);
+            <span class="kw">let </span>res = try_from(bytes.as_ref()).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(<span class="number">0x80</span>), extra), res);
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">try_from_unterminated</span>() {
-        <span class="comment">// 2 bytes</span>
-        {
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x82</span>, <span class="number">0x01</span>];
-            <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap_err</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">Error::UnTerminatedBytes</span>, <span class="ident">e</span>);
-
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x82</span>, <span class="number">0xff</span>];
-            <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap_err</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">Error::UnTerminatedBytes</span>, <span class="ident">e</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>bytes = <span class="macro">vec!</span>[<span class="number">0x81</span>, <span class="number">0xff</span>];
+            bytes.extend(extra);
+            <span class="kw">let </span>res = try_from(bytes.as_ref()).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(<span class="number">0xff</span>), extra), res);
         }
 
-        <span class="comment">// 3 bytes</span>
-        {
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x83</span>, <span class="number">0x01</span>, <span class="number">0x00</span>];
-            <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap_err</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">Error::UnTerminatedBytes</span>, <span class="ident">e</span>);
+        <span class="comment">// 3 bytes
+        </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>bytes = <span class="macro">vec!</span>[<span class="number">0x82</span>, <span class="number">0x01</span>, <span class="number">0x00</span>];
+            bytes.extend(extra);
+            <span class="kw">let </span>res = try_from(bytes.as_ref()).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(<span class="number">0x0100</span>), extra), res);
 
-            <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x83</span>, <span class="number">0xff</span>, <span class="number">0xff</span>];
-            <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>).<span class="ident">unwrap_err</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">Error::UnTerminatedBytes</span>, <span class="ident">e</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>bytes = <span class="macro">vec!</span>[<span class="number">0x82</span>, <span class="number">0xff</span>, <span class="number">0xff</span>];
+            bytes.extend(extra);
+            <span class="kw">let </span>res = try_from(bytes.as_ref()).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(<span class="number">0xffff</span>), extra), res);
         }
 
-        <span class="comment">// max</span>
-        {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="number">1</span>] <span class="op">=</span> [<span class="number">0xff</span>; <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="number">1</span>];
-            <span class="ident">bytes</span>[<span class="number">0</span>] <span class="op">=</span> <span class="number">0x80</span> <span class="op">+</span> (<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">+</span> <span class="number">1</span>;
-            <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>).<span class="ident">unwrap_err</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">Error::UnTerminatedBytes</span>, <span class="ident">e</span>);
+        <span class="comment">// max
+        </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>bytes: [u8; size_of::&lt;usize&gt;() + <span class="number">1</span>] = [<span class="number">0xff</span>; size_of::&lt;usize&gt;() + <span class="number">1</span>];
+            bytes[<span class="number">0</span>] = <span class="number">0x80 </span>+ (size_of::&lt;usize&gt;() <span class="kw">as </span>u8);
+            <span class="kw">let </span><span class="kw-2">mut </span>bytes = Vec::from(<span class="kw-2">&amp;</span>bytes <span class="kw">as </span><span class="kw-2">&amp;</span>[u8]);
+            bytes.extend(extra);
+            <span class="kw">let </span>res = try_from(<span class="kw-2">&amp;</span>bytes).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(std::usize::MAX), extra), res);
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">to_bytes</span>() {
-        <span class="kw">let</span> <span class="ident">empty</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[];
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>try_from_overflow() {
+        <span class="kw">let </span><span class="kw-2">mut </span>bytes: [u8; size_of::&lt;usize&gt;() + <span class="number">2</span>] = [<span class="number">0x00</span>; size_of::&lt;usize&gt;() + <span class="number">2</span>];
+        bytes[<span class="number">0</span>] = <span class="number">0x80 </span>+ (size_of::&lt;usize&gt;() <span class="kw">as </span>u8) + <span class="number">1</span>;
+        bytes[<span class="number">1</span>] = <span class="number">0x01</span>;
+        <span class="kw">let </span>e = try_from(<span class="kw-2">&amp;</span>bytes).unwrap_err();
+        <span class="macro">assert_eq!</span>(Error::OverFlow, e);
 
-        <span class="comment">// Indefinite</span>
-        {
-            <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Length::Indefinite</span>.<span class="ident">to_bytes</span>();
-            <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Indefinite</span>, <span class="ident">empty</span>), <span class="ident">length</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>bytes = Vec::from(<span class="kw-2">&amp;</span>bytes <span class="kw">as </span><span class="kw-2">&amp;</span>[u8]);
+        bytes.push(<span class="number">0xff</span>);
+        <span class="kw">let </span>e = try_from(<span class="kw-2">&amp;</span>bytes).unwrap_err();
+        <span class="macro">assert_eq!</span>(Error::OverFlow, e);
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>try_from_redundant() {
+        <span class="comment">// 2 bytes
+        </span>{
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x81</span>, <span class="number">0x00</span>];
+            <span class="kw">let </span>e = try_from(bytes).unwrap_err();
+            <span class="macro">assert_eq!</span>(Error::RedundantBytes, e);
         }
 
-        <span class="comment">// Definite</span>
-        <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">len</span> <span class="kw">in</span> <span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">1</span>, <span class="number">0x7f</span>, <span class="number">0x80</span>, <span class="number">0xff</span>, <span class="number">0x0100</span>, <span class="number">0xffff</span>, <span class="ident">std::usize::MAX</span>] {
-            <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Length::Definite</span>(<span class="ident">len</span>).<span class="ident">to_bytes</span>();
-            <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>((<span class="ident">Length::Definite</span>(<span class="ident">len</span>), <span class="ident">empty</span>), <span class="ident">length</span>);
+        <span class="comment">// 3 bytes
+        </span>{
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x82</span>, <span class="number">0x00</span>, <span class="number">0x01</span>];
+            <span class="kw">let </span>e = try_from(bytes).unwrap_err();
+            <span class="macro">assert_eq!</span>(Error::RedundantBytes, e);
+
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x82</span>, <span class="number">0x00</span>, <span class="number">0xff</span>];
+            <span class="kw">let </span>e = try_from(bytes).unwrap_err();
+            <span class="macro">assert_eq!</span>(Error::RedundantBytes, e);
         }
+
+        <span class="comment">// max
+        </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>bytes: [u8; size_of::&lt;usize&gt;() + <span class="number">2</span>] = [<span class="number">0xff</span>; size_of::&lt;usize&gt;() + <span class="number">2</span>];
+            bytes[<span class="number">0</span>] = <span class="number">0x80 </span>+ (size_of::&lt;usize&gt;() <span class="kw">as </span>u8) + <span class="number">1</span>;
+            bytes[<span class="number">1</span>] = <span class="number">0x00</span>;
+            <span class="kw">let </span>e = try_from(<span class="kw-2">&amp;</span>bytes).unwrap_err();
+            <span class="macro">assert_eq!</span>(Error::RedundantBytes, e);
+        }
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>try_from_unterminated() {
+        <span class="comment">// 2 bytes
+        </span>{
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x82</span>, <span class="number">0x01</span>];
+            <span class="kw">let </span>e = try_from(bytes).unwrap_err();
+            <span class="macro">assert_eq!</span>(Error::UnTerminatedBytes, e);
+
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x82</span>, <span class="number">0xff</span>];
+            <span class="kw">let </span>e = try_from(bytes).unwrap_err();
+            <span class="macro">assert_eq!</span>(Error::UnTerminatedBytes, e);
+        }
+
+        <span class="comment">// 3 bytes
+        </span>{
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x83</span>, <span class="number">0x01</span>, <span class="number">0x00</span>];
+            <span class="kw">let </span>e = try_from(bytes).unwrap_err();
+            <span class="macro">assert_eq!</span>(Error::UnTerminatedBytes, e);
+
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x83</span>, <span class="number">0xff</span>, <span class="number">0xff</span>];
+            <span class="kw">let </span>e = try_from(bytes).unwrap_err();
+            <span class="macro">assert_eq!</span>(Error::UnTerminatedBytes, e);
+        }
+
+        <span class="comment">// max
+        </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>bytes: [u8; size_of::&lt;usize&gt;() + <span class="number">1</span>] = [<span class="number">0xff</span>; size_of::&lt;usize&gt;() + <span class="number">1</span>];
+            bytes[<span class="number">0</span>] = <span class="number">0x80 </span>+ (size_of::&lt;usize&gt;() <span class="kw">as </span>u8) + <span class="number">1</span>;
+            <span class="kw">let </span>e = try_from(<span class="kw-2">&amp;</span>bytes).unwrap_err();
+            <span class="macro">assert_eq!</span>(Error::UnTerminatedBytes, e);
+        }
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>to_bytes() {
+        <span class="kw">let </span>empty: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[];
+
+        <span class="comment">// Indefinite
+        </span>{
+            <span class="kw">let </span>bytes = Length::Indefinite.to_bytes();
+            <span class="kw">let </span>length = try_from(bytes.as_ref()).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Indefinite, empty), length);
+        }
+
+        <span class="comment">// Definite
+        </span><span class="kw">for </span><span class="kw-2">&amp;</span>len <span class="kw">in </span><span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">1</span>, <span class="number">0x7f</span>, <span class="number">0x80</span>, <span class="number">0xff</span>, <span class="number">0x0100</span>, <span class="number">0xffff</span>, std::usize::MAX] {
+            <span class="kw">let </span>bytes = Length::Definite(len).to_bytes();
+            <span class="kw">let </span>length = try_from(bytes.as_ref()).unwrap();
+            <span class="macro">assert_eq!</span>((Length::Definite(len), empty), length);
+        }
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>len() {
+        <span class="comment">// Indefinite
+        </span><span class="macro">assert_eq!</span>(Length::Indefinite.len(), <span class="number">1</span>);
+
+        <span class="comment">// Definite 1 byte
+        </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">128 </span>{
+            <span class="macro">assert_eq!</span>(Length::Definite(i).len(), <span class="number">1</span>);
+        }
+
+        <span class="comment">// Definite 2 byte
+        </span><span class="macro">assert_eq!</span>(Length::Definite(<span class="number">128</span>).len(), <span class="number">2</span>);
+        <span class="macro">assert_eq!</span>(Length::Definite(<span class="number">255</span>).len(), <span class="number">2</span>);
+
+        <span class="comment">// Definite 3 byte
+        </span><span class="macro">assert_eq!</span>(Length::Definite(<span class="number">257</span>).len(), <span class="number">3</span>);
+        <span class="macro">assert_eq!</span>(Length::Definite(<span class="number">65535</span>).len(), <span class="number">3</span>);
+
+        <span class="comment">// Max
+        </span><span class="macro">assert_eq!</span>(
+            Length::Definite(std::usize::MAX).len(),
+            std::mem::size_of::&lt;usize&gt;() + <span class="number">1
+        </span>);
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bsn1" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bsn1" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
