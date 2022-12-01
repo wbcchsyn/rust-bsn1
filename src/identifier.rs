@@ -1449,7 +1449,7 @@ impl TryFrom<&[u8]> for Id {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`from_bytes`].
+    /// This function is same to [`try_from_bytes`].
     ///
     /// # Warnings
     ///
@@ -1457,7 +1457,7 @@ impl TryFrom<&[u8]> for Id {
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
     ///
-    /// [`from_bytes`]: #method.from_bytes
+    /// [`try_from_bytes`]: #method.try_from_bytes
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         <&IdRef>::try_from(bytes).map(|idref| idref.to_owned())
     }
@@ -1542,15 +1542,15 @@ impl Id {
     ///
     /// // &[0] represents 'Univedrsal EOC'.
     /// let bytes0: &[u8] = &[0];
-    /// let id0 = Id::from_bytes(bytes0).unwrap();
+    /// let id0 = Id::try_from_bytes(bytes0).unwrap();
     ///
     /// // The extra octets at the end does not affect the result.
     /// let bytes1: &[u8] = &[0, 1, 2];
-    /// let id1 = Id::from_bytes(bytes1).unwrap();
+    /// let id1 = Id::try_from_bytes(bytes1).unwrap();
     ///
     /// assert_eq!(id0, id1);
     /// ```
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
+    pub fn try_from_bytes(bytes: &[u8]) -> Result<Self, Error> {
         Self::try_from(bytes)
     }
 
@@ -1558,14 +1558,14 @@ impl Id {
     /// `bytes` must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
-    /// implementation or [`from_bytes`] instead.
+    /// implementation or [`try_from_bytes`] instead.
     ///
     /// # Safety
     ///
     /// The behavior is undefined if the format of `bytes` is not right.
     ///
     /// [`TryFrom`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Id
-    /// [`from_bytes`]: #method.from_bytes
+    /// [`try_from_bytes`]: #method.try_from_bytes
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
         IdRef::from_bytes_unchecked(bytes).to_owned()
     }
@@ -1835,7 +1835,7 @@ mod tests {
                     bytes[0] = cl as u8 | pc as u8 | IdRef::LONG_FLAG;
                     bytes[1] = 0x84;
                     bytes[19] = 0x00;
-                    let id = Id::from_bytes(&bytes).unwrap();
+                    let id = Id::try_from_bytes(&bytes).unwrap();
                     assert!(id.number::<u128>().is_err());
                 }
             }
