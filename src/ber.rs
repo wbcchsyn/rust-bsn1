@@ -58,7 +58,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`BerRef::from_bytes`].
+    /// This function is same to [`BerRef::try_from_bytes`].
     ///
     /// # Warnings
     ///
@@ -66,7 +66,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
     ///
-    /// [`BerRef::from_bytes`]: #method.from_bytes
+    /// [`BerRef::try_from_bytes`]: #method.try_from_bytes
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let id = <&IdRef>::try_from(bytes)?;
         let parsing = &bytes[id.as_ref().len()..];
@@ -125,15 +125,15 @@ impl BerRef {
     ///
     /// // Represents 'True' as Boolean.
     /// let bytes: &[u8] = &[0x01, 0x01, 0xff];
-    /// let ber0 = BerRef::from_bytes(bytes).unwrap();
+    /// let ber0 = BerRef::try_from_bytes(bytes).unwrap();
     /// assert!(ber0.contents().to_bool_ber().unwrap());
     ///
     /// // The extra octets at the end does not affect to the result.
     /// let bytes: &[u8] = &[0x01, 0x01, 0xff, 0x00];
-    /// let ber1 = BerRef::from_bytes(bytes).unwrap();
+    /// let ber1 = BerRef::try_from_bytes(bytes).unwrap();
     /// assert_eq!(ber0, ber1);
     /// ```
-    pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
+    pub fn try_from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
         <&Self>::try_from(bytes)
     }
 
@@ -142,14 +142,14 @@ impl BerRef {
     /// `bytes` must be BER octets and must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` are valid octets as an 'BER' or not, use [`TryFrom`]
-    /// implementation or [`from_bytes`].
+    /// implementation or [`try_from_bytes`].
     ///
     /// # Safety
     ///
     /// The behavior is undefined if `bytes` is not formatted as a BER.
     ///
     /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20BerRef
-    /// [`from_bytes`]: #method.from_bytes
+    /// [`try_from_bytes`]: #method.try_from_bytes
     ///
     /// # Examples
     ///
@@ -207,7 +207,7 @@ impl BerRef {
     ///
     /// // Represents '3' as an Integer.
     /// let bytes: &[u8] = &[0x02, 0x01, 0x03];
-    /// let ber = BerRef::from_bytes(bytes).unwrap();
+    /// let ber = BerRef::try_from_bytes(bytes).unwrap();
     ///
     /// assert_eq!(ber.id(), IdRef::integer());
     /// ```
@@ -232,7 +232,7 @@ impl BerRef {
     ///
     /// // Represents 'False' as a Boolean.
     /// let bytes: &[u8] = &[0x01, 0x01, 0x00];
-    /// let ber = BerRef::from_bytes(bytes).unwrap();
+    /// let ber = BerRef::try_from_bytes(bytes).unwrap();
     ///
     /// assert_eq!(ber.length(), Length::Definite(1));
     /// ```
@@ -251,7 +251,7 @@ impl BerRef {
     ///
     /// // Represents 'False' as a Boolean.
     /// let bytes: &[u8] = &[0x01, 0x01, 0x00];
-    /// let ber = BerRef::from_bytes(bytes).unwrap();
+    /// let ber = BerRef::try_from_bytes(bytes).unwrap();
     ///
     /// assert_eq!(ber.contents().to_bool_ber().unwrap(), false);
     /// ```
