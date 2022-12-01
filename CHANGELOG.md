@@ -69,3 +69,49 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - DerRef
     - IdRef
     - Id
+
+## 0.9 - 2022-12-01
+### Added
+- Struct 'Contents' and 'ContentsRef'.
+- The following trait implementations.
+    - 'Hash' for struct 'Ber'
+    - 'Hash' for struct 'BerRef'
+    - 'Hash' for struct 'Der'
+    - 'Hash' for struct 'DerRef'
+    - DerefMut for 'Id'
+- The following functions and methods.
+    - IdRef::from\_bytes\_mut()
+    - IdRef::from\_bytes\_mut\_unchecked()
+    - IdRef.as\_bytes\_mut()
+    - IdRef.set\_class()
+    - IdRef.set\_pc()
+    - Length::from\_bytes()
+    - Length.len()
+- Implementation of trait 'Send' and 'Sync' for the following structs.
+    - Ber
+    - Contents
+    - Der
+    - Id
+### Changed
+- The argument type of 'Ber::new()' and 'Der::new()'. (They take '&ContentsRef' instead of '&[u8]'.)
+- The return type of 'BerRef.contents()' and 'DerRef.contents()'. (They return '&ContentsRef' instead of '&[u8]'.)
+- The argument type of 'Id::new()'
+- The argument type and the return type of 'IdRef.number()'. (It takes and returns builtin primitive integer types like u8, i128, and so on.)
+- The return type of 'Length.to\_bytes()'. (It returns 'impl Deref<Target = [u8]>', instead of 'impl AsRef<[u8]>'.)
+### Removed
+- Module 'contents'; use functions of 'Contents' or 'ContentsRef' instead.
+- BSD-2-Clause license
+- The following trait implementations. ('Deref' and 'DerefMut' will do.)
+    - AsRef<BerRef> for Ber
+    - AsMut<ContentsRef> for Contents
+    - AsRef<ContentsRef> for Contents
+    - AsRef<DerRef> for Der
+    - AsRef<IdRef> for Id
+- The following build functions.
+    - Ber::from\_bytes\_starts\_with\_unchecked()
+    - BerRef::from\_bytes\_starts\_with\_unchecked()
+    - Der::from\_bytes\_starts\_with\_unchecked()
+    - DerRef::from\_bytes\_starts\_with\_unchecked()
+### Fixed
+- Enable to parse the identifier octets whose length is longer than or equals to 3 bytes.
+- Make the check strict to parse integer contents.
