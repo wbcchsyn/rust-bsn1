@@ -277,7 +277,7 @@ impl IdRef {
     ///
     /// {
     ///     // '&[0]' represents 'EOC'.
-    ///     let idref = unsafe { IdRef::from_bytes_mut_unchecked(bytes) };
+    ///     let idref = unsafe { IdRef::from_mut_bytes_unchecked(bytes) };
     ///     assert_eq!(IdRef::eoc(), idref);
     ///
     ///     // '&[1]' represents 'BOOL'.
@@ -288,7 +288,7 @@ impl IdRef {
     /// // 'bytes' is updated as well.
     /// assert_eq!(bytes[0], 1);
     /// ```
-    pub unsafe fn from_bytes_mut_unchecked(bytes: &mut [u8]) -> &mut Self {
+    pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         mem::transmute(bytes)
     }
     /// Provides a reference to `IdRef` representing 'Universal EOC'.
@@ -1369,7 +1369,7 @@ impl IdRef {
     /// let bytes: &mut [u8] = &mut [5];
     ///
     /// {
-    ///     let idref = unsafe { IdRef::from_bytes_mut_unchecked(bytes) };
+    ///     let idref = unsafe { IdRef::from_mut_bytes_unchecked(bytes) };
     ///     assert_eq!(5, idref.as_bytes()[0]);
     ///
     ///     idref.as_mut_bytes()[0] = 6;
