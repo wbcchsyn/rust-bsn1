@@ -1,6 +1,6 @@
 [package]
 name = "bsn1"
-version = "0.4.1"
+version = "0.9.0"
 authors = ["Yoshida Shin <wbcchsyn@gmail.com>"]
 edition = "2018"
 
