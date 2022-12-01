@@ -91,7 +91,7 @@ impl<'a> TryFrom<&'a mut [u8]> for &'a mut IdRef {
     ///
     /// This function is same to [`IdRef::from_bytes_mut`].
     ///
-    /// [`IdRef::from_bytes`]: #method.from_bytes_mut
+    /// [`IdRef::from_bytes_mut`]: #method.from_bytes_mut
     ///
     /// # Warnings
     ///
