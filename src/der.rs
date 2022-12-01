@@ -123,10 +123,6 @@ impl DerRef {
     /// If it is not sure whether `bytes` is valid octets as an 'DER' or not, use [`TryFrom`]
     /// implementation or [`from_bytes`].
     ///
-    /// If it is not sure whether `bytes` includes some extra octet(s) or not,
-    /// use [`from_bytes_starts_with_unchecked`]
-    ///
-    /// [`from_bytes_starts_with_unchecked`]: #method.from_bytes_starts_with_unchecked
     /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20DerRef
     /// [`from_bytes`]: #method.from_bytes
     ///
@@ -146,53 +142,6 @@ impl DerRef {
         let ptr = bytes as *const [u8];
         let ptr = ptr as *const Self;
         &*ptr
-    }
-
-    /// Provides a reference from `bytes` that starts with a DER.
-    ///
-    /// `bytes` may include some extra octet(s) at the end.
-    ///
-    /// If it is not sure whether `bytes` starts with DER octets or not, use [`TryFrom`]
-    /// implementation or [`from_bytes`] .
-    ///
-    /// If it is sure that `bytes` does not include any extra octet(s) at the end and that
-    /// `bytes` is valid as a DER, use [`from_bytes_unchecked`].
-    ///
-    /// # Safety
-    ///
-    /// The behavior is undefined if `bytes` does not start with 'ASN.1 DER' octets.
-    ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20DerRef
-    /// [`from_bytes_unchecked`]: #method.from_bytes_unchecked
-    /// [`from_bytes`]: #method.from_bytes
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::DerRef;
-    ///
-    /// // Represents '8' as Integer.
-    /// let bytes0: &[u8] = &[0x02, 0x01, 0x08];
-    /// let der0 = unsafe { DerRef::from_bytes_starts_with_unchecked(bytes0) };
-    ///
-    /// // The result is not changed even if extra octets are added to the end.
-    /// let bytes1: &[u8] = &[0x02, 0x01, 0x08, 0x00, 0xff];
-    /// let der1 = unsafe { DerRef::from_bytes_starts_with_unchecked(bytes1) };
-    ///
-    /// assert_eq!(der0, der1);
-    /// ```
-    pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> &Self {
-        let id = identifier::shrink_to_fit_unchecked(bytes);
-        let parsing = &bytes[id.len()..];
-
-        let (len, parsing) = match length::from_bytes_starts_with_unchecked(parsing) {
-            (Length::Definite(len), parsing) => (len, parsing),
-            _ => panic!("{}", Error::IndefiniteLength),
-        };
-
-        let total_len = bytes.len() - parsing.len() + len;
-        let bytes = &bytes[..total_len];
-        Self::from_bytes_unchecked(bytes)
     }
 }
 
@@ -828,26 +777,6 @@ mod tests {
             let der = Der::new(id, contents);
             let der_ref = <&DerRef>::try_from(der.as_ref() as &[u8]).unwrap();
             assert_eq!(der_ref, &der as &DerRef);
-        }
-    }
-
-    #[test]
-    fn from_bytes_starts_with_unchecked() {
-        let id = IdRef::octet_string();
-
-        let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
-        let extras: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
-        for &bytes in byteses {
-            let contents = ContentsRef::from_bytes(bytes);
-            let der = Der::new(id, contents);
-
-            for &extra in extras {
-                let mut bytes = Vec::from(der.as_ref() as &[u8]);
-                bytes.extend(extra);
-
-                let der_ref = unsafe { DerRef::from_bytes_starts_with_unchecked(bytes.as_ref()) };
-                assert_eq!(der_ref, &der);
-            }
         }
     }
 }
