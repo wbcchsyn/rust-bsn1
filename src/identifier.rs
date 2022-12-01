@@ -1370,16 +1370,16 @@ impl IdRef {
     ///
     /// {
     ///     let idref = unsafe { IdRef::from_bytes_mut_unchecked(bytes) };
-    ///     assert_eq!(5, idref.as_bytes_mut()[0]);
+    ///     assert_eq!(5, idref.as_bytes()[0]);
     ///
-    ///     idref.as_bytes_mut()[0] = 6;
-    ///     assert_eq!(6, idref.as_bytes_mut()[0]);
+    ///     idref.as_mut_bytes()[0] = 6;
+    ///     assert_eq!(6, idref.as_bytes()[0]);
     /// }
     ///
     /// // 'bytes' is updated as well.
     /// assert_eq!(6, bytes[0]);
     /// ```
-    pub fn as_bytes_mut(&mut self) -> &mut [u8] {
+    pub fn as_mut_bytes(&mut self) -> &mut [u8] {
         self
     }
 
