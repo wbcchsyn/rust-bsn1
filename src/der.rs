@@ -435,12 +435,8 @@ impl Der {
     /// If it is not sure whether `bytes` are valid octets as an 'DER' or not, use [`TryFrom`]
     /// implementation or [`from_bytes`].
     ///
-    /// If it is not sure whether `bytes` includes some extra octet(s) at the end or not, use
-    /// [`from_bytes_starts_with_unchecked`].
-    ///
     /// [`TryFrom`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Der
     /// [`from_bytes`]: #method.from_bytes
-    /// [`from_bytes_starts_with_unchecked`]: #method.from_bytes_starts_with_unchecked
     ///
     /// # Safety
     ///
@@ -459,51 +455,6 @@ impl Der {
         Self {
             buffer: Buffer::from(bytes),
         }
-    }
-
-    /// Builds a new instance from `bytes` that starts with 'DER' octets.
-    ///
-    /// `bytes` may include some extra octet(s) at the end.
-    ///
-    /// If it is not sure whether `bytes` starts with DER octets or not, use [`TryFrom`]
-    /// implementation or [`from_bytes`] .
-    ///
-    /// If it is sure that `bytes` does not include any extra octet, use [`from_bytes_unchecked`].
-    ///
-    /// # Safety
-    ///
-    /// The behavior is undefined if `bytes` does not start with 'ASN.1 DER' octets.
-    ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Der
-    /// [`from_bytes_unchecked`]: #method.from_bytes_unchecked
-    /// [`from_bytes`]: #method.from_bytes
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::Der;
-    ///
-    /// let bytes: &[u8] = &[0x02, 0x01, 0x0a];  // Represents '10' as Integer.
-    /// let der0 = unsafe { Der::from_bytes_starts_with_unchecked(bytes) };
-    ///
-    /// // Extra octets at the end of `bytes` does not affect to the result.
-    /// let bytes: &[u8] = &[0x02, 0x01, 0x0a, 0xff, 0x00];
-    /// let der1 = unsafe { Der::from_bytes_starts_with_unchecked(bytes) };
-    ///
-    /// assert_eq!(der0, der1);
-    /// ```
-    pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> Self {
-        let id = identifier::shrink_to_fit_unchecked(bytes);
-        let parsing = &bytes[id.len()..];
-
-        let (len, parsing) = match length::from_bytes_starts_with_unchecked(parsing) {
-            (Length::Definite(len), parsing) => (len, parsing),
-            _ => panic!("{}", Error::IndefiniteLength),
-        };
-
-        let total_len = bytes.len() - parsing.len() + len;
-        let bytes = &bytes[..total_len];
-        Self::from_bytes_unchecked(bytes)
     }
 
     /// Creates a new instance from `id` and the iterator of `contents`.
