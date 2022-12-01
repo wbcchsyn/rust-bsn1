@@ -1,103 +1,102 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;der.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>der.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../bsn1/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
-<span id="2">  2</span>
-<span id="3">  3</span>
-<span id="4">  4</span>
-<span id="5">  5</span>
-<span id="6">  6</span>
-<span id="7">  7</span>
-<span id="8">  8</span>
-<span id="9">  9</span>
-<span id="10"> 10</span>
-<span id="11"> 11</span>
-<span id="12"> 12</span>
-<span id="13"> 13</span>
-<span id="14"> 14</span>
-<span id="15"> 15</span>
-<span id="16"> 16</span>
-<span id="17"> 17</span>
-<span id="18"> 18</span>
-<span id="19"> 19</span>
-<span id="20"> 20</span>
-<span id="21"> 21</span>
-<span id="22"> 22</span>
-<span id="23"> 23</span>
-<span id="24"> 24</span>
-<span id="25"> 25</span>
-<span id="26"> 26</span>
-<span id="27"> 27</span>
-<span id="28"> 28</span>
-<span id="29"> 29</span>
-<span id="30"> 30</span>
-<span id="31"> 31</span>
-<span id="32"> 32</span>
-<span id="33"> 33</span>
-<span id="34"> 34</span>
-<span id="35"> 35</span>
-<span id="36"> 36</span>
-<span id="37"> 37</span>
-<span id="38"> 38</span>
-<span id="39"> 39</span>
-<span id="40"> 40</span>
-<span id="41"> 41</span>
-<span id="42"> 42</span>
-<span id="43"> 43</span>
-<span id="44"> 44</span>
-<span id="45"> 45</span>
-<span id="46"> 46</span>
-<span id="47"> 47</span>
-<span id="48"> 48</span>
-<span id="49"> 49</span>
-<span id="50"> 50</span>
-<span id="51"> 51</span>
-<span id="52"> 52</span>
-<span id="53"> 53</span>
-<span id="54"> 54</span>
-<span id="55"> 55</span>
-<span id="56"> 56</span>
-<span id="57"> 57</span>
-<span id="58"> 58</span>
-<span id="59"> 59</span>
-<span id="60"> 60</span>
-<span id="61"> 61</span>
-<span id="62"> 62</span>
-<span id="63"> 63</span>
-<span id="64"> 64</span>
-<span id="65"> 65</span>
-<span id="66"> 66</span>
-<span id="67"> 67</span>
-<span id="68"> 68</span>
-<span id="69"> 69</span>
-<span id="70"> 70</span>
-<span id="71"> 71</span>
-<span id="72"> 72</span>
-<span id="73"> 73</span>
-<span id="74"> 74</span>
-<span id="75"> 75</span>
-<span id="76"> 76</span>
-<span id="77"> 77</span>
-<span id="78"> 78</span>
-<span id="79"> 79</span>
-<span id="80"> 80</span>
-<span id="81"> 81</span>
-<span id="82"> 82</span>
-<span id="83"> 83</span>
-<span id="84"> 84</span>
-<span id="85"> 85</span>
-<span id="86"> 86</span>
-<span id="87"> 87</span>
-<span id="88"> 88</span>
-<span id="89"> 89</span>
-<span id="90"> 90</span>
-<span id="91"> 91</span>
-<span id="92"> 92</span>
-<span id="93"> 93</span>
-<span id="94"> 94</span>
-<span id="95"> 95</span>
-<span id="96"> 96</span>
-<span id="97"> 97</span>
-<span id="98"> 98</span>
-<span id="99"> 99</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/der.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>der.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../bsn1/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../bsn1/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../bsn1/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
 <span id="100">100</span>
 <span id="101">101</span>
 <span id="102">102</span>
@@ -781,1046 +780,787 @@
 <span id="780">780</span>
 <span id="781">781</span>
 <span id="782">782</span>
-<span id="783">783</span>
-<span id="784">784</span>
-<span id="785">785</span>
-<span id="786">786</span>
-<span id="787">787</span>
-<span id="788">788</span>
-<span id="789">789</span>
-<span id="790">790</span>
-<span id="791">791</span>
-<span id="792">792</span>
-<span id="793">793</span>
-<span id="794">794</span>
-<span id="795">795</span>
-<span id="796">796</span>
-<span id="797">797</span>
-<span id="798">798</span>
-<span id="799">799</span>
-<span id="800">800</span>
-<span id="801">801</span>
-<span id="802">802</span>
-<span id="803">803</span>
-<span id="804">804</span>
-<span id="805">805</span>
-<span id="806">806</span>
-<span id="807">807</span>
-<span id="808">808</span>
-<span id="809">809</span>
-<span id="810">810</span>
-<span id="811">811</span>
-<span id="812">812</span>
-<span id="813">813</span>
-<span id="814">814</span>
-<span id="815">815</span>
-<span id="816">816</span>
-<span id="817">817</span>
-<span id="818">818</span>
-<span id="819">819</span>
-<span id="820">820</span>
-<span id="821">821</span>
-<span id="822">822</span>
-<span id="823">823</span>
-<span id="824">824</span>
-<span id="825">825</span>
-<span id="826">826</span>
-<span id="827">827</span>
-<span id="828">828</span>
-<span id="829">829</span>
-<span id="830">830</span>
-<span id="831">831</span>
-<span id="832">832</span>
-<span id="833">833</span>
-<span id="834">834</span>
-<span id="835">835</span>
-<span id="836">836</span>
-<span id="837">837</span>
-<span id="838">838</span>
-<span id="839">839</span>
-<span id="840">840</span>
-<span id="841">841</span>
-<span id="842">842</span>
-<span id="843">843</span>
-<span id="844">844</span>
-<span id="845">845</span>
-<span id="846">846</span>
-<span id="847">847</span>
-<span id="848">848</span>
-<span id="849">849</span>
-<span id="850">850</span>
-<span id="851">851</span>
-<span id="852">852</span>
-<span id="853">853</span>
-<span id="854">854</span>
-<span id="855">855</span>
-<span id="856">856</span>
-<span id="857">857</span>
-<span id="858">858</span>
-<span id="859">859</span>
-<span id="860">860</span>
-<span id="861">861</span>
-<span id="862">862</span>
-<span id="863">863</span>
-<span id="864">864</span>
-<span id="865">865</span>
-<span id="866">866</span>
-<span id="867">867</span>
-<span id="868">868</span>
-<span id="869">869</span>
-<span id="870">870</span>
-<span id="871">871</span>
-<span id="872">872</span>
-<span id="873">873</span>
-<span id="874">874</span>
-<span id="875">875</span>
-<span id="876">876</span>
-<span id="877">877</span>
-<span id="878">878</span>
-<span id="879">879</span>
-<span id="880">880</span>
-<span id="881">881</span>
-<span id="882">882</span>
-<span id="883">883</span>
-<span id="884">884</span>
-<span id="885">885</span>
-<span id="886">886</span>
-<span id="887">887</span>
-<span id="888">888</span>
-<span id="889">889</span>
-<span id="890">890</span>
-<span id="891">891</span>
-<span id="892">892</span>
-<span id="893">893</span>
-<span id="894">894</span>
-<span id="895">895</span>
-<span id="896">896</span>
-<span id="897">897</span>
-<span id="898">898</span>
-<span id="899">899</span>
-<span id="900">900</span>
-<span id="901">901</span>
-<span id="902">902</span>
-<span id="903">903</span>
-<span id="904">904</span>
-<span id="905">905</span>
-<span id="906">906</span>
-<span id="907">907</span>
-<span id="908">908</span>
-<span id="909">909</span>
-<span id="910">910</span>
-<span id="911">911</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2021 Shin Yoshida</span>
-<span class="comment">//</span>
-<span class="comment">// &quot;LGPL-3.0-or-later OR Apache-2.0 OR BSD-2-Clause&quot;</span>
-<span class="comment">//</span>
-<span class="comment">// This is part of bsn1</span>
-<span class="comment">//</span>
-<span class="comment">//  bsn1 is free software: you can redistribute it and/or modify</span>
-<span class="comment">//  it under the terms of the GNU Lesser General Public License as published by</span>
-<span class="comment">//  the Free Software Foundation, either version 3 of the License, or</span>
-<span class="comment">//  (at your option) any later version.</span>
-<span class="comment">//</span>
-<span class="comment">//  bsn1 is distributed in the hope that it will be useful,</span>
-<span class="comment">//  but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
-<span class="comment">//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
-<span class="comment">//  GNU Lesser General Public License for more details.</span>
-<span class="comment">//</span>
-<span class="comment">//  You should have received a copy of the GNU Lesser General Public License</span>
-<span class="comment">//  along with bsn1.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
-<span class="comment">//</span>
-<span class="comment">//</span>
-<span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
-<span class="comment">// you may not use this file except in compliance with the License.</span>
-<span class="comment">// You may obtain a copy of the License at</span>
-<span class="comment">//</span>
-<span class="comment">//     http://www.apache.org/licenses/LICENSE-2.0</span>
-<span class="comment">//</span>
-<span class="comment">// Unless required by applicable law or agreed to in writing, software</span>
-<span class="comment">// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
-<span class="comment">// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
-<span class="comment">// See the License for the specific language governing permissions and</span>
-<span class="comment">// limitations under the License.</span>
-<span class="comment">//</span>
-<span class="comment">//</span>
-<span class="comment">// Redistribution and use in source and binary forms, with or without modification, are permitted</span>
-<span class="comment">// provided that the following conditions are met:</span>
-<span class="comment">//</span>
-<span class="comment">// 1. Redistributions of source code must retain the above copyright notice, this list of</span>
-<span class="comment">//    conditions and the following disclaimer.</span>
-<span class="comment">// 2. Redistributions in binary form must reproduce the above copyright notice, this</span>
-<span class="comment">//    list of conditions and the following disclaimer in the documentation and/or other</span>
-<span class="comment">//    materials provided with the distribution.</span>
-<span class="comment">//</span>
-<span class="comment">// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND</span>
-<span class="comment">// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED</span>
-<span class="comment">// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.</span>
-<span class="comment">// IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,</span>
-<span class="comment">// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT</span>
-<span class="comment">// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR</span>
-<span class="comment">// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,</span>
-<span class="comment">// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)</span>
-<span class="comment">// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
-<span class="comment">// POSSIBILITY OF SUCH DAMAGE.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2021-2022 Shin Yoshida
+//
+// &quot;LGPL-3.0-or-later OR Apache-2.0&quot;
+//
+// This is part of bsn1
+//
+//  bsn1 is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU Lesser General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  bsn1 is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public License
+//  along with bsn1.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+//
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">contents</span>, <span class="ident">identifier</span>, <span class="ident">length</span>, <span class="ident">Buffer</span>, <span class="ident">Error</span>, <span class="ident">IdRef</span>, <span class="ident">Length</span>};
-<span class="kw">use</span> <span class="ident">core::convert::TryFrom</span>;
-<span class="kw">use</span> <span class="ident">core::ops::Deref</span>;
-<span class="kw">use</span> <span class="ident">num::PrimInt</span>;
-<span class="kw">use</span> <span class="ident">std::borrow::Borrow</span>;
+</span><span class="kw">use crate</span>::{identifier, length, Buffer, Contents, ContentsRef, Error, IdRef, Length};
+<span class="kw">use </span>num::PrimInt;
+<span class="kw">use </span>std::borrow::Borrow;
+<span class="kw">use </span>std::convert::TryFrom;
+<span class="kw">use </span>std::ops::Deref;
 
-<span class="doccomment">/// `DerRef` is a wrapper of `[u8]` and represents DER.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This struct is &#39;Unsized&#39;, and user usually uses a reference to the instance.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DerRef</span> {
-    <span class="ident">bytes</span>: [<span class="ident">u8</span>],
+<span class="doccomment">/// `DerRef` is a wrapper of `[u8]` and represents DER.
+///
+/// This struct is &#39;Unsized&#39;, and user will usually uses a reference.
+</span><span class="attribute">#[derive(Debug, PartialEq, Eq, Hash)]
+</span><span class="kw">pub struct </span>DerRef {
+    bytes: [u8],
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">DerRef</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; TryFrom&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]&gt; <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>DerRef {
+    <span class="kw">type </span>Error = Error;
 
-    <span class="doccomment">/// Parses `bytes` starting with octets of &#39;ASN.1 DER&#39; and returns a reference to `DerRef` .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function ignores extra octet(s) at the end of `bytes` if any.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Warnings</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ASN.1 does not allow some universal identifier for DER, however, this function will accept</span>
-    <span class="doccomment">/// such an identifier.</span>
-    <span class="doccomment">/// For example, &#39;Octet String&#39; must be primitive in DER, but this function returns `Ok` for</span>
-    <span class="doccomment">/// constructed Octet String DER.</span>
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">IdRef</span><span class="op">&gt;</span><span class="ident">::try_from</span>(<span class="ident">bytes</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">parsing</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="ident">id</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>()..];
+    <span class="doccomment">/// Parses `bytes` starting with octets of &#39;ASN.1 DER&#39; and returns a reference to `DerRef` .
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`DerRef::from_bytes`].
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function will accept
+    /// such an identifier.
+    /// For example, &#39;Octet String&#39; must be primitive in DER, but this function returns `Ok` for
+    /// constructed Octet String DER.
+    ///
+    /// [`DerRef::from_bytes`]: #method.from_bytes
+    </span><span class="kw">fn </span>try_from(bytes: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>id = &lt;<span class="kw-2">&amp;</span>IdRef&gt;::try_from(bytes)<span class="question-mark">?</span>;
+        <span class="kw">let </span>parsing = <span class="kw-2">&amp;</span>bytes[id.as_ref().len()..];
 
-        <span class="kw">let</span> (<span class="ident">len</span>, <span class="ident">parsing</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">length::try_from</span>(<span class="ident">parsing</span>) {
-            <span class="prelude-val">Err</span>(<span class="ident">Error::OverFlow</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::UnTerminatedBytes</span>),
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
-            <span class="prelude-val">Ok</span>((<span class="ident">Length::Indefinite</span>, <span class="kw">_</span>)) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::IndefiniteLength</span>),
-            <span class="prelude-val">Ok</span>((<span class="ident">Length::Definite</span>(<span class="ident">len</span>), <span class="ident">parsing</span>)) =&gt; (<span class="ident">len</span>, <span class="ident">parsing</span>),
+        <span class="kw">let </span>(len, parsing) = <span class="kw">match </span>length::try_from(parsing) {
+            <span class="prelude-val">Err</span>(Error::OverFlow) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnTerminatedBytes),
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(e),
+            <span class="prelude-val">Ok</span>((Length::Indefinite, <span class="kw">_</span>)) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::IndefiniteLength),
+            <span class="prelude-val">Ok</span>((Length::Definite(len), parsing)) =&gt; (len, parsing),
         };
 
-        <span class="kw">let</span> <span class="ident">total_len</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">parsing</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">len</span>;
-        <span class="kw">if</span> <span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">total_len</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">Error::UnTerminatedBytes</span>)
-        } <span class="kw">else</span> {
-            <span class="kw">unsafe</span> { <span class="prelude-val">Ok</span>(<span class="ident">DerRef::from_bytes_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..<span class="ident">total_len</span>])) }
+        <span class="kw">let </span>total_len = bytes.len() - parsing.len() + len;
+        <span class="kw">if </span>bytes.len() &lt; total_len {
+            <span class="prelude-val">Err</span>(Error::UnTerminatedBytes)
+        } <span class="kw">else </span>{
+            <span class="kw">unsafe </span>{ <span class="prelude-val">Ok</span>(DerRef::from_bytes_unchecked(<span class="kw-2">&amp;</span>bytes[..total_len])) }
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">DerRef</span> {
-    <span class="doccomment">/// Parses `bytes` starting with octets of &#39;ASN.1 DER&#39; and returns a reference to `DerRef` .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function ignores extra octet(s) at the end of `bytes` if any.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function is same to [`&lt;&amp;DerRef&gt;::try_from`] .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Warnings</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ASN.1 does not allow some universal identifier for DER, however, this function will accept</span>
-    <span class="doccomment">/// such an identifier.</span>
-    <span class="doccomment">/// For example, &#39;Octet String&#39; must be primitive in DER, but this function returns `Ok` for</span>
-    <span class="doccomment">/// constructed Octet String DER.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`&lt;&amp;DerRef&gt;::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="self">Self</span><span class="op">&gt;</span><span class="ident">::try_from</span>(<span class="ident">bytes</span>)
+<span class="kw">impl </span>DerRef {
+    <span class="doccomment">/// Parses `bytes` starting with octets of &#39;ASN.1 DER&#39; and returns a reference to `DerRef`.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`&lt;&amp;DerRef&gt;::try_from`].
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function will accept
+    /// such an identifier.
+    /// For example, &#39;Octet String&#39; must be primitive in DER, but this function returns `Ok` for
+    /// constructed Octet String DER.
+    ///
+    /// [`&lt;&amp;DerRef&gt;::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20DerRef
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::DerRef;
+    ///
+    /// // Represents &#39;8&#39; as Integer.
+    /// let bytes0: &amp;[u8] = &amp;[0x02, 0x01, 0x08];
+    /// let der0 = DerRef::from_bytes(bytes0).unwrap();
+    ///
+    /// // The result is not changed even if extra octets are added to the end.
+    /// let bytes1: &amp;[u8] = &amp;[0x02, 0x01, 0x08, 0x00, 0xff];
+    /// let der1 = DerRef::from_bytes(bytes1).unwrap();
+    ///
+    /// assert_eq!(der0, der1);
+    /// ```
+    </span><span class="kw">pub fn </span>from_bytes(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>, Error&gt; {
+        &lt;<span class="kw-2">&amp;</span><span class="self">Self</span>&gt;::try_from(bytes)
     }
 
-    <span class="doccomment">/// Provides a reference from `bytes` without any sanitization.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// `bytes` must not include any extra octet.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If it is not sure whether `bytes` are valid octets as an &#39;DER&#39; or not, use [`TryFrom`]</span>
-    <span class="doccomment">/// implementation or [`from_bytes`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The difference from [`from_bytes_starts_with_unchecked`] is that</span>
-    <span class="doccomment">/// [`from_bytes_starts_with_unchecked`] checks the &#39;LENGTH&#39; octets and excludes extra</span>
-    <span class="doccomment">/// octet(s) at the end if any while this method does not check at all (i.e.</span>
-    <span class="doccomment">/// [`from_bytes_starts_with_unchecked`] allows extra octets at the end.)</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`from_bytes_starts_with_unchecked`]: #method.from_bytes_starts_with_unchecked</span>
-    <span class="doccomment">/// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E</span>
-    <span class="doccomment">/// [`from_bytes`]: #method.from_bytes</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The behavior is undefined if `bytes` is not formatted as a DER.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::{Der, DerRef, IdRef};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let der = Der::new(IdRef::octet_string(), &amp;[]);</span>
-    <span class="doccomment">/// let der_ref = unsafe { DerRef::from_bytes_unchecked(der.as_ref()) };</span>
-    <span class="doccomment">/// assert_eq!(der.as_ref() as &amp;DerRef, der_ref);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_bytes_unchecked</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">bytes</span> <span class="kw">as</span> <span class="kw-2">*const</span> [<span class="ident">u8</span>];
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="self">Self</span>;
-        <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">ptr</span>
-    }
-
-    <span class="doccomment">/// Provides a reference from `bytes` that starts with a DER.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// `bytes` may include some extra octet(s) at the end.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If it is not sure whether `bytes` starts with DER octets or not, use [`TryFrom`]</span>
-    <span class="doccomment">/// implementation or [`from_bytes`] .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The difference from [`from_bytes_unchecked`] is that this function checks the &#39;LENGTH&#39;</span>
-    <span class="doccomment">/// octets and excludes extra octet(s) at the end if any, while [`from_bytes_unchecked`]</span>
-    <span class="doccomment">/// does not check at all.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The behavior is undefined if `bytes` does not start with &#39;ASN.1 DER&#39; octets.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E</span>
-    <span class="doccomment">/// [`from_bytes_unchecked`]: #method.from_bytes_unchecked</span>
-    <span class="doccomment">/// [`from_bytes`]: #method.from_bytes</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::{Der, DerRef, IdRef};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let der = Der::new(IdRef::octet_string(), &amp;[]);</span>
-    <span class="doccomment">/// let mut bytes = Vec::from(der.as_ref() as &amp;[u8]);</span>
-    <span class="doccomment">/// bytes.extend(&amp;[1, 2, 3]);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let der_ref = unsafe { DerRef::from_bytes_starts_with_unchecked(bytes.as_ref()) };</span>
-    <span class="doccomment">/// assert_eq!(der.as_ref() as &amp;DerRef, der_ref);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_bytes_starts_with_unchecked</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">identifier::shrink_to_fit_unchecked</span>(<span class="ident">bytes</span>);
-        <span class="kw">let</span> <span class="ident">parsing</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="ident">id</span>.<span class="ident">len</span>()..];
-
-        <span class="kw">let</span> (<span class="ident">len</span>, <span class="ident">parsing</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">length::from_bytes_starts_with_unchecked</span>(<span class="ident">parsing</span>) {
-            (<span class="ident">Length::Definite</span>(<span class="ident">len</span>), <span class="ident">parsing</span>) =&gt; (<span class="ident">len</span>, <span class="ident">parsing</span>),
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Error::IndefiniteLength</span>),
-        };
-
-        <span class="kw">let</span> <span class="ident">total_len</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">parsing</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">len</span>;
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span>[..<span class="ident">total_len</span>];
-        <span class="ident"><span class="self">Self</span>::from_bytes_unchecked</span>(<span class="ident">bytes</span>)
+    <span class="doccomment">/// Provides a reference from `bytes` without any check.
+    ///
+    /// `bytes` must not include any extra octet.
+    ///
+    /// If it is not sure whether `bytes` is valid octets as an &#39;DER&#39; or not, use [`TryFrom`]
+    /// implementation or [`from_bytes`].
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20DerRef
+    /// [`from_bytes`]: #method.from_bytes
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if `bytes` is not formatted as a DER.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::DerRef;
+    ///
+    /// let bytes: &amp;[u8] = &amp;[0x02, 0x01, 0x08];  // Represents &#39;8&#39; as Integer.
+    /// let _der: &amp;DerRef = unsafe { DerRef::from_bytes_unchecked(bytes) };
+    /// ```
+    </span><span class="kw">pub unsafe fn </span>from_bytes_unchecked(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="kw-2">&amp;</span><span class="self">Self </span>{
+        <span class="kw">let </span>ptr = bytes <span class="kw">as </span><span class="kw-2">*const </span>[u8];
+        <span class="kw">let </span>ptr = ptr <span class="kw">as </span><span class="kw-2">*const </span><span class="self">Self</span>;
+        <span class="kw-2">&amp;*</span>ptr
     }
 }
 
-<span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DerRef</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bytes</span>
+<span class="kw">impl </span>AsRef&lt;[u8]&gt; <span class="kw">for </span>DerRef {
+    <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.bytes
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Borrow</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DerRef</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">borrow</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bytes</span>
+<span class="kw">impl </span>Borrow&lt;[u8]&gt; <span class="kw">for </span>DerRef {
+    <span class="kw">fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.bytes
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ToOwned</span> <span class="kw">for</span> <span class="ident">DerRef</span> {
-    <span class="kw">type</span> <span class="ident">Owned</span> <span class="op">=</span> <span class="ident">Der</span>;
+<span class="kw">impl </span>ToOwned <span class="kw">for </span>DerRef {
+    <span class="kw">type </span>Owned = Der;
 
-    <span class="kw">fn</span> <span class="ident">to_owned</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Owned</span> {
-        <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">Buffer::from</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bytes</span>);
-        <span class="ident">Der</span> { <span class="ident">buffer</span> }
+    <span class="kw">fn </span>to_owned(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Owned {
+        <span class="kw">let </span>buffer = Buffer::from(<span class="kw-2">&amp;</span><span class="self">self</span>.bytes);
+        Der { buffer }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">PartialEq</span><span class="op">&lt;</span><span class="ident">Der</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DerRef</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Der</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">as_ref</span>() <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="ident">DerRef</span>
+<span class="kw">impl </span>PartialEq&lt;Der&gt; <span class="kw">for </span>DerRef {
+    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>Der) -&gt; bool {
+        <span class="self">self </span>== other <span class="kw">as </span><span class="kw-2">&amp;</span>DerRef
     }
 }
 
-<span class="kw">impl</span> <span class="ident">DerRef</span> {
-    <span class="doccomment">/// Returns a reference to `IdRef` of `self` .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::{Der, IdRef};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let id = IdRef::octet_string();</span>
-    <span class="doccomment">/// let contents = &amp;[1, 2, 3];</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // &#39;DER&#39; implements &#39;Deref&lt;Target=DerRef&gt;&#39;</span>
-    <span class="doccomment">/// let der = Der::new(id, contents);</span>
-    <span class="doccomment">/// assert_eq!(id, der.id());</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">IdRef</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">identifier::shrink_to_fit_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bytes</span>);
-            <span class="ident">IdRef::from_bytes_unchecked</span>(<span class="ident">bytes</span>)
+<span class="kw">impl </span>DerRef {
+    <span class="doccomment">/// Returns a reference to the `IdRef` of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{DerRef, IdRef};
+    ///
+    /// let bytes: &amp;[u8] = &amp;[0x02, 0x01, 0x04];  // Represents &#39;4&#39; as Integer.
+    /// let der = DerRef::from_bytes(bytes).unwrap();
+    ///
+    /// assert_eq!(IdRef::integer(), der.id());
+    /// ```
+    </span><span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>IdRef {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>bytes = identifier::shrink_to_fit_unchecked(<span class="kw-2">&amp;</span><span class="self">self</span>.bytes);
+            IdRef::from_bytes_unchecked(bytes)
         }
     }
 
-    <span class="doccomment">/// Returns `Length` to represent the length of contents.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note that DER does not allow indefinite Length.</span>
-    <span class="doccomment">/// The return value must be `Length::Definite` .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Warnings</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// `Length` stands for the length octets in DER.</span>
-    <span class="doccomment">/// The total bytes is greater than the value.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::{Der, IdRef, Length};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let id = IdRef::octet_string();</span>
-    <span class="doccomment">/// let contents = &amp;[1, 2, 3];</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // &#39;DER&#39; implements &#39;Deref&lt;Target=DerRef&gt;&#39;</span>
-    <span class="doccomment">/// let der = Der::new(id, contents);</span>
-    <span class="doccomment">/// assert_eq!(Length::Definite(contents.len()), der.length());</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">length</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Length</span> {
-        <span class="kw">let</span> <span class="ident">id_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>().<span class="ident">as_ref</span>().<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bytes</span>[<span class="ident">id_len</span>..];
-        <span class="kw">unsafe</span> { <span class="ident">length::from_bytes_starts_with_unchecked</span>(<span class="ident">bytes</span>).<span class="number">0</span> }
+    <span class="doccomment">/// Returns `Length` to represent the length of contents.
+    ///
+    /// Note that DER does not allow indefinite Length.
+    /// The return value must be `Length::Definite`.
+    ///
+    /// # Warnings
+    ///
+    /// `Length` stands for the length octets in DER; i.e. the length of the contents.
+    /// The total byte count of the DER is greater than the value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{DerRef, Length};
+    ///
+    /// let bytes: &amp;[u8] = &amp;[0x04, 0x02, 0x00, 0xff];  // Represents &#39;[0x00, 0xff]&#39; as Octet String
+    /// let der = DerRef::from_bytes(bytes).unwrap();
+    ///
+    /// assert_eq!(Length::Definite(2), der.length());
+    /// ```
+    </span><span class="kw">pub fn </span>length(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Length {
+        <span class="kw">let </span>id_len = <span class="self">self</span>.id().as_ref().len();
+        <span class="kw">let </span>bytes = <span class="kw-2">&amp;</span><span class="self">self</span>.bytes[id_len..];
+        <span class="kw">unsafe </span>{ length::from_bytes_starts_with_unchecked(bytes).<span class="number">0 </span>}
     }
 
-    <span class="doccomment">/// Returns a reference to the contents octets of `self` .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::{Der, IdRef};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let id = IdRef::octet_string();</span>
-    <span class="doccomment">/// let contents = &amp;[1, 2, 3];</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // &#39;DER&#39; implements &#39;Deref&lt;Target=DerRef&gt;&#39;</span>
-    <span class="doccomment">/// let der = Der::new(id, contents);</span>
-    <span class="doccomment">/// assert_eq!(contents, der.contents());</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contents</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="kw">let</span> <span class="ident">id_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>().<span class="ident">as_ref</span>().<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bytes</span>[<span class="ident">id_len</span>..];
-        <span class="kw">unsafe</span> { <span class="ident">length::from_bytes_starts_with_unchecked</span>(<span class="ident">bytes</span>).<span class="number">1</span> }
+    <span class="doccomment">/// Returns a reference to the contents octets of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ContentsRef, DerRef};
+    ///
+    /// let bytes: &amp;[u8] = &amp;[0x04, 0x02, 0x00, 0xff];  // Represents &#39;[0x00, 0xff]&#39; as Octet String
+    /// let der = DerRef::from_bytes(bytes).unwrap();
+    /// let contents = ContentsRef::from_bytes(&amp;bytes[2..]);
+    ///
+    /// assert_eq!(contents, der.contents());
+    /// ```
+    </span><span class="kw">pub fn </span>contents(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ContentsRef {
+        <span class="kw">let </span>id_len = <span class="self">self</span>.id().as_ref().len();
+        <span class="kw">let </span>bytes = <span class="kw-2">&amp;</span><span class="self">self</span>.bytes[id_len..];
+        <span class="kw">let </span>bytes = <span class="kw">unsafe </span>{ length::from_bytes_starts_with_unchecked(bytes).<span class="number">1 </span>};
+        ContentsRef::from_bytes(bytes)
     }
 
-    <span class="doccomment">/// Provides a reference to the inner slice.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::DerRef;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // This octets represents `3` as integer.</span>
-    <span class="doccomment">/// let bytes = vec![0x02, 0x01, 0x03];</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let der = unsafe { DerRef::from_bytes_unchecked(&amp;bytes) };</span>
-    <span class="doccomment">/// assert_eq!(&amp;bytes, der.as_bytes());</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bytes</span>
+    <span class="doccomment">/// Provides a reference to the inner slice.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use bsn1::DerRef;
+    ///
+    /// // This octets represents `3` as integer.
+    /// let bytes = vec![0x02, 0x01, 0x03];
+    ///
+    /// let der = DerRef::from_bytes(&amp;bytes).unwrap();
+    /// assert_eq!(&amp;bytes, der.as_bytes());
+    /// ```
+    </span><span class="kw">pub fn </span>as_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.bytes
     }
 }
 
-<span class="doccomment">/// `Der` owns [`DerRef`] and represents DER.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`DerRef`]: struct.DerRef.html</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Der</span> {
-    <span class="ident">buffer</span>: <span class="ident">Buffer</span>,
+<span class="doccomment">/// `Der` owns [`DerRef`] and represents ASN.1 DER.
+///
+/// The structure of `Der` is similar to that of `Vec&lt;u8&gt;`.
+///
+/// User can access to the [`DerRef`] via the [`Deref`] implementation, and to the inner slice via
+/// the [`DerRef`].
+///
+/// [`DerRef`]: struct.DerRef.html
+/// [`Deref`]: #impl-Deref-for-Der
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+</span><span class="kw">pub struct </span>Der {
+    buffer: Buffer,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">DerRef</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Der</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">der_ref</span>: <span class="kw-2">&amp;</span><span class="ident">DerRef</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">der_ref</span>.<span class="ident">to_owned</span>()
+<span class="kw">impl </span>From&lt;<span class="kw-2">&amp;</span>DerRef&gt; <span class="kw">for </span>Der {
+    <span class="kw">fn </span>from(der_ref: <span class="kw-2">&amp;</span>DerRef) -&gt; <span class="self">Self </span>{
+        der_ref.to_owned()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Der</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
+<span class="kw">impl </span>TryFrom&lt;<span class="kw-2">&amp;</span>[u8]&gt; <span class="kw">for </span>Der {
+    <span class="kw">type </span>Error = Error;
 
-    <span class="doccomment">/// Parses `bytes` starting with DER octets and builds a new instance.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function ignores extra octet(s) at the end of `bytes` if any.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function is same to [`from_bytes`] .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Warnings</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ASN.1 does not allow some universal identifier for DER, however, this function accepts</span>
-    <span class="doccomment">/// such an identifier.</span>
-    <span class="doccomment">/// For example, &#39;Octet String&#39; must be primitive in DER, but this function returns `Ok` for</span>
-    <span class="doccomment">/// constructed Octet String DER.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`from_bytes`]: #method.from_bytes</span>
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">der_ref</span> <span class="op">=</span> <span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">DerRef</span><span class="op">&gt;</span><span class="ident">::try_from</span>(<span class="ident">bytes</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">der_ref</span>.<span class="ident">to_owned</span>())
+    <span class="doccomment">/// Parses `bytes` starting with DER octets and creates a new instance.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`from_bytes`] .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such an identifier.
+    /// For example, &#39;Octet String&#39; must be primitive in DER, but this function returns `Ok` for
+    /// constructed Octet String DER.
+    ///
+    /// [`from_bytes`]: #method.from_bytes
+    </span><span class="kw">fn </span>try_from(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>der_ref = &lt;<span class="kw-2">&amp;</span>DerRef&gt;::try_from(bytes)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(der_ref.to_owned())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Der</span> {
-    <span class="doccomment">/// Creates a new instance from `id` and `contents` .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Warnings</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ASN.1 does not allow some universal identifier for DER, however, this function accepts</span>
-    <span class="doccomment">/// such an identifier.</span>
-    <span class="doccomment">/// For example, &#39;Octet String&#39; must be primitive in DER, but this function will construct a</span>
-    <span class="doccomment">/// new instance even if `id` represenets constructed &#39;Octet String.&#39;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::{Der, IdRef};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let id = IdRef::octet_string();</span>
-    <span class="doccomment">/// let contents: &amp;[u8] = &amp;[10, 20, 30];</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let der = Der::new(id, contents);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(id, der.id());</span>
-    <span class="doccomment">/// assert_eq!(contents, der.contents());</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">IdRef</span>, <span class="ident">contents</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">Length::Definite</span>(<span class="ident">contents</span>.<span class="ident">len</span>());
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">len</span>.<span class="ident">to_bytes</span>();
+<span class="kw">impl </span>Der {
+    <span class="doccomment">/// Creates a new instance from `id` and `contents`.
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such identifiers.
+    /// For example, &#39;Octet String&#39; must be primitive in DER, but this function will construct a
+    /// new instance even if `id` represenets constructed &#39;Octet String.&#39;
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ContentsRef, Der, IdRef};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents = ContentsRef::from_bytes(&amp;[10, 20, 30]);
+    ///
+    /// let der = Der::new(id, contents);
+    ///
+    /// assert_eq!(id, der.id());
+    /// assert_eq!(contents, der.contents());
+    /// ```
+    </span><span class="kw">pub fn </span>new(id: <span class="kw-2">&amp;</span>IdRef, contents: <span class="kw-2">&amp;</span>ContentsRef) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>len = Length::Definite(contents.len());
+        <span class="kw">let </span>len = len.to_bytes();
 
-        <span class="kw">let</span> <span class="ident">total_len</span> <span class="op">=</span> <span class="ident">id</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="op">+</span> <span class="ident">len</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="op">+</span> <span class="ident">contents</span>.<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">Buffer::with_capacity</span>(<span class="ident">total_len</span>);
-        <span class="kw">unsafe</span> { <span class="ident">buffer</span>.<span class="ident">set_len</span>(<span class="ident">total_len</span>) };
+        <span class="kw">let </span>total_len = id.len() + len.len() + contents.len();
+        <span class="kw">let </span><span class="kw-2">mut </span>buffer = Buffer::with_capacity(total_len);
+        <span class="kw">unsafe </span>{ buffer.set_len(total_len) };
 
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">as_mut_ptr</span>();
-            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">id</span>.<span class="ident">as_ref</span>();
-            <span class="ident">ptr</span>.<span class="ident">copy_from_nonoverlapping</span>(<span class="ident">id</span>.<span class="ident">as_ptr</span>(), <span class="ident">id</span>.<span class="ident">len</span>());
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>ptr = buffer.as_mut_ptr();
+            ptr.copy_from_nonoverlapping(id.as_ptr(), id.len());
 
-            <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">id</span>.<span class="ident">len</span>());
-            <span class="ident">ptr</span>.<span class="ident">copy_from_nonoverlapping</span>(<span class="ident">len</span>.<span class="ident">as_ref</span>().<span class="ident">as_ptr</span>(), <span class="ident">len</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>());
+            <span class="kw">let </span>ptr = ptr.add(id.len());
+            ptr.copy_from_nonoverlapping(len.as_ptr(), len.len());
 
-            <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">len</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>());
-            <span class="ident">ptr</span>.<span class="ident">copy_from_nonoverlapping</span>(<span class="ident">contents</span>.<span class="ident">as_ptr</span>(), <span class="ident">contents</span>.<span class="ident">len</span>());
+            <span class="kw">let </span>ptr = ptr.add(len.len());
+            ptr.copy_from_nonoverlapping(contents.as_ptr(), contents.len());
         }
 
-        <span class="self">Self</span> { <span class="ident">buffer</span> }
+        <span class="self">Self </span>{ buffer }
     }
 
-    <span class="doccomment">/// Parses `bytes` starting with DER octets and builds a new instance.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function ignores extra octet(s) at the end of `bytes` if any.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function is same to [`TryFrom::try_from`] .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Warnings</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ASN.1 does not allow some universal identifier for DER, however, this function accepts</span>
-    <span class="doccomment">/// such an identifier.</span>
-    <span class="doccomment">/// For example, &#39;Octet String&#39; must be primitive in DER, but this function returns `Ok` for</span>
-    <span class="doccomment">/// constructed Octet String DER.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`TryFrom::try_from`]: #impl-TryFrom%3C%26%27_%20%5Bu8%5D%3E</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="ident"><span class="self">Self</span>::try_from</span>(<span class="ident">bytes</span>)
+    <span class="doccomment">/// Parses `bytes` starting with DER octets and builds a new instance.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`TryFrom::try_from`] .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such an identifier.
+    /// For example, &#39;Octet String&#39; must be primitive in DER, but this function returns `Ok` for
+    /// constructed Octet String DER.
+    ///
+    /// [`TryFrom::try_from`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Der
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Der;
+    ///
+    /// let bytes: &amp;[u8] = &amp;[0x02, 0x01, 0x0a];  // Represents &#39;10&#39; as Integer.
+    /// let der0 = Der::from_bytes(bytes).unwrap();
+    ///
+    /// // Extra octets at the end does not affect the result.
+    /// let bytes: &amp;[u8] = &amp;[0x02, 0x01, 0x0a, 0x01, 0x02];
+    /// let der1 = Der::from_bytes(bytes).unwrap();
+    ///
+    /// assert_eq!(der0, der1);
+    /// ```
+    </span><span class="kw">pub fn </span>from_bytes(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
+        <span class="self">Self</span>::try_from(bytes)
     }
 
-    <span class="doccomment">/// Builds a new instance holding `bytes` without any sanitization.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// `bytes` must not include any extra octet.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If it is not sure whether `bytes` are valid octets as an &#39;DER&#39; or not, use [`TryFrom`]</span>
-    <span class="doccomment">/// implementation or [`from_bytes`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The difference from [`from_bytes_starts_with_unchecked`] is that</span>
-    <span class="doccomment">/// [`from_bytes_starts_with_unchecked`] checks the &#39;LENGTH&#39; octets and excludes extra</span>
-    <span class="doccomment">/// octet(s) at the end if any while this method does not check at all (i.e.</span>
-    <span class="doccomment">/// [`from_bytes_starts_with_unchecked`] allows extra octets at the end.)</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E</span>
-    <span class="doccomment">/// [`from_bytes`]: #method.from_bytes</span>
-    <span class="doccomment">/// [`from_bytes_starts_with_unchecked`]: #method.from_bytes_starts_with_unchecked</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The behavior is undefined if `bytes` is not formatted as a DER.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::{Der, IdRef};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let der0 = Der::new(IdRef::octet_string(), &amp;[]);</span>
-    <span class="doccomment">/// let der1 = unsafe { Der::from_bytes_unchecked(der0.as_ref()) };</span>
-    <span class="doccomment">/// assert_eq!(der0, der1);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_bytes_unchecked</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">buffer</span>: <span class="ident">Buffer::from</span>(<span class="ident">bytes</span>),
+    <span class="doccomment">/// Builds a new instance holding `bytes` without any check.
+    ///
+    /// `bytes` must not include any extra octet.
+    ///
+    /// If it is not sure whether `bytes` are valid octets as an &#39;DER&#39; or not, use [`TryFrom`]
+    /// implementation or [`from_bytes`].
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Der
+    /// [`from_bytes`]: #method.from_bytes
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if `bytes` is not formatted as a DER.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Der;
+    ///
+    /// let bytes: &amp;[u8] = &amp;[0x02, 0x01, 0x0a];  // Represents &#39;10&#39; as Integer.
+    /// let der = unsafe { Der::from_bytes_unchecked(bytes) };
+    /// assert_eq!(bytes, der.as_bytes());
+    /// ```
+    </span><span class="kw">pub unsafe fn </span>from_bytes_unchecked(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            buffer: Buffer::from(bytes),
         }
     }
 
-    <span class="doccomment">/// Builds a new instance from `bytes` that starts with &#39;DER&#39; octets.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// `bytes` may include some extra octet(s) at the end.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If it is not sure whether `bytes` starts with DER octets or not, use [`TryFrom`]</span>
-    <span class="doccomment">/// implementation or [`from_bytes`] .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The difference from [`from_bytes_unchecked`] is that this function checks the &#39;LENGTH&#39;</span>
-    <span class="doccomment">/// octets and excludes extra octet(s) at the end if any, while [`from_bytes_unchecked`]</span>
-    <span class="doccomment">/// does not check at all.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The behavior is undefined if `bytes` does not start with &#39;ASN.1 DER&#39; octets.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E</span>
-    <span class="doccomment">/// [`from_bytes_unchecked`]: #method.from_bytes_unchecked</span>
-    <span class="doccomment">/// [`from_bytes`]: #method.from_bytes</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::{Der, IdRef};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let der0 = Der::new(IdRef::octet_string(), &amp;[]);</span>
-    <span class="doccomment">/// let mut bytes = Vec::from(der0.as_ref() as &amp;[u8]);</span>
-    <span class="doccomment">/// bytes.extend(&amp;[1, 2, 3]);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let der1 = unsafe { Der::from_bytes_starts_with_unchecked(bytes.as_ref()) };</span>
-    <span class="doccomment">/// assert_eq!(der0, der1);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_bytes_starts_with_unchecked</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">identifier::shrink_to_fit_unchecked</span>(<span class="ident">bytes</span>);
-        <span class="kw">let</span> <span class="ident">parsing</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="ident">id</span>.<span class="ident">len</span>()..];
-
-        <span class="kw">let</span> (<span class="ident">len</span>, <span class="ident">parsing</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">length::from_bytes_starts_with_unchecked</span>(<span class="ident">parsing</span>) {
-            (<span class="ident">Length::Definite</span>(<span class="ident">len</span>), <span class="ident">parsing</span>) =&gt; (<span class="ident">len</span>, <span class="ident">parsing</span>),
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Error::IndefiniteLength</span>),
-        };
-
-        <span class="kw">let</span> <span class="ident">total_len</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">parsing</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">len</span>;
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span>[..<span class="ident">total_len</span>];
-        <span class="ident"><span class="self">Self</span>::from_bytes_unchecked</span>(<span class="ident">bytes</span>)
-    }
-
-    <span class="doccomment">/// Creates a new instance from `id` and `contents` .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Warnings</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ASN.1 does not allow some universal identifier for DER, however, this function accepts</span>
-    <span class="doccomment">/// such an identifier.</span>
-    <span class="doccomment">/// For example, &#39;Octet String&#39; must be primitive in DER, but this function will construct a</span>
-    <span class="doccomment">/// new instance even if `id` represenets constructed &#39;Octet String.&#39;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::{Der, IdRef};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let id = IdRef::sequence();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Build instance using function &#39;from_id_iterator()&#39;.</span>
-    <span class="doccomment">/// let contents: &amp;[Der] = &amp;[Der::utf8_string(&quot;foo&quot;), Der::integer(29)];</span>
-    <span class="doccomment">/// let der = Der::from_id_iterator(id, contents.iter());</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Build instance using function &#39;new()&#39;.</span>
-    <span class="doccomment">/// let contents: Vec&lt;u8&gt; = contents.iter()</span>
-    <span class="doccomment">///                         .map(|i| Vec::from(i.as_ref() as &amp;[u8]))</span>
-    <span class="doccomment">///                         .flatten().collect();</span>
-    <span class="doccomment">/// let expected = Der::new(id, &amp;contents);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(expected, der);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_id_iterator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">IdRef</span>, <span class="ident">contents</span>: <span class="ident">I</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">I</span>: <span class="ident">Iterator</span> <span class="op">+</span> <span class="ident">Clone</span>,
-        <span class="ident">I::Item</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
+    <span class="doccomment">/// Creates a new instance from `id` and the iterator of `contents`.
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such an identifier.
+    /// For example, &#39;Octet String&#39; must be primitive in DER, but this function will construct a
+    /// new instance even if `id` represenets constructed &#39;Octet String.&#39;
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ContentsRef, Der, IdRef};
+    ///
+    /// let id = IdRef::sequence();
+    ///
+    /// // Build instance using function &#39;from_id_iterator()&#39;.
+    /// let contents: &amp;[Der] = &amp;[Der::utf8_string(&quot;foo&quot;), Der::integer(29_i32)];
+    /// let der = Der::from_id_iterator(id, contents.iter());
+    ///
+    /// // Build instance using function &#39;new()&#39;.
+    /// let contents: Vec&lt;u8&gt; = contents.iter()
+    ///                         .map(|i| Vec::from(i.as_ref() as &amp;[u8]))
+    ///                         .flatten().collect();
+    /// let contents = ContentsRef::from_bytes(&amp;contents);
+    /// let expected = Der::new(id, contents);
+    ///
+    /// // The result are same.
+    /// assert_eq!(expected, der);
+    /// ```
+    </span><span class="kw">pub fn </span>from_id_iterator&lt;I&gt;(id: <span class="kw-2">&amp;</span>IdRef, contents: I) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>I: Iterator + Clone,
+        I::Item: AsRef&lt;[u8]&gt;,
     {
-        <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">contents</span>
-            .<span class="ident">clone</span>()
-            .<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">item</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">item</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>());
-        <span class="kw">let</span> <span class="ident">length_bytes</span> <span class="op">=</span> <span class="ident">Length::Definite</span>(<span class="ident">length</span>).<span class="ident">to_bytes</span>();
-        <span class="kw">let</span> <span class="ident">total_len</span> <span class="op">=</span> <span class="ident">id</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="op">+</span> <span class="ident">length_bytes</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="op">+</span> <span class="ident">length</span>;
+        <span class="kw">let </span>length = contents
+            .clone()
+            .fold(<span class="number">0</span>, |acc, item| acc + item.as_ref().len());
+        <span class="kw">let </span>length_bytes = Length::Definite(length).to_bytes();
+        <span class="kw">let </span>total_len = id.len() + length_bytes.len() + length;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">Buffer::with_capacity</span>(<span class="ident">total_len</span>);
-        <span class="ident">buffer</span>.<span class="ident">extend_from_slice</span>(<span class="ident">id</span>.<span class="ident">as_ref</span>());
-        <span class="ident">buffer</span>.<span class="ident">extend_from_slice</span>(<span class="ident">length_bytes</span>.<span class="ident">as_ref</span>());
-        <span class="kw">for</span> <span class="ident">c</span> <span class="kw">in</span> <span class="ident">contents</span> {
-            <span class="ident">buffer</span>.<span class="ident">extend_from_slice</span>(<span class="ident">c</span>.<span class="ident">as_ref</span>());
+        <span class="kw">let </span><span class="kw-2">mut </span>buffer = Buffer::with_capacity(total_len);
+        buffer.extend_from_slice(id.as_ref());
+        buffer.extend_from_slice(length_bytes.as_ref());
+        <span class="kw">for </span>c <span class="kw">in </span>contents {
+            buffer.extend_from_slice(c.as_ref());
         }
 
-        <span class="self">Self</span> { <span class="ident">buffer</span> }
+        <span class="self">Self </span>{ buffer }
     }
 
-    <span class="doccomment">/// Returns a new instance representing boolean.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::{contents, Der, IdRef};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let val = true;</span>
-    <span class="doccomment">/// let der = Der::boolean(val);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(IdRef::boolean(), der.id());</span>
-    <span class="doccomment">/// assert_eq!(val, contents::to_bool_der(der.contents()).unwrap());</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">boolean</span>(<span class="ident">val</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">IdRef::boolean</span>(), <span class="ident">contents::from_bool</span>(<span class="ident">val</span>).<span class="ident">as_ref</span>())
+    <span class="doccomment">/// Returns a new instance representing boolean.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let val = true;
+    /// let der = Der::boolean(val);
+    ///
+    /// assert_eq!(IdRef::boolean(), der.id());
+    /// assert_eq!(val, der.contents().to_bool_der().unwrap());
+    /// ```
+    </span><span class="kw">pub fn </span>boolean(val: bool) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(IdRef::boolean(), <span class="kw-2">&amp;</span>Contents::from_bool(val))
     }
 
-    <span class="doccomment">/// Returns a new instance representing integer.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Type `T` should be the builtin primitive integer types (e.g., u8, u32, isize, i128, ...)</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::{contents, Der, IdRef};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let val = 39;</span>
-    <span class="doccomment">/// let der = Der::integer(val);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(IdRef::integer(), der.id());</span>
-    <span class="doccomment">/// assert_eq!(val, contents::to_integer(der.contents()).unwrap());</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">integer</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">PrimInt</span>,
+    <span class="doccomment">/// Returns a new instance representing integer.
+    ///
+    /// Type `T` should be the builtin primitive integer types (e.g., u8, u32, isize, i128, ...)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let val = 39;
+    /// let der = Der::integer(val);
+    ///
+    /// assert_eq!(IdRef::integer(), der.id());
+    /// assert_eq!(val, der.contents().to_integer().unwrap());
+    /// ```
+    </span><span class="kw">pub fn </span>integer&lt;T&gt;(val: T) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>T: PrimInt,
     {
-        <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">IdRef::integer</span>(), <span class="ident">contents::from_integer</span>(<span class="ident">val</span>).<span class="ident">as_ref</span>())
+        <span class="self">Self</span>::new(IdRef::integer(), <span class="kw-2">&amp;</span>Contents::from_integer(val))
     }
 
-    <span class="doccomment">/// Returns a new instance representing utf8_string.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::{Der, IdRef};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let val = &amp;&quot;foo&quot;;</span>
-    <span class="doccomment">/// let der = Der::utf8_string(val);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(IdRef::utf8_string(), der.id());</span>
-    <span class="doccomment">/// assert_eq!(val.as_bytes(), der.contents());</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">utf8_string</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">IdRef::utf8_string</span>(), <span class="ident">val</span>.<span class="ident">as_bytes</span>())
+    <span class="doccomment">/// Returns a new instance representing utf8_string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let val = &quot;foo&quot;;
+    /// let der = Der::utf8_string(val);
+    ///
+    /// assert_eq!(IdRef::utf8_string(), der.id());
+    /// assert_eq!(val.as_bytes(), der.contents().as_ref());
+    /// ```
+    </span><span class="kw">pub fn </span>utf8_string(val: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(
+            IdRef::utf8_string(),
+            ContentsRef::from_bytes(val.as_bytes()),
+        )
     }
 
-    <span class="doccomment">/// Returns a new instance representing octet_string.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::{Der, IdRef};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let val = &amp;[1, 2, 3];</span>
-    <span class="doccomment">/// let der = Der::octet_string(val);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(IdRef::octet_string(), der.id());</span>
-    <span class="doccomment">/// assert_eq!(val, der.contents());</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">octet_string</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">IdRef::octet_string</span>(), <span class="ident">val</span>)
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Der</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">as_ref</span>()
+    <span class="doccomment">/// Returns a new instance representing octet_string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef};
+    ///
+    /// let val = &amp;[1, 2, 3];
+    /// let der = Der::octet_string(val);
+    ///
+    /// assert_eq!(IdRef::octet_string(), der.id());
+    /// assert_eq!(val, der.contents().as_ref());
+    /// ```
+    </span><span class="kw">pub fn </span>octet_string(val: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(IdRef::octet_string(), ContentsRef::from_bytes(val))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">DerRef</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Der</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">DerRef</span> {
-        <span class="self">self</span>.<span class="ident">deref</span>()
+<span class="kw">impl </span>AsRef&lt;[u8]&gt; <span class="kw">for </span>Der {
+    <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="self">self</span>.buffer.as_ref()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Borrow</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Der</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">borrow</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">borrow</span>()
+<span class="kw">impl </span>Borrow&lt;[u8]&gt; <span class="kw">for </span>Der {
+    <span class="kw">fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="self">self</span>.buffer.borrow()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">DerRef</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Der</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">borrow</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">DerRef</span> {
-        <span class="self">self</span>.<span class="ident">deref</span>()
+<span class="kw">impl </span>Borrow&lt;DerRef&gt; <span class="kw">for </span>Der {
+    <span class="kw">fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>DerRef {
+        <span class="self">self</span>.deref()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">Der</span> {
-    <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">DerRef</span>;
+<span class="kw">impl </span>Deref <span class="kw">for </span>Der {
+    <span class="kw">type </span>Target = DerRef;
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
-        <span class="kw">unsafe</span> { <span class="ident">DerRef::from_bytes_unchecked</span>(<span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">as_ref</span>()) }
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="kw">unsafe </span>{ DerRef::from_bytes_unchecked(<span class="self">self</span>.buffer.as_ref()) }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">PartialEq</span><span class="op">&lt;</span><span class="ident">DerRef</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Der</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">DerRef</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">as_ref</span>() <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="ident">DerRef</span> <span class="op">==</span> <span class="ident">other</span>
+<span class="kw">impl </span>PartialEq&lt;DerRef&gt; <span class="kw">for </span>Der {
+    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>DerRef) -&gt; bool {
+        <span class="self">self </span><span class="kw">as </span><span class="kw-2">&amp;</span>DerRef == other
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Der</span> {
-    <span class="doccomment">/// Consumes `self` , returning `Vec` .</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use bsn1::{Der, IdRef};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let id = IdRef::octet_string();</span>
-    <span class="doccomment">/// let contents: &amp;[u8] = &amp;[0, 1, 2, 3, 4];</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let der = Der::new(id, contents);</span>
-    <span class="doccomment">/// let v = der.clone().into_vec();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(der.as_ref() as &amp;[u8], v.as_ref() as &amp;[u8]);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_vec</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">into_vec</span>()
+<span class="kw">impl </span>Der {
+    <span class="doccomment">/// Consumes `self`, returning `Vec`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Der;
+    ///
+    /// let der = Der::octet_string(&amp;[0, 1, 2, 3, 4]);
+    /// let v = der.clone().into_vec();
+    ///
+    /// assert_eq!(der.as_ref() as &amp;[u8], v.as_ref() as &amp;[u8]);
+    /// ```
+    </span><span class="kw">pub fn </span>into_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
+        <span class="self">self</span>.buffer.into_vec()
     }
 }
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">disassemble_der</span>(<span class="ident">der</span>: <span class="ident">Der</span>) -&gt; <span class="ident">Buffer</span> {
-    <span class="ident">der</span>.<span class="ident">buffer</span>
+<span class="kw">pub fn </span>disassemble_der(der: Der) -&gt; Buffer {
+    der.buffer
 }
 
-<span class="doccomment">/// Builds a `Der` instance representing &#39;Constructed DER&#39; effectively.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Formula</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// `constructed_der!(id: &amp;IdRef [, (id_1, contents_1) [, (id_2, contents_2) [...]]]) =&gt; Der`</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// `id_n` and `contents_n` must be bounded on `AsRef&lt;[u8]&gt;` .</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Warnings</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ASN.1 does not allow some universal identifier for DER, however, this macro accepts</span>
-<span class="doccomment">/// such an identifier.</span>
-<span class="doccomment">/// For example, &#39;Octet String&#39; must be primitive in DER, but this function will construct a</span>
-<span class="doccomment">/// new instance even if `id` represenets constructed &#39;Octet String.&#39;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Empty contents.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # #[macro_use] extern crate bsn1;</span>
-<span class="doccomment">/// use bsn1::{Der, IdRef};</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let id = IdRef::sequence();</span>
-<span class="doccomment">/// let expected = Der::new(id, &amp;[]);</span>
-<span class="doccomment">/// let der = constructed_der!(id);</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// assert_eq!(expected, der);</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Sequence of 2 DERs.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # #[macro_use] extern crate bsn1;</span>
-<span class="doccomment">/// use bsn1::{contents, DerRef, IdRef};</span>
-<span class="doccomment">/// use std::convert::TryFrom;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let id = IdRef::sequence();</span>
-<span class="doccomment">/// let id1 = IdRef::octet_string();</span>
-<span class="doccomment">/// let contents1: [u8; 3] = [1, 2, 3];</span>
-<span class="doccomment">/// let id2 = IdRef::integer();</span>
-<span class="doccomment">/// let contents2 = contents::from_integer(10);</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let der = constructed_der!(id, (id1.to_owned(), contents1), (id2, &amp;contents2));</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// assert_eq!(id, der.id());</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let bytes = der.contents();</span>
-<span class="doccomment">/// let der1 = &lt;&amp;DerRef&gt;::try_from(bytes).unwrap();</span>
-<span class="doccomment">/// assert_eq!(id1, der1.id());</span>
-<span class="doccomment">/// assert_eq!(contents1, der1.contents());</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let bytes = &amp;bytes[der1.as_ref().len()..];</span>
-<span class="doccomment">/// let der2 = &lt;&amp;DerRef&gt;::try_from(bytes).unwrap();</span>
-<span class="doccomment">/// assert_eq!(id2, der2.id());</span>
-<span class="doccomment">/// assert_eq!(contents2.as_ref(), der2.contents());</span>
-<span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules!</span> <span class="ident">constructed_der</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>:<span class="ident">expr</span> $(, (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id_n</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">contents_n</span>:<span class="ident">expr</span>))<span class="kw-2">*</span>) =&gt; {{
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>;
-        <span class="macro">__bsn1__expand_constructed_der!</span>($((<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id_n</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">contents_n</span>)),<span class="op">*</span> ; <span class="ident">id</span>)
+<span class="doccomment">/// Builds a `Der` instance representing &#39;Constructed DER&#39; effectively.
+///
+/// # Formula
+///
+/// `constructed_der!(id: &amp;IdRef [, (id_1, contents_1) [, (id_2, contents_2) [...]]]) =&gt; Der`
+///
+/// `id_n` and `contents_n` must be bounded on `AsRef&lt;[u8]&gt;` .
+///
+/// # Warnings
+///
+/// ASN.1 does not allow some universal identifier for DER, however, this macro accepts
+/// such an identifier.
+/// For example, &#39;Octet String&#39; must be primitive in DER, but this function will construct a
+/// new instance even if `id` represenets constructed &#39;Octet String.&#39;
+///
+/// # Examples
+///
+/// Empty contents.
+///
+/// ```
+/// # #[macro_use] extern crate bsn1;
+/// use bsn1::{Der, IdRef};
+///
+/// let id = IdRef::sequence();
+/// let der = constructed_der!(id);
+///
+/// assert_eq!(der.id(), id);
+/// assert!(der.contents().is_empty());
+/// ```
+///
+/// Sequence of 2 DERs.
+///
+/// ```
+/// # #[macro_use] extern crate bsn1;
+/// use bsn1::{Contents, ContentsRef, DerRef, IdRef};
+///
+/// let id = IdRef::sequence();
+/// let id1 = IdRef::octet_string();
+/// let contents1 = &amp;[1, 2, 3];
+/// let id2 = IdRef::integer();
+/// let contents2 = Contents::from_integer(10);
+///
+/// let der = constructed_der!(id, (id1.to_owned(), contents1), (id2, &amp;contents2));
+///
+/// assert_eq!(id, der.id());
+///
+/// let bytes = der.contents().as_ref();
+/// let der1 = DerRef::from_bytes(bytes).unwrap();
+/// assert_eq!(id1, der1.id());
+/// assert_eq!(contents1, der1.contents().as_ref());
+///
+/// let bytes = &amp;bytes[der1.as_ref().len()..];
+/// let der2 = DerRef::from_bytes(bytes).unwrap();
+/// assert_eq!(id2, der2.id());
+/// assert_eq!(&amp;contents2 as &amp;ContentsRef, der2.contents());
+/// ```
+</span><span class="attribute">#[macro_export]
+</span><span class="macro">macro_rules! </span>constructed_der {
+    (<span class="macro-nonterminal">$id</span>:expr $(, (<span class="macro-nonterminal">$id_n</span>:expr, <span class="macro-nonterminal">$contents_n</span>:expr))<span class="kw-2">*</span>) =&gt; {{
+        <span class="kw">let </span>id = <span class="macro-nonterminal">$id</span>;
+        <span class="macro">__bsn1__expand_constructed_der!</span>($((<span class="macro-nonterminal">$id_n</span>, <span class="macro-nonterminal">$contents_n</span>)),* ; id)
     }};
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>:<span class="ident">expr</span> $(, (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id_n</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">contents_n</span>:<span class="ident">expr</span>))<span class="kw-2">*</span>,) =&gt; {
-        <span class="macro">constructed_der!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>, $((<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id_n</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">contents_n</span>)),<span class="kw-2">*</span>)
+    (<span class="macro-nonterminal">$id</span>:expr $(, (<span class="macro-nonterminal">$id_n</span>:expr, <span class="macro-nonterminal">$contents_n</span>:expr))<span class="kw-2">*</span>,) =&gt; {
+        <span class="macro">constructed_der!</span>(<span class="macro-nonterminal">$id</span>, $((<span class="macro-nonterminal">$id_n</span>, <span class="macro-nonterminal">$contents_n</span>)),<span class="kw-2">*</span>)
     };
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules!</span> <span class="ident">__bsn1__expand_constructed_der</span> {
-    (; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>:<span class="ident">tt</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">contents</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) =&gt; {{
-        <span class="kw">let</span> <span class="ident">contents</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">u8</span>]] <span class="op">=</span> <span class="kw-2">&amp;</span>[$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">contents</span>),<span class="kw-2">*</span>];
-        <span class="ident">bsn1::Der::from_id_iterator</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>, <span class="ident">contents</span>.<span class="ident">iter</span>())
+<span class="attribute">#[doc(hidden)]
+#[macro_export]
+</span><span class="macro">macro_rules! </span>__bsn1__expand_constructed_der {
+    (; <span class="macro-nonterminal">$id</span>:tt $(<span class="macro-nonterminal">$contents</span>:tt)<span class="kw-2">*</span>) =&gt; {{
+        <span class="kw">let </span>contents: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[u8]] = <span class="kw-2">&amp;</span>[$(<span class="macro-nonterminal">$contents</span>),<span class="kw-2">*</span>];
+        bsn1::Der::from_id_iterator(<span class="macro-nonterminal">$id</span>, contents.iter())
     }};
 
-    ((<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id_1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">contents_1</span>:<span class="ident">expr</span>) $(, (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id_n</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">contents_n</span>:<span class="ident">expr</span>))<span class="op">*</span> ; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>:<span class="ident">tt</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">acc</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) =&gt; {{
-        <span class="kw">use</span> <span class="ident">bsn1::Length</span>;
+    ((<span class="macro-nonterminal">$id_1</span>:expr, <span class="macro-nonterminal">$contents_1</span>:expr) $(, (<span class="macro-nonterminal">$id_n</span>:expr, <span class="macro-nonterminal">$contents_n</span>:expr))* ; <span class="macro-nonterminal">$id</span>:tt $(<span class="macro-nonterminal">$acc</span>:tt)<span class="kw-2">*</span>) =&gt; {{
+        <span class="kw">use </span>bsn1::Length;
 
-        <span class="kw">let</span> <span class="ident">id_1</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id_1</span>;
-        <span class="kw">let</span> <span class="ident">id_1</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="ident">id_1</span>.<span class="ident">as_ref</span>();
+        <span class="kw">let </span>id_1 = <span class="macro-nonterminal">$id_1</span>;
+        <span class="kw">let </span>id_1: <span class="kw-2">&amp;</span>[u8] = id_1.as_ref();
 
-        <span class="kw">let</span> <span class="ident">contents_1</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">contents_1</span>;
-        <span class="kw">let</span> <span class="ident">contents_1</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="ident">contents_1</span>.<span class="ident">as_ref</span>();
+        <span class="kw">let </span>contents_1 = <span class="macro-nonterminal">$contents_1</span>;
+        <span class="kw">let </span>contents_1: <span class="kw-2">&amp;</span>[u8] = contents_1.as_ref();
 
-        <span class="kw">let</span> <span class="ident">length_1</span> <span class="op">=</span> <span class="ident">Length::Definite</span>(<span class="ident">contents_1</span>.<span class="ident">len</span>());
-        <span class="kw">let</span> <span class="ident">length_1</span> <span class="op">=</span> <span class="ident">length_1</span>.<span class="ident">to_bytes</span>();
-        <span class="kw">let</span> <span class="ident">length_1</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="ident">length_1</span>.<span class="ident">as_ref</span>();
+        <span class="kw">let </span>length_1 = Length::Definite(contents_1.len());
+        <span class="kw">let </span>length_1 = length_1.to_bytes();
+        <span class="kw">let </span>length_1: <span class="kw-2">&amp;</span>[u8] = length_1.as_ref();
 
         <span class="macro">__bsn1__expand_constructed_der!</span>(
-            $((<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id_n</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">contents_n</span>)),<span class="op">*</span>
+            $((<span class="macro-nonterminal">$id_n</span>, <span class="macro-nonterminal">$contents_n</span>)),*
             ;
-            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>
-            $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">acc</span>)<span class="op">*</span>
-            <span class="ident">id_1</span>
-            <span class="ident">length_1</span>
-            <span class="ident">contents_1</span>
+            <span class="macro-nonterminal">$id
+            </span>$(<span class="macro-nonterminal">$acc</span>)*
+            id_1
+            length_1
+            contents_1
         )
     }};
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">new</span>() {
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">IdRef::octet_string</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>new() {
+        <span class="kw">let </span>id = IdRef::octet_string();
 
-        <span class="kw">let</span> <span class="ident">byteses</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">u8</span>]] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[<span class="number">0x00</span>], <span class="kw-2">&amp;</span>[<span class="number">0xff</span>], <span class="kw-2">&amp;</span>[<span class="number">0x00</span>, <span class="number">0x00</span>], <span class="kw-2">&amp;</span>[<span class="number">0xff</span>, <span class="number">0xff</span>]];
-        <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span> <span class="kw">in</span> <span class="ident">byteses</span> {
-            <span class="kw">let</span> <span class="ident">der</span> <span class="op">=</span> <span class="ident">Der::new</span>(<span class="ident">id</span>, <span class="ident">bytes</span>);
-            <span class="macro">assert_eq!</span>(<span class="ident">id</span>, <span class="ident">der</span>.<span class="ident">id</span>());
-            <span class="macro">assert_eq!</span>(<span class="ident">Length::Definite</span>(<span class="ident">bytes</span>.<span class="ident">len</span>()), <span class="ident">der</span>.<span class="ident">length</span>());
-            <span class="macro">assert_eq!</span>(<span class="ident">bytes</span>, <span class="ident">der</span>.<span class="ident">contents</span>());
+        <span class="kw">let </span>byteses: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[u8]] = <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[<span class="number">0x00</span>], <span class="kw-2">&amp;</span>[<span class="number">0xff</span>], <span class="kw-2">&amp;</span>[<span class="number">0x00</span>, <span class="number">0x00</span>], <span class="kw-2">&amp;</span>[<span class="number">0xff</span>, <span class="number">0xff</span>]];
+        <span class="kw">for </span><span class="kw-2">&amp;</span>bytes <span class="kw">in </span>byteses {
+            <span class="kw">let </span>contents = ContentsRef::from_bytes(bytes);
+            <span class="kw">let </span>der = Der::new(id, contents);
+            <span class="macro">assert_eq!</span>(id, der.id());
+            <span class="macro">assert_eq!</span>(Length::Definite(bytes.len()), der.length());
+            <span class="macro">assert_eq!</span>(contents, der.contents());
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from_id_iterator</span>() {
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">IdRef::octet_string</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>from_id_iterator() {
+        <span class="kw">let </span>id = IdRef::octet_string();
 
-        <span class="comment">// Empty contents</span>
-        {
-            <span class="kw">let</span> <span class="ident">contents</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">u8</span>]] <span class="op">=</span> <span class="kw-2">&amp;</span>[];
-            <span class="kw">let</span> <span class="ident">der</span> <span class="op">=</span> <span class="ident">Der::from_id_iterator</span>(<span class="ident">id</span>, <span class="ident">contents</span>.<span class="ident">iter</span>());
-            <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">Der::new</span>(<span class="ident">id</span>, <span class="kw-2">&amp;</span>[]);
-            <span class="macro">assert_eq!</span>(<span class="ident">expected</span>, <span class="ident">der</span>);
+        <span class="comment">// Empty contents
+        </span>{
+            <span class="kw">let </span>contents: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[u8]] = <span class="kw-2">&amp;</span>[];
+            <span class="kw">let </span>der = Der::from_id_iterator(id, contents.iter());
+            <span class="kw">let </span>expected = Der::new(id, ContentsRef::from_bytes(<span class="kw-2">&amp;</span>[]));
+            <span class="macro">assert_eq!</span>(expected, der);
         }
 
-        <span class="comment">// Single slice of empty bytes.</span>
-        {
-            <span class="kw">let</span> <span class="ident">contents</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">u8</span>]] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[]];
-            <span class="kw">let</span> <span class="ident">der</span> <span class="op">=</span> <span class="ident">Der::from_id_iterator</span>(<span class="ident">id</span>, <span class="ident">contents</span>.<span class="ident">iter</span>());
-            <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">Der::new</span>(<span class="ident">id</span>, <span class="kw-2">&amp;</span>[]);
-            <span class="macro">assert_eq!</span>(<span class="ident">expected</span>, <span class="ident">der</span>);
+        <span class="comment">// Single slice of empty bytes.
+        </span>{
+            <span class="kw">let </span>contents: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[u8]] = <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[]];
+            <span class="kw">let </span>der = Der::from_id_iterator(id, contents.iter());
+            <span class="kw">let </span>expected = Der::new(id, ContentsRef::from_bytes(<span class="kw-2">&amp;</span>[]));
+            <span class="macro">assert_eq!</span>(expected, der);
         }
 
-        <span class="comment">// Single slice of not empty bytes.</span>
-        {
-            <span class="kw">let</span> <span class="ident">contents</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">u8</span>]] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]];
-            <span class="kw">let</span> <span class="ident">der</span> <span class="op">=</span> <span class="ident">Der::from_id_iterator</span>(<span class="ident">id</span>, <span class="ident">contents</span>.<span class="ident">iter</span>());
-            <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">Der::new</span>(<span class="ident">id</span>, <span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
-            <span class="macro">assert_eq!</span>(<span class="ident">expected</span>, <span class="ident">der</span>);
+        <span class="comment">// Single slice of not empty bytes.
+        </span>{
+            <span class="kw">let </span>contents: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[u8]] = <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]];
+            <span class="kw">let </span>der = Der::from_id_iterator(id, contents.iter());
+            <span class="kw">let </span>expected = Der::new(id, ContentsRef::from_bytes(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]));
+            <span class="macro">assert_eq!</span>(expected, der);
         }
 
-        <span class="comment">// 2 elements slice.</span>
-        <span class="comment">// Both elements are empty.</span>
-        {
-            <span class="kw">let</span> <span class="ident">contents</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">u8</span>]] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[]];
-            <span class="kw">let</span> <span class="ident">der</span> <span class="op">=</span> <span class="ident">Der::from_id_iterator</span>(<span class="ident">id</span>, <span class="ident">contents</span>.<span class="ident">iter</span>());
-            <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">Der::new</span>(<span class="ident">id</span>, <span class="kw-2">&amp;</span>[]);
-            <span class="macro">assert_eq!</span>(<span class="ident">expected</span>, <span class="ident">der</span>);
+        <span class="comment">// 2 elements slice.
+        // Both elements are empty.
+        </span>{
+            <span class="kw">let </span>contents: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[u8]] = <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[]];
+            <span class="kw">let </span>der = Der::from_id_iterator(id, contents.iter());
+            <span class="kw">let </span>expected = Der::new(id, ContentsRef::from_bytes(<span class="kw-2">&amp;</span>[]));
+            <span class="macro">assert_eq!</span>(expected, der);
         }
 
-        <span class="comment">// 2 elements slice.</span>
-        <span class="comment">// One of the elements is empty</span>
-        {
-            <span class="kw">let</span> <span class="ident">contents</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">u8</span>]] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>]];
-            <span class="kw">let</span> <span class="ident">der</span> <span class="op">=</span> <span class="ident">Der::from_id_iterator</span>(<span class="ident">id</span>, <span class="ident">contents</span>.<span class="ident">iter</span>());
-            <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">Der::new</span>(<span class="ident">id</span>, <span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>]);
-            <span class="macro">assert_eq!</span>(<span class="ident">expected</span>, <span class="ident">der</span>);
+        <span class="comment">// 2 elements slice.
+        // One of the elements is empty
+        </span>{
+            <span class="kw">let </span>contents: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[u8]] = <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>]];
+            <span class="kw">let </span>der = Der::from_id_iterator(id, contents.iter());
+            <span class="kw">let </span>expected = Der::new(id, ContentsRef::from_bytes(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>]));
+            <span class="macro">assert_eq!</span>(expected, der);
 
-            <span class="kw">let</span> <span class="ident">contents</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">u8</span>]] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="number">3</span>], <span class="kw-2">&amp;</span>[]];
-            <span class="kw">let</span> <span class="ident">der</span> <span class="op">=</span> <span class="ident">Der::from_id_iterator</span>(<span class="ident">id</span>, <span class="ident">contents</span>.<span class="ident">iter</span>());
-            <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">Der::new</span>(<span class="ident">id</span>, <span class="kw-2">&amp;</span>[<span class="number">3</span>]);
-            <span class="macro">assert_eq!</span>(<span class="ident">expected</span>, <span class="ident">der</span>);
+            <span class="kw">let </span>contents: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[u8]] = <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="number">3</span>], <span class="kw-2">&amp;</span>[]];
+            <span class="kw">let </span>der = Der::from_id_iterator(id, contents.iter());
+            <span class="kw">let </span>expected = Der::new(id, ContentsRef::from_bytes(<span class="kw-2">&amp;</span>[<span class="number">3</span>]));
+            <span class="macro">assert_eq!</span>(expected, der);
         }
 
-        <span class="comment">// 2 elements slice.</span>
-        <span class="comment">// Neither element is empty</span>
-        {
-            <span class="kw">let</span> <span class="ident">contents</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">u8</span>]] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>], <span class="kw-2">&amp;</span>[<span class="number">3</span>]];
-            <span class="kw">let</span> <span class="ident">der</span> <span class="op">=</span> <span class="ident">Der::from_id_iterator</span>(<span class="ident">id</span>, <span class="ident">contents</span>.<span class="ident">iter</span>());
-            <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">Der::new</span>(<span class="ident">id</span>, <span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
-            <span class="macro">assert_eq!</span>(<span class="ident">expected</span>, <span class="ident">der</span>);
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">try_from</span>() {
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">IdRef::octet_string</span>();
-
-        <span class="kw">let</span> <span class="ident">byteses</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">u8</span>]] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[<span class="number">0x00</span>], <span class="kw-2">&amp;</span>[<span class="number">0xff</span>], <span class="kw-2">&amp;</span>[<span class="number">0x00</span>, <span class="number">0x00</span>], <span class="kw-2">&amp;</span>[<span class="number">0xff</span>, <span class="number">0xff</span>]];
-        <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span> <span class="kw">in</span> <span class="ident">byteses</span> {
-            <span class="kw">let</span> <span class="ident">der</span> <span class="op">=</span> <span class="ident">Der::new</span>(<span class="ident">id</span>, <span class="ident">bytes</span>);
-            <span class="kw">let</span> <span class="ident">der_ref</span> <span class="op">=</span> <span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">DerRef</span><span class="op">&gt;</span><span class="ident">::try_from</span>(<span class="ident">der</span>.<span class="ident">as_ref</span>() <span class="kw">as</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">der_ref</span>, <span class="ident">der</span>.<span class="ident">as_ref</span>() <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="ident">DerRef</span>);
+        <span class="comment">// 2 elements slice.
+        // Neither element is empty
+        </span>{
+            <span class="kw">let </span>contents: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[u8]] = <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>], <span class="kw-2">&amp;</span>[<span class="number">3</span>]];
+            <span class="kw">let </span>der = Der::from_id_iterator(id, contents.iter());
+            <span class="kw">let </span>expected = Der::new(id, ContentsRef::from_bytes(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]));
+            <span class="macro">assert_eq!</span>(expected, der);
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from_bytes_starts_with_unchecked</span>() {
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">IdRef::octet_string</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>try_from() {
+        <span class="kw">let </span>id = IdRef::octet_string();
 
-        <span class="kw">let</span> <span class="ident">byteses</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">u8</span>]] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[<span class="number">0x00</span>], <span class="kw-2">&amp;</span>[<span class="number">0xff</span>], <span class="kw-2">&amp;</span>[<span class="number">0x00</span>, <span class="number">0x00</span>], <span class="kw-2">&amp;</span>[<span class="number">0xff</span>, <span class="number">0xff</span>]];
-        <span class="kw">let</span> <span class="ident">extras</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">u8</span>]] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[<span class="number">0x00</span>], <span class="kw-2">&amp;</span>[<span class="number">0xff</span>], <span class="kw-2">&amp;</span>[<span class="number">0x00</span>, <span class="number">0x00</span>], <span class="kw-2">&amp;</span>[<span class="number">0xff</span>, <span class="number">0xff</span>]];
-        <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span> <span class="kw">in</span> <span class="ident">byteses</span> {
-            <span class="kw">let</span> <span class="ident">der</span> <span class="op">=</span> <span class="ident">Der::new</span>(<span class="ident">id</span>, <span class="ident">bytes</span>);
-
-            <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">extra</span> <span class="kw">in</span> <span class="ident">extras</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec::from</span>(<span class="ident">der</span>.<span class="ident">as_ref</span>() <span class="kw">as</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]);
-                <span class="ident">bytes</span>.<span class="ident">extend</span>(<span class="ident">extra</span>);
-
-                <span class="kw">let</span> <span class="ident">der_ref</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">DerRef::from_bytes_starts_with_unchecked</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()) };
-                <span class="macro">assert_eq!</span>(<span class="ident">der_ref</span>, <span class="kw-2">&amp;</span><span class="ident">der</span>);
-            }
+        <span class="kw">let </span>byteses: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[u8]] = <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[<span class="number">0x00</span>], <span class="kw-2">&amp;</span>[<span class="number">0xff</span>], <span class="kw-2">&amp;</span>[<span class="number">0x00</span>, <span class="number">0x00</span>], <span class="kw-2">&amp;</span>[<span class="number">0xff</span>, <span class="number">0xff</span>]];
+        <span class="kw">for </span><span class="kw-2">&amp;</span>bytes <span class="kw">in </span>byteses {
+            <span class="kw">let </span>contents = ContentsRef::from_bytes(bytes);
+            <span class="kw">let </span>der = Der::new(id, contents);
+            <span class="kw">let </span>der_ref = &lt;<span class="kw-2">&amp;</span>DerRef&gt;::try_from(der.as_ref() <span class="kw">as </span><span class="kw-2">&amp;</span>[u8]).unwrap();
+            <span class="macro">assert_eq!</span>(der_ref, <span class="kw-2">&amp;</span>der <span class="kw">as </span><span class="kw-2">&amp;</span>DerRef);
         }
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bsn1" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bsn1" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
