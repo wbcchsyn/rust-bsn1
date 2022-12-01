@@ -360,20 +360,8 @@ impl AsRef<[u8]> for Contents {
     }
 }
 
-impl AsRef<ContentsRef> for Contents {
-    fn as_ref(&self) -> &ContentsRef {
-        self
-    }
-}
-
 impl AsMut<[u8]> for Contents {
     fn as_mut(&mut self) -> &mut [u8] {
-        self
-    }
-}
-
-impl AsMut<ContentsRef> for Contents {
-    fn as_mut(&mut self) -> &mut ContentsRef {
         self
     }
 }

@@ -219,7 +219,7 @@ impl ToOwned for DerRef {
 
 impl PartialEq<Der> for DerRef {
     fn eq(&self, other: &Der) -> bool {
-        self == other.as_ref() as &DerRef
+        self == other as &DerRef
     }
 }
 
@@ -640,12 +640,6 @@ impl AsRef<[u8]> for Der {
     }
 }
 
-impl AsRef<DerRef> for Der {
-    fn as_ref(&self) -> &DerRef {
-        self.deref()
-    }
-}
-
 impl Borrow<[u8]> for Der {
     fn borrow(&self) -> &[u8] {
         self.buffer.borrow()
@@ -668,7 +662,7 @@ impl Deref for Der {
 
 impl PartialEq<DerRef> for Der {
     fn eq(&self, other: &DerRef) -> bool {
-        self.as_ref() as &DerRef == other
+        self as &DerRef == other
     }
 }
 
@@ -748,7 +742,7 @@ pub fn disassemble_der(der: Der) -> Buffer {
 /// let bytes = &bytes[der1.as_ref().len()..];
 /// let der2 = DerRef::from_bytes(bytes).unwrap();
 /// assert_eq!(id2, der2.id());
-/// assert_eq!(contents2.as_ref() as &ContentsRef, der2.contents());
+/// assert_eq!(&contents2 as &ContentsRef, der2.contents());
 /// ```
 #[macro_export]
 macro_rules! constructed_der {
@@ -882,7 +876,7 @@ mod tests {
             let contents = ContentsRef::from_bytes(bytes);
             let der = Der::new(id, contents);
             let der_ref = <&DerRef>::try_from(der.as_ref() as &[u8]).unwrap();
-            assert_eq!(der_ref, der.as_ref() as &DerRef);
+            assert_eq!(der_ref, &der as &DerRef);
         }
     }
 

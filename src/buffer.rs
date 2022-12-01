@@ -31,12 +31,11 @@
 // limitations under the License.
 
 use std::alloc::{self, Layout};
-use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::mem::{align_of, size_of, size_of_val};
-use std::ops::{Index, IndexMut};
+use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 #[repr(C)]
 pub struct Buffer {
@@ -107,18 +106,6 @@ impl Buffer {
     }
 }
 
-impl AsRef<[u8]> for Buffer {
-    fn as_ref(&self) -> &[u8] {
-        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
-    }
-}
-
-impl AsMut<[u8]> for Buffer {
-    fn as_mut(&mut self) -> &mut [u8] {
-        unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
-    }
-}
-
 impl fmt::Debug for Buffer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let contents: &[u8] = self.as_ref();
@@ -126,9 +113,17 @@ impl fmt::Debug for Buffer {
     }
 }
 
-impl Borrow<[u8]> for Buffer {
-    fn borrow(&self) -> &[u8] {
-        self.as_ref()
+impl Deref for Buffer {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
+    }
+}
+
+impl DerefMut for Buffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
     }
 }
 
@@ -137,7 +132,7 @@ impl Hash for Buffer {
     where
         H: Hasher,
     {
-        let this: &[u8] = self.borrow();
+        let this: &[u8] = self;
         this.hash(hasher);
     }
 }
@@ -157,11 +152,11 @@ impl IndexMut<usize> for Buffer {
 
 impl<T> PartialEq<T> for Buffer
 where
-    T: Borrow<[u8]>,
+    T: Deref<Target = [u8]>,
 {
     fn eq(&self, other: &T) -> bool {
-        let this: &[u8] = self.borrow();
-        let other: &[u8] = other.borrow();
+        let this: &[u8] = self;
+        let other: &[u8] = other;
         this == other
     }
 }
@@ -170,19 +165,19 @@ impl Eq for Buffer {}
 
 impl<T> PartialOrd<T> for Buffer
 where
-    T: Borrow<[u8]>,
+    T: Deref<Target = [u8]>,
 {
     fn partial_cmp(&self, other: &T) -> Option<Ordering> {
-        let this: &[u8] = self.borrow();
-        let other: &[u8] = other.borrow();
+        let this: &[u8] = self;
+        let other: &[u8] = other;
         this.partial_cmp(other)
     }
 }
 
 impl Ord for Buffer {
     fn cmp(&self, other: &Self) -> Ordering {
-        let this: &[u8] = self.borrow();
-        let other: &[u8] = other.borrow();
+        let this: &[u8] = self;
+        let other: &[u8] = other;
         this.cmp(other)
     }
 }

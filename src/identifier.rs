@@ -1159,7 +1159,7 @@ impl ToOwned for IdRef {
 
 impl PartialEq<Id> for IdRef {
     fn eq(&self, other: &Id) -> bool {
-        self == other.as_ref() as &IdRef
+        self == other as &IdRef
     }
 }
 
@@ -1577,12 +1577,6 @@ impl AsRef<[u8]> for Id {
     }
 }
 
-impl AsRef<IdRef> for Id {
-    fn as_ref(&self) -> &IdRef {
-        self.deref()
-    }
-}
-
 impl Borrow<[u8]> for Id {
     fn borrow(&self) -> &[u8] {
         self.buffer.borrow()
@@ -1611,7 +1605,7 @@ impl DerefMut for Id {
 
 impl PartialEq<IdRef> for Id {
     fn eq(&self, other: &IdRef) -> bool {
-        self.as_ref() as &IdRef == other
+        self as &IdRef == other
     }
 }
 

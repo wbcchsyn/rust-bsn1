@@ -253,7 +253,7 @@ impl ToOwned for BerRef {
 
 impl PartialEq<Ber> for BerRef {
     fn eq(&self, other: &Ber) -> bool {
-        self == other.as_ref() as &BerRef
+        self == other as &BerRef
     }
 }
 
@@ -622,12 +622,6 @@ impl AsRef<[u8]> for Ber {
     }
 }
 
-impl AsRef<BerRef> for Ber {
-    fn as_ref(&self) -> &BerRef {
-        self.deref()
-    }
-}
-
 impl Borrow<[u8]> for Ber {
     fn borrow(&self) -> &[u8] {
         self.buffer.borrow()
@@ -650,7 +644,7 @@ impl Deref for Ber {
 
 impl PartialEq<BerRef> for Ber {
     fn eq(&self, other: &BerRef) -> bool {
-        self.as_ref() as &BerRef == other
+        self as &BerRef == other
     }
 }
 
@@ -802,7 +796,7 @@ mod tests {
             let contents = ContentsRef::from_bytes(bytes);
             let ber = Ber::new(id, contents);
             let ber_ref = <&BerRef>::try_from(ber.as_ref() as &[u8]).unwrap();
-            assert_eq!(ber_ref, ber.as_ref() as &BerRef);
+            assert_eq!(ber_ref, &ber as &BerRef);
         }
     }
 

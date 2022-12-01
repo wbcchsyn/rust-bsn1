@@ -31,7 +31,7 @@
 // limitations under the License.
 
 use crate::Length;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::ops::{Index, IndexMut};
 
 #[derive(Clone, Copy)]
@@ -53,12 +53,6 @@ impl StackBuffer {
     }
 }
 
-impl AsRef<[u8]> for StackBuffer {
-    fn as_ref(&self) -> &[u8] {
-        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
-    }
-}
-
 impl Deref for StackBuffer {
     type Target = [u8];
 
@@ -67,23 +61,23 @@ impl Deref for StackBuffer {
     }
 }
 
+impl DerefMut for StackBuffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
+    }
+}
+
 impl Index<usize> for StackBuffer {
     type Output = u8;
 
     fn index(&self, index: usize) -> &Self::Output {
-        unsafe {
-            let ptr = self.as_ptr().add(index);
-            &*ptr
-        }
+        self.deref().index(index)
     }
 }
 
 impl IndexMut<usize> for StackBuffer {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        unsafe {
-            let ptr = self.as_mut_ptr().add(index);
-            &mut *ptr
-        }
+        self.deref_mut().index_mut(index)
     }
 }
 
