@@ -1599,7 +1599,7 @@ impl Deref for Id {
 
 impl DerefMut for Id {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { mem::transmute(self.buffer.as_mut()) }
+        unsafe { mem::transmute(self.buffer.as_mut_bytes()) }
     }
 }
 

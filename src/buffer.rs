@@ -146,7 +146,7 @@ impl Index<usize> for Buffer {
 
 impl IndexMut<usize> for Buffer {
     fn index_mut(&mut self, i: usize) -> &mut u8 {
-        &mut self.as_mut()[i]
+        &mut self.as_mut_bytes()[i]
     }
 }
 
@@ -191,7 +191,7 @@ impl Buffer {
 
         debug_assert!(old_len < self.capacity());
         self.set_len(old_len + 1);
-        self.as_mut()[old_len] = v;
+        self.as_mut_bytes()[old_len] = v;
     }
 
     pub fn extend_from_slice(&mut self, vals: &[u8]) {
