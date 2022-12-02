@@ -394,7 +394,7 @@ impl Deref for Contents {
     type Target = ContentsRef;
 
     fn deref(&self) -> &Self::Target {
-        ContentsRef::from_bytes(self.buffer.as_ref())
+        ContentsRef::from_bytes(self.buffer.as_bytes())
     }
 }
 

@@ -141,7 +141,7 @@ mod stack_buffer_tests {
             unsafe { buffer.push(i as u8) };
             v.push(i as u8);
 
-            assert_eq!(v.as_ref() as &[u8], buffer.as_ref());
+            assert_eq!(&v, buffer.as_bytes());
         }
 
         assert_eq!(buffer.capacity(), buffer.len());

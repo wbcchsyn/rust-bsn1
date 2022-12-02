@@ -62,7 +62,7 @@ impl Drop for Buffer {
 
 impl Clone for Buffer {
     fn clone(&self) -> Self {
-        Self::from(self.as_ref())
+        Self::from(self.as_bytes())
     }
 }
 
@@ -108,7 +108,7 @@ impl Buffer {
 
 impl fmt::Debug for Buffer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let contents: &[u8] = self.as_ref();
+        let contents: &[u8] = self;
         f.debug_tuple("Buffer").field(&contents).finish()
     }
 }
@@ -140,7 +140,7 @@ impl Hash for Buffer {
 impl Index<usize> for Buffer {
     type Output = u8;
     fn index(&self, i: usize) -> &u8 {
-        &self.as_ref()[i]
+        &self.as_bytes()[i]
     }
 }
 
@@ -288,7 +288,7 @@ impl Buffer {
 
     pub fn into_vec(mut self) -> Vec<u8> {
         if self.is_stack() {
-            Vec::from(self.as_ref())
+            Vec::from(self.as_bytes())
         } else {
             unsafe {
                 let ret = Vec::from_raw_parts(self.as_mut_ptr(), self.len(), self.capacity());
@@ -329,18 +329,18 @@ mod buffer_tests {
         }
 
         let v = vec![1];
-        let mut buffer = Buffer::from(v.as_ref());
+        let mut buffer = Buffer::from(&v as &[u8]);
         for i in 0..40 {
             buffer.reserve(i);
-            assert_eq!(&v, buffer.as_ref());
+            assert_eq!(&v, buffer.as_bytes());
             assert!(i <= buffer.capacity());
         }
 
         let v = Vec::from_iter(0..200);
-        let mut buffer = Buffer::from(v.as_ref());
+        let mut buffer = Buffer::from(&v as &[u8]);
         for i in 0..40 {
             buffer.reserve(i);
-            assert_eq!(&v, buffer.as_ref());
+            assert_eq!(&v, buffer.as_bytes());
             assert!(i <= buffer.capacity());
         }
     }
@@ -355,7 +355,7 @@ mod buffer_tests {
                 unsafe { buffer.push(c) };
             }
 
-            assert_eq!(&v, buffer.as_ref());
+            assert_eq!(&v, buffer.as_bytes());
         }
 
         for i in 0..100 {
@@ -365,7 +365,7 @@ mod buffer_tests {
                 unsafe { buffer.push(c) };
             }
 
-            assert_eq!(&v, buffer.as_ref());
+            assert_eq!(&v, buffer.as_bytes());
         }
     }
 
@@ -379,8 +379,7 @@ mod buffer_tests {
             buffer.extend_from_slice(&vals);
             vec.extend_from_slice(&vals);
 
-            let expected: &[u8] = vec.as_ref();
-            assert_eq!(expected, buffer.as_ref());
+            assert_eq!(&vec, buffer.as_bytes());
         }
     }
 }

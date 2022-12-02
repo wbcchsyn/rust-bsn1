@@ -63,7 +63,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
     /// [`DerRef::try_from_bytes`]: #method.try_from_bytes
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let id = <&IdRef>::try_from(bytes)?;
-        let parsing = &bytes[id.as_ref().len()..];
+        let parsing = &bytes[id.len()..];
 
         let (len, parsing) = match length::try_from(parsing) {
             Err(Error::OverFlow) => return Err(Error::UnTerminatedBytes),
@@ -213,7 +213,7 @@ impl DerRef {
     /// assert_eq!(Length::Definite(2), der.length());
     /// ```
     pub fn length(&self) -> Length {
-        let id_len = self.id().as_ref().len();
+        let id_len = self.id().len();
         let bytes = &self.bytes[id_len..];
         unsafe { length::from_bytes_starts_with_unchecked(bytes).0 }
     }
@@ -232,7 +232,7 @@ impl DerRef {
     /// assert_eq!(contents, der.contents());
     /// ```
     pub fn contents(&self) -> &ContentsRef {
-        let id_len = self.id().as_ref().len();
+        let id_len = self.id().len();
         let bytes = &self.bytes[id_len..];
         let bytes = unsafe { length::from_bytes_starts_with_unchecked(bytes).1 };
         ContentsRef::from_bytes(bytes)
@@ -428,7 +428,7 @@ impl Der {
     ///
     /// // Build instance using function 'new()'.
     /// let contents: Vec<u8> = contents.iter()
-    ///                         .map(|i| Vec::from(i.as_ref() as &[u8]))
+    ///                         .map(|i| Vec::from(i.as_bytes()))
     ///                         .flatten().collect();
     /// let contents = ContentsRef::from_bytes(&contents);
     /// let expected = Der::new(id, contents);
@@ -448,11 +448,9 @@ impl Der {
         let total_len = id.len() + length_bytes.len() + length;
 
         let mut buffer = Buffer::with_capacity(total_len);
-        buffer.extend_from_slice(id.as_ref());
-        buffer.extend_from_slice(length_bytes.as_ref());
-        for c in contents {
-            buffer.extend_from_slice(c.as_ref());
-        }
+        buffer.extend_from_slice(&id);
+        buffer.extend_from_slice(&length_bytes);
+        contents.for_each(|c| buffer.extend_from_slice(c.as_ref()));
 
         Self { buffer }
     }
@@ -507,7 +505,7 @@ impl Der {
     /// let der = Der::utf8_string(val);
     ///
     /// assert_eq!(IdRef::utf8_string(), der.id());
-    /// assert_eq!(val.as_bytes(), der.contents().as_ref());
+    /// assert_eq!(val.as_bytes(), der.contents().as_bytes());
     /// ```
     pub fn utf8_string(val: &str) -> Self {
         Self::new(
@@ -527,7 +525,7 @@ impl Der {
     /// let der = Der::octet_string(val);
     ///
     /// assert_eq!(IdRef::octet_string(), der.id());
-    /// assert_eq!(val, der.contents().as_ref());
+    /// assert_eq!(val, der.contents().as_bytes());
     /// ```
     pub fn octet_string(val: &[u8]) -> Self {
         Self::new(IdRef::octet_string(), ContentsRef::from_bytes(val))
@@ -536,7 +534,7 @@ impl Der {
 
 impl AsRef<[u8]> for Der {
     fn as_ref(&self) -> &[u8] {
-        self.buffer.as_ref()
+        self.buffer.as_bytes()
     }
 }
 
@@ -556,7 +554,7 @@ impl Deref for Der {
     type Target = DerRef;
 
     fn deref(&self) -> &Self::Target {
-        unsafe { DerRef::from_bytes_unchecked(self.buffer.as_ref()) }
+        unsafe { DerRef::from_bytes_unchecked(self.buffer.as_bytes()) }
     }
 }
 
@@ -577,7 +575,7 @@ impl Der {
     /// let der = Der::octet_string(&[0, 1, 2, 3, 4]);
     /// let v = der.clone().into_vec();
     ///
-    /// assert_eq!(der.as_ref() as &[u8], v.as_ref() as &[u8]);
+    /// assert_eq!(der.as_bytes(), &v);
     /// ```
     pub fn into_vec(self) -> Vec<u8> {
         self.buffer.into_vec()
@@ -634,12 +632,12 @@ pub fn disassemble_der(der: Der) -> Buffer {
 ///
 /// assert_eq!(id, der.id());
 ///
-/// let bytes = der.contents().as_ref();
+/// let bytes = der.contents().as_bytes();
 /// let der1 = DerRef::try_from_bytes(bytes).unwrap();
 /// assert_eq!(id1, der1.id());
-/// assert_eq!(contents1, der1.contents().as_ref());
+/// assert_eq!(contents1, der1.contents().as_bytes());
 ///
-/// let bytes = &bytes[der1.as_ref().len()..];
+/// let bytes = &bytes[der1.as_bytes().len()..];
 /// let der2 = DerRef::try_from_bytes(bytes).unwrap();
 /// assert_eq!(id2, der2.id());
 /// assert_eq!(&contents2 as &ContentsRef, der2.contents());
@@ -775,7 +773,7 @@ mod tests {
         for &bytes in byteses {
             let contents = ContentsRef::from_bytes(bytes);
             let der = Der::new(id, contents);
-            let der_ref = <&DerRef>::try_from(der.as_ref() as &[u8]).unwrap();
+            let der_ref = <&DerRef>::try_from(der.as_bytes()).unwrap();
             assert_eq!(der_ref, &der as &DerRef);
         }
     }
