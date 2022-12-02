@@ -301,6 +301,10 @@ impl Buffer {
     pub fn as_bytes(&self) -> &[u8] {
         self
     }
+
+    pub fn as_mut_bytes(&mut self) -> &mut [u8] {
+        self
+    }
 }
 
 #[cfg(test)]
