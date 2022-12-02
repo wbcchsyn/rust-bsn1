@@ -68,9 +68,9 @@ impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`IdRef::from_bytes`].
+    /// This function is same to [`IdRef::try_from_bytes`].
     ///
-    /// [`IdRef::from_bytes`]: #method.from_bytes
+    /// [`IdRef::try_from_bytes`]: #method.try_from_bytes
     ///
     /// # Warnings
     ///
@@ -78,7 +78,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
-        IdRef::from_bytes(bytes)
+        IdRef::try_from_bytes(bytes)
     }
 }
 
@@ -89,9 +89,9 @@ impl<'a> TryFrom<&'a mut [u8]> for &'a mut IdRef {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`IdRef::from_bytes_mut`].
+    /// This function is same to [`IdRef::try_from_mut_bytes`].
     ///
-    /// [`IdRef::from_bytes_mut`]: #method.from_bytes_mut
+    /// [`IdRef::try_from_mut_bytes`]: #method.try_from_mut_bytes
     ///
     /// # Warnings
     ///
@@ -99,7 +99,7 @@ impl<'a> TryFrom<&'a mut [u8]> for &'a mut IdRef {
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
     fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
-        IdRef::from_bytes_mut(bytes)
+        IdRef::try_from_mut_bytes(bytes)
     }
 }
 
@@ -143,15 +143,15 @@ impl IdRef {
     ///
     /// // &[0] represents 'EOC'.
     /// let bytes: &[u8] = &[0];
-    /// let idref = IdRef::from_bytes(bytes).unwrap();
+    /// let idref = IdRef::try_from_bytes(bytes).unwrap();
     /// assert_eq!(IdRef::eoc(), idref);
     ///
     /// // The result is not changed if (an) extra octet(s) is added at the end.
     /// let bytes: &[u8] = &[0, 1, 2];
-    /// let idref = IdRef::from_bytes(bytes).unwrap();
+    /// let idref = IdRef::try_from_bytes(bytes).unwrap();
     /// assert_eq!(IdRef::eoc(), idref);
     /// ```
-    pub fn from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
+    pub fn try_from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
         let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
 
         if first & IdRef::LONG_FLAG != IdRef::LONG_FLAG {
@@ -205,7 +205,7 @@ impl IdRef {
     /// let bytes: &mut [u8] = &mut [0];
     ///
     /// {
-    ///     let idref = IdRef::from_bytes_mut(bytes).unwrap();
+    ///     let idref = IdRef::try_from_mut_bytes(bytes).unwrap();
     ///
     ///     // [0] represents 'EOC'.
     ///     assert_eq!(IdRef::eoc(), idref);
@@ -220,11 +220,11 @@ impl IdRef {
     ///
     /// // The result is not changed if (an) extra octet(s) is added at the end.
     /// let bytes: &mut [u8] = &mut [0, 1, 2, 3];
-    /// let idref = IdRef::from_bytes_mut(bytes).unwrap();
+    /// let idref = IdRef::try_from_mut_bytes(bytes).unwrap();
     /// assert_eq!(IdRef::eoc(), idref);
     /// ```
-    pub fn from_bytes_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
-        let ret = Self::from_bytes(bytes)?;
+    pub fn try_from_mut_bytes(bytes: &mut [u8]) -> Result<&mut Self, Error> {
+        let ret = Self::try_from_bytes(bytes)?;
         let ptr = (ret as *const Self) as *mut Self;
         unsafe { Ok(&mut *ptr) }
     }
@@ -232,14 +232,14 @@ impl IdRef {
     /// `bytes` must not include any extra octets.
     ///
     /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
-    /// implementation or [`from_bytes`] instead.
+    /// implementation or [`try_from_bytes`] instead.
     ///
     /// # Safety
     ///
     /// The behavior is undefined if the format of `bytes` is not right.
     ///
     /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20IdRef
-    /// [`from_bytes`]: #method.from_bytes
+    /// [`try_from_bytes`]: #method.try_from_bytes
     ///
     /// # Examples
     ///
@@ -259,14 +259,14 @@ impl IdRef {
     /// `bytes` must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
-    /// implementation or [`from_bytes_mut`] instead.
+    /// implementation or [`try_from_mut_bytes`] instead.
     ///
     /// # Safety
     ///
     /// The behavior is undefined if the format of `bytes` is not right.
     ///
     /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20IdRef
-    /// [`from_bytes_mut`]: #method.from_bytes_mut
+    /// [`try_from_mut_bytes`]: #method.try_from_mut_bytes
     ///
     /// # Examples
     ///
@@ -277,7 +277,7 @@ impl IdRef {
     ///
     /// {
     ///     // '&[0]' represents 'EOC'.
-    ///     let idref = unsafe { IdRef::from_bytes_mut_unchecked(bytes) };
+    ///     let idref = unsafe { IdRef::from_mut_bytes_unchecked(bytes) };
     ///     assert_eq!(IdRef::eoc(), idref);
     ///
     ///     // '&[1]' represents 'BOOL'.
@@ -288,7 +288,7 @@ impl IdRef {
     /// // 'bytes' is updated as well.
     /// assert_eq!(bytes[0], 1);
     /// ```
-    pub unsafe fn from_bytes_mut_unchecked(bytes: &mut [u8]) -> &mut Self {
+    pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         mem::transmute(bytes)
     }
     /// Provides a reference to `IdRef` representing 'Universal EOC'.
@@ -1369,17 +1369,17 @@ impl IdRef {
     /// let bytes: &mut [u8] = &mut [5];
     ///
     /// {
-    ///     let idref = unsafe { IdRef::from_bytes_mut_unchecked(bytes) };
-    ///     assert_eq!(5, idref.as_bytes_mut()[0]);
+    ///     let idref = unsafe { IdRef::from_mut_bytes_unchecked(bytes) };
+    ///     assert_eq!(5, idref.as_bytes()[0]);
     ///
-    ///     idref.as_bytes_mut()[0] = 6;
-    ///     assert_eq!(6, idref.as_bytes_mut()[0]);
+    ///     idref.as_mut_bytes()[0] = 6;
+    ///     assert_eq!(6, idref.as_bytes()[0]);
     /// }
     ///
     /// // 'bytes' is updated as well.
     /// assert_eq!(6, bytes[0]);
     /// ```
-    pub fn as_bytes_mut(&mut self) -> &mut [u8] {
+    pub fn as_mut_bytes(&mut self) -> &mut [u8] {
         self
     }
 
@@ -1392,7 +1392,7 @@ impl IdRef {
     ///
     /// // Creates a '&mut IdRef' representing 'Universal Integer'.
     /// let mut bytes = Vec::from(IdRef::integer().as_bytes());
-    /// let idref = IdRef::from_bytes_mut(&mut bytes).unwrap();
+    /// let idref = IdRef::try_from_mut_bytes(&mut bytes).unwrap();
     ///
     /// assert_eq!(ClassTag::Universal, idref.class());
     ///
@@ -1413,7 +1413,7 @@ impl IdRef {
     ///
     /// // Creates a '&mut IdRef' representing 'Universal Integer'.
     /// let mut bytes = Vec::from(IdRef::integer().as_bytes());
-    /// let idref = IdRef::from_bytes_mut(&mut bytes).unwrap();
+    /// let idref = IdRef::try_from_mut_bytes(&mut bytes).unwrap();
     ///
     /// assert_eq!(PCTag::Primitive, idref.pc());
     ///
@@ -1449,7 +1449,7 @@ impl TryFrom<&[u8]> for Id {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`from_bytes`].
+    /// This function is same to [`try_from_bytes`].
     ///
     /// # Warnings
     ///
@@ -1457,7 +1457,7 @@ impl TryFrom<&[u8]> for Id {
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
     ///
-    /// [`from_bytes`]: #method.from_bytes
+    /// [`try_from_bytes`]: #method.try_from_bytes
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         <&IdRef>::try_from(bytes).map(|idref| idref.to_owned())
     }
@@ -1542,15 +1542,15 @@ impl Id {
     ///
     /// // &[0] represents 'Univedrsal EOC'.
     /// let bytes0: &[u8] = &[0];
-    /// let id0 = Id::from_bytes(bytes0).unwrap();
+    /// let id0 = Id::try_from_bytes(bytes0).unwrap();
     ///
     /// // The extra octets at the end does not affect the result.
     /// let bytes1: &[u8] = &[0, 1, 2];
-    /// let id1 = Id::from_bytes(bytes1).unwrap();
+    /// let id1 = Id::try_from_bytes(bytes1).unwrap();
     ///
     /// assert_eq!(id0, id1);
     /// ```
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
+    pub fn try_from_bytes(bytes: &[u8]) -> Result<Self, Error> {
         Self::try_from(bytes)
     }
 
@@ -1558,14 +1558,14 @@ impl Id {
     /// `bytes` must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
-    /// implementation or [`from_bytes`] instead.
+    /// implementation or [`try_from_bytes`] instead.
     ///
     /// # Safety
     ///
     /// The behavior is undefined if the format of `bytes` is not right.
     ///
     /// [`TryFrom`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Id
-    /// [`from_bytes`]: #method.from_bytes
+    /// [`try_from_bytes`]: #method.try_from_bytes
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
         IdRef::from_bytes_unchecked(bytes).to_owned()
     }
@@ -1835,7 +1835,7 @@ mod tests {
                     bytes[0] = cl as u8 | pc as u8 | IdRef::LONG_FLAG;
                     bytes[1] = 0x84;
                     bytes[19] = 0x00;
-                    let id = Id::from_bytes(&bytes).unwrap();
+                    let id = Id::try_from_bytes(&bytes).unwrap();
                     assert!(id.number::<u128>().is_err());
                 }
             }
