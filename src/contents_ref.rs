@@ -61,9 +61,9 @@ impl<'a> From<&'a [u8]> for &'a ContentsRef {
 }
 
 impl<'a> From<&'a mut [u8]> for &'a mut ContentsRef {
-    /// This function is same to [`ContentsRef::from_bytes_mut`].
+    /// This function is same to [`ContentsRef::from_mut_bytes`].
     ///
-    /// [`ContentsRef::from_bytes_mut`]: #method.from_bytes_mut
+    /// [`ContentsRef::from_mut_bytes`]: #method.from_mut_bytes
     fn from(bytes: &'a mut [u8]) -> Self {
         unsafe { mem::transmute(bytes) }
     }
@@ -114,7 +114,7 @@ impl ContentsRef {
     /// let bytes: &mut [u8] = &mut [1, 2, 3];
     ///
     /// {
-    ///     let contents = ContentsRef::from_bytes_mut(bytes);
+    ///     let contents = ContentsRef::from_mut_bytes(bytes);
     ///     assert_eq!(contents as &[u8], &[1, 2, 3]);
     ///
     ///     contents[0] = 10;
@@ -124,7 +124,7 @@ impl ContentsRef {
     /// // 'bytes' is updated as well.
     /// assert_eq!(bytes, &[10, 2, 3]);
     /// ```
-    pub fn from_bytes_mut(bytes: &mut [u8]) -> &mut Self {
+    pub fn from_mut_bytes(bytes: &mut [u8]) -> &mut Self {
         <&mut ContentsRef>::from(bytes)
     }
 

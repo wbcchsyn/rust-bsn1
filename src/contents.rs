@@ -400,7 +400,7 @@ impl Deref for Contents {
 
 impl DerefMut for Contents {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        ContentsRef::from_bytes_mut(self.buffer.as_mut())
+        ContentsRef::from_mut_bytes(self.buffer.as_mut())
     }
 }
 
