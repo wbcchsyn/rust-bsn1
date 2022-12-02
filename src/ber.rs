@@ -162,6 +162,25 @@ impl BerRef {
         <&Self>::try_from(bytes)
     }
 
+    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a mutable reference to
+    /// `BerRef`.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`<&mut BerRef>::try_from`] .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
+    /// functions returns `Ok`.
+    ///
+    /// [`<&mut BerRef>::try_from`]:
+    ///     #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20BerRef
+    pub fn try_from_mut_bytes(bytes: &mut [u8]) -> Result<&mut Self, Error> {
+        <&mut Self>::try_from(bytes)
+    }
+
     /// Provides a reference from `bytes` without any check.
     ///
     /// `bytes` must be BER octets and must not include any extra octet.
