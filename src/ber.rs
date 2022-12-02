@@ -47,7 +47,7 @@ pub struct BerRef {
 
 impl<'a> From<&'a DerRef> for &'a BerRef {
     fn from(der: &'a DerRef) -> Self {
-        unsafe { BerRef::from_bytes_unchecked(der.as_ref()) }
+        unsafe { BerRef::from_bytes_unchecked(der.as_bytes()) }
     }
 }
 
@@ -69,7 +69,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
     /// [`BerRef::try_from_bytes`]: #method.try_from_bytes
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let id = <&IdRef>::try_from(bytes)?;
-        let parsing = &bytes[id.as_ref().len()..];
+        let parsing = &bytes[id.len()..];
 
         match length::try_from(parsing) {
             Err(e) => Err(e),
@@ -85,7 +85,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
             Ok((Length::Indefinite, mut parsing)) => {
                 while {
                     let element = Self::try_from(parsing)?;
-                    let len = element.as_ref().len();
+                    let len = element.as_bytes().len();
                     parsing = &parsing[len..];
 
                     if element.id() != IdRef::eoc() {
@@ -184,7 +184,7 @@ impl ToOwned for BerRef {
     type Owned = Ber;
 
     fn to_owned(&self) -> Self::Owned {
-        let buffer = Buffer::from(self.as_ref());
+        let buffer = Buffer::from(self.as_bytes());
         Ber { buffer }
     }
 }
@@ -237,7 +237,7 @@ impl BerRef {
     /// assert_eq!(ber.length(), Length::Definite(1));
     /// ```
     pub fn length(&self) -> Length {
-        let id_len = self.id().as_ref().len();
+        let id_len = self.id().len();
         let bytes = &self.bytes[id_len..];
         unsafe { length::from_bytes_starts_with_unchecked(bytes).0 }
     }
@@ -256,7 +256,7 @@ impl BerRef {
     /// assert_eq!(ber.contents().to_bool_ber().unwrap(), false);
     /// ```
     pub fn contents(&self) -> &ContentsRef {
-        let id_len = self.id().as_ref().len();
+        let id_len = self.id().len();
         let bytes = &self.bytes[id_len..];
         let contents = unsafe { length::from_bytes_starts_with_unchecked(bytes).1 };
         ContentsRef::from_bytes(contents)
@@ -392,7 +392,7 @@ impl Ber {
     ///
     /// let contents = ContentsRef::from_bytes(&[]);
     /// let ber0 = Ber::new(IdRef::octet_string(), contents);
-    /// let ber1 = unsafe { Ber::from_bytes_unchecked(ber0.as_ref()) };
+    /// let ber1 = unsafe { Ber::from_bytes_unchecked(ber0.as_bytes()) };
     /// assert_eq!(ber0, ber1);
     /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
@@ -416,7 +416,7 @@ impl Ber {
     ///
     /// // Build instance using function 'new()'.
     /// let contents: Vec<u8> = contents.iter()
-    ///                         .map(|i| Vec::from(i.as_ref() as &[u8]))
+    ///                         .map(|i| Vec::from(i.as_bytes()))
     ///                         .flatten().collect();
     /// let contents = ContentsRef::from_bytes(&contents);
     /// let expected = Ber::new(id, contents);
@@ -508,7 +508,7 @@ impl Ber {
 
 impl AsRef<[u8]> for Ber {
     fn as_ref(&self) -> &[u8] {
-        self.buffer.as_ref()
+        self.buffer.as_bytes()
     }
 }
 
@@ -528,7 +528,7 @@ impl Deref for Ber {
     type Target = BerRef;
 
     fn deref(&self) -> &Self::Target {
-        unsafe { BerRef::from_bytes_unchecked(self.buffer.as_ref()) }
+        unsafe { BerRef::from_bytes_unchecked(self.buffer.as_bytes()) }
     }
 }
 
@@ -552,7 +552,7 @@ impl Ber {
     /// let ber = Ber::new(id, contents);
     /// let v = ber.clone().into_vec();
     ///
-    /// assert_eq!(ber.as_ref() as &[u8], v.as_ref() as &[u8]);
+    /// assert_eq!(ber.as_bytes(), &v);
     /// ```
     pub fn into_vec(self) -> Vec<u8> {
         self.buffer.into_vec()
@@ -605,7 +605,7 @@ impl Ber {
 /// assert_eq!(id1, ber1.id());
 /// assert_eq!(contents1, ber1.contents());
 ///
-/// let bytes = &bytes[ber1.as_ref().len()..];
+/// let bytes = &bytes[ber1.as_bytes().len()..];
 /// let ber2 = <&BerRef>::try_from(bytes).unwrap();
 /// assert_eq!(id2, ber2.id());
 /// assert_eq!(&contents2 as &ContentsRef, ber2.contents());
@@ -632,7 +632,7 @@ mod tests {
         for &bytes in byteses {
             let contents = ContentsRef::from_bytes(bytes);
             let ber = Ber::new(id, contents);
-            let ber_ref = <&BerRef>::try_from(ber.as_ref() as &[u8]).unwrap();
+            let ber_ref = <&BerRef>::try_from(ber.as_bytes()).unwrap();
             assert_eq!(ber_ref, &ber as &BerRef);
         }
     }
@@ -657,17 +657,17 @@ mod tests {
 
         for i in 0..10 {
             let id = IdRef::sequence();
-            let mut bytes: Vec<u8> = Vec::from(id.as_ref() as &[u8]);
+            let mut bytes: Vec<u8> = Vec::from(id.as_bytes());
 
-            bytes.extend(Length::Indefinite.to_bytes().as_ref());
+            bytes.extend(Length::Indefinite.to_bytes().iter());
 
             for ber in bers[0..i].iter() {
-                bytes.extend(ber.as_ref() as &[u8]);
+                bytes.extend(ber.as_bytes());
             }
-            bytes.extend(eoc.as_ref() as &[u8]);
+            bytes.extend(eoc.as_bytes());
 
-            let ber = <&BerRef>::try_from(bytes.as_ref() as &[u8]).unwrap();
-            assert_eq!(bytes.as_ref() as &[u8], ber.as_ref() as &[u8]);
+            let ber = <&BerRef>::try_from(&bytes as &[u8]).unwrap();
+            assert_eq!(&bytes, ber.as_bytes());
         }
     }
 }

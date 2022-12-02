@@ -394,13 +394,13 @@ impl Deref for Contents {
     type Target = ContentsRef;
 
     fn deref(&self) -> &Self::Target {
-        ContentsRef::from_bytes(self.buffer.as_ref())
+        ContentsRef::from_bytes(self.buffer.as_bytes())
     }
 }
 
 impl DerefMut for Contents {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        ContentsRef::from_mut_bytes(self.buffer.as_mut())
+        ContentsRef::from_mut_bytes(self.buffer.as_mut_bytes())
     }
 }
 

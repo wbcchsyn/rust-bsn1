@@ -111,7 +111,7 @@ impl Length {
     /// let length = Length::Definite(3);
     /// let bytes = length.to_bytes();
     ///
-    /// let deserialized = Length::try_from(bytes.as_ref()).unwrap();
+    /// let deserialized = Length::try_from(&bytes as &[u8]).unwrap();
     /// assert_eq!(length, deserialized);
     /// ```
     pub fn to_bytes(self) -> impl Deref<Target = [u8]> {
@@ -326,7 +326,7 @@ mod tests {
         {
             let mut bytes = vec![0x80];
             bytes.extend(extra);
-            let res = try_from(bytes.as_ref()).unwrap();
+            let res = try_from(&bytes).unwrap();
             assert_eq!((Length::Indefinite, extra), res);
         }
 
@@ -334,12 +334,12 @@ mod tests {
         {
             let mut bytes = vec![0x00];
             bytes.extend(extra);
-            let res = try_from(bytes.as_ref()).unwrap();
+            let res = try_from(&bytes).unwrap();
             assert_eq!((Length::Definite(0), extra), res);
 
             let mut bytes = vec![0x7f];
             bytes.extend(extra);
-            let res = try_from(bytes.as_ref()).unwrap();
+            let res = try_from(&bytes).unwrap();
             assert_eq!((Length::Definite(0x7f), extra), res);
         }
 
@@ -347,12 +347,12 @@ mod tests {
         {
             let mut bytes = vec![0x81, 0x80];
             bytes.extend(extra);
-            let res = try_from(bytes.as_ref()).unwrap();
+            let res = try_from(&bytes).unwrap();
             assert_eq!((Length::Definite(0x80), extra), res);
 
             let mut bytes = vec![0x81, 0xff];
             bytes.extend(extra);
-            let res = try_from(bytes.as_ref()).unwrap();
+            let res = try_from(&bytes).unwrap();
             assert_eq!((Length::Definite(0xff), extra), res);
         }
 
@@ -360,12 +360,12 @@ mod tests {
         {
             let mut bytes = vec![0x82, 0x01, 0x00];
             bytes.extend(extra);
-            let res = try_from(bytes.as_ref()).unwrap();
+            let res = try_from(&bytes).unwrap();
             assert_eq!((Length::Definite(0x0100), extra), res);
 
             let mut bytes = vec![0x82, 0xff, 0xff];
             bytes.extend(extra);
-            let res = try_from(bytes.as_ref()).unwrap();
+            let res = try_from(&bytes).unwrap();
             assert_eq!((Length::Definite(0xffff), extra), res);
         }
 
@@ -464,14 +464,14 @@ mod tests {
         // Indefinite
         {
             let bytes = Length::Indefinite.to_bytes();
-            let length = try_from(bytes.as_ref()).unwrap();
+            let length = try_from(&bytes).unwrap();
             assert_eq!((Length::Indefinite, empty), length);
         }
 
         // Definite
         for &len in &[0, 1, 0x7f, 0x80, 0xff, 0x0100, 0xffff, std::usize::MAX] {
             let bytes = Length::Definite(len).to_bytes();
-            let length = try_from(bytes.as_ref()).unwrap();
+            let length = try_from(&bytes).unwrap();
             assert_eq!((Length::Definite(len), empty), length);
         }
     }

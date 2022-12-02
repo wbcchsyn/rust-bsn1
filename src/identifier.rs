@@ -1573,7 +1573,7 @@ impl Id {
 
 impl AsRef<[u8]> for Id {
     fn as_ref(&self) -> &[u8] {
-        self.buffer.as_ref()
+        self.buffer.as_bytes()
     }
 }
 
@@ -1593,13 +1593,13 @@ impl Deref for Id {
     type Target = IdRef;
 
     fn deref(&self) -> &Self::Target {
-        unsafe { IdRef::from_bytes_unchecked(self.buffer.as_ref()) }
+        unsafe { IdRef::from_bytes_unchecked(self.buffer.as_bytes()) }
     }
 }
 
 impl DerefMut for Id {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { mem::transmute(self.buffer.as_mut()) }
+        unsafe { mem::transmute(self.buffer.as_mut_bytes()) }
     }
 }
 
@@ -1630,12 +1630,12 @@ mod tests {
                     let first = cl as u8 + pc as u8 + 0;
                     let bytes: &[u8] = &[first];
                     let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(bytes, id.as_ref());
+                    assert_eq!(bytes, id.as_bytes());
 
                     let first = cl as u8 + pc as u8 + 0x1e;
                     let bytes: &[u8] = &[first];
                     let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(bytes, id.as_ref());
+                    assert_eq!(bytes, id.as_bytes());
                 }
 
                 let first = cl as u8 + pc as u8 + 0x1f;
@@ -1644,11 +1644,11 @@ mod tests {
                 {
                     let bytes: &[u8] = &[first, 0x1f];
                     let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(bytes, id.as_ref());
+                    assert_eq!(bytes, id.as_bytes());
 
                     let bytes: &[u8] = &[first, 0x7f];
                     let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(bytes, id.as_ref());
+                    assert_eq!(bytes, id.as_bytes());
                 }
 
                 // len bytes
@@ -1660,9 +1660,9 @@ mod tests {
                     bytes[1] = 0x81;
                     bytes[len - 1] = 0x00;
 
-                    let bytes: &[u8] = bytes.as_ref();
+                    let bytes: &[u8] = &bytes;
                     let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(bytes.as_ref(), id.as_ref());
+                    assert_eq!(bytes, id.as_bytes());
 
                     let mut bytes = vec![first];
                     for _ in 1..len {
@@ -1670,9 +1670,9 @@ mod tests {
                     }
                     bytes[len - 1] = 0x7f;
 
-                    let bytes: &[u8] = bytes.as_ref();
+                    let bytes: &[u8] = &bytes;
                     let id = <&IdRef>::try_from(bytes).unwrap();
-                    assert_eq!(bytes.as_ref(), id.as_ref());
+                    assert_eq!(bytes, id.as_bytes());
                 }
             }
         }
@@ -1703,7 +1703,7 @@ mod tests {
                     }
                     bytes[len - 1] = 0x00;
 
-                    let bytes: &[u8] = bytes.as_ref();
+                    let bytes: &[u8] = &bytes;
                     let e = <&IdRef>::try_from(bytes).unwrap_err();
                     assert_eq!(Error::RedundantBytes, e);
 
@@ -1714,7 +1714,7 @@ mod tests {
                     bytes[1] = 0x80;
                     bytes[len - 1] = 0x7f;
 
-                    let bytes: &[u8] = bytes.as_ref();
+                    let bytes: &[u8] = &bytes;
                     let e = <&IdRef>::try_from(bytes).unwrap_err();
                     assert_eq!(Error::RedundantBytes, e);
                 }
@@ -1750,7 +1750,7 @@ mod tests {
                     }
                     bytes[1] = 0x81;
 
-                    let bytes: &[u8] = bytes.as_ref();
+                    let bytes: &[u8] = &bytes;
                     let e = <&IdRef>::try_from(bytes).unwrap_err();
                     assert_eq!(Error::UnTerminatedBytes, e);
 
@@ -1759,7 +1759,7 @@ mod tests {
                         bytes.push(0xff);
                     }
 
-                    let bytes: &[u8] = bytes.as_ref();
+                    let bytes: &[u8] = &bytes;
                     let e = <&IdRef>::try_from(bytes).unwrap_err();
                     assert_eq!(Error::UnTerminatedBytes, e);
                 }
@@ -1858,8 +1858,8 @@ mod tests {
                     std::u128::MAX,
                 ] {
                     let id = Id::new(cl, pc, num);
-                    let idref = <&IdRef>::try_from(id.as_ref() as &[u8]).unwrap();
-                    assert_eq!(idref.as_ref(), id.as_ref() as &[u8]);
+                    let idref = <&IdRef>::try_from(id.as_bytes()).unwrap();
+                    assert_eq!(idref.as_bytes(), id.as_bytes());
                 }
             }
         }
@@ -1872,17 +1872,17 @@ mod tests {
                 for i in 0..=IdRef::MAX_SHORT {
                     let id = Id::new(cl, pc, i);
                     let expected: &[u8] = &[cl as u8 + pc as u8 + i];
-                    assert_eq!(id.as_ref() as &[u8], expected);
+                    assert_eq!(id.as_bytes(), expected);
                 }
                 for i in (IdRef::MAX_SHORT + 1)..0x80 {
                     let id = Id::new(cl, pc, i);
                     let expected: &[u8] = &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, i];
-                    assert_eq!(id.as_ref() as &[u8], expected);
+                    assert_eq!(id.as_bytes(), expected);
                 }
                 for i in 0x80..=u8::MAX {
                     let id = Id::new(cl, pc, i);
                     let expected: &[u8] = &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x81, i - 0x80];
-                    assert_eq!(id.as_ref() as &[u8], expected);
+                    assert_eq!(id.as_bytes(), expected);
                 }
             }
         }
@@ -1897,18 +1897,18 @@ mod tests {
                     for i in 0..=IdRef::MAX_SHORT {
                         let id = Id::new(cl, pc, i as u16);
                         let expected: &[u8] = &[cl as u8 + pc as u8 + i];
-                        assert_eq!(id.as_ref() as &[u8], expected);
+                        assert_eq!(id.as_bytes(), expected);
                     }
                     for i in (IdRef::MAX_SHORT + 1)..0x80 {
                         let id = Id::new(cl, pc, i as u16);
                         let expected: &[u8] = &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, i];
-                        assert_eq!(id.as_ref() as &[u8], expected);
+                        assert_eq!(id.as_bytes(), expected);
                     }
                     for i in 0x80..=u8::MAX {
                         let id = Id::new(cl, pc, i as u16);
                         let expected: &[u8] =
                             &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x81, i - 0x80];
-                        assert_eq!(id.as_ref() as &[u8], expected);
+                        assert_eq!(id.as_bytes(), expected);
                     }
                 }
 
@@ -1917,7 +1917,7 @@ mod tests {
                     let i = u8::MAX as u16 + 1;
                     let id = Id::new(cl, pc, i);
                     let expected: &[u8] = &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x82, 0];
-                    assert_eq!(id.as_ref() as &[u8], expected);
+                    assert_eq!(id.as_bytes(), expected);
                 }
 
                 // i16::MAX
@@ -1926,7 +1926,7 @@ mod tests {
                     let id = Id::new(cl, pc, i);
                     let expected: &[u8] =
                         &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x81, 0xff, 0x7f];
-                    assert_eq!(id.as_ref() as &[u8], expected);
+                    assert_eq!(id.as_bytes(), expected);
                 }
 
                 // i16::MAX + 1
@@ -1935,7 +1935,7 @@ mod tests {
                     let id = Id::new(cl, pc, i);
                     let expected: &[u8] =
                         &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x82, 0x80, 0x00];
-                    assert_eq!(id.as_ref() as &[u8], expected);
+                    assert_eq!(id.as_bytes(), expected);
                 }
 
                 // u16::MAX
@@ -1944,7 +1944,7 @@ mod tests {
                     let id = Id::new(cl, pc, i);
                     let expected: &[u8] =
                         &[cl as u8 + pc as u8 + IdRef::LONG_FLAG, 0x83, 0xff, 0x7f];
-                    assert_eq!(id.as_ref() as &[u8], expected);
+                    assert_eq!(id.as_bytes(), expected);
                 }
             }
         }
@@ -1962,7 +1962,7 @@ mod tests {
                     expected[0] = cl as u8 + pc as u8 + IdRef::LONG_FLAG;
                     expected[1] = 0x81;
                     expected[10] = 0x7f;
-                    assert_eq!(id.as_ref() as &[u8], expected);
+                    assert_eq!(id.as_bytes(), expected);
                 }
 
                 // u64::MAX + 1
@@ -1973,7 +1973,7 @@ mod tests {
                     expected[0] = cl as u8 + pc as u8 + IdRef::LONG_FLAG;
                     expected[1] = 0x82;
                     expected[10] = 0x00;
-                    assert_eq!(id.as_ref() as &[u8], expected);
+                    assert_eq!(id.as_bytes(), expected);
                 }
 
                 // u128::MAX
@@ -1984,7 +1984,7 @@ mod tests {
                     expected[0] = cl as u8 + pc as u8 + IdRef::LONG_FLAG;
                     expected[1] = 0x83;
                     expected[19] = 0x7f;
-                    assert_eq!(id.as_ref() as &[u8], expected);
+                    assert_eq!(id.as_bytes(), expected);
                 }
             }
         }
