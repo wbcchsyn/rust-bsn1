@@ -297,6 +297,10 @@ impl Buffer {
             }
         }
     }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        self
+    }
 }
 
 #[cfg(test)]
