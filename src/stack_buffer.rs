@@ -113,6 +113,11 @@ impl StackBuffer {
     pub const fn capacity(&self) -> usize {
         Self::CAPACITY
     }
+
+    #[cfg(test)]
+    pub fn as_bytes(&self) -> &[u8] {
+        self
+    }
 }
 
 #[cfg(test)]
