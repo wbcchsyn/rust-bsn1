@@ -372,4 +372,20 @@ impl ContentsRef {
             }
         }
     }
+
+    /// Provides a reference to the inner slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::ContentsRef;
+    ///
+    /// let bytes =  &[1, 2, 3, 4];
+    /// let contents = ContentsRef::from_bytes(bytes);
+    ///
+    /// assert_eq!(contents.as_bytes(), bytes);
+    /// ```
+    pub fn as_bytes(&self) -> &[u8] {
+        self
+    }
 }
