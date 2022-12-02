@@ -283,7 +283,7 @@ impl TryFrom<&[u8]> for Der {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`from_bytes`] .
+    /// This function is same to [`try_from_bytes`] .
     ///
     /// # Warnings
     ///
@@ -292,7 +292,7 @@ impl TryFrom<&[u8]> for Der {
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
     ///
-    /// [`from_bytes`]: #method.from_bytes
+    /// [`try_from_bytes`]: #method.try_from_bytes
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         let der_ref = <&DerRef>::try_from(bytes)?;
         Ok(der_ref.to_owned())
@@ -365,15 +365,15 @@ impl Der {
     /// use bsn1::Der;
     ///
     /// let bytes: &[u8] = &[0x02, 0x01, 0x0a];  // Represents '10' as Integer.
-    /// let der0 = Der::from_bytes(bytes).unwrap();
+    /// let der0 = Der::try_from_bytes(bytes).unwrap();
     ///
     /// // Extra octets at the end does not affect the result.
     /// let bytes: &[u8] = &[0x02, 0x01, 0x0a, 0x01, 0x02];
-    /// let der1 = Der::from_bytes(bytes).unwrap();
+    /// let der1 = Der::try_from_bytes(bytes).unwrap();
     ///
     /// assert_eq!(der0, der1);
     /// ```
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
+    pub fn try_from_bytes(bytes: &[u8]) -> Result<Self, Error> {
         Self::try_from(bytes)
     }
 
@@ -382,10 +382,10 @@ impl Der {
     /// `bytes` must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` are valid octets as an 'DER' or not, use [`TryFrom`]
-    /// implementation or [`from_bytes`].
+    /// implementation or [`try_from_bytes`].
     ///
     /// [`TryFrom`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Der
-    /// [`from_bytes`]: #method.from_bytes
+    /// [`try_from_bytes`]: #method.try_from_bytes
     ///
     /// # Safety
     ///
