@@ -388,4 +388,21 @@ impl ContentsRef {
     pub fn as_bytes(&self) -> &[u8] {
         self
     }
+
+    /// Provides a mutable reference to the inner slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::ContentsRef;
+    ///
+    /// let bytes =  &mut [1, 2, 3, 4];
+    /// let contents = ContentsRef::from_mut_bytes(bytes);
+    ///
+    /// contents.as_mut_bytes()[0] = 0;
+    /// assert_eq!(bytes, &[0, 2, 3, 4]);
+    /// ```
+    pub fn as_mut_bytes(&mut self) -> &mut [u8] {
+        self
+    }
 }
