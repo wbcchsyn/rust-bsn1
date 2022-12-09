@@ -34,7 +34,7 @@ use crate::{identifier, length, Buffer, Contents, ContentsRef, Error, IdRef, Len
 use num::PrimInt;
 use std::borrow::Borrow;
 use std::convert::TryFrom;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 /// `DerRef` is a wrapper of `[u8]` and represents DER.
 ///
@@ -666,6 +666,12 @@ impl Deref for Der {
 
     fn deref(&self) -> &Self::Target {
         unsafe { DerRef::from_bytes_unchecked(self.buffer.as_bytes()) }
+    }
+}
+
+impl DerefMut for Der {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { DerRef::from_mut_bytes_unchecked(self.buffer.as_mut_bytes()) }
     }
 }
 
