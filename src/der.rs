@@ -236,7 +236,7 @@ impl PartialEq<Der> for DerRef {
 }
 
 impl DerRef {
-    /// Returns a reference to the `IdRef` of `self` .
+    /// Returns a reference to the `IdRef` of `self`.
     ///
     /// # Examples
     ///
@@ -253,6 +253,32 @@ impl DerRef {
             let bytes = identifier::shrink_to_fit_unchecked(&self.bytes);
             IdRef::from_bytes_unchecked(bytes)
         }
+    }
+
+    /// Returns a mutable reference to the `IdRef` of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, DerRef, IdRef, PCTag};
+    ///
+    /// // Represents '4' as Integer.
+    /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x04];
+    /// let der = DerRef::try_from_mut_bytes(bytes).unwrap();
+    ///
+    /// assert_eq!(der.id().class(), ClassTag::Universal);
+    /// der.mut_id().set_class(ClassTag::Private);
+    /// assert_eq!(der.id().class(), ClassTag::Private);
+    ///
+    /// assert_eq!(der.id().pc(), PCTag::Primitive);
+    /// der.mut_id().set_pc(PCTag::Constructed);
+    /// assert_eq!(der.id().pc(), PCTag::Constructed);
+    /// ```
+    pub fn mut_id(&mut self) -> &mut IdRef {
+        let ret = self.id();
+        let ptr = ret as *const IdRef;
+        let ptr = ptr as *mut IdRef;
+        unsafe { &mut *ptr }
     }
 
     /// Returns `Length` to represent the length of contents.
