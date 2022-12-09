@@ -142,6 +142,26 @@ impl DerRef {
         <&Self>::try_from(bytes)
     }
 
+    /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a mutable reference to
+    /// `DerRef`.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`<&mut DerRef>::try_from`].
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function will accept
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
+    /// constructed Octet String DER.
+    ///
+    /// [`<&mut DerRef>::try_from`]:
+    ///     #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20DerRef
+    pub fn try_from_mut_bytes(bytes: &mut [u8]) -> Result<&mut Self, Error> {
+        <&mut Self>::try_from(bytes)
+    }
+
     /// Provides a reference from `bytes` without any check.
     ///
     /// `bytes` must not include any extra octet.
