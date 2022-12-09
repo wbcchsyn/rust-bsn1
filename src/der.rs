@@ -307,7 +307,7 @@ impl DerRef {
         unsafe { length::from_bytes_starts_with_unchecked(bytes).0 }
     }
 
-    /// Returns a reference to the contents octets of `self` .
+    /// Returns a reference to the contents octets of `self`.
     ///
     /// # Examples
     ///
@@ -325,6 +325,28 @@ impl DerRef {
         let bytes = &self.bytes[id_len..];
         let bytes = unsafe { length::from_bytes_starts_with_unchecked(bytes).1 };
         ContentsRef::from_bytes(bytes)
+    }
+
+    /// Returns a mutable reference to the contents octets of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ContentsRef, DerRef};
+    ///
+    /// // Represents '[0x00, 0xff]' as Octet String
+    /// let bytes: &mut [u8] = &mut [0x04, 0x02, 0x00, 0xff];  
+    /// let mut der = DerRef::try_from_mut_bytes(bytes).unwrap();
+    ///
+    /// assert_eq!(der.contents().as_bytes(), &[0x00, 0xff]);
+    /// der.mut_contents().copy_from_slice(&[0x01, 0x02]);
+    /// assert_eq!(der.contents().as_bytes(), &[0x01, 0x02]);
+    /// ```
+    pub fn mut_contents(&mut self) -> &mut ContentsRef {
+        let ret = self.contents();
+        let ptr = ret as *const ContentsRef;
+        let ptr = ptr as *mut ContentsRef;
+        unsafe { &mut *ptr }
     }
 
     /// Provides a reference to the inner slice.
