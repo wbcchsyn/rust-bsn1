@@ -189,6 +189,23 @@ impl DerRef {
         let ptr = ptr as *const Self;
         &*ptr
     }
+
+    /// Provides a mutable reference from `bytes` without any check.
+    ///
+    /// `bytes` must not include any extra octet.
+    ///
+    /// If it is not sure whether `bytes` is valid octets as an 'DER' or not, use [`TryFrom`]
+    /// implementation or [`try_from_mut_bytes`].
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20DerRef
+    /// [`try_from_mut_bytes`]: #method.try_from_mut_bytes
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if `bytes` is not formatted as a DER.
+    pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
+        std::mem::transmute(bytes)
+    }
 }
 
 impl AsRef<[u8]> for DerRef {
