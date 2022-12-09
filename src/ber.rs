@@ -35,7 +35,7 @@ use num::PrimInt;
 use std::borrow::Borrow;
 use std::convert::TryFrom;
 use std::mem;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 /// `BerRef` is a wrapper of `[u8]` and represents a BER.
 ///
@@ -678,6 +678,12 @@ impl Deref for Ber {
 
     fn deref(&self) -> &Self::Target {
         unsafe { BerRef::from_bytes_unchecked(self.buffer.as_bytes()) }
+    }
+}
+
+impl DerefMut for Ber {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { BerRef::from_mut_bytes_unchecked(self.buffer.as_mut_bytes()) }
     }
 }
 
