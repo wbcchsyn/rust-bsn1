@@ -748,6 +748,84 @@ impl Ber {
     pub fn into_vec(self) -> Vec<u8> {
         self.buffer.into_vec()
     }
+
+    /// Force the length of the contents to `new_length`.
+    ///
+    /// If `new_length` is greater than the current length of the `contents`, this method enlarges
+    /// the `contents`. The extended octets are not initialized. Use [`mut_contents`] to initialize.
+    ///
+    /// If the contents length of `self` forms indefinite, the length octets does not changes;
+    /// otherwise the length octets will be updated.
+    ///
+    /// # Warnings
+    ///
+    /// `new_length` specifies the length of the contents.
+    /// The total length of `self` will be greater then `new_length`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new total length exceeds `isize::MAX`.
+    ///
+    /// [`mut_contents`]: #method.mut_contents
+    ///
+    /// # Examples
+    ///
+    /// Enlarge indefinite length Ber object.
+    ///
+    /// ```
+    /// use bsn1::{Ber, ContentsRef, IdRef, Length};
+    ///
+    /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), ContentsRef::from_bytes(&[]));
+    ///
+    /// assert_eq!(ber.length(), Length::Indefinite);
+    /// assert_eq!(ber.contents().as_bytes(), &[]);
+    ///
+    /// let new_contents: &[u8] = &[0, 1,  2, 3];
+    /// ber.set_length(new_contents.len());
+    /// ber.mut_contents().clone_from_slice(new_contents);
+    ///
+    /// assert_eq!(ber.length(), Length::Indefinite);
+    /// assert_eq!(ber.contents().as_bytes(), new_contents);
+    /// ```
+    ///
+    /// Enshorten definite length Ber object.
+    ///
+    /// ```
+    /// use bsn1::{Ber, ContentsRef, IdRef, Length};
+    ///
+    /// let old_contents: &[u8] = &[0, 1, 2, 3, 4];
+    /// let mut ber = Ber::new(IdRef::octet_string(), ContentsRef::from_bytes(old_contents));
+    ///
+    /// assert_eq!(ber.length(), Length::Definite(old_contents.len()));
+    /// assert_eq!(ber.contents().as_bytes(), old_contents);
+    ///
+    /// let new_contents = &old_contents[0..2];
+    /// ber.set_length(new_contents.len());
+    /// ber.mut_contents().clone_from_slice(new_contents);
+    ///
+    /// assert_eq!(ber.length(), Length::Definite(new_contents.len()));
+    /// assert_eq!(ber.contents().as_bytes(), new_contents);
+    /// ```
+    pub fn set_length(&mut self, new_length: usize) {
+        match self.length() {
+            Length::Indefinite => {
+                let old_length = self.contents().len();
+
+                let diff = (new_length as isize) - (old_length as isize);
+
+                if 0 < diff {
+                    self.buffer.reserve(diff as usize);
+                }
+
+                let total_len = self.as_bytes().len() as isize + diff;
+                unsafe { self.buffer.set_len(total_len as usize) };
+            }
+            _ => {
+                let this: &mut Der = unsafe { std::mem::transmute(self) };
+                this.set_length(new_length);
+            }
+        };
+    }
 }
 
 /// Builds a `Ber` instance representing a Constructed BER effectively.
@@ -859,6 +937,209 @@ mod tests {
 
             let ber = <&BerRef>::try_from(&bytes as &[u8]).unwrap();
             assert_eq!(&bytes, ber.as_bytes());
+        }
+    }
+
+    #[test]
+    fn extend_indefinite_ber() {
+        let mut ber = Ber::new_indefinite(IdRef::octet_string(), ContentsRef::from_bytes(&[]));
+
+        for i in 0..=256 {
+            ber.set_length(i + 1);
+            ber.mut_contents()[i] = i as u8;
+
+            assert_eq!(ber.length(), Length::Indefinite);
+
+            let contents = ber.contents();
+            assert_eq!(contents.len(), i + 1);
+            for j in 0..=i {
+                assert_eq!(contents[j], j as u8);
+            }
+        }
+
+        {
+            ber.set_length(65535);
+            assert_eq!(ber.length(), Length::Indefinite);
+
+            let contents = ber.contents();
+            assert_eq!(contents.len(), 65535);
+            for i in 0..=256 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        {
+            ber.set_length(65536);
+            assert_eq!(ber.length(), Length::Indefinite);
+
+            let contents = ber.contents();
+            assert_eq!(contents.len(), 65536);
+            for i in 0..=256 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        {
+            ber.set_length(256.pow(3) - 1);
+            assert_eq!(ber.length(), Length::Indefinite);
+
+            let contents = ber.contents();
+            assert_eq!(contents.len(), 256.pow(3) - 1);
+            for i in 0..=256 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        {
+            ber.set_length(256.pow(3));
+            assert_eq!(ber.length(), Length::Indefinite);
+
+            let contents = ber.contents();
+            assert_eq!(contents.len(), 256.pow(3));
+            for i in 0..=256 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+    }
+
+    #[test]
+    fn extend_definite_ber() {
+        let mut ber = Ber::new(IdRef::octet_string(), ContentsRef::from_bytes(&[]));
+
+        for i in 0..=256 {
+            ber.set_length(i + 1);
+            ber.mut_contents()[i] = i as u8;
+
+            assert_eq!(ber.length(), Length::Definite(i + 1));
+
+            let contents = ber.contents();
+            assert_eq!(contents.len(), i + 1);
+            for j in 0..=i {
+                assert_eq!(contents[j], j as u8);
+            }
+        }
+
+        {
+            ber.set_length(65535);
+            assert_eq!(ber.length(), Length::Definite(65535));
+
+            let contents = ber.contents();
+            assert_eq!(contents.len(), 65535);
+            for i in 0..=256 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        {
+            ber.set_length(65536);
+            assert_eq!(ber.length(), Length::Definite(65536));
+
+            let contents = ber.contents();
+            assert_eq!(contents.len(), 65536);
+            for i in 0..=256 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        {
+            ber.set_length(256.pow(3) - 1);
+            assert_eq!(ber.length(), Length::Definite(256.pow(3) - 1));
+
+            let contents = ber.contents();
+            assert_eq!(contents.len(), 256.pow(3) - 1);
+            for i in 0..=256 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        {
+            ber.set_length(256.pow(3));
+            assert_eq!(ber.length(), Length::Definite(256.pow(3)));
+
+            let contents = ber.contents();
+            assert_eq!(contents.len(), 256.pow(3));
+            for i in 0..=256 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+    }
+
+    #[test]
+    fn enshorten_indefinite_der() {
+        let contents: Vec<u8> = (0..=255).cycle().take(65537).collect();
+        let mut ber =
+            Ber::new_indefinite(IdRef::octet_string(), ContentsRef::from_bytes(&contents));
+
+        {
+            ber.set_length(65536);
+            assert_eq!(ber.length(), Length::Indefinite);
+            assert_eq!(ber.contents().len(), 65536);
+
+            let contents = ber.contents();
+            for i in 0..65536 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        {
+            ber.set_length(65535);
+            assert_eq!(ber.length(), Length::Indefinite);
+            assert_eq!(ber.contents().len(), 65535);
+
+            let contents = ber.contents();
+            for i in 0..65535 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        for i in (0..=256).rev() {
+            ber.set_length(i);
+            assert_eq!(ber.length(), Length::Indefinite);
+            assert_eq!(ber.contents().len(), i);
+
+            let contents = ber.contents();
+            for j in 0..i {
+                assert_eq!(contents[j], j as u8);
+            }
+        }
+    }
+
+    #[test]
+    fn enshorten_definite_der() {
+        let contents: Vec<u8> = (0..=255).cycle().take(65536).collect();
+        let mut ber = Ber::new(IdRef::octet_string(), ContentsRef::from_bytes(&contents));
+
+        {
+            ber.set_length(65536);
+            assert_eq!(ber.length(), Length::Definite(65536));
+            assert_eq!(ber.contents().len(), 65536);
+
+            let contents = ber.contents();
+            for i in 0..65536 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        {
+            ber.set_length(65535);
+            assert_eq!(ber.length(), Length::Definite(65535));
+            assert_eq!(ber.contents().len(), 65535);
+
+            let contents = ber.contents();
+            for i in 0..65535 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        for i in (0..=256).rev() {
+            ber.set_length(i);
+            assert_eq!(ber.length(), Length::Definite(i));
+            assert_eq!(ber.contents().len(), i);
+
+            let contents = ber.contents();
+            for j in 0..i {
+                assert_eq!(contents[j], j as u8);
+            }
         }
     }
 }
