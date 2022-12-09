@@ -503,6 +503,42 @@ impl Ber {
         Self::from(der)
     }
 
+    /// Creates a new instance from `id` and `contents` with indefinite length.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, ContentsRef, IdRef, Length};
+    ///
+    /// let id = IdRef::octet_string();
+    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let ber = Ber::new_indefinite(id, contents);
+    ///
+    /// assert_eq!(ber.id(), id);
+    /// assert_eq!(ber.length(), Length::Indefinite);
+    /// assert!(ber.contents().is_empty());
+    /// ```
+    pub fn new_indefinite(id: &IdRef, contents: &ContentsRef) -> Self {
+        let length = Length::Indefinite.to_bytes();
+        let total_len = id.len() + length.len() + contents.len();
+        let mut buffer = Buffer::with_capacity(total_len);
+
+        unsafe {
+            buffer.set_len(total_len);
+
+            let ptr = buffer.as_mut_ptr();
+            ptr.copy_from_nonoverlapping(id.as_ptr(), id.len());
+
+            let ptr = ptr.add(id.len());
+            ptr.copy_from_nonoverlapping(length.as_ptr(), length.len());
+
+            let ptr = ptr.add(length.len());
+            ptr.copy_from_nonoverlapping(contents.as_ptr(), contents.len());
+        }
+
+        Self { buffer }
+    }
+
     /// Parses `bytes` starting with BER octets and builds a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
