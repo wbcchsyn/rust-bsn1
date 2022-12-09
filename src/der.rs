@@ -47,7 +47,7 @@ pub struct DerRef {
 impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
     type Error = Error;
 
-    /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a reference to `DerRef` .
+    /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a reference to `DerRef`.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
@@ -78,6 +78,32 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
         } else {
             unsafe { Ok(DerRef::from_bytes_unchecked(&bytes[..total_len])) }
         }
+    }
+}
+
+impl<'a> TryFrom<&'a mut [u8]> for &'a mut DerRef {
+    type Error = Error;
+
+    /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a mutable reference to
+    /// DerRef`.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`DerRef::try_from_mut_bytes`].
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function will accept
+    /// such an identifier.
+    /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
+    /// constructed Octet String DER.
+    ///
+    /// [`DerRef::try_from_mut_bytes`]: #method.try_from_mut_bytes
+    fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
+        let ret = DerRef::try_from_bytes(bytes)?;
+        let ptr = ret as *const DerRef;
+        let ptr = ptr as *mut DerRef;
+        unsafe { Ok(&mut *ptr) }
     }
 }
 
