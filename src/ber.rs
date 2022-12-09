@@ -210,6 +210,36 @@ impl BerRef {
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         mem::transmute(bytes)
     }
+
+    /// Provides a reference from `bytes` without any check.
+    ///
+    /// `bytes` must be BER octets and must not include any extra octet.
+    ///
+    /// If it is not sure whether `bytes` are valid octets as an 'BER' or not, use [`TryFrom`]
+    /// implementation or [`try_from_bytes`].
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if `bytes` is not formatted as a BER.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20BerRef
+    /// [`try_from_bytes`]: #method.try_from_bytes
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{BerRef, IdRef};
+    ///
+    /// // Represents '0x34' as an Integer.
+    /// let bytes: &[u8] = &[0x02, 0x01, 0x34];
+    /// let ber = unsafe { BerRef::from_bytes_unchecked(bytes) };
+    ///
+    /// assert_eq!(ber.id(), IdRef::integer());
+    /// assert_eq!(ber.contents().to_integer::<i32>().unwrap(), 0x34);
+    /// ```
+    pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
+        mem::transmute(bytes)
+    }
 }
 
 impl AsRef<[u8]> for BerRef {
