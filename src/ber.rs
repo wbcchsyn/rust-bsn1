@@ -292,6 +292,38 @@ impl BerRef {
         }
     }
 
+    /// Provides a mutable reference to [`IdRef`] of `self` .
+    ///
+    /// [`IdRef`]: struct.IdRef.html
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{BerRef, ClassTag, IdRef, PCTag};
+    ///
+    /// // Represents '3' as an Integer.
+    /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x03];
+    /// let ber = BerRef::try_from_mut_bytes(bytes).unwrap();
+    ///
+    /// assert_eq!(ber.id(), IdRef::integer());
+    ///
+    /// assert_eq!(ber.id().class(), ClassTag::Universal);
+    /// ber.mut_id().set_class(ClassTag::Private);
+    /// assert_eq!(ber.id().class(), ClassTag::Private);
+    ///
+    /// assert_eq!(ber.id().pc(), PCTag::Primitive);
+    /// ber.mut_id().set_pc(PCTag::Constructed);
+    /// assert_eq!(ber.id().pc(), PCTag::Constructed);
+    /// ```
+    pub fn mut_id(&mut self) -> &mut IdRef {
+        unsafe {
+            let ret = self.id();
+            let ptr = ret as *const IdRef;
+            let ptr = ptr as *mut IdRef;
+            &mut *ptr
+        }
+    }
+
     /// Returns `Length` of `self`.
     ///
     /// # Warnings
