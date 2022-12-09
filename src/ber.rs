@@ -368,6 +368,31 @@ impl BerRef {
         ContentsRef::from_bytes(contents)
     }
 
+    /// Provides a mutable reference to the 'contents' octets of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::BerRef;
+    ///
+    /// // Represents 'False' as a Boolean.
+    /// let bytes: &mut [u8] = &mut [0x01, 0x01, 0x00];
+    /// let ber = BerRef::try_from_mut_bytes(bytes).unwrap();
+    ///
+    /// assert_eq!(ber.contents().to_bool_ber().unwrap(), false);
+    ///
+    /// ber.mut_contents()[0] = 0xff;
+    /// assert_eq!(ber.contents().to_bool_ber().unwrap(), true);
+    /// ```
+    pub fn mut_contents(&mut self) -> &mut ContentsRef {
+        unsafe {
+            let ret = self.contents();
+            let ptr = ret as *const ContentsRef;
+            let ptr = ptr as *mut ContentsRef;
+            &mut *ptr
+        }
+    }
+
     /// Provides a reference to the inner slice.
     ///
     /// # Examples
