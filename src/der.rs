@@ -158,6 +158,24 @@ impl DerRef {
     ///
     /// [`<&mut DerRef>::try_from`]:
     ///     #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20DerRef
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{DerRef, IdRef};
+    ///
+    /// // Represents '8' as Integer.
+    /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x08];
+    /// let der = DerRef::try_from_mut_bytes(bytes).unwrap();
+    ///
+    /// // The value is 0x08 at first.
+    /// assert_eq!(der.contents().as_bytes(), &[0x08]);
+    ///
+    /// der.mut_contents()[0] = 0x09;
+    ///
+    /// // The value is updated.
+    /// assert_eq!(der.contents().as_bytes(), &[0x09]);
+    /// ```
     pub fn try_from_mut_bytes(bytes: &mut [u8]) -> Result<&mut Self, Error> {
         <&mut Self>::try_from(bytes)
     }
