@@ -456,6 +456,10 @@ impl Der {
     /// For example, 'Octet String' must be primitive in DER, but this function will construct a
     /// new instance even if `id` represenets constructed 'Octet String.'
     ///
+    /// # Panics
+    ///
+    /// Panics if the total length of the return value exceeds `isize::MAX`.
+    ///
     /// # Examples
     ///
     /// ```
