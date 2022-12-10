@@ -34,7 +34,7 @@ use crate::{identifier, length, Buffer, Contents, ContentsRef, Error, IdRef, Len
 use num::PrimInt;
 use std::borrow::Borrow;
 use std::convert::TryFrom;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 /// `DerRef` is a wrapper of `[u8]` and represents DER.
 ///
@@ -455,6 +455,47 @@ impl Der {
         Self { buffer }
     }
 
+    /// Creates a new instance from `id` and `contents` of `length` bytes.
+    ///
+    /// The `contents` of the return value is not initialized.
+    /// Use [`mut_contents`] to initialize it.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the total bytes will exceeds `isize::MAX`.
+    ///
+    /// [`mut_contents`]: #method.mut_contents
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef, Length};
+    ///
+    /// let der = Der::with_id_length(IdRef::utf8_string(), 36);
+    ///
+    /// assert_eq!(der.id(), IdRef::utf8_string());
+    /// assert_eq!(der.length(), Length::Definite(36));
+    /// assert_eq!(der.contents().len(), 36);
+    /// ```
+    pub fn with_id_length(id: &IdRef, length: usize) -> Self {
+        let length_ = Length::Definite(length).to_bytes();
+        let total_len = id.len() + length_.len() + length;
+
+        let mut buffer = Buffer::with_capacity(total_len);
+
+        unsafe {
+            let dst = buffer.as_mut_ptr();
+            dst.copy_from_nonoverlapping(id.as_ptr(), id.len());
+
+            let dst = dst.add(id.len());
+            dst.copy_from_nonoverlapping(length_.as_ptr(), length_.len());
+
+            buffer.set_len(total_len);
+        }
+
+        Self { buffer }
+    }
+
     /// Parses `bytes` starting with DER octets and builds a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
@@ -669,6 +710,12 @@ impl Deref for Der {
     }
 }
 
+impl DerefMut for Der {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { DerRef::from_mut_bytes_unchecked(self.buffer.as_mut_bytes()) }
+    }
+}
+
 impl PartialEq<DerRef> for Der {
     fn eq(&self, other: &DerRef) -> bool {
         self as &DerRef == other
@@ -690,6 +737,77 @@ impl Der {
     /// ```
     pub fn into_vec(self) -> Vec<u8> {
         self.buffer.into_vec()
+    }
+
+    /// Forces to set the length of the `contents` to `new_length`.
+    ///
+    /// If `new_length` is greater than the length of current `contents`, the bytes of the extended
+    /// contents are not initialized. Use [`mut_contents`] to update them.
+    ///
+    /// # Warnings
+    ///
+    /// `new_length` specifies the length of `contents`.
+    /// The total length will be greater than `new_length`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the total length will exceeds `isize::MAX`.
+    ///
+    /// [`mut_cntents`]: #method.mut_contents
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, Length};
+    ///
+    /// let mut der = Der::octet_string(&[]);
+    ///
+    /// assert_eq!(der.length(), Length::Definite(0));
+    /// assert_eq!(der.contents().as_bytes(), &[]);
+    ///
+    /// let new_contents: &[u8] = &[1, 2, 3, 4];
+    /// der.set_length(new_contents.len());
+    /// der.mut_contents().copy_from_slice(new_contents);
+    ///
+    /// assert_eq!(der.length(), Length::Definite(new_contents.len()));
+    /// assert_eq!(der.contents().as_bytes(), new_contents);
+    /// ```
+    pub fn set_length(&mut self, new_length: usize) {
+        let old_length = self.contents().len();
+        if old_length == new_length {
+            return;
+        }
+
+        let contents_offset = (new_length as isize) - (old_length as isize);
+
+        let old_length_ = Length::Definite(old_length).to_bytes();
+        let new_length_ = Length::Definite(new_length).to_bytes();
+        let length_offset = (new_length_.len() as isize) - (old_length_.len() as isize);
+
+        // Reserve the capacity if necessary
+        if 0 < contents_offset {
+            let total_offset = length_offset + contents_offset;
+            self.buffer.reserve(total_offset as usize);
+        }
+
+        unsafe {
+            // Copy the contents if necessary.
+            if length_offset != 0 {
+                let src = self.mut_contents().as_mut_ptr();
+                let dst = src.offset(length_offset);
+                let count = new_length.min(old_length);
+                dst.copy_from(src, count);
+            }
+
+            // Copy the length
+            let src = new_length_.as_ptr();
+            let dst = self.buffer.as_mut_ptr().add(self.id().len());
+            dst.copy_from_nonoverlapping(src, new_length_.len());
+
+            // Update the buffer length
+            let total_len = (self.buffer.len() as isize) + length_offset + contents_offset;
+            self.buffer.set_len(total_len as usize);
+        }
     }
 }
 
@@ -886,6 +1004,123 @@ mod tests {
             let der = Der::new(id, contents);
             let der_ref = <&DerRef>::try_from(der.as_bytes()).unwrap();
             assert_eq!(der_ref, &der as &DerRef);
+        }
+    }
+
+    #[test]
+    fn extend_der() {
+        let mut der = Der::octet_string(&[]);
+
+        for i in 0..=256 {
+            der.set_length(i + 1);
+            der.mut_contents()[i] = i as u8;
+
+            assert_eq!(der.length(), Length::Definite(i + 1));
+
+            let contents = der.contents();
+            for j in 0..=i {
+                assert_eq!(contents[j], j as u8);
+            }
+        }
+
+        {
+            der.set_length(65535);
+            assert_eq!(der.length(), Length::Definite(65535));
+
+            let contents = der.contents();
+            for i in 0..=256 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        {
+            der.set_length(65536);
+            assert_eq!(der.length(), Length::Definite(65536));
+
+            let contents = der.contents();
+            for i in 0..=256 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        {
+            der.set_length(256.pow(3) - 1);
+            assert_eq!(der.length(), Length::Definite(256.pow(3) - 1));
+
+            let contents = der.contents();
+            for i in 0..=256 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        {
+            der.set_length(256.pow(3));
+            assert_eq!(der.length(), Length::Definite(256.pow(3)));
+
+            let contents = der.contents();
+            for i in 0..=256 {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+    }
+
+    #[test]
+    fn shrinik_der() {
+        let contents: Vec<u8> = (0..=std::u8::MAX).cycle().take(256.pow(3) + 1).collect();
+        let mut der = Der::octet_string(&contents);
+
+        {
+            let len = 256.pow(3);
+            der.set_length(len);
+            assert_eq!(der.length(), Length::Definite(len));
+
+            let contents = der.contents();
+            for i in 0..len {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        {
+            let len = 256.pow(3) - 1;
+            der.set_length(len);
+            assert_eq!(der.length(), Length::Definite(len));
+
+            let contents = der.contents();
+            for i in 0..len {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        {
+            let len = 65536;
+            der.set_length(len);
+            assert_eq!(der.length(), Length::Definite(len));
+
+            let contents = der.contents();
+            for i in 0..len {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        {
+            let len = 65535;
+            der.set_length(len);
+            assert_eq!(der.length(), Length::Definite(len));
+
+            let contents = der.contents();
+            for i in 0..len {
+                assert_eq!(contents[i], i as u8);
+            }
+        }
+
+        for len in (0..=256).rev() {
+            der.set_length(len);
+            assert_eq!(der.length(), Length::Definite(len));
+
+            let contents = der.contents();
+            for i in 0..len {
+                assert_eq!(contents[i], i as u8);
+            }
         }
     }
 }
