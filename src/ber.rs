@@ -543,6 +543,40 @@ impl Ber {
         Self { buffer }
     }
 
+    /// Creates a new instance with definite length from `id` and `contents` of `length` bytes.
+    ///
+    /// The `contents` of the return value is not initialized.
+    /// Use [`mut_contents`] to initialize it.
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such identifiers.
+    /// For example, 'Octet String' must be primitive in DER, but this function will construct a
+    /// new instance even if `id` represenets constructed 'Octet String.'
+    ///
+    /// # Panics
+    ///
+    /// Panics if the total bytes will exceeds `isize::MAX`.
+    ///
+    /// [`mut_contents`]: #method.mut_contents
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, IdRef, Length};
+    ///
+    /// let ber = Ber::with_id_length(IdRef::utf8_string(), 36);
+    ///
+    /// assert_eq!(ber.id(), IdRef::utf8_string());
+    /// assert_eq!(ber.length(), Length::Definite(36));
+    /// assert_eq!(ber.contents().len(), 36);
+    /// ```
+    pub fn with_id_length(id: &IdRef, length: usize) -> Self {
+        let der = Der::with_id_length(id, length);
+        Self::from(der)
+    }
+
     /// Parses `bytes` starting with BER octets and builds a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
