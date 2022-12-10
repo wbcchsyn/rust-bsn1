@@ -577,6 +577,53 @@ impl Ber {
         Self::from(der)
     }
 
+    /// Creates a new instance with indefinite length from `id` and `contents` of `length` bytes.
+    ///
+    /// The `contents` of the return value is not initialized.
+    /// Use [`mut_contents`] to initialize it.
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such identifiers.
+    /// For example, 'Octet String' must be primitive in DER, but this function will construct a
+    /// new instance even if `id` represenets constructed 'Octet String.'
+    ///
+    /// # Panics
+    ///
+    /// Panics if the total bytes will exceeds `isize::MAX`.
+    ///
+    /// [`mut_contents`]: #method.mut_contents
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, IdRef, Length};
+    ///
+    /// let ber = Ber::with_id_length_indefinite(IdRef::utf8_string(), 36);
+    ///
+    /// assert_eq!(ber.id(), IdRef::utf8_string());
+    /// assert_eq!(ber.length(), Length::Indefinite);
+    /// ```
+    pub fn with_id_length_indefinite(id: &IdRef, length: usize) -> Self {
+        let length_ = Length::Indefinite.to_bytes();
+        let total_len = id.len() + length_.len() + length;
+
+        let mut buffer = Buffer::with_capacity(total_len);
+
+        unsafe {
+            let dst = buffer.as_mut_ptr();
+            dst.copy_from_nonoverlapping(id.as_ptr(), id.len());
+
+            let dst = dst.add(id.len());
+            dst.copy_from_nonoverlapping(length_.as_ptr(), length_.len());
+
+            buffer.set_len(total_len);
+        }
+
+        Self { buffer }
+    }
+
     /// Parses `bytes` starting with BER octets and builds a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
