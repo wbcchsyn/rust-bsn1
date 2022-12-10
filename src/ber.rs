@@ -177,6 +177,24 @@ impl BerRef {
     ///
     /// [`<&mut BerRef>::try_from`]:
     ///     #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20BerRef
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::BerRef;
+    ///
+    /// // Represents '0x04' as an Integer.
+    /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x04];
+    /// let ber = BerRef::try_from_mut_bytes(bytes).unwrap();
+    ///
+    /// // The value is 0x04 at first.
+    /// assert_eq!(ber.contents().as_bytes(), &[0x04]);
+    ///
+    /// ber.mut_contents()[0] = 0x05;
+    ///
+    /// // The value is updated.
+    /// assert_eq!(ber.contents().as_bytes(), &[0x05]);
+    /// ```
     pub fn try_from_mut_bytes(bytes: &mut [u8]) -> Result<&mut Self, Error> {
         <&mut Self>::try_from(bytes)
     }
