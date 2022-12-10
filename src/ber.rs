@@ -486,6 +486,10 @@ impl Ber {
     /// (Generally speaking, the performance of definite length is better than that of indefinite
     /// length. Indefinite length is seldom used these days.)
     ///
+    /// # Panics
+    ///
+    /// Panics if the total length exceeds `isize::MAX`.
+    ///
     /// # Examples
     ///
     /// ```
