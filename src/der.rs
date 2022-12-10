@@ -221,6 +221,24 @@ impl DerRef {
     /// # Safety
     ///
     /// The behavior is undefined if `bytes` is not formatted as a DER.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::DerRef;
+    ///
+    /// // Represents '8' as Integer.
+    /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x08];
+    /// let der = unsafe { DerRef::from_mut_bytes_unchecked(bytes) };
+    ///
+    /// // The value is 0x08 at first.
+    /// assert_eq!(der.contents().as_bytes(), &[0x08]);
+    ///
+    /// der.mut_contents()[0] = 0x09;
+    ///
+    /// // The value is updated.
+    /// assert_eq!(der.contents().as_bytes(), &[0x09]);
+    /// ```
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         std::mem::transmute(bytes)
     }
