@@ -103,6 +103,31 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
     }
 }
 
+impl<'a> TryFrom<&'a mut [u8]> for &'a mut BerRef {
+    type Error = Error;
+
+    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a mutable reference to
+    /// `BerRef`.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`BerRef::try_from_mut_bytes`].
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
+    /// functions returns `Ok`.
+    ///
+    /// [`BerRef::try_from_mut_bytes`]: #method.try_from_mut_bytes
+    fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
+        let ret = <&'a BerRef>::try_from(bytes as &[u8])?;
+        let ptr = ret as *const BerRef;
+        let ptr = ptr as *mut BerRef;
+        unsafe { Ok(&mut *ptr) }
+    }
+}
+
 impl BerRef {
     /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a reference to `BerRef` .
     ///
@@ -137,6 +162,43 @@ impl BerRef {
         <&Self>::try_from(bytes)
     }
 
+    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a mutable reference to
+    /// `BerRef`.
+    ///
+    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// This function is same to [`<&mut BerRef>::try_from`] .
+    ///
+    /// # Warnings
+    ///
+    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
+    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
+    /// functions returns `Ok`.
+    ///
+    /// [`<&mut BerRef>::try_from`]:
+    ///     #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20BerRef
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::BerRef;
+    ///
+    /// // Represents '0x04' as an Integer.
+    /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x04];
+    /// let ber = BerRef::try_from_mut_bytes(bytes).unwrap();
+    ///
+    /// // The value is 0x04 at first.
+    /// assert_eq!(ber.contents().as_bytes(), &[0x04]);
+    ///
+    /// ber.mut_contents()[0] = 0x05;
+    ///
+    /// // The value is updated.
+    /// assert_eq!(ber.contents().as_bytes(), &[0x05]);
+    /// ```
+    pub fn try_from_mut_bytes(bytes: &mut [u8]) -> Result<&mut Self, Error> {
+        <&mut Self>::try_from(bytes)
+    }
+
     /// Provides a reference from `bytes` without any check.
     ///
     /// `bytes` must be BER octets and must not include any extra octet.
@@ -164,6 +226,36 @@ impl BerRef {
     /// assert_eq!(ber.contents().to_integer::<i32>().unwrap(), 0x34);
     /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
+        mem::transmute(bytes)
+    }
+
+    /// Provides a reference from `bytes` without any check.
+    ///
+    /// `bytes` must be BER octets and must not include any extra octet.
+    ///
+    /// If it is not sure whether `bytes` are valid octets as an 'BER' or not, use [`TryFrom`]
+    /// implementation or [`try_from_bytes`].
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if `bytes` is not formatted as a BER.
+    ///
+    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20BerRef
+    /// [`try_from_bytes`]: #method.try_from_bytes
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{BerRef, IdRef};
+    ///
+    /// // Represents '0x34' as an Integer.
+    /// let bytes: &[u8] = &[0x02, 0x01, 0x34];
+    /// let ber = unsafe { BerRef::from_bytes_unchecked(bytes) };
+    ///
+    /// assert_eq!(ber.id(), IdRef::integer());
+    /// assert_eq!(ber.contents().to_integer::<i32>().unwrap(), 0x34);
+    /// ```
+    pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         mem::transmute(bytes)
     }
 }
@@ -218,6 +310,38 @@ impl BerRef {
         }
     }
 
+    /// Provides a mutable reference to [`IdRef`] of `self` .
+    ///
+    /// [`IdRef`]: struct.IdRef.html
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{BerRef, ClassTag, IdRef, PCTag};
+    ///
+    /// // Represents '3' as an Integer.
+    /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x03];
+    /// let ber = BerRef::try_from_mut_bytes(bytes).unwrap();
+    ///
+    /// assert_eq!(ber.id(), IdRef::integer());
+    ///
+    /// assert_eq!(ber.id().class(), ClassTag::Universal);
+    /// ber.mut_id().set_class(ClassTag::Private);
+    /// assert_eq!(ber.id().class(), ClassTag::Private);
+    ///
+    /// assert_eq!(ber.id().pc(), PCTag::Primitive);
+    /// ber.mut_id().set_pc(PCTag::Constructed);
+    /// assert_eq!(ber.id().pc(), PCTag::Constructed);
+    /// ```
+    pub fn mut_id(&mut self) -> &mut IdRef {
+        unsafe {
+            let ret = self.id();
+            let ptr = ret as *const IdRef;
+            let ptr = ptr as *mut IdRef;
+            &mut *ptr
+        }
+    }
+
     /// Returns `Length` of `self`.
     ///
     /// # Warnings
@@ -260,6 +384,31 @@ impl BerRef {
         let bytes = &self.bytes[id_len..];
         let contents = unsafe { length::from_bytes_starts_with_unchecked(bytes).1 };
         ContentsRef::from_bytes(contents)
+    }
+
+    /// Provides a mutable reference to the 'contents' octets of `self` .
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::BerRef;
+    ///
+    /// // Represents 'False' as a Boolean.
+    /// let bytes: &mut [u8] = &mut [0x01, 0x01, 0x00];
+    /// let ber = BerRef::try_from_mut_bytes(bytes).unwrap();
+    ///
+    /// assert_eq!(ber.contents().to_bool_ber().unwrap(), false);
+    ///
+    /// ber.mut_contents()[0] = 0xff;
+    /// assert_eq!(ber.contents().to_bool_ber().unwrap(), true);
+    /// ```
+    pub fn mut_contents(&mut self) -> &mut ContentsRef {
+        unsafe {
+            let ret = self.contents();
+            let ptr = ret as *const ContentsRef;
+            let ptr = ptr as *mut ContentsRef;
+            &mut *ptr
+        }
     }
 
     /// Provides a reference to the inner slice.
