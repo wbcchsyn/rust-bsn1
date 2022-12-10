@@ -500,6 +500,13 @@ impl Der {
     /// The `contents` of the return value is not initialized.
     /// Use [`mut_contents`] to initialize it.
     ///
+    /// # Warnings
+    ///
+    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// such identifiers.
+    /// For example, 'Octet String' must be primitive in DER, but this function will construct a
+    /// new instance even if `id` represenets constructed 'Octet String.'
+    ///
     /// # Panics
     ///
     /// Panics if the total bytes will exceeds `isize::MAX`.
