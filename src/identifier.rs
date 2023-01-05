@@ -32,13 +32,11 @@
 
 use crate::{Buffer, ClassTag, Error, PCTag};
 use num::cast::AsPrimitive;
-use num::traits::CheckedMul;
 use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::mem;
-use std::ops::BitOrAssign;
 use std::ops::{Deref, DerefMut};
 
 /// `IdRef` is a wrapper of `[u8]` representing Identifier.
@@ -1324,7 +1322,7 @@ impl IdRef {
     /// ```
     pub fn number<T>(&self) -> Result<T, Error>
     where
-        T: PrimInt + CheckedMul + BitOrAssign + FromPrimitive,
+        T: PrimInt + FromPrimitive,
     {
         debug_assert!(0 < self.len());
 
@@ -1340,7 +1338,7 @@ impl IdRef {
             for &octet in self.as_bytes()[2..].iter() {
                 let shft_mul = T::from_u8(128).ok_or(Error::OverFlow)?;
                 ret = ret.checked_mul(&shft_mul).ok_or(Error::OverFlow)?;
-                ret |= T::from_u8(octet & mask).unwrap();
+                ret = ret + T::from_u8(octet & mask).unwrap();
             }
 
             Ok(ret)
