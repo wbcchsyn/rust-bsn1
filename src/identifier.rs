@@ -1158,6 +1158,24 @@ impl PartialEq<Id> for IdRef {
 }
 
 impl IdRef {
+    /// Returns the length of the inner bytes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::IdRef;
+    ///
+    /// // Id of Universal Integer is [0x02].
+    /// assert_eq!(IdRef::integer().len(), 1);
+    ///
+    /// let bytes: &[u8] = &[0xff, 0xff, 0x00];
+    /// let id = IdRef::try_from_bytes(bytes).unwrap();
+    /// assert_eq!(id.len(), bytes.len());
+    /// ```
+    pub fn len(&self) -> usize {
+        return self.as_bytes().len();
+    }
+
     /// Returns `ClassTag` of `self`.
     ///
     /// # Examples

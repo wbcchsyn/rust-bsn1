@@ -139,6 +139,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - DerRef::from\_mut\_bytes\_unchecked()
     - DerRef.mut\_id()
     - DerRef.mut\_contents()
+    - IdRef.len()
 ### Changed
 - Rename the following functions and methods
     - Ber::from\_bytes() -> Ber::try\_from\_bytes()
