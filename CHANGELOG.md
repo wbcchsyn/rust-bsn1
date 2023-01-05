@@ -121,6 +121,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - The following trait implementations
     - DerefMut for Ber
     - 'TryFrom<&mut [u8]>' for '&mut BerRef'
+    - DerefMut for Der
     - 'TryFrom<&mut [u8]>' for '&mut DerRef'
     - 'AsRef<IdRef>' for Id
     - 'AsMut<IdRef>' for Id
