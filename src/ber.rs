@@ -837,7 +837,8 @@ impl Ber {
     /// Force the length of the contents to `new_length`.
     ///
     /// If `new_length` is greater than the current length of the `contents`, this method enlarges
-    /// the `contents`. The extended octets are not initialized. Use [`mut_contents`] to initialize.
+    /// the `contents`. The extended octets are not initialized. Use [`mut_contents`] to initialize
+    /// them.
     ///
     /// If the contents length of `self` forms indefinite, the length octets does not changes;
     /// otherwise the length octets will be updated.
