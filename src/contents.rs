@@ -46,7 +46,7 @@ use std::ops::{Deref, DerefMut};
 /// [`ContentsRef`]: struct.ContentsRef.html
 /// [`Deref`]: #impl-Deref-for-Contents
 /// [`DerefMut`]: #impl-DerefMut-for-Contents
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Eq, Hash)]
 pub struct Contents {
     buffer: Buffer,
 }
@@ -404,9 +404,12 @@ impl DerefMut for Contents {
     }
 }
 
-impl PartialEq<ContentsRef> for Contents {
-    fn eq(&self, other: &ContentsRef) -> bool {
-        self == other
+impl<T> PartialEq<T> for Contents
+where
+    T: Borrow<T>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self == other.borrow()
     }
 }
 
