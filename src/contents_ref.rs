@@ -228,6 +228,25 @@ impl ContentsRef {
         self.as_bytes().len()
     }
 
+    /// Returns `true` if the inner slice is empty, or `false`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use bsn1::ContentsRef;
+    ///
+    /// let bytes = &[];
+    /// let contents = ContentsRef::from_bytes(bytes);
+    /// assert_eq!(contents.is_empty(), true);
+    ///
+    /// let bytes = &[0, 1, 2, 3, 4];
+    /// let contents = ContentsRef::from_bytes(bytes);
+    /// assert_eq!(contents.is_empty(), false);
+    /// ```    
+    pub fn is_empty(&self) -> bool {
+        self.as_bytes().is_empty()
+    }
+
     /// Parses `self` as the ASN.1 contents of integer.
     ///
     /// Type `T` should be the builtin primitive integer types (e.g., u8, i32, isize, i128...)

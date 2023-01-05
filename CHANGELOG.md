@@ -142,6 +142,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - BerRef.mut\_contents()
     - ContentsRef\_as\_bytes()
     - ContentsRef\_as\_mut\_bytes()
+    - ContentsRef.is\_empty();
     - ContentsRef.len();
     - Der::with\_id\_length()
     - Der.set\_length()
