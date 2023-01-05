@@ -43,12 +43,12 @@ use std::ops::{Deref, DerefMut};
 
 /// `IdRef` is a wrapper of `[u8]` representing Identifier.
 ///
-/// User can access to the inner slice via [`Deref`] or [`DerefMut`] implementation.
+/// User can access to the inner slice via method [`as_bytes`] or [`as_mut_bytes`]
 ///
 /// This struct is `Unsized` , and user will usually use a reference to it.
 ///
-/// [`Deref`]: #impl-Deref-for-IdRef
-/// [`DerefMut`]: #impl-DerefMut-for-IdRef
+/// [`as_bytes`]: #method.as_bytes
+/// [`as_mut_bytes`]: #method.as_mut_bytes
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct IdRef {
     bytes: [u8],
