@@ -129,6 +129,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - 'PartialOrd<T>' for 'Id' where 'T' is bounded on 'Borrow<IdRef>'
     - 'PartialEq<T>' for 'IdRef' where 'T' is bounded on 'Borrow<IdRef>'
     - 'PartialOrd<T>' for 'IdRef' where 'T' is bounded on 'Borrow<IdRef>'
+    - 'PartialOrd' for Length
 - The following functions and methods
     - Ber::new\_indefinite()
     - Ber::with\_id\_length()
@@ -148,6 +149,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - DerRef.mut\_contents()
     - Id.set\_number()
     - IdRef.len()
+    - Length.definite()
+    - Length.is\_definite()
+    - Length.is\_indefinite()
 ### Changed
 - Rename the following functions and methods
     - Ber::from\_bytes() -> Ber::try\_from\_bytes()
@@ -163,9 +167,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - Length::from\_bytes() -> Length::try\_from\_bytes()
 - Make the following functions and methods unsafe
     - IdRef.as\_mut\_bytes()
+- `PartialEq::eq(Length::Indefinite, Length::Indefinite)` returns false, because they cannot be compared
 ### Removed
 - Delete the implementations for the following traits
     - Borrow<[u8]> for Id
     - Borrow<[u8]> for IdRef
     - Deref for IdRef
     - DerefMut for IdRef
+    - Eq for Length
