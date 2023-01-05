@@ -208,6 +208,26 @@ impl Length {
             Self::Definite(n) => Some(n),
         }
     }
+
+    /// Returns `true` if `self` is `Indefinite`; otherwise `false`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Length;
+    ///
+    /// let length = Length::Indefinite;
+    /// assert_eq!(length.is_indefinite(), true);
+    ///
+    /// let length = Length::Definite(12);
+    /// assert_eq!(length.is_indefinite(), false);
+    /// ```
+    pub fn is_indefinite(self) -> bool {
+        match self {
+            Self::Indefinite => true,
+            _ => false,
+        }
+    }
 }
 
 /// Tries to parse `bytes` starting with 'length' and returns `(Length, octets_after_length)`.
