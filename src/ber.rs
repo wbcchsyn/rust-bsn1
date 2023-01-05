@@ -275,9 +275,12 @@ impl ToOwned for BerRef {
     }
 }
 
-impl PartialEq<Ber> for BerRef {
-    fn eq(&self, other: &Ber) -> bool {
-        self == other as &BerRef
+impl<T> PartialEq<T> for BerRef
+where
+    T: Borrow<BerRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self == other.borrow()
     }
 }
 
