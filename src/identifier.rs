@@ -1129,9 +1129,12 @@ impl ToOwned for IdRef {
     }
 }
 
-impl PartialEq<Id> for IdRef {
-    fn eq(&self, other: &Id) -> bool {
-        self == other as &IdRef
+impl<T> PartialEq<T> for IdRef
+where
+    T: Borrow<IdRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.eq(other.borrow())
     }
 }
 

@@ -122,6 +122,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - DerefMut for Ber
     - 'TryFrom<&mut [u8]>' for '&mut BerRef'
     - 'TryFrom<&mut [u8]>' for '&mut DerRef'
+    - 'PartialEq<T>' for 'IdRef' where 'T' is bounded on 'Borrow<IdRef>'
 - The following functions and methods
     - Ber::new\_indefinite()
     - Ber::with\_id\_length()
