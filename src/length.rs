@@ -42,7 +42,7 @@ use std::ops::Deref;
 /// Note that `Length` represents the byte count of the contents in ASN.1.
 /// The total byte size of BER, DER, and CER is greater than that.
 /// (BER, DER, and CER are constituted of identifier, length, and contents.)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Hash)]
 pub enum Length {
     /// Represents 'Indefinite' length.
     ///
