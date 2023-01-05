@@ -31,6 +31,7 @@
 // limitations under the License.
 
 use std::alloc::{self, Layout};
+use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
@@ -124,6 +125,12 @@ impl Deref for Buffer {
 impl DerefMut for Buffer {
     fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
+    }
+}
+
+impl Borrow<[u8]> for Buffer {
+    fn borrow(&self) -> &[u8] {
+        self.deref()
     }
 }
 
