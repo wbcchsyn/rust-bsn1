@@ -159,12 +159,10 @@ impl IndexMut<usize> for Buffer {
 
 impl<T> PartialEq<T> for Buffer
 where
-    T: Deref<Target = [u8]>,
+    T: Borrow<[u8]>,
 {
     fn eq(&self, other: &T) -> bool {
-        let this: &[u8] = self;
-        let other: &[u8] = other;
-        this == other
+        self.deref() == other.borrow()
     }
 }
 
@@ -172,20 +170,16 @@ impl Eq for Buffer {}
 
 impl<T> PartialOrd<T> for Buffer
 where
-    T: Deref<Target = [u8]>,
+    T: Borrow<[u8]>,
 {
     fn partial_cmp(&self, other: &T) -> Option<Ordering> {
-        let this: &[u8] = self;
-        let other: &[u8] = other;
-        this.partial_cmp(other)
+        self.deref().partial_cmp(other.borrow())
     }
 }
 
 impl Ord for Buffer {
     fn cmp(&self, other: &Self) -> Ordering {
-        let this: &[u8] = self;
-        let other: &[u8] = other;
-        this.cmp(other)
+        self.deref().cmp(other.deref())
     }
 }
 
