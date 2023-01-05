@@ -1444,7 +1444,7 @@ impl IdRef {
 /// [`IdRef`]: struct.IdRef.html
 /// [`Deref`]: #impl-Deref-for-Id
 /// [`DerefMut`]: #impl-DerefMut-for-Id
-#[derive(Debug, Clone, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Eq, Ord, Hash)]
 pub struct Id {
     buffer: Buffer,
 }
@@ -1616,6 +1616,15 @@ where
 {
     fn eq(&self, other: &T) -> bool {
         self.deref().eq(other.borrow())
+    }
+}
+
+impl<T> PartialOrd<T> for Id
+where
+    T: Borrow<IdRef>,
+{
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        self.deref().partial_cmp(other.borrow())
     }
 }
 
