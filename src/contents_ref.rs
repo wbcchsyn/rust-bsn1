@@ -32,7 +32,7 @@
 
 use crate::{Contents, Error};
 use num::PrimInt;
-use std::borrow::ToOwned;
+use std::borrow::{Borrow, ToOwned};
 use std::mem;
 use std::mem::MaybeUninit;
 use std::ops::{Index, IndexMut};
@@ -189,9 +189,12 @@ where
     }
 }
 
-impl PartialEq<Contents> for ContentsRef {
-    fn eq(&self, other: &Contents) -> bool {
-        self == other
+impl<T> PartialEq<T> for ContentsRef
+where
+    T: Borrow<ContentsRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.as_bytes() == other.borrow().as_bytes()
     }
 }
 
