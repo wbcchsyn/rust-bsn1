@@ -32,8 +32,8 @@
 
 use crate::{Contents, Error};
 use num::PrimInt;
+use std::borrow::Borrow;
 use std::borrow::ToOwned;
-use std::borrow::{Borrow, BorrowMut};
 use std::mem;
 use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
@@ -171,12 +171,6 @@ impl AsMut<[u8]> for ContentsRef {
 
 impl Borrow<[u8]> for ContentsRef {
     fn borrow(&self) -> &[u8] {
-        self
-    }
-}
-
-impl BorrowMut<[u8]> for ContentsRef {
-    fn borrow_mut(&mut self) -> &mut [u8] {
         self
     }
 }
