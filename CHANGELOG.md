@@ -153,6 +153,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - IdRef::from\_bytes\_mut\_unchecked() -> IdRef::try\_from\_mut\_bytes\_unchecked()
     - IdRef.as\_bytes\_mut() -> IdRef.as\_mut\_bytes()
     - Length::from\_bytes() -> Length::try\_from\_bytes()
+- Make the following functions and methods unsafe
+    - IdRef.as\_mut\_bytes()
 ### Removed
 - Delete the implementations for the following traits
     - Boffow<[u8]> for IdRef

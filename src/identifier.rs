@@ -1391,7 +1391,7 @@ impl IdRef {
     /// // 'bytes' is updated as well.
     /// assert_eq!(6, bytes[0]);
     /// ```
-    pub fn as_mut_bytes(&mut self) -> &mut [u8] {
+    pub unsafe fn as_mut_bytes(&mut self) -> &mut [u8] {
         self
     }
 
