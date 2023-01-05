@@ -200,23 +200,18 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::IdRef;
+    /// use bsn1::{ClassTag, IdRef};
     ///
     /// let bytes: &mut [u8] = &mut [0];
     ///
     /// {
     ///     let idref = IdRef::try_from_mut_bytes(bytes).unwrap();
-    ///
-    ///     // [0] represents 'EOC'.
-    ///     assert_eq!(IdRef::eoc(), idref);
-    ///
-    ///     // [1] represents 'BOOL'.
-    ///     idref[0] = 1;
-    ///     assert_eq!(IdRef::boolean(), idref);
+    ///     // Update idref
+    ///     idref.set_class(ClassTag::Private);
     /// }
     ///
     /// // 'bytes' is updcated as well.
-    /// assert_eq!(bytes[0], 1);
+    /// assert_eq!(bytes[0], ClassTag::Private as u8);
     ///
     /// // The result is not changed if (an) extra octet(s) is added at the end.
     /// let bytes: &mut [u8] = &mut [0, 1, 2, 3];
@@ -271,22 +266,19 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::IdRef;
+    /// use bsn1::{ClassTag, IdRef};
     ///
     /// let bytes: &mut [u8] = &mut [0];
     ///
     /// {
-    ///     // '&[0]' represents 'EOC'.
     ///     let idref = unsafe { IdRef::from_mut_bytes_unchecked(bytes) };
-    ///     assert_eq!(IdRef::eoc(), idref);
     ///
-    ///     // '&[1]' represents 'BOOL'.
-    ///     idref[0] = 1;
-    ///     assert_eq!(IdRef::boolean(), idref);
+    ///     // Update idref
+    ///     idref.set_class(ClassTag::Application);
     /// }
     ///
     /// // 'bytes' is updated as well.
-    /// assert_eq!(bytes[0], 1);
+    /// assert_eq!(bytes[0], ClassTag::Application as u8);
     /// ```
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         mem::transmute(bytes)
@@ -1136,12 +1128,6 @@ impl Deref for IdRef {
     }
 }
 
-impl DerefMut for IdRef {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.bytes
-    }
-}
-
 impl ToOwned for IdRef {
     type Owned = Id;
 
@@ -1380,7 +1366,7 @@ impl IdRef {
     ///
     /// let bytes: &mut [u8] = &mut [5];
     ///
-    /// {
+    /// unsafe {
     ///     let idref = unsafe { IdRef::from_mut_bytes_unchecked(bytes) };
     ///     assert_eq!(5, idref.as_bytes()[0]);
     ///
@@ -1392,7 +1378,7 @@ impl IdRef {
     /// assert_eq!(6, bytes[0]);
     /// ```
     pub unsafe fn as_mut_bytes(&mut self) -> &mut [u8] {
-        self
+        &mut self.bytes
     }
 
     /// Update the class tag of `self`.
@@ -1412,8 +1398,10 @@ impl IdRef {
     /// assert_eq!(ClassTag::Application, idref.class());
     /// ```
     pub fn set_class(&mut self, cls: ClassTag) {
-        self[0] &= !Self::CLASS_MASK;
-        self[0] |= cls as u8;
+        let bytes = unsafe { self.as_mut_bytes() };
+
+        bytes[0] &= !Self::CLASS_MASK;
+        bytes[0] |= cls as u8;
     }
 
     /// Update the PC tag of `self`.
@@ -1433,9 +1421,11 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, idref.pc());
     /// ```
     pub fn set_pc(&mut self, pc: PCTag) {
+        let bytes = unsafe { self.as_mut_bytes() };
+
         const MASK: u8 = 0xdf;
-        self[0] &= MASK;
-        self[0] |= pc as u8;
+        bytes[0] &= MASK;
+        bytes[0] |= pc as u8;
     }
 }
 
