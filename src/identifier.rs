@@ -35,6 +35,7 @@ use num::cast::AsPrimitive;
 use num::traits::CheckedMul;
 use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
+use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::mem;
 use std::ops::BitOrAssign;
@@ -1135,6 +1136,15 @@ where
 {
     fn eq(&self, other: &T) -> bool {
         self.eq(other.borrow())
+    }
+}
+
+impl<T> PartialOrd<T> for IdRef
+where
+    T: Borrow<IdRef>,
+{
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        self.partial_cmp(other.borrow())
     }
 }
 
