@@ -42,7 +42,7 @@ use std::ops::Deref;
 /// Note that `Length` represents the byte count of the contents in ASN.1.
 /// The total byte size of BER, DER, and CER is greater than that.
 /// (BER, DER, and CER are constituted of identifier, length, and contents.)
-#[derive(Debug, Clone, Copy, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Hash)]
 pub enum Length {
     /// Represents 'Indefinite' length.
     ///
@@ -64,6 +64,12 @@ impl TryFrom<&[u8]> for Length {
     /// [`try_from_bytes`]: #method.from_bytes
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         try_from(bytes).map(|(length, _rest)| length)
+    }
+}
+
+impl PartialEq for Length {
+    fn eq(&self, other: &Self) -> bool {
+        self.is_definite() && self.definite() == other.definite()
     }
 }
 
@@ -335,8 +341,10 @@ mod tests {
         // Indefinite
         {
             let bytes: &[u8] = &[0x80];
-            let res = try_from(bytes).unwrap();
-            assert_eq!((Length::Indefinite, empty), res);
+            let (length, left) = try_from(bytes).unwrap();
+
+            assert_eq!(length.is_indefinite(), true);
+            assert_eq!(left, empty);
         }
 
         // Short form
@@ -389,8 +397,10 @@ mod tests {
         {
             let mut bytes = vec![0x80];
             bytes.extend(extra);
-            let res = try_from(&bytes).unwrap();
-            assert_eq!((Length::Indefinite, extra), res);
+            let (length, left) = try_from(&bytes).unwrap();
+
+            assert_eq!(length.is_indefinite(), true);
+            assert_eq!(left, extra);
         }
 
         // Short form
@@ -527,15 +537,19 @@ mod tests {
         // Indefinite
         {
             let bytes = Length::Indefinite.to_bytes();
-            let length = try_from(&bytes).unwrap();
-            assert_eq!((Length::Indefinite, empty), length);
+            let (length, left) = try_from(&bytes).unwrap();
+
+            assert_eq!(length.is_indefinite(), true);
+            assert_eq!(left, empty);
         }
 
         // Definite
         for &len in &[0, 1, 0x7f, 0x80, 0xff, 0x0100, 0xffff, std::usize::MAX] {
             let bytes = Length::Definite(len).to_bytes();
-            let length = try_from(&bytes).unwrap();
-            assert_eq!((Length::Definite(len), empty), length);
+            let (length, left) = try_from(&bytes).unwrap();
+
+            assert_eq!(Length::Definite(len), length);
+            assert_eq!(left, empty);
         }
     }
 

@@ -519,7 +519,7 @@ impl Ber {
     /// let ber = Ber::new_indefinite(id, contents);
     ///
     /// assert_eq!(ber.id(), id);
-    /// assert_eq!(ber.length(), Length::Indefinite);
+    /// assert_eq!(ber.length().is_indefinite(), true);
     /// assert!(ber.contents().is_empty());
     /// ```
     pub fn new_indefinite(id: &IdRef, contents: &ContentsRef) -> Self {
@@ -603,7 +603,7 @@ impl Ber {
     /// let ber = Ber::with_id_length_indefinite(IdRef::utf8_string(), 36);
     ///
     /// assert_eq!(ber.id(), IdRef::utf8_string());
-    /// assert_eq!(ber.length(), Length::Indefinite);
+    /// assert_eq!(ber.length().is_indefinite(), true);
     /// ```
     pub fn with_id_length_indefinite(id: &IdRef, length: usize) -> Self {
         let length_ = Length::Indefinite.to_bytes();
@@ -862,14 +862,14 @@ impl Ber {
     ///
     /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), ContentsRef::from_bytes(&[]));
     ///
-    /// assert_eq!(ber.length(), Length::Indefinite);
+    /// assert_eq!(ber.length().is_indefinite(), true);
     /// assert_eq!(ber.contents().as_bytes(), &[]);
     ///
     /// let new_contents: &[u8] = &[0, 1,  2, 3];
     /// ber.set_length(new_contents.len());
     /// ber.mut_contents().clone_from_slice(new_contents);
     ///
-    /// assert_eq!(ber.length(), Length::Indefinite);
+    /// assert_eq!(ber.length().is_indefinite(), true);
     /// assert_eq!(ber.contents().as_bytes(), new_contents);
     /// ```
     ///
@@ -1033,7 +1033,7 @@ mod tests {
             ber.set_length(i + 1);
             ber.mut_contents()[i] = i as u8;
 
-            assert_eq!(ber.length(), Length::Indefinite);
+            assert_eq!(ber.length().is_indefinite(), true);
 
             let contents = ber.contents();
             assert_eq!(contents.len(), i + 1);
@@ -1044,7 +1044,7 @@ mod tests {
 
         {
             ber.set_length(65535);
-            assert_eq!(ber.length(), Length::Indefinite);
+            assert_eq!(ber.length().is_indefinite(), true);
 
             let contents = ber.contents();
             assert_eq!(contents.len(), 65535);
@@ -1055,7 +1055,7 @@ mod tests {
 
         {
             ber.set_length(65536);
-            assert_eq!(ber.length(), Length::Indefinite);
+            assert_eq!(ber.length().is_indefinite(), true);
 
             let contents = ber.contents();
             assert_eq!(contents.len(), 65536);
@@ -1066,7 +1066,7 @@ mod tests {
 
         {
             ber.set_length(256.pow(3) - 1);
-            assert_eq!(ber.length(), Length::Indefinite);
+            assert_eq!(ber.length().is_indefinite(), true);
 
             let contents = ber.contents();
             assert_eq!(contents.len(), 256.pow(3) - 1);
@@ -1077,7 +1077,7 @@ mod tests {
 
         {
             ber.set_length(256.pow(3));
-            assert_eq!(ber.length(), Length::Indefinite);
+            assert_eq!(ber.length().is_indefinite(), true);
 
             let contents = ber.contents();
             assert_eq!(contents.len(), 256.pow(3));
@@ -1157,7 +1157,7 @@ mod tests {
 
         {
             ber.set_length(65536);
-            assert_eq!(ber.length(), Length::Indefinite);
+            assert_eq!(ber.length().is_indefinite(), true);
             assert_eq!(ber.contents().len(), 65536);
 
             let contents = ber.contents();
@@ -1168,7 +1168,7 @@ mod tests {
 
         {
             ber.set_length(65535);
-            assert_eq!(ber.length(), Length::Indefinite);
+            assert_eq!(ber.length().is_indefinite(), true);
             assert_eq!(ber.contents().len(), 65535);
 
             let contents = ber.contents();
@@ -1179,7 +1179,7 @@ mod tests {
 
         for i in (0..=256).rev() {
             ber.set_length(i);
-            assert_eq!(ber.length(), Length::Indefinite);
+            assert_eq!(ber.length().is_indefinite(), true);
             assert_eq!(ber.contents().len(), i);
 
             let contents = ber.contents();
