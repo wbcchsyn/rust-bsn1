@@ -1128,12 +1128,6 @@ impl AsRef<[u8]> for IdRef {
     }
 }
 
-impl Borrow<[u8]> for IdRef {
-    fn borrow(&self) -> &[u8] {
-        &self.bytes
-    }
-}
-
 impl Deref for IdRef {
     type Target = [u8];
 
@@ -1152,7 +1146,7 @@ impl ToOwned for IdRef {
     type Owned = Id;
 
     fn to_owned(&self) -> Self::Owned {
-        let buffer = Buffer::from(self.borrow());
+        let buffer = Buffer::from(self.as_bytes());
         Self::Owned { buffer }
     }
 }
