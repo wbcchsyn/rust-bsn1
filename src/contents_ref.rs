@@ -197,6 +197,22 @@ impl ToOwned for ContentsRef {
 }
 
 impl ContentsRef {
+    /// Returns the length of the inner slice.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use bsn1::ContentsRef;
+    ///
+    /// let bytes = &[0, 1, 2, 3, 4];
+    /// let contents = ContentsRef::from_bytes(bytes);
+    ///
+    /// assert_eq!(contents.len(), bytes.len());
+    /// ```    
+    pub fn len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
     /// Parses `self` as the ASN.1 contents of integer.
     ///
     /// Type `T` should be the builtin primitive integer types (e.g., u8, i32, isize, i128...)
