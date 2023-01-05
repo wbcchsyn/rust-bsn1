@@ -35,7 +35,8 @@ use num::PrimInt;
 use std::borrow::ToOwned;
 use std::mem;
 use std::mem::MaybeUninit;
-use std::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut, Index, IndexMut};
+use std::slice::SliceIndex;
 
 /// `ContentsRef` is a wrapper of [u8] and represents 'ASN.1 contents'.
 ///
@@ -165,6 +166,26 @@ impl AsRef<[u8]> for ContentsRef {
 impl AsMut<[u8]> for ContentsRef {
     fn as_mut(&mut self) -> &mut [u8] {
         self
+    }
+}
+
+impl<T> Index<T> for ContentsRef
+where
+    T: SliceIndex<[u8]>,
+{
+    type Output = T::Output;
+
+    fn index(&self, index: T) -> &Self::Output {
+        &self.as_bytes()[index]
+    }
+}
+
+impl<T> IndexMut<T> for ContentsRef
+where
+    T: SliceIndex<[u8]>,
+{
+    fn index_mut(&mut self, index: T) -> &mut Self::Output {
+        &mut self.as_mut_bytes()[index]
     }
 }
 

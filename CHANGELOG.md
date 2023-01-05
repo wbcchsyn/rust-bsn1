@@ -130,6 +130,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - 'PartialEq<T>' for 'IdRef' where 'T' is bounded on 'Borrow<IdRef>'
     - 'PartialOrd<T>' for 'IdRef' where 'T' is bounded on 'Borrow<IdRef>'
     - 'PartialOrd' for Length
+    - 'Index<T>' for ContentsRef where 'T' is bounded on 'SliceIndex<[u8]>'
 - The following functions and methods
     - Ber::new\_indefinite()
     - Ber::with\_id\_length()
