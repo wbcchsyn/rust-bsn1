@@ -185,6 +185,29 @@ impl Length {
             }
         }
     }
+
+    /// Converts `self` to `Option<usize>`.
+    ///
+    /// Returns `None` if self is `Indefinite`; otherwise, wraps the inner number in `Some`
+    /// and returns it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Length;
+    ///
+    /// let length = Length::Indefinite;
+    /// assert_eq!(length.definite(), None);
+    ///
+    /// let length = Length::Definite(45);
+    /// assert_eq!(length.definite(), Some(45));
+    /// ```
+    pub fn definite(self) -> Option<usize> {
+        match self {
+            Self::Indefinite => None,
+            Self::Definite(n) => Some(n),
+        }
+    }
 }
 
 /// Tries to parse `bytes` starting with 'length' and returns `(Length, octets_after_length)`.

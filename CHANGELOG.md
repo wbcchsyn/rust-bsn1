@@ -148,6 +148,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - DerRef.mut\_contents()
     - Id.set\_number()
     - IdRef.len()
+    - Length.definite()
 ### Changed
 - Rename the following functions and methods
     - Ber::from\_bytes() -> Ber::try\_from\_bytes()
