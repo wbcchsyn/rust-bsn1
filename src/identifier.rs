@@ -1632,6 +1632,58 @@ where
     }
 }
 
+impl Id {
+    /// Update the numberof `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, PCTag};
+    ///
+    /// let mut id = Id::new(ClassTag::Private, PCTag::Primitive, 13_u8);
+    /// assert_eq!(id.number::<u8>().unwrap(), 13_u8);
+    ///
+    /// id.set_number(34_u8);
+    /// assert_eq!(id.number::<u8>().unwrap(), 34_u8);
+    /// ```
+    pub fn set_number<T>(&mut self, num: T)
+    where
+        T: Unsigned + FromPrimitive + PrimInt + AsPrimitive<u8>,
+    {
+        if num <= T::from_u8(IdRef::MAX_SHORT).unwrap() {
+            let o = self.class() as u8 + self.pc() as u8 + num.as_();
+            self.buffer[0] = o;
+            unsafe { self.buffer.set_len(1) };
+        } else {
+            let long_flag = self.class() as u8 + self.pc() as u8 + IdRef::LONG_FLAG;
+
+            const BITS_PER_BYTES: usize = 8;
+            const BITS_BUT_MORE_FLAG_PER_BYTES: usize = 7;
+            let number_bits_len =
+                mem::size_of_val(&num) * BITS_PER_BYTES - num.leading_zeros() as usize;
+            let number_bytes_len =
+                (number_bits_len + BITS_BUT_MORE_FLAG_PER_BYTES - 1) / BITS_BUT_MORE_FLAG_PER_BYTES;
+
+            let len = number_bytes_len + mem::size_of_val(&long_flag);
+            if self.buffer.len() < len {
+                self.buffer.reserve(len - self.buffer.len());
+            }
+            unsafe { self.buffer.set_len(len) };
+
+            self.buffer[0] = long_flag;
+
+            let mut n = num;
+            for i in (1..len).rev() {
+                let o = n.as_() | IdRef::MORE_FLAG;
+                self.buffer[i] = o;
+                n = n.unsigned_shr(7);
+            }
+            self.buffer[len - 1] &= !(IdRef::MORE_FLAG);
+            debug_assert!(n == T::from_u8(0).unwrap());
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2044,6 +2096,29 @@ mod tests {
                         assert_eq!(pc1, id.pc());
                         assert_eq!(Ok(i), id.number());
                     }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn set_number() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                let mut id = Id::new(cl, pc, 0_u8);
+
+                for i in 0..=u16::MAX {
+                    id.set_number(i);
+                    assert_eq!(cl, id.class());
+                    assert_eq!(pc, id.pc());
+                    assert_eq!(Ok(i), id.number());
+                }
+
+                for i in (0..=u16::MAX).rev() {
+                    id.set_number(i);
+                    assert_eq!(cl, id.class());
+                    assert_eq!(pc, id.pc());
+                    assert_eq!(Ok(i), id.number());
                 }
             }
         }
