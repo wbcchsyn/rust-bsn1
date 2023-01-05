@@ -867,7 +867,7 @@ impl Ber {
     ///
     /// let new_contents: &[u8] = &[0, 1,  2, 3];
     /// ber.set_length(new_contents.len());
-    /// ber.mut_contents().clone_from_slice(new_contents);
+    /// ber.mut_contents().as_mut_bytes().clone_from_slice(new_contents);
     ///
     /// assert_eq!(ber.length().is_indefinite(), true);
     /// assert_eq!(ber.contents().as_bytes(), new_contents);
@@ -886,7 +886,7 @@ impl Ber {
     ///
     /// let new_contents = &old_contents[0..2];
     /// ber.set_length(new_contents.len());
-    /// ber.mut_contents().clone_from_slice(new_contents);
+    /// ber.mut_contents().as_mut_bytes().clone_from_slice(new_contents);
     ///
     /// assert_eq!(ber.length(), Length::Definite(new_contents.len()));
     /// assert_eq!(ber.contents().as_bytes(), new_contents);
