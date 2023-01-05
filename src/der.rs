@@ -800,7 +800,7 @@ impl Der {
     ///
     /// Panics if the total length will exceeds `isize::MAX`.
     ///
-    /// [`mut_cntents`]: #method.mut_contents
+    /// [`mut_contents`]: #method.mut_contents
     ///
     /// # Examples
     ///
