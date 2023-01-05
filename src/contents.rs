@@ -378,12 +378,6 @@ impl Borrow<ContentsRef> for Contents {
     }
 }
 
-impl BorrowMut<[u8]> for Contents {
-    fn borrow_mut(&mut self) -> &mut [u8] {
-        self
-    }
-}
-
 impl BorrowMut<ContentsRef> for Contents {
     fn borrow_mut(&mut self) -> &mut ContentsRef {
         self
