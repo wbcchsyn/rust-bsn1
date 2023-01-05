@@ -1120,14 +1120,6 @@ impl AsRef<[u8]> for IdRef {
     }
 }
 
-impl Deref for IdRef {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        &self.bytes
-    }
-}
-
 impl ToOwned for IdRef {
     type Owned = Id;
 
@@ -1330,9 +1322,9 @@ impl IdRef {
             debug_assert_eq!(self.bytes[0] & Self::LONG_FLAG, Self::LONG_FLAG);
 
             let mask: u8 = !Self::MORE_FLAG;
-            let mut ret = T::from_u8(self[1] & mask).unwrap();
+            let mut ret = T::from_u8(self.as_bytes()[1] & mask).unwrap();
 
-            for &octet in self[2..].iter() {
+            for &octet in self.as_bytes()[2..].iter() {
                 let shft_mul = T::from_u8(128).ok_or(Error::OverFlow)?;
                 ret = ret.checked_mul(&shft_mul).ok_or(Error::OverFlow)?;
                 ret |= T::from_u8(octet & mask).unwrap();
