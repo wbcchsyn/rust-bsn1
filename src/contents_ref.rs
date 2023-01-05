@@ -46,7 +46,7 @@ use std::slice::SliceIndex;
 ///
 /// [`as_bytes`]: #method.as_bytes
 /// [`as_mut_bytes`]: #method.as_mut_bytes
-#[derive(Debug, PartialEq, Eq, PartialOrd, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct ContentsRef {
     bytes: [u8],
 }

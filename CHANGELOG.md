@@ -184,4 +184,5 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - Deref for IdRef
     - DerefMut for IdRef
     - Eq for Length
+    - PartialOrd for ContentsRef
     - Ord for ContentsRef
