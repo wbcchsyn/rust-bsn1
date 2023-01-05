@@ -32,21 +32,21 @@
 
 use crate::{Contents, Error};
 use num::PrimInt;
-use std::borrow::ToOwned;
-use std::borrow::{Borrow, BorrowMut};
+use std::borrow::{Borrow, ToOwned};
 use std::mem;
 use std::mem::MaybeUninit;
-use std::ops::{Deref, DerefMut};
+use std::ops::{Index, IndexMut};
+use std::slice::SliceIndex;
 
 /// `ContentsRef` is a wrapper of [u8] and represents 'ASN.1 contents'.
 ///
-/// User can access to the inner slice via [`Deref`] and [`DerefMut`] implementations.
+/// User can access to the inner slice via [`as_bytes`] and [`as_mut_bytes`].
 ///
 /// This struct is `Unsized`, and user will usually use a reference.
 ///
-/// [`Deref`]: #impl-Deref-for-ContentsRef
-/// [`DerefMut`]: #impl-DerefMut-for-ContentsRef
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// [`as_bytes`]: #method.as_bytes
+/// [`as_mut_bytes`]: #method.as_mut_bytes
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct ContentsRef {
     bytes: [u8],
 }
@@ -93,7 +93,7 @@ impl ContentsRef {
     /// let bytes: &[u8] = &[1, 2, 3];
     /// let contents = ContentsRef::from_bytes(bytes);
     ///
-    /// assert_eq!(contents as &[u8], bytes);
+    /// assert_eq!(contents.as_bytes(), bytes);
     /// ```
     pub fn from_bytes(bytes: &[u8]) -> &Self {
         <&ContentsRef>::from(bytes)
@@ -115,10 +115,10 @@ impl ContentsRef {
     ///
     /// {
     ///     let contents = ContentsRef::from_mut_bytes(bytes);
-    ///     assert_eq!(contents as &[u8], &[1, 2, 3]);
+    ///     assert_eq!(contents.as_bytes(), &[1, 2, 3]);
     ///
     ///     contents[0] = 10;
-    ///     assert_eq!(contents as &[u8], &[10, 2, 3]);
+    ///     assert_eq!(contents.as_bytes(), &[10, 2, 3]);
     /// }
     ///
     /// // 'bytes' is updated as well.
@@ -159,45 +159,42 @@ impl ContentsRef {
 
 impl AsRef<[u8]> for ContentsRef {
     fn as_ref(&self) -> &[u8] {
-        self
+        self.as_bytes()
     }
 }
 
 impl AsMut<[u8]> for ContentsRef {
     fn as_mut(&mut self) -> &mut [u8] {
-        self
+        self.as_mut_bytes()
     }
 }
 
-impl Borrow<[u8]> for ContentsRef {
-    fn borrow(&self) -> &[u8] {
-        self
+impl<T> Index<T> for ContentsRef
+where
+    T: SliceIndex<[u8]>,
+{
+    type Output = T::Output;
+
+    fn index(&self, index: T) -> &Self::Output {
+        &self.as_bytes()[index]
     }
 }
 
-impl BorrowMut<[u8]> for ContentsRef {
-    fn borrow_mut(&mut self) -> &mut [u8] {
-        self
+impl<T> IndexMut<T> for ContentsRef
+where
+    T: SliceIndex<[u8]>,
+{
+    fn index_mut(&mut self, index: T) -> &mut Self::Output {
+        &mut self.as_mut_bytes()[index]
     }
 }
 
-impl Deref for ContentsRef {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        &self.bytes
-    }
-}
-
-impl DerefMut for ContentsRef {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.bytes
-    }
-}
-
-impl PartialEq<Contents> for ContentsRef {
-    fn eq(&self, other: &Contents) -> bool {
-        self == other
+impl<T> PartialEq<T> for ContentsRef
+where
+    T: Borrow<ContentsRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.as_bytes() == other.borrow().as_bytes()
     }
 }
 
@@ -205,11 +202,46 @@ impl ToOwned for ContentsRef {
     type Owned = Contents;
 
     fn to_owned(&self) -> Self::Owned {
-        Contents::from_bytes(self)
+        Contents::from_bytes(self.as_bytes())
     }
 }
 
 impl ContentsRef {
+    /// Returns the length of the inner slice.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use bsn1::ContentsRef;
+    ///
+    /// let bytes = &[0, 1, 2, 3, 4];
+    /// let contents = ContentsRef::from_bytes(bytes);
+    ///
+    /// assert_eq!(contents.len(), bytes.len());
+    /// ```    
+    pub fn len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    /// Returns `true` if the inner slice is empty, or `false`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use bsn1::ContentsRef;
+    ///
+    /// let bytes = &[];
+    /// let contents = ContentsRef::from_bytes(bytes);
+    /// assert_eq!(contents.is_empty(), true);
+    ///
+    /// let bytes = &[0, 1, 2, 3, 4];
+    /// let contents = ContentsRef::from_bytes(bytes);
+    /// assert_eq!(contents.is_empty(), false);
+    /// ```    
+    pub fn is_empty(&self) -> bool {
+        self.as_bytes().is_empty()
+    }
+
     /// Parses `self` as the ASN.1 contents of integer.
     ///
     /// Type `T` should be the builtin primitive integer types (e.g., u8, i32, isize, i128...)
@@ -249,7 +281,11 @@ impl ContentsRef {
 
         // If 'T' is Unsigned type and the first octet is 0x00,
         // We can ignore the first byte 0x00.
-        let bytes = if self[0] == 0x00 { &self[1..] } else { self };
+        let bytes = if self[0] == 0x00 {
+            &self[1..]
+        } else {
+            self.as_bytes()
+        };
         if mem::size_of::<T>() < bytes.len() {
             return Err(Error::OverFlow);
         }
@@ -285,7 +321,11 @@ impl ContentsRef {
     {
         // If 'T' is Unsigned type and the first octet is 0x00,
         // We can ignore the first byte 0x00.
-        let bytes = if self[0] == 0x00 { &self[1..] } else { self };
+        let bytes = if self[0] == 0x00 {
+            &self[1..]
+        } else {
+            self.as_bytes()
+        };
         let filler = if self[0] & 0x80 == 0x00 { 0x00 } else { 0xff };
 
         let mut be: MaybeUninit<T> = MaybeUninit::uninit();
@@ -386,7 +426,7 @@ impl ContentsRef {
     /// assert_eq!(contents.as_bytes(), bytes);
     /// ```
     pub fn as_bytes(&self) -> &[u8] {
-        self
+        &self.bytes
     }
 
     /// Provides a mutable reference to the inner slice.
@@ -403,6 +443,6 @@ impl ContentsRef {
     /// assert_eq!(bytes, &[0, 2, 3, 4]);
     /// ```
     pub fn as_mut_bytes(&mut self) -> &mut [u8] {
-        self
+        &mut self.bytes
     }
 }

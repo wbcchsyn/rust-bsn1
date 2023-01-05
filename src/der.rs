@@ -372,10 +372,10 @@ impl DerRef {
     ///
     /// // Represents '[0x00, 0xff]' as Octet String
     /// let bytes: &mut [u8] = &mut [0x04, 0x02, 0x00, 0xff];
-    /// let mut der = DerRef::try_from_mut_bytes(bytes).unwrap();
+    /// let der = DerRef::try_from_mut_bytes(bytes).unwrap();
     ///
     /// assert_eq!(der.contents().as_bytes(), &[0x00, 0xff]);
-    /// der.mut_contents().copy_from_slice(&[0x01, 0x02]);
+    /// der.mut_contents().as_mut_bytes().copy_from_slice(&[0x01, 0x02]);
     /// assert_eq!(der.contents().as_bytes(), &[0x01, 0x02]);
     /// ```
     pub fn mut_contents(&mut self) -> &mut ContentsRef {
@@ -489,7 +489,7 @@ impl Der {
             ptr.copy_from_nonoverlapping(len.as_ptr(), len.len());
 
             let ptr = ptr.add(len.len());
-            ptr.copy_from_nonoverlapping(contents.as_ptr(), contents.len());
+            ptr.copy_from_nonoverlapping(contents.as_bytes().as_ptr(), contents.len());
         }
 
         Self { buffer }
@@ -814,7 +814,7 @@ impl Der {
     ///
     /// let new_contents: &[u8] = &[1, 2, 3, 4];
     /// der.set_length(new_contents.len());
-    /// der.mut_contents().copy_from_slice(new_contents);
+    /// der.mut_contents().as_mut_bytes().copy_from_slice(new_contents);
     ///
     /// assert_eq!(der.length(), Length::Definite(new_contents.len()));
     /// assert_eq!(der.contents().as_bytes(), new_contents);
@@ -840,7 +840,7 @@ impl Der {
         unsafe {
             // Copy the contents if necessary.
             if length_offset != 0 {
-                let src = self.mut_contents().as_mut_ptr();
+                let src = self.mut_contents().as_mut_bytes().as_mut_ptr();
                 let dst = src.offset(length_offset);
                 let count = new_length.min(old_length);
                 dst.copy_from(src, count);

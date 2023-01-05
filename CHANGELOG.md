@@ -130,6 +130,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - 'PartialEq<T>' for 'IdRef' where 'T' is bounded on 'Borrow<IdRef>'
     - 'PartialOrd<T>' for 'IdRef' where 'T' is bounded on 'Borrow<IdRef>'
     - 'PartialOrd' for Length
+    - 'AsRef<ContentsRef>' for Contents
+    - 'AsMut<ContentsRef>' for Contents
+    - 'Index<T>' for ContentsRef where 'T' is bounded on 'SliceIndex<[u8]>'
 - The following functions and methods
     - Ber::new\_indefinite()
     - Ber::with\_id\_length()
@@ -141,6 +144,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - BerRef.mut\_contents()
     - ContentsRef\_as\_bytes()
     - ContentsRef\_as\_mut\_bytes()
+    - ContentsRef.is\_empty();
+    - ContentsRef.len();
     - Der::with\_id\_length()
     - Der.set\_length()
     - DerRef::try\_from\_mut\_bytes()
@@ -170,8 +175,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - `PartialEq::eq(Length::Indefinite, Length::Indefinite)` returns false, because they cannot be compared
 ### Removed
 - Delete the implementations for the following traits
+    - Borrow<[u8]> for Contents
+    - BorrowMut<[u8]> for Contents
+    - Borrow<[u8]> for ContentsRef
+    - BorrowMut<[u8]> for ContentsRef
     - Borrow<[u8]> for Id
     - Borrow<[u8]> for IdRef
     - Deref for IdRef
     - DerefMut for IdRef
     - Eq for Length
+    - Ord for Contents
+    - PartialOrd for Contents
+    - PartialOrd for ContentsRef
+    - Ord for ContentsRef
