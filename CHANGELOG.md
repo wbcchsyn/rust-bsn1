@@ -123,6 +123,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - 'TryFrom<&mut [u8]>' for '&mut BerRef'
     - 'TryFrom<&mut [u8]>' for '&mut DerRef'
     - 'AsRef<IdRef>' for Id
+    - 'AsMut<IdRef>' for Id
     - 'PartialEq<T>' for 'Id' where 'T' is bounded on 'Borrow<IdRef>'
     - 'PartialOrd<T>' for 'Id' where 'T' is bounded on 'Borrow<IdRef>'
     - 'PartialEq<T>' for 'IdRef' where 'T' is bounded on 'Borrow<IdRef>'

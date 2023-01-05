@@ -1590,6 +1590,12 @@ impl AsRef<IdRef> for Id {
     }
 }
 
+impl AsMut<IdRef> for Id {
+    fn as_mut(&mut self) -> &mut IdRef {
+        self.deref_mut()
+    }
+}
+
 impl Borrow<IdRef> for Id {
     fn borrow(&self) -> &IdRef {
         self.deref()
