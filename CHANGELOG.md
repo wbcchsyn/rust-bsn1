@@ -145,6 +145,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - DerRef::from\_mut\_bytes\_unchecked()
     - DerRef.mut\_id()
     - DerRef.mut\_contents()
+    - Id.set\_number()
     - IdRef.len()
 ### Changed
 - Rename the following functions and methods
@@ -163,7 +164,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - IdRef.as\_mut\_bytes()
 ### Removed
 - Delete the implementations for the following traits
-    - Boffow<[u8]> for Id
-    - Boffow<[u8]> for IdRef
+    - Borrow<[u8]> for Id
+    - Borrow<[u8]> for IdRef
     - Deref for IdRef
     - DerefMut for IdRef
