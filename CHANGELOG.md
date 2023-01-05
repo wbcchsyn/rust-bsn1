@@ -115,3 +115,41 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 ### Fixed
 - Enable to parse the identifier octets whose length is longer than or equals to 3 bytes.
 - Make the check strict to parse integer contents.
+
+## 1.0
+### Added
+- The following trait implementations
+    - DerefMut for Ber
+    - 'TryFrom<&mut [u8]>' for '&mut BerRef'
+    - 'TryFrom<&mut [u8]>' for '&mut DerRef'
+- The following functions and methods
+    - Ber::new\_indefinite()
+    - Ber::with\_id\_length()
+    - Ber::with\_id\_length\_indefinite()
+    - Ber.set\_length()
+    - BerRef::try\_from\_mut\_bytes()
+    - BerRef::from\_mut\_bytes\_unchecked()
+    - BerRef.mut\_id()
+    - BerRef.mut\_contents()
+    - ContentsRef\_as\_bytes()
+    - ContentsRef\_as\_mut\_bytes()
+    - Der::with\_id\_length()
+    - Der.set\_length()
+    - DerRef::try\_from\_mut\_bytes()
+    - DerRef::from\_mut\_bytes\_unchecked()
+    - DerRef.mut\_id()
+    - DerRef.mut\_contents()
+### Changed
+- Rename the following functions and methods
+    - Ber::from\_bytes() -> Ber::try\_from\_bytes()
+    - BerRef::from\_bytes() -> BerRef::try\_from\_bytes()
+    - ContentsRef::from\_bytes\_mut() -> ContentsRef::from\_mut\_bytes()
+    - Der::from\_bytes() -> Der::try\_from\_bytes()
+    - DerRef::from\_bytes() -> DerRef::try\_from\_bytes()
+    - Id::from\_bytes() -> Id::try\_from\_bytes()
+    - IdRef::from\_bytes() -> IdRef::try\_from\_bytes()
+    - IdRef::from\_bytes\_mut() -> IdRef::try\_from\_mut\_bytes()
+    - IdRef::from\_bytes\_mut\_unchecked() -> IdRef::try\_from\_mut\_bytes\_unchecked()
+    - IdRef.as\_bytes\_mut() -> IdRef.as\_mut\_bytes()
+    - Length::from\_bytes() -> Length::try\_from\_bytes()
+### Removed
