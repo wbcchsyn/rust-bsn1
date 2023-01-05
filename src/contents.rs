@@ -46,7 +46,7 @@ use std::ops::{Deref, DerefMut};
 /// [`ContentsRef`]: struct.ContentsRef.html
 /// [`Deref`]: #impl-Deref-for-Contents
 /// [`DerefMut`]: #impl-DerefMut-for-Contents
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Contents {
     buffer: Buffer,
 }
