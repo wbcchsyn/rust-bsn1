@@ -1584,9 +1584,15 @@ impl AsRef<[u8]> for Id {
     }
 }
 
-impl Borrow<[u8]> for Id {
-    fn borrow(&self) -> &[u8] {
-        self.buffer.borrow()
+impl AsRef<IdRef> for Id {
+    fn as_ref(&self) -> &IdRef {
+        self.deref()
+    }
+}
+
+impl AsMut<IdRef> for Id {
+    fn as_mut(&mut self) -> &mut IdRef {
+        self.deref_mut()
     }
 }
 
