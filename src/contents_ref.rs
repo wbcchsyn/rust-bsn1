@@ -40,12 +40,12 @@ use std::slice::SliceIndex;
 
 /// `ContentsRef` is a wrapper of [u8] and represents 'ASN.1 contents'.
 ///
-/// User can access to the inner slice via [`Deref`] and [`DerefMut`] implementations.
+/// User can access to the inner slice via [`as_bytes`] and [`as_mut_bytes`].
 ///
 /// This struct is `Unsized`, and user will usually use a reference.
 ///
-/// [`Deref`]: #impl-Deref-for-ContentsRef
-/// [`DerefMut`]: #impl-DerefMut-for-ContentsRef
+/// [`as_bytes`]: #method.as_bytes
+/// [`as_mut_bytes`]: #method.as_mut_bytes
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ContentsRef {
     bytes: [u8],
