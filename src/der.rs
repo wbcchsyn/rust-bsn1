@@ -371,7 +371,7 @@ impl DerRef {
     /// use bsn1::{ContentsRef, DerRef};
     ///
     /// // Represents '[0x00, 0xff]' as Octet String
-    /// let bytes: &mut [u8] = &mut [0x04, 0x02, 0x00, 0xff];  
+    /// let bytes: &mut [u8] = &mut [0x04, 0x02, 0x00, 0xff];
     /// let mut der = DerRef::try_from_mut_bytes(bytes).unwrap();
     ///
     /// assert_eq!(der.contents().as_bytes(), &[0x00, 0xff]);
