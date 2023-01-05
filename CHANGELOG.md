@@ -129,6 +129,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - 'PartialOrd<T>' for 'Id' where 'T' is bounded on 'Borrow<IdRef>'
     - 'PartialEq<T>' for 'IdRef' where 'T' is bounded on 'Borrow<IdRef>'
     - 'PartialOrd<T>' for 'IdRef' where 'T' is bounded on 'Borrow<IdRef>'
+    - 'PartialOrd' for Length
 - The following functions and methods
     - Ber::new\_indefinite()
     - Ber::with\_id\_length()

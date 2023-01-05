@@ -33,6 +33,7 @@
 //! functions and enum about 'Length' octet of 'ASN.1.'
 
 use crate::{Error, StackBuffer};
+use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::mem::{size_of, size_of_val};
 use std::ops::Deref;
@@ -70,6 +71,15 @@ impl TryFrom<&[u8]> for Length {
 impl PartialEq for Length {
     fn eq(&self, other: &Self) -> bool {
         self.is_definite() && self.definite() == other.definite()
+    }
+}
+
+impl PartialOrd for Length {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        let this = self.definite()?;
+        let other = other.definite()?;
+
+        Some(this.cmp(&other))
     }
 }
 
