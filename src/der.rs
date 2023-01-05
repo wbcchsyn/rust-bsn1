@@ -483,7 +483,7 @@ impl Der {
 
         unsafe {
             let ptr = buffer.as_mut_ptr();
-            ptr.copy_from_nonoverlapping(id.as_ptr(), id.len());
+            ptr.copy_from_nonoverlapping(id.as_bytes().as_ptr(), id.len());
 
             let ptr = ptr.add(id.len());
             ptr.copy_from_nonoverlapping(len.as_ptr(), len.len());
@@ -532,7 +532,7 @@ impl Der {
 
         unsafe {
             let dst = buffer.as_mut_ptr();
-            dst.copy_from_nonoverlapping(id.as_ptr(), id.len());
+            dst.copy_from_nonoverlapping(id.as_bytes().as_ptr(), id.len());
 
             let dst = dst.add(id.len());
             dst.copy_from_nonoverlapping(length_.as_ptr(), length_.len());
@@ -647,7 +647,7 @@ impl Der {
         let total_len = id.len() + length_bytes.len() + length;
 
         let mut buffer = Buffer::with_capacity(total_len);
-        buffer.extend_from_slice(&id);
+        buffer.extend_from_slice(id.as_bytes());
         buffer.extend_from_slice(&length_bytes);
         contents.for_each(|c| buffer.extend_from_slice(c.as_ref()));
 

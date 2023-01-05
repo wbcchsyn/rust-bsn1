@@ -35,6 +35,7 @@ use num::cast::AsPrimitive;
 use num::traits::CheckedMul;
 use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
+use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::mem;
 use std::ops::BitOrAssign;
@@ -42,12 +43,12 @@ use std::ops::{Deref, DerefMut};
 
 /// `IdRef` is a wrapper of `[u8]` representing Identifier.
 ///
-/// User can access to the inner slice via [`Deref`] or [`DerefMut`] implementation.
+/// User can access to the inner slice via method [`as_bytes`] or [`as_mut_bytes`]
 ///
 /// This struct is `Unsized` , and user will usually use a reference to it.
 ///
-/// [`Deref`]: #impl-Deref-for-IdRef
-/// [`DerefMut`]: #impl-DerefMut-for-IdRef
+/// [`as_bytes`]: #method.as_bytes
+/// [`as_mut_bytes`]: #method.as_mut_bytes
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct IdRef {
     bytes: [u8],
@@ -200,23 +201,18 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::IdRef;
+    /// use bsn1::{ClassTag, IdRef};
     ///
     /// let bytes: &mut [u8] = &mut [0];
     ///
     /// {
     ///     let idref = IdRef::try_from_mut_bytes(bytes).unwrap();
-    ///
-    ///     // [0] represents 'EOC'.
-    ///     assert_eq!(IdRef::eoc(), idref);
-    ///
-    ///     // [1] represents 'BOOL'.
-    ///     idref[0] = 1;
-    ///     assert_eq!(IdRef::boolean(), idref);
+    ///     // Update idref
+    ///     idref.set_class(ClassTag::Private);
     /// }
     ///
     /// // 'bytes' is updcated as well.
-    /// assert_eq!(bytes[0], 1);
+    /// assert_eq!(bytes[0], ClassTag::Private as u8);
     ///
     /// // The result is not changed if (an) extra octet(s) is added at the end.
     /// let bytes: &mut [u8] = &mut [0, 1, 2, 3];
@@ -271,22 +267,19 @@ impl IdRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::IdRef;
+    /// use bsn1::{ClassTag, IdRef};
     ///
     /// let bytes: &mut [u8] = &mut [0];
     ///
     /// {
-    ///     // '&[0]' represents 'EOC'.
     ///     let idref = unsafe { IdRef::from_mut_bytes_unchecked(bytes) };
-    ///     assert_eq!(IdRef::eoc(), idref);
     ///
-    ///     // '&[1]' represents 'BOOL'.
-    ///     idref[0] = 1;
-    ///     assert_eq!(IdRef::boolean(), idref);
+    ///     // Update idref
+    ///     idref.set_class(ClassTag::Application);
     /// }
     ///
     /// // 'bytes' is updated as well.
-    /// assert_eq!(bytes[0], 1);
+    /// assert_eq!(bytes[0], ClassTag::Application as u8);
     /// ```
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         mem::transmute(bytes)
@@ -1128,42 +1121,52 @@ impl AsRef<[u8]> for IdRef {
     }
 }
 
-impl Borrow<[u8]> for IdRef {
-    fn borrow(&self) -> &[u8] {
-        &self.bytes
-    }
-}
-
-impl Deref for IdRef {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        &self.bytes
-    }
-}
-
-impl DerefMut for IdRef {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.bytes
-    }
-}
-
 impl ToOwned for IdRef {
     type Owned = Id;
 
     fn to_owned(&self) -> Self::Owned {
-        let buffer = Buffer::from(self.borrow());
+        let buffer = Buffer::from(self.as_bytes());
         Self::Owned { buffer }
     }
 }
 
-impl PartialEq<Id> for IdRef {
-    fn eq(&self, other: &Id) -> bool {
-        self == other as &IdRef
+impl<T> PartialEq<T> for IdRef
+where
+    T: Borrow<IdRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.eq(other.borrow())
+    }
+}
+
+impl<T> PartialOrd<T> for IdRef
+where
+    T: Borrow<IdRef>,
+{
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        self.partial_cmp(other.borrow())
     }
 }
 
 impl IdRef {
+    /// Returns the length of the inner bytes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::IdRef;
+    ///
+    /// // Id of Universal Integer is [0x02].
+    /// assert_eq!(IdRef::integer().len(), 1);
+    ///
+    /// let bytes: &[u8] = &[0xff, 0xff, 0x00];
+    /// let id = IdRef::try_from_bytes(bytes).unwrap();
+    /// assert_eq!(id.len(), bytes.len());
+    /// ```
+    pub fn len(&self) -> usize {
+        return self.as_bytes().len();
+    }
+
     /// Returns `ClassTag` of `self`.
     ///
     /// # Examples
@@ -1332,9 +1335,9 @@ impl IdRef {
             debug_assert_eq!(self.bytes[0] & Self::LONG_FLAG, Self::LONG_FLAG);
 
             let mask: u8 = !Self::MORE_FLAG;
-            let mut ret = T::from_u8(self[1] & mask).unwrap();
+            let mut ret = T::from_u8(self.as_bytes()[1] & mask).unwrap();
 
-            for &octet in self[2..].iter() {
+            for &octet in self.as_bytes()[2..].iter() {
                 let shft_mul = T::from_u8(128).ok_or(Error::OverFlow)?;
                 ret = ret.checked_mul(&shft_mul).ok_or(Error::OverFlow)?;
                 ret |= T::from_u8(octet & mask).unwrap();
@@ -1368,7 +1371,7 @@ impl IdRef {
     ///
     /// let bytes: &mut [u8] = &mut [5];
     ///
-    /// {
+    /// unsafe {
     ///     let idref = unsafe { IdRef::from_mut_bytes_unchecked(bytes) };
     ///     assert_eq!(5, idref.as_bytes()[0]);
     ///
@@ -1379,8 +1382,8 @@ impl IdRef {
     /// // 'bytes' is updated as well.
     /// assert_eq!(6, bytes[0]);
     /// ```
-    pub fn as_mut_bytes(&mut self) -> &mut [u8] {
-        self
+    pub unsafe fn as_mut_bytes(&mut self) -> &mut [u8] {
+        &mut self.bytes
     }
 
     /// Update the class tag of `self`.
@@ -1400,8 +1403,10 @@ impl IdRef {
     /// assert_eq!(ClassTag::Application, idref.class());
     /// ```
     pub fn set_class(&mut self, cls: ClassTag) {
-        self[0] &= !Self::CLASS_MASK;
-        self[0] |= cls as u8;
+        let bytes = unsafe { self.as_mut_bytes() };
+
+        bytes[0] &= !Self::CLASS_MASK;
+        bytes[0] |= cls as u8;
     }
 
     /// Update the PC tag of `self`.
@@ -1421,9 +1426,11 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, idref.pc());
     /// ```
     pub fn set_pc(&mut self, pc: PCTag) {
+        let bytes = unsafe { self.as_mut_bytes() };
+
         const MASK: u8 = 0xdf;
-        self[0] &= MASK;
-        self[0] |= pc as u8;
+        bytes[0] &= MASK;
+        bytes[0] |= pc as u8;
     }
 }
 
@@ -1437,7 +1444,7 @@ impl IdRef {
 /// [`IdRef`]: struct.IdRef.html
 /// [`Deref`]: #impl-Deref-for-Id
 /// [`DerefMut`]: #impl-DerefMut-for-Id
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Eq, Ord, Hash)]
 pub struct Id {
     buffer: Buffer,
 }
@@ -1603,9 +1610,21 @@ impl DerefMut for Id {
     }
 }
 
-impl PartialEq<IdRef> for Id {
-    fn eq(&self, other: &IdRef) -> bool {
-        self as &IdRef == other
+impl<T> PartialEq<T> for Id
+where
+    T: Borrow<IdRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.deref().eq(other.borrow())
+    }
+}
+
+impl<T> PartialOrd<T> for Id
+where
+    T: Borrow<IdRef>,
+{
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        self.deref().partial_cmp(other.borrow())
     }
 }
 

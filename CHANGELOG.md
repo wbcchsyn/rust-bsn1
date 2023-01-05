@@ -122,6 +122,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - DerefMut for Ber
     - 'TryFrom<&mut [u8]>' for '&mut BerRef'
     - 'TryFrom<&mut [u8]>' for '&mut DerRef'
+    - 'PartialEq<T>' for 'Id' where 'T' is bounded on 'Borrow<IdRef>'
+    - 'PartialOrd<T>' for 'Id' where 'T' is bounded on 'Borrow<IdRef>'
+    - 'PartialEq<T>' for 'IdRef' where 'T' is bounded on 'Borrow<IdRef>'
+    - 'PartialOrd<T>' for 'IdRef' where 'T' is bounded on 'Borrow<IdRef>'
 - The following functions and methods
     - Ber::new\_indefinite()
     - Ber::with\_id\_length()
@@ -139,6 +143,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - DerRef::from\_mut\_bytes\_unchecked()
     - DerRef.mut\_id()
     - DerRef.mut\_contents()
+    - IdRef.len()
 ### Changed
 - Rename the following functions and methods
     - Ber::from\_bytes() -> Ber::try\_from\_bytes()
@@ -152,4 +157,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - IdRef::from\_bytes\_mut\_unchecked() -> IdRef::try\_from\_mut\_bytes\_unchecked()
     - IdRef.as\_bytes\_mut() -> IdRef.as\_mut\_bytes()
     - Length::from\_bytes() -> Length::try\_from\_bytes()
+- Make the following functions and methods unsafe
+    - IdRef.as\_mut\_bytes()
 ### Removed
+- Delete the implementations for the following traits
+    - Boffow<[u8]> for IdRef
+    - Deref for IdRef
+    - DerefMut for IdRef
