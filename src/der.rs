@@ -489,7 +489,7 @@ impl Der {
             ptr.copy_from_nonoverlapping(len.as_ptr(), len.len());
 
             let ptr = ptr.add(len.len());
-            ptr.copy_from_nonoverlapping(contents.as_ptr(), contents.len());
+            ptr.copy_from_nonoverlapping(contents.as_bytes().as_ptr(), contents.len());
         }
 
         Self { buffer }

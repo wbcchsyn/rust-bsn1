@@ -537,7 +537,7 @@ impl Ber {
             ptr.copy_from_nonoverlapping(length.as_ptr(), length.len());
 
             let ptr = ptr.add(length.len());
-            ptr.copy_from_nonoverlapping(contents.as_ptr(), contents.len());
+            ptr.copy_from_nonoverlapping(contents.as_bytes().as_ptr(), contents.len());
         }
 
         Self { buffer }
@@ -752,7 +752,7 @@ impl Ber {
     /// let ber = Ber::utf8_string(val);
     ///
     /// assert_eq!(IdRef::utf8_string(), ber.id());
-    /// assert_eq!(val.as_bytes(), ber.contents() as &[u8]);
+    /// assert_eq!(val.as_bytes(), ber.contents().as_bytes());
     /// ```
     pub fn utf8_string(val: &str) -> Self {
         Self::from(Der::utf8_string(val))
@@ -769,7 +769,7 @@ impl Ber {
     /// let ber = Ber::octet_string(val);
     ///
     /// assert_eq!(IdRef::octet_string(), ber.id());
-    /// assert_eq!(val, ber.contents() as &[u8]);
+    /// assert_eq!(val, ber.contents().as_bytes());
     /// ```
     pub fn octet_string(val: &[u8]) -> Self {
         Self::from(Der::octet_string(val))
@@ -954,7 +954,7 @@ impl Ber {
 ///
 /// assert_eq!(id, ber.id());
 ///
-/// let bytes = ber.contents() as &[u8];
+/// let bytes = ber.contents().as_bytes();
 /// let ber1 = <&BerRef>::try_from(bytes).unwrap();
 /// assert_eq!(id1, ber1.id());
 /// assert_eq!(contents1, ber1.contents());

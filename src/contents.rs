@@ -216,7 +216,7 @@ impl Contents {
     /// let bytes: &[u8] = &[1, 2, 3];
     /// let contents = Contents::from_bytes(bytes);
     ///
-    /// assert_eq!(&contents as &[u8], bytes);
+    /// assert_eq!(contents.as_bytes(), bytes);
     /// ```
     pub fn from_bytes(bytes: &[u8]) -> Self {
         Self {
@@ -356,7 +356,7 @@ impl Contents {
 
 impl AsRef<[u8]> for Contents {
     fn as_ref(&self) -> &[u8] {
-        self
+        self.as_bytes()
     }
 }
 
@@ -408,7 +408,7 @@ mod tests {
             let contents = Contents::from_integer(i);
             let expected: &[u8] = &[i as u8];
 
-            assert_eq!(&contents as &[u8], expected);
+            assert_eq!(contents.as_bytes(), expected);
         }
     }
 
@@ -417,13 +417,13 @@ mod tests {
         for i in 0..0x80 {
             let contents = Contents::from_integer(i as u8);
             let expected: &[u8] = &[i as u8];
-            assert_eq!(&contents as &[u8], expected);
+            assert_eq!(contents.as_bytes(), expected);
         }
 
         for i in 0x80..=u8::MAX {
             let contents = Contents::from_integer(i as u8);
             let expected: &[u8] = &[0x00, i];
-            assert_eq!(&contents as &[u8], expected);
+            assert_eq!(contents.as_bytes(), expected);
         }
     }
 
@@ -438,7 +438,7 @@ mod tests {
             let f = i.unsigned_shr(8) as u8;
             let s = i as u8;
             let expected = &[f, s];
-            assert_eq!(&contents as &[u8], expected);
+            assert_eq!(contents.as_bytes(), expected);
         }
     }
 
@@ -451,7 +451,7 @@ mod tests {
             let s = i as u8;
             let expected: &[u8] = &[0, f, s];
 
-            assert_eq!(&contents as &[u8], expected);
+            assert_eq!(contents.as_bytes(), expected);
         }
     }
 
@@ -464,7 +464,7 @@ mod tests {
             let mut expected: [u8; 16] = [0x00; 16];
             expected[0] = 0x80;
 
-            assert_eq!(&contents as &[u8], expected);
+            assert_eq!(contents.as_bytes(), expected);
         }
 
         // i128::MAX
@@ -474,7 +474,7 @@ mod tests {
             let mut expected: [u8; 16] = [0xff; 16];
             expected[0] = 0x7f;
 
-            assert_eq!(&contents as &[u8], expected);
+            assert_eq!(contents.as_bytes(), expected);
         }
     }
 
@@ -487,7 +487,7 @@ mod tests {
             let mut expected: [u8; 17] = [0x00; 17];
             expected[1] = 0x80;
 
-            assert_eq!(&contents as &[u8], expected);
+            assert_eq!(contents.as_bytes(), expected);
         }
 
         // u128::MAX
@@ -497,7 +497,7 @@ mod tests {
             let mut expected: [u8; 17] = [0xff; 17];
             expected[0] = 0x00;
 
-            assert_eq!(&contents as &[u8], expected);
+            assert_eq!(contents.as_bytes(), expected);
         }
     }
 
@@ -845,13 +845,13 @@ mod tests {
         // True
         {
             let contents = ContentsRef::from_bool(true);
-            assert_eq!(&[0xff], contents as &[u8]);
+            assert_eq!(&[0xff], contents.as_bytes());
         }
 
         // false
         {
             let contents = ContentsRef::from_bool(false);
-            assert_eq!(&[0x00], contents as &[u8]);
+            assert_eq!(&[0x00], contents.as_bytes());
         }
     }
 
@@ -932,13 +932,13 @@ mod tests {
         // True
         {
             let contents = Contents::from_bool(true);
-            assert_eq!(&[0xff], &contents as &[u8]);
+            assert_eq!(&[0xff], contents.as_bytes());
         }
 
         // false
         {
             let contents = Contents::from_bool(false);
-            assert_eq!(&[0x00], &contents as &[u8]);
+            assert_eq!(&[0x00], contents.as_bytes());
         }
     }
 }
