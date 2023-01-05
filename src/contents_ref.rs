@@ -32,7 +32,6 @@
 
 use crate::{Contents, Error};
 use num::PrimInt;
-use std::borrow::Borrow;
 use std::borrow::ToOwned;
 use std::mem;
 use std::mem::MaybeUninit;
@@ -165,12 +164,6 @@ impl AsRef<[u8]> for ContentsRef {
 
 impl AsMut<[u8]> for ContentsRef {
     fn as_mut(&mut self) -> &mut [u8] {
-        self
-    }
-}
-
-impl Borrow<[u8]> for ContentsRef {
-    fn borrow(&self) -> &[u8] {
         self
     }
 }

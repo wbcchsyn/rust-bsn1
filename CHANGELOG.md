@@ -170,6 +170,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - `PartialEq::eq(Length::Indefinite, Length::Indefinite)` returns false, because they cannot be compared
 ### Removed
 - Delete the implementations for the following traits
+    - Borrow<[u8]> for ContentsRef
     - BorrowMut<[u8]> for ContentsRef
     - Borrow<[u8]> for Id
     - Borrow<[u8]> for IdRef
