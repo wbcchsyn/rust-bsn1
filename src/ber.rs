@@ -266,12 +266,6 @@ impl AsRef<[u8]> for BerRef {
     }
 }
 
-impl Borrow<[u8]> for BerRef {
-    fn borrow(&self) -> &[u8] {
-        &self.bytes
-    }
-}
-
 impl ToOwned for BerRef {
     type Owned = Ber;
 
@@ -281,9 +275,12 @@ impl ToOwned for BerRef {
     }
 }
 
-impl PartialEq<Ber> for BerRef {
-    fn eq(&self, other: &Ber) -> bool {
-        self == other as &BerRef
+impl<T> PartialEq<T> for BerRef
+where
+    T: Borrow<BerRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self == other.borrow()
     }
 }
 
@@ -437,7 +434,7 @@ impl BerRef {
 /// the [`BerRef`].
 ///
 /// [`BerRef`]: struct.BerRef.html
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Eq, Hash)]
 pub struct Ber {
     buffer: Buffer,
 }
@@ -782,12 +779,6 @@ impl AsRef<[u8]> for Ber {
     }
 }
 
-impl Borrow<[u8]> for Ber {
-    fn borrow(&self) -> &[u8] {
-        self.buffer.borrow()
-    }
-}
-
 impl Borrow<BerRef> for Ber {
     fn borrow(&self) -> &BerRef {
         self.deref()
@@ -808,9 +799,12 @@ impl DerefMut for Ber {
     }
 }
 
-impl PartialEq<BerRef> for Ber {
-    fn eq(&self, other: &BerRef) -> bool {
-        self as &BerRef == other
+impl<T> PartialEq<T> for Ber
+where
+    T: Borrow<BerRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.deref() == other.borrow()
     }
 }
 

@@ -120,6 +120,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 ### Added
 - The following trait implementations
     - DerefMut for Ber
+    - PartialEq<T> for Ber where T is bounded on Borrow<BerRef>
     - 'TryFrom<&mut [u8]>' for '&mut BerRef'
     - DerefMut for Der
     - 'TryFrom<&mut [u8]>' for '&mut DerRef'
@@ -175,6 +176,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - `PartialEq::eq(Length::Indefinite, Length::Indefinite)` returns false, because they cannot be compared
 ### Removed
 - Delete the implementations for the following traits
+    - Borrow<[u8]> for Ber
+    - Borrow<[u8]> for BerRef
     - Borrow<[u8]> for Contents
     - BorrowMut<[u8]> for Contents
     - Borrow<[u8]> for ContentsRef
