@@ -779,12 +779,6 @@ impl AsRef<[u8]> for Ber {
     }
 }
 
-impl Borrow<[u8]> for Ber {
-    fn borrow(&self) -> &[u8] {
-        self.buffer.borrow()
-    }
-}
-
 impl Borrow<BerRef> for Ber {
     fn borrow(&self) -> &BerRef {
         self.deref()
