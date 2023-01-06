@@ -120,6 +120,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 ### Added
 - The following trait implementations
     - DerefMut for Ber
+    - PartialEq<T> for Ber where T is bounded on Borrow<BerRef>
     - 'TryFrom<&mut [u8]>' for '&mut BerRef'
     - DerefMut for Der
     - 'TryFrom<&mut [u8]>' for '&mut DerRef'

@@ -434,7 +434,7 @@ impl BerRef {
 /// the [`BerRef`].
 ///
 /// [`BerRef`]: struct.BerRef.html
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Eq, Hash)]
 pub struct Ber {
     buffer: Buffer,
 }
@@ -799,9 +799,12 @@ impl DerefMut for Ber {
     }
 }
 
-impl PartialEq<BerRef> for Ber {
-    fn eq(&self, other: &BerRef) -> bool {
-        self as &BerRef == other
+impl<T> PartialEq<T> for Ber
+where
+    T: Borrow<BerRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.deref() == other.borrow()
     }
 }
 
