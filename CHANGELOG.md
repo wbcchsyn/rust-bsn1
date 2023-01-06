@@ -120,20 +120,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 ### Added
 - The following trait implementations
     - DerefMut for Ber
-    - PartialEq<T> for Ber where T is bounded on Borrow<BerRef>
-    - 'TryFrom<&mut [u8]>' for '&mut BerRef'
+    - TryFrom<&mut [u8]> for '&mut BerRef'
     - DerefMut for Der
-    - 'TryFrom<&mut [u8]>' for '&mut DerRef'
-    - 'AsRef<IdRef>' for Id
-    - 'AsMut<IdRef>' for Id
-    - 'PartialEq<T>' for 'Id' where 'T' is bounded on 'Borrow<IdRef>'
-    - 'PartialOrd<T>' for 'Id' where 'T' is bounded on 'Borrow<IdRef>'
-    - 'PartialEq<T>' for 'IdRef' where 'T' is bounded on 'Borrow<IdRef>'
-    - 'PartialOrd<T>' for 'IdRef' where 'T' is bounded on 'Borrow<IdRef>'
-    - 'PartialOrd' for Length
-    - 'AsRef<ContentsRef>' for Contents
-    - 'AsMut<ContentsRef>' for Contents
-    - 'Index<T>' for ContentsRef where 'T' is bounded on 'SliceIndex<[u8]>'
+    - TryFrom<&mut [u8]> for '&mut DerRef'
+    - AsRef<IdRef> for Id
+    - AsMut<IdRef> for Id
+    - PartialOrd for Length
+    - AsRef<ContentsRef> for Contents
+    - AsMut<ContentsRef> for Contents
+    - Index<T> for ContentsRef where T is bounded on SliceIndex<[u8]>
 - The following functions and methods
     - Ber::new\_indefinite()
     - Ber::with\_id\_length()
@@ -143,8 +138,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
     - BerRef::from\_mut\_bytes\_unchecked()
     - BerRef.mut\_id()
     - BerRef.mut\_contents()
-    - ContentsRef\_as\_bytes()
-    - ContentsRef\_as\_mut\_bytes()
+    - ContentsRef.\_as\_bytes()
+    - ContentsRef.\_as\_mut\_bytes()
     - ContentsRef.is\_empty();
     - ContentsRef.len();
     - Der::with\_id\_length()
@@ -178,6 +173,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Delete the implementations for the following traits
     - Borrow<[u8]> for Ber
     - Borrow<[u8]> for BerRef
+    - Borrow<[u8]> for DerRef
     - Borrow<[u8]> for Contents
     - BorrowMut<[u8]> for Contents
     - Borrow<[u8]> for ContentsRef
