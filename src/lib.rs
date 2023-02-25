@@ -37,7 +37,7 @@
 //! # What is ASN.1?
 //!
 //! ASN.1 stands for 'Abstract Syntax Notation One' and X.690 is an 'ITU-T' standard specifying
-//! the following ASN.1 encoding formats.
+//! the following ASN.1 encoding format.
 //!
 //! - Basic Encoding Rules (BER)
 //! - Canonical Encoding Rules (CER)
@@ -59,9 +59,10 @@
 //! 'Transport Layer Security (TLS, SSL)', 'Lightweight Directory Access Protocol (LDAP)',
 //! '4th Generation Mobile Communication System (4G)', and so on.
 //!
-//! See ['X.690 (07/2002)'] for details.
+//! See also [X.690 (07/2002)] and [Wikipedia].
 //!
-//! ['X.690 (07/2002)']: https://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
+//! [X.690 (07/2002)]: https://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
+//! [Wikipedia]: https://en.wikipedia.org/wiki/X.690
 
 mod ber;
 mod buffer;
@@ -87,9 +88,9 @@ use std::fmt;
 /// Errors for this crate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Error {
-    /// The bytes finishes before the last octet.
+    /// The bytes finish before the last octet.
     UnTerminatedBytes,
-    /// The bytes includes some redundant octet(s).
+    /// The bytes include some redundant octet(s).
     /// ('ASN.1' does not allow such bytes.)
     RedundantBytes,
     /// Over flow is occurred to parse bytes as a number.
@@ -99,19 +100,19 @@ pub enum Error {
     IndefiniteLength,
     /// The contents of 'EOC' of the 'Indefinite Length BER' must be empty.
     BadEoc,
-    /// The contents includes some invalid octet(s).
+    /// The contents include invalid octet(s).
     InvalidContents,
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::UnTerminatedBytes => f.write_str("The bytes finishes before the last octet."),
-            Self::RedundantBytes => f.write_str("The bytes includes some redundant octet(s)."),
+            Self::UnTerminatedBytes => f.write_str("The bytes finish before the last octet."),
+            Self::RedundantBytes => f.write_str("The bytes include some redundant octet(s)."),
             Self::OverFlow => f.write_str("Over flow is occurred to parse bytes as a number."),
             Self::IndefiniteLength => f.write_str("'Indefinite Length' in DER or CER"),
-            Self::BadEoc => f.write_str("'Indefinite Length BER' includes bad 'EOC.'"),
-            Self::InvalidContents => f.write_str("Contents includes invlid octet(s)."),
+            Self::BadEoc => f.write_str("'Indefinite Length BER' includes a bad 'EOC.'"),
+            Self::InvalidContents => f.write_str("Contents include invlid octet(s)."),
         }
     }
 }

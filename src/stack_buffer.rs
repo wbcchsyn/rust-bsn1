@@ -84,7 +84,7 @@ impl IndexMut<usize> for StackBuffer {
 impl StackBuffer {
     /// # Safety
     ///
-    /// The behavior is undefined if the length will exceeds the capacity.
+    /// The behaviour is undefined if the length will exceeds the capacity.
     pub unsafe fn push(&mut self, val: u8) {
         debug_assert!(self.len() < self.capacity());
 

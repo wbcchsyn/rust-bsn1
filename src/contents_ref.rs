@@ -38,41 +38,41 @@ use std::mem::MaybeUninit;
 use std::ops::{Index, IndexMut};
 use std::slice::SliceIndex;
 
-/// `ContentsRef` is a wrapper of [u8] and represents 'ASN.1 contents'.
+/// `ContentsRef` is a wrapper of `[u8]` and represents 'ASN.1 contents'.
 ///
-/// User can access to the inner slice via [`as_bytes`] and [`as_mut_bytes`].
+/// The user can access the inner slice via [`as_bytes`] and [`as_mut_bytes`].
 ///
-/// This struct is `Unsized`, and user will usually use a reference.
+/// This struct is `Unsized`, and the user will usually use a reference.
 ///
-/// [`as_bytes`]: #method.as_bytes
-/// [`as_mut_bytes`]: #method.as_mut_bytes
+/// [`as_bytes`]: Self::as_bytes
+/// [`as_mut_bytes`]: Self::as_mut_bytes
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct ContentsRef {
     bytes: [u8],
 }
 
 impl<'a> From<&'a [u8]> for &'a ContentsRef {
-    /// This function is same to [`ContentsRef::from_bytes`].
+    /// This function is the same as [`ContentsRef::from_bytes`].
     ///
-    /// [`ContentsRef::from_bytes`]: #method.from_bytes
+    /// [Read more](std::convert::From::from)
     fn from(bytes: &'a [u8]) -> Self {
         unsafe { mem::transmute(bytes) }
     }
 }
 
 impl<'a> From<&'a mut [u8]> for &'a mut ContentsRef {
-    /// This function is same to [`ContentsRef::from_mut_bytes`].
+    /// This function is the same as [`ContentsRef::from_mut_bytes`].
     ///
-    /// [`ContentsRef::from_mut_bytes`]: #method.from_mut_bytes
+    /// [Read more](std::convert::From::from)
     fn from(bytes: &'a mut [u8]) -> Self {
         unsafe { mem::transmute(bytes) }
     }
 }
 
 impl From<bool> for &'static ContentsRef {
-    /// This function is same to [`ContentsRef::from_bool`].
+    /// This function is the same as [`ContentsRef::from_bool`].
     ///
-    /// [`ContentsRef::from_bool`]: #method.from_bool
+    /// [Read more](std::convert::From::from)
     fn from(val: bool) -> Self {
         ContentsRef::from_bool(val)
     }
@@ -80,10 +80,6 @@ impl From<bool> for &'static ContentsRef {
 
 impl ContentsRef {
     /// Creates a reference to `ContentsRef` holding `bytes`.
-    ///
-    /// This function is same to [`<&ContentsRef>::from`].
-    ///
-    /// [`<&ContentsRef>::from`]: #impl-From%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20ContentsRef
     ///
     /// # Examples
     ///
@@ -100,11 +96,6 @@ impl ContentsRef {
     }
 
     /// Creates a mutable reference to `ContentsRef` holding `bytes`.
-    ///
-    /// This function is same to [`<&mut ContentsRef>::from`].
-    ///
-    /// [`<&mut ContentsRef>::from`]:
-    ///     #impl-From%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20ContentsRef
     ///
     /// # Examples
     ///
@@ -131,7 +122,7 @@ impl ContentsRef {
     /// Creates a reference to `ContentsRef` representing `val`.
     ///
     /// The rule of 'ASN.1 bool' is slightly different among 'Ber', 'Der', and 'CER', however,
-    /// this function is valid for all of them.
+    /// the return value is valid for all of them.
     ///
     /// # Examples
     ///
@@ -207,7 +198,7 @@ impl ToOwned for ContentsRef {
 }
 
 impl ContentsRef {
-    /// Returns the length of the inner slice.
+    /// Returns the byte count of the inner slice.
     ///
     /// # Example
     ///
@@ -244,7 +235,7 @@ impl ContentsRef {
 
     /// Parses `self` as the ASN.1 contents of integer.
     ///
-    /// Type `T` should be the builtin primitive integer types (e.g., u8, i32, isize, i128...)
+    /// Type `T` should be a built-in primitive integer type (e.g., u8, i32, isize, i128...)
     ///
     /// # Examples
     ///
@@ -307,11 +298,11 @@ impl ContentsRef {
 
     /// Parses `self` as a contents of ASN.1 integer without any check.
     ///
-    /// Type `T` should be the builtin primitive integer type (e.g., u8, i32, isize, u128, ...)
+    /// Type `T` should be a built-in primitive integer type (e.g., u8, i32, isize, u128, ...)
     ///
     /// # Safety
     ///
-    /// The behavior is undefined in the following cases.
+    /// The behaviour is undefined in the following cases.
     ///
     /// - `self` is not formatted as the contents of ASN.1 integer.
     /// - The value is greater than the max value of `T`, or less than the min value of `T`.
@@ -339,11 +330,14 @@ impl ContentsRef {
         T::from_be(be.assume_init())
     }
 
-    /// Parses `self` as a contents of BER bool.
+    /// Parses `self` as the contents of BER bool.
     ///
     /// # Warnings
     ///
     /// The rule of BER bool is different from that of DER and CER.
+    /// See also [`to_bool_der`].
+    ///
+    /// [`to_bool_der`]: Self::to_bool_der
     ///
     /// # Examples
     ///
@@ -357,7 +351,7 @@ impl ContentsRef {
     /// assert_eq!(Ok(false), false_contents.to_bool_ber());
     ///
     /// // 'BER' regards any octet except for 0x00 as 'True',
-    /// // while 'DER' regards octets except for 0x00 and 0xff as error.
+    /// // while 'DER' regards octets except for 0x00 and 0xff as an error.
     /// let bytes = &[0x03];
     /// let ber_contents = ContentsRef::from_bytes(bytes);
     /// assert!(ber_contents.to_bool_ber().is_ok());
@@ -375,11 +369,14 @@ impl ContentsRef {
         }
     }
 
-    /// Parses `self` as a contents of DER bool.
+    /// Parses `self` as the contents of DER bool.
     ///
     /// # Warnings
     ///
     /// The rule of BER bool is different from that of DER and CER.
+    /// See also [`to_bool_ber`].
+    ///
+    /// [`to_bool_ber`]: Self::to_bool_ber
     ///
     /// # Examples
     ///

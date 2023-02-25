@@ -38,7 +38,7 @@ use std::ops::{Deref, DerefMut};
 
 /// `DerRef` is a wrapper of `[u8]` and represents DER.
 ///
-/// This struct is 'Unsized', and user will usually uses a reference.
+/// This struct is 'Unsized', and the user will usually use a reference.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct DerRef {
     bytes: [u8],
@@ -51,16 +51,16 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`DerRef::try_from_bytes`].
+    /// This function is the same as [`DerRef::try_from_bytes`].
     ///
     /// # Warnings
     ///
-    /// ASN.1 does not allow some universal identifier for DER, however, this function will accept
+    /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
     /// such an identifier.
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
     ///
-    /// [`DerRef::try_from_bytes`]: #method.try_from_bytes
+    /// [`Read more`](std::convert::TryFrom::try_from)
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let id = <&IdRef>::try_from(bytes)?;
         let parsing = &bytes[id.len()..];
@@ -85,20 +85,20 @@ impl<'a> TryFrom<&'a mut [u8]> for &'a mut DerRef {
     type Error = Error;
 
     /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a mutable reference to
-    /// DerRef`.
+    /// `DerRef`.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`DerRef::try_from_mut_bytes`].
+    /// This function is the same as [`DerRef::try_from_mut_bytes`].
     ///
     /// # Warnings
     ///
-    /// ASN.1 does not allow some universal identifier for DER, however, this function will accept
+    /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
     /// such an identifier.
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
     ///
-    /// [`DerRef::try_from_mut_bytes`]: #method.try_from_mut_bytes
+    /// [`Read more`](std::convert::TryFrom::try_from)
     fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
         let ret = DerRef::try_from_bytes(bytes)?;
         let ptr = ret as *const DerRef;
@@ -112,16 +112,16 @@ impl DerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`<&DerRef>::try_from`].
+    /// This function is the same as [`TryFrom::try_from`].
     ///
     /// # Warnings
     ///
-    /// ASN.1 does not allow some universal identifier for DER, however, this function will accept
+    /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
     /// such an identifier.
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
     ///
-    /// [`<&DerRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20DerRef
+    /// [`TryFrom::try_from`]: #method.try_from
     ///
     /// # Examples
     ///
@@ -147,17 +147,16 @@ impl DerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`<&mut DerRef>::try_from`].
+    /// This function is the same as [`TryFrom::try_from`].
     ///
     /// # Warnings
     ///
-    /// ASN.1 does not allow some universal identifier for DER, however, this function will accept
+    /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
     /// such an identifier.
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
     ///
-    /// [`<&mut DerRef>::try_from`]:
-    ///     #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20DerRef
+    /// [`TryFrom::try_from`]: #method.try_from-1
     ///
     /// # Examples
     ///
@@ -184,15 +183,15 @@ impl DerRef {
     ///
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` is valid octets as an 'DER' or not, use [`TryFrom`]
-    /// implementation or [`try_from_bytes`].
+    /// If it is not sure whether `bytes` is valid octets as a 'DER', use [`TryFrom`]
+    /// implementation or [`try_from_bytes`] instead.
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20DerRef
-    /// [`try_from_bytes`]: #method.try_from_bytes
+    /// [`TryFrom`]: #method.try_from
+    /// [`try_from_bytes`]: Self::try_from_bytes
     ///
     /// # Safety
     ///
-    /// The behavior is undefined if `bytes` is not formatted as a DER.
+    /// The behaviour is undefined if `bytes` is not formatted as a DER.
     ///
     /// # Examples
     ///
@@ -212,15 +211,15 @@ impl DerRef {
     ///
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` is valid octets as an 'DER' or not, use [`TryFrom`]
-    /// implementation or [`try_from_mut_bytes`].
+    /// If it is not sure whether `bytes` is valid octets as a 'DER', use [`TryFrom`]
+    /// implementation or [`try_from_mut_bytes`] instead.
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20DerRef
-    /// [`try_from_mut_bytes`]: #method.try_from_mut_bytes
+    /// [`TryFrom`]: #method.try_from-1
+    /// [`try_from_mut_bytes`]: Self::try_from_mut_bytes
     ///
     /// # Safety
     ///
-    /// The behavior is undefined if `bytes` is not formatted as a DER.
+    /// The behaviour is undefined if `bytes` is not formatted as a DER.
     ///
     /// # Examples
     ///
@@ -317,14 +316,14 @@ impl DerRef {
         unsafe { &mut *ptr }
     }
 
-    /// Returns `Length` to represent the length of contents.
+    /// Returns `Length` of `self`.
     ///
     /// Note that DER does not allow indefinite Length.
-    /// The return value must be `Length::Definite`.
+    /// The return value is always `Length::Definite`.
     ///
     /// # Warnings
     ///
-    /// `Length` stands for the length octets in DER; i.e. the length of the contents.
+    /// `Length` stands for the length octets in DER: i.e. the length of the contents.
     /// The total byte count of the DER is greater than the value.
     ///
     /// # Examples
@@ -407,11 +406,8 @@ impl DerRef {
 ///
 /// The structure of `Der` is similar to that of `Vec<u8>`.
 ///
-/// User can access to the [`DerRef`] via the [`Deref`] implementation, and to the inner slice via
-/// the [`DerRef`].
-///
-/// [`DerRef`]: struct.DerRef.html
-/// [`Deref`]: #impl-Deref-for-Der
+/// User can access the [`DerRef`] via the [`Deref`] and [`DerefMut`] implementation,
+/// and to the inner slice via the [`DerRef`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Der {
     buffer: Buffer,
@@ -430,16 +426,16 @@ impl TryFrom<&[u8]> for Der {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`try_from_bytes`] .
+    /// This function is the same as [`try_from_bytes`].
     ///
     /// # Warnings
     ///
-    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
     /// such an identifier.
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
     ///
-    /// [`try_from_bytes`]: #method.try_from_bytes
+    /// [`try_from_bytes`]: Self::try_from_bytes
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         let der_ref = <&DerRef>::try_from(bytes)?;
         Ok(der_ref.to_owned())
@@ -451,10 +447,10 @@ impl Der {
     ///
     /// # Warnings
     ///
-    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
     /// such identifiers.
     /// For example, 'Octet String' must be primitive in DER, but this function will construct a
-    /// new instance even if `id` represenets constructed 'Octet String.'
+    /// new instance even if `id` represents constructed 'Octet String.'
     ///
     /// # Panics
     ///
@@ -498,20 +494,20 @@ impl Der {
     /// Creates a new instance from `id` and `contents` of `length` bytes.
     ///
     /// The `contents` of the return value is not initialized.
-    /// Use [`mut_contents`] to initialize it.
+    /// Use [`mut_contents`] via [`DerefMut`] implementation to initialize them.
     ///
     /// # Warnings
     ///
-    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
     /// such identifiers.
     /// For example, 'Octet String' must be primitive in DER, but this function will construct a
-    /// new instance even if `id` represenets constructed 'Octet String.'
+    /// new instance even if `id` represents constructed 'Octet String.'
     ///
     /// # Panics
     ///
-    /// Panics if the total bytes will exceeds `isize::MAX`.
+    /// Panics if the total bytes exceed `isize::MAX`.
     ///
-    /// [`mut_contents`]: #method.mut_contents
+    /// [`mut_contents`]: DerRef::mut_contents
     ///
     /// # Examples
     ///
@@ -547,16 +543,16 @@ impl Der {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`TryFrom::try_from`] .
+    /// This function is the same as [`TryFrom::try_from`].
     ///
     /// # Warnings
     ///
-    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
     /// such an identifier.
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
     ///
-    /// [`TryFrom::try_from`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Der
+    /// [`TryFrom::try_from`]: #method.TryFrom
     ///
     /// # Examples
     ///
@@ -580,15 +576,15 @@ impl Der {
     ///
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` are valid octets as an 'DER' or not, use [`TryFrom`]
-    /// implementation or [`try_from_bytes`].
+    /// If it is not sure whether `bytes` are valid octets as an 'DER', use [`TryFrom`]
+    /// implementation or [`try_from_bytes`] instead.
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Der
-    /// [`try_from_bytes`]: #method.try_from_bytes
+    /// [`TryFrom`]: #method.try_from-1
+    /// [`try_from_bytes`]: #Self::try_from_bytes
     ///
     /// # Safety
     ///
-    /// The behavior is undefined if `bytes` is not formatted as a DER.
+    /// The behaviour is undefined if `bytes` is not formatted as a DER.
     ///
     /// # Examples
     ///
@@ -609,10 +605,14 @@ impl Der {
     ///
     /// # Warnings
     ///
-    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
+    /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
     /// such an identifier.
     /// For example, 'Octet String' must be primitive in DER, but this function will construct a
-    /// new instance even if `id` represenets constructed 'Octet String.'
+    /// new instance even if `id` represents constructed 'Octet String.'
+    ///
+    /// # Panics
+    ///
+    /// Panics if the total length of the return value exceeds `isize::MAX`.
     ///
     /// # Examples
     ///
@@ -654,7 +654,7 @@ impl Der {
         Self { buffer }
     }
 
-    /// Returns a new instance representing boolean.
+    /// Returns a new instance representing a boolean.
     ///
     /// # Examples
     ///
@@ -673,7 +673,7 @@ impl Der {
 
     /// Returns a new instance representing integer.
     ///
-    /// Type `T` should be the builtin primitive integer types (e.g., u8, u32, isize, i128, ...)
+    /// Type `T` should be a built-in primitive integer type (e.g., u8, u32, isize, i128, ...)
     ///
     /// # Examples
     ///
@@ -695,6 +695,10 @@ impl Der {
 
     /// Returns a new instance representing utf8_string.
     ///
+    /// # Panics
+    ///
+    /// Panics if the total length of the return value exceeds `isize::MAX`.
+    ///
     /// # Examples
     ///
     /// ```
@@ -714,6 +718,10 @@ impl Der {
     }
 
     /// Returns a new instance representing octet_string.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the total length of the return value exceeds `isize::MAX`.
     ///
     /// # Examples
     ///
@@ -788,19 +796,21 @@ impl Der {
 
     /// Forces to set the length of the `contents` to `new_length`.
     ///
-    /// If `new_length` is greater than the length of current `contents`, the bytes of the extended
-    /// contents are not initialized. Use [`mut_contents`] to update them.
+    /// If `new_length` is less than the length of current `contents`, this method truncates the
+    /// contents; otherwise, the `contents` is enlarged. The bytes of the extended
+    /// contents are not initialized. Use [`mut_contents`] via [`DerefMut`] implementation
+    /// to initialize them.
     ///
     /// # Warnings
     ///
-    /// `new_length` specifies the length of `contents`.
+    /// `new_length` implies the length of `contents`.
     /// The total length will be greater than `new_length`.
     ///
     /// # Panics
     ///
-    /// Panics if the total length will exceeds `isize::MAX`.
+    /// Panics if the total length exceed `isize::MAX`.
     ///
-    /// [`mut_contents`]: #method.mut_contents
+    /// [`mut_contents`]: DerRef::mut_contents
     ///
     /// # Examples
     ///
@@ -868,14 +878,14 @@ pub fn disassemble_der(der: Der) -> Buffer {
 ///
 /// `constructed_der!(id: &IdRef [, (id_1, contents_1) [, (id_2, contents_2) [...]]]) => Der`
 ///
-/// `id_n` and `contents_n` must be bounded on `AsRef<[u8]>` .
+/// `id_n` and `contents_n` must be bounded on `AsRef<[u8]>`.
 ///
 /// # Warnings
 ///
-/// ASN.1 does not allow some universal identifier for DER, however, this macro accepts
+/// ASN.1 does not allow some universal identifiers for DER, however, this macro accepts
 /// such an identifier.
 /// For example, 'Octet String' must be primitive in DER, but this function will construct a
-/// new instance even if `id` represenets constructed 'Octet String.'
+/// new instance even if `id` represents constructed 'Octet String.'
 ///
 /// # Examples
 ///
