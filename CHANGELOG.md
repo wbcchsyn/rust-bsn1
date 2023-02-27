@@ -116,7 +116,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Enable to parse the identifier octets whose length is longer than or equals to 3 bytes.
 - Make the check strict to parse integer contents.
 
-## 1.0
+## 1.0 - 2023-03-02
 ### Added
 - The following trait implementations
     - DerefMut for Ber
