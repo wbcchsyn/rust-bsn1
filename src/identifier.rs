@@ -1,4 +1,4 @@
-// Copyright 2021-2022 Shin Yoshida
+// Copyright 2021-2023 Shin Yoshida
 //
 // "LGPL-3.0-or-later OR Apache-2.0"
 //
@@ -41,12 +41,12 @@ use std::ops::{Deref, DerefMut};
 
 /// `IdRef` is a wrapper of `[u8]` representing Identifier.
 ///
-/// User can access to the inner slice via method [`as_bytes`] or [`as_mut_bytes`]
+/// The user can access the inner slice via method [`as_bytes`] or [`as_mut_bytes`]
 ///
-/// This struct is `Unsized` , and user will usually use a reference to it.
+/// This struct is `Unsized`, and the user will usually use a reference to it.
 ///
-/// [`as_bytes`]: #method.as_bytes
-/// [`as_mut_bytes`]: #method.as_mut_bytes
+/// [`as_bytes`]: Self::as_bytes
+/// [`as_mut_bytes`]: Self::as_mut_bytes
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct IdRef {
     bytes: [u8],
@@ -67,15 +67,15 @@ impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`IdRef::try_from_bytes`].
-    ///
-    /// [`IdRef::try_from_bytes`]: #method.try_from_bytes
+    /// This function is the same as [`IdRef::try_from_bytes`].
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
+    ///
+    /// [Read more](std::convert::TryFrom::try_from)
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         IdRef::try_from_bytes(bytes)
     }
@@ -84,19 +84,20 @@ impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
 impl<'a> TryFrom<&'a mut [u8]> for &'a mut IdRef {
     type Error = Error;
 
-    /// Parses `bytes` starting with identifier, and tries to provide a reference to `IdRef`.
+    /// Parses `bytes` starting with identifier, and tries to provide a mutable reference to
+    /// `IdRef`.
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`IdRef::try_from_mut_bytes`].
-    ///
-    /// [`IdRef::try_from_mut_bytes`]: #method.try_from_mut_bytes
+    /// This function is the same as [`IdRef::try_from_mut_bytes`].
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
+    ///
+    /// [Read more](std::convert::TryFrom::try_from)
     fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
         IdRef::try_from_mut_bytes(bytes)
     }
@@ -106,7 +107,7 @@ impl<'a> TryFrom<&'a mut [u8]> for &'a mut IdRef {
 ///
 /// # Safety
 ///
-/// The behavior is undefined if `bytes` does not starts with 'ASN.1 Identifier.'
+/// The behaviour is undefined if `bytes` does not starts with 'ASN.1 Identifier.'
 pub unsafe fn shrink_to_fit_unchecked(bytes: &[u8]) -> &[u8] {
     if bytes[0] & IdRef::LONG_FLAG != IdRef::LONG_FLAG {
         &bytes[0..1]
@@ -125,7 +126,7 @@ impl IdRef {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`<&IdRef>::try_from`].
+    /// This function is the same as [`TryFrom::try_from`].
     ///
     /// # Warnings
     ///
@@ -133,7 +134,7 @@ impl IdRef {
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok.
     ///
-    /// [`<&IdRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20IdRef
+    /// [`TryFrom::try_from`]: #method.try_from
     ///
     /// # Examples
     ///
@@ -181,11 +182,12 @@ impl IdRef {
         Err(Error::UnTerminatedBytes)
     }
 
-    /// Parses `bytes` starting with identifier, and tries to provide a reference to `IdRef`.
+    /// Parses `bytes` starting with identifier, and tries to provide a mutable reference to
+    /// `IdRef`.
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`<&mut IdRef>::try_from`].
+    /// This function is the same as [`TryFrom::try_from`].
     ///
     /// # Warnings
     ///
@@ -193,8 +195,7 @@ impl IdRef {
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
     ///
-    /// [`<&mut IdRef>::try_from`]:
-    ///   #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20IdRef
+    /// [`TryFrom::try_from`]: #method.try_from-1
     ///
     /// # Examples
     ///
@@ -222,18 +223,19 @@ impl IdRef {
         let ptr = (ret as *const Self) as *mut Self;
         unsafe { Ok(&mut *ptr) }
     }
+
     /// Provides a reference from `bytes` without any check.
     /// `bytes` must not include any extra octets.
     ///
-    /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
+    /// If it is not sure whether `bytes` is valid octets as an identifer, use [`TryFrom`]
     /// implementation or [`try_from_bytes`] instead.
     ///
     /// # Safety
     ///
-    /// The behavior is undefined if the format of `bytes` is not right.
+    /// The behaviour is undefined if the format of `bytes` is not right.
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20IdRef
-    /// [`try_from_bytes`]: #method.try_from_bytes
+    /// [`TryFrom`]: #method.try_from
+    /// [`try_from_bytes`]: Self::try_from_bytes
     ///
     /// # Examples
     ///
@@ -252,15 +254,15 @@ impl IdRef {
     /// Provides a mutable reference from `bytes` without any check.
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
+    /// If it is not sure whether `bytes` is valid octets as an identifer, use [`TryFrom`]
     /// implementation or [`try_from_mut_bytes`] instead.
     ///
     /// # Safety
     ///
-    /// The behavior is undefined if the format of `bytes` is not right.
+    /// The behaviour is undefined if the format of `bytes` is not right.
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20IdRef
-    /// [`try_from_mut_bytes`]: #method.try_from_mut_bytes
+    /// [`TryFrom`]: #method.try_from-1
+    /// [`try_from_mut_bytes`]: Self::try_from_mut_bytes
     ///
     /// # Examples
     ///
@@ -282,6 +284,7 @@ impl IdRef {
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         mem::transmute(bytes)
     }
+
     /// Provides a reference to `IdRef` representing 'Universal EOC'.
     ///
     /// # Examples
@@ -590,7 +593,7 @@ impl IdRef {
     }
 
     /// Provides a reference to `IdRef` representing 'Universal Sequence' or 'Universal Sequence
-    /// of.'
+    /// of'.
     ///
     /// # Examples
     ///
@@ -1147,7 +1150,7 @@ where
 }
 
 impl IdRef {
-    /// Returns the length of the inner bytes.
+    /// Returns the byte count of the inner bytes.
     ///
     /// # Examples
     ///
@@ -1165,7 +1168,7 @@ impl IdRef {
         return self.as_bytes().len();
     }
 
-    /// Returns `ClassTag` of `self`.
+    /// Returns the `ClassTag` of `self`.
     ///
     /// # Examples
     ///
@@ -1308,7 +1311,7 @@ impl IdRef {
 
     /// Returns the number of `self` unless overflow.
     ///
-    /// Type `T` should be the builtin primitive integer types (e.g., u8, i32, isize, i128...)
+    /// Type `T` should be a built-in primitive integer type (e.g., u8, i32, isize, i128...)
     ///
     /// # Examples
     ///
@@ -1361,6 +1364,10 @@ impl IdRef {
     }
 
     /// Provides a mutable reference to the inner slice.
+    ///
+    /// # Safety
+    ///
+    /// The behaviour is undefined if the inner slice will be invalid as an Identifier of 'ASN.1'.
     ///
     /// # Examples
     ///
@@ -1436,7 +1443,7 @@ impl IdRef {
 ///
 /// The structure of `Id` is similar to that of `Vec<u8>`.
 ///
-/// User can access to the [`IdRef`] via the [`Deref`] and [`DerefMut`] implementations, and to
+/// The user can access the [`IdRef`] via the [`Deref`] and [`DerefMut`] implementations, and
 /// the inner slice via [`IdRef`].
 ///
 /// [`IdRef`]: struct.IdRef.html
@@ -1454,7 +1461,7 @@ impl TryFrom<&[u8]> for Id {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`try_from_bytes`].
+    /// This function is the same as [`try_from_bytes`].
     ///
     /// # Warnings
     ///
@@ -1462,7 +1469,9 @@ impl TryFrom<&[u8]> for Id {
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
     ///
-    /// [`try_from_bytes`]: #method.try_from_bytes
+    /// [`try_from_bytes`]: Self::try_from_bytes
+    ///
+    /// [Read more](std::convert::TryFrom::try_from)
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         <&IdRef>::try_from(bytes).map(|idref| idref.to_owned())
     }
@@ -1471,7 +1480,7 @@ impl TryFrom<&[u8]> for Id {
 impl Id {
     /// Creates a new instance from `class` , `pc` , and `number`.
     ///
-    /// type `T` should be the builtin primitive unsigned integer types
+    /// type `T` should be a built-in primitive unsigned integer type
     /// (e.g., u8, u16, u32, u64, u128, usize.)
     ///
     /// # Warnings
@@ -1530,7 +1539,7 @@ impl Id {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is same to [`TryFrom::try_from`].
+    /// This function is the same as [`TryFrom::try_from`].
     ///
     /// # Warnings
     ///
@@ -1538,7 +1547,7 @@ impl Id {
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
     ///
-    /// [`TryFrom::try_from`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Id
+    /// [`TryFrom::try_from`]: #method.try_from
     ///
     /// # Examples
     ///
@@ -1562,15 +1571,15 @@ impl Id {
     /// Provides a reference from `bytes` without any check.
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` is valid octets as an identifer or not, use [`TryFrom`]
+    /// If it is not sure whether `bytes` is valid octets as an identifer, use [`TryFrom`]
     /// implementation or [`try_from_bytes`] instead.
     ///
     /// # Safety
     ///
-    /// The behavior is undefined if the format of `bytes` is not right.
+    /// The behaviour is undefined if the format of `bytes` is not right.
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Id
-    /// [`try_from_bytes`]: #method.try_from_bytes
+    /// [`TryFrom`]: #method.try_from
+    /// [`try_from_bytes`]: Self::try_from_bytes
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
         IdRef::from_bytes_unchecked(bytes).to_owned()
     }
@@ -1633,7 +1642,7 @@ where
 }
 
 impl Id {
-    /// Update the numberof `self`.
+    /// Update the number of `self`.
     ///
     /// # Examples
     ///

@@ -1,4 +1,4 @@
-// Copyright 2021-2022 Shin Yoshida
+// Copyright 2021-2023 Shin Yoshida
 //
 // "LGPL-3.0-or-later OR Apache-2.0"
 //
@@ -186,7 +186,7 @@ impl Ord for Buffer {
 impl Buffer {
     /// # Safety
     ///
-    /// The behavior is undefined if the length will exceeds the capacity.
+    /// The behaviour is undefined if the length will exceeds the capacity.
     pub unsafe fn push(&mut self, v: u8) {
         let old_len = self.len();
 

@@ -1,4 +1,4 @@
-// Copyright 2021-2022 Shin Yoshida
+// Copyright 2021-2023 Shin Yoshida
 //
 // "LGPL-3.0-or-later OR Apache-2.0"
 //
@@ -39,7 +39,7 @@ use std::ops::{Deref, DerefMut};
 
 /// `BerRef` is a wrapper of `[u8]` and represents a BER.
 ///
-/// This struct is 'Unsized', and user usually uses a reference to the instance.
+/// This struct is 'Unsized' and the user will usually use a reference to the instance.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct BerRef {
     bytes: [u8],
@@ -58,15 +58,15 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`BerRef::try_from_bytes`].
+    /// This function is the same as [`BerRef::try_from_bytes`].
+    ///
+    /// [Read more](std::convert::TryFrom::try_from)
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
-    ///
-    /// [`BerRef::try_from_bytes`]: #method.try_from_bytes
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let id = <&IdRef>::try_from(bytes)?;
         let parsing = &bytes[id.len()..];
@@ -111,15 +111,15 @@ impl<'a> TryFrom<&'a mut [u8]> for &'a mut BerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`BerRef::try_from_mut_bytes`].
+    /// This function is the same as [`BerRef::try_from_mut_bytes`].
+    ///
+    /// [Read more](std::convert::TryFrom::try_from)
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
-    ///
-    /// [`BerRef::try_from_mut_bytes`]: #method.try_from_mut_bytes
     fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
         let ret = <&'a BerRef>::try_from(bytes as &[u8])?;
         let ptr = ret as *const BerRef;
@@ -129,11 +129,11 @@ impl<'a> TryFrom<&'a mut [u8]> for &'a mut BerRef {
 }
 
 impl BerRef {
-    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a reference to `BerRef` .
+    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a reference to `BerRef`.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`<&BerRef>::try_from`] .
+    /// This function is the same as [`TryFrom::try_from`].
     ///
     /// # Warnings
     ///
@@ -141,19 +141,19 @@ impl BerRef {
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
     ///
-    /// [`<&BerRef>::try_from`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20BerRef
+    /// [`TryFrom::try_from`]: #method.try_from
     ///
     /// # Examples
     ///
     /// ```
     /// use bsn1::BerRef;
     ///
-    /// // Represents 'True' as Boolean.
+    /// // Represents 'True' as a Boolean.
     /// let bytes: &[u8] = &[0x01, 0x01, 0xff];
     /// let ber0 = BerRef::try_from_bytes(bytes).unwrap();
     /// assert!(ber0.contents().to_bool_ber().unwrap());
     ///
-    /// // The extra octets at the end does not affect to the result.
+    /// // The extra octets at the end do not affect the result.
     /// let bytes: &[u8] = &[0x01, 0x01, 0xff, 0x00];
     /// let ber1 = BerRef::try_from_bytes(bytes).unwrap();
     /// assert_eq!(ber0, ber1);
@@ -167,7 +167,7 @@ impl BerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`<&mut BerRef>::try_from`] .
+    /// This function is the same as [`TryFrom::try_from`].
     ///
     /// # Warnings
     ///
@@ -175,8 +175,7 @@ impl BerRef {
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
     ///
-    /// [`<&mut BerRef>::try_from`]:
-    ///     #impl-TryFrom%3C%26%27a%20mut%20%5Bu8%5D%3E-for-%26%27a%20mut%20BerRef
+    /// [`TryFrom::try_from`]: #method.try_from-1
     ///
     /// # Examples
     ///
@@ -203,15 +202,15 @@ impl BerRef {
     ///
     /// `bytes` must be BER octets and must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` are valid octets as an 'BER' or not, use [`TryFrom`]
-    /// implementation or [`try_from_bytes`].
+    /// If it is not sure whether `bytes` are valid octets as an 'BER', use [`TryFrom`]
+    /// implementation or [`try_from_bytes`] instead.
     ///
     /// # Safety
     ///
-    /// The behavior is undefined if `bytes` is not formatted as a BER.
+    /// The behaviour is undefined if `bytes` is not formatted as a BER.
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20BerRef
-    /// [`try_from_bytes`]: #method.try_from_bytes
+    /// [`TryFrom`]: #method.try_from
+    /// [`try_from_bytes`]: Self::try_from_bytes
     ///
     /// # Examples
     ///
@@ -233,15 +232,15 @@ impl BerRef {
     ///
     /// `bytes` must be BER octets and must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` are valid octets as an 'BER' or not, use [`TryFrom`]
-    /// implementation or [`try_from_bytes`].
+    /// If it is not sure whether `bytes` are valid octets as a 'BER', use [`TryFrom`]
+    /// implementation or [`try_from_mut_bytes`] instead.
     ///
     /// # Safety
     ///
-    /// The behavior is undefined if `bytes` is not formatted as a BER.
+    /// The behaviour is undefined if `bytes` is not formatted as a BER.
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%27a%20%5Bu8%5D%3E-for-%26%27a%20BerRef
-    /// [`try_from_bytes`]: #method.try_from_bytes
+    /// [`TryFrom`]: #method.try_from-1
+    /// [`try_from_mut_bytes`]: Self::try_from_mut_bytes
     ///
     /// # Examples
     ///
@@ -285,9 +284,7 @@ where
 }
 
 impl BerRef {
-    /// Provides a reference to [`IdRef`] of `self` .
-    ///
-    /// [`IdRef`]: struct.IdRef.html
+    /// Provides a reference to the [`IdRef`] of `self`.
     ///
     /// # Examples
     ///
@@ -307,9 +304,7 @@ impl BerRef {
         }
     }
 
-    /// Provides a mutable reference to [`IdRef`] of `self` .
-    ///
-    /// [`IdRef`]: struct.IdRef.html
+    /// Provides a mutable reference to the [`IdRef`] of `self`.
     ///
     /// # Examples
     ///
@@ -339,12 +334,13 @@ impl BerRef {
         }
     }
 
-    /// Returns `Length` of `self`.
+    /// Returns the [`Length`] of `self`.
     ///
     /// # Warnings
     ///
-    /// `Length` stands for 'the length octets of the contents' in BER.
-    /// The total byte count is greater than the value.
+    /// `Length` stands for 'the length octets' in BER.
+    /// It implies the byte count of `contents` or `indefinite`.
+    /// The total byte count is greater than the value even if it is `definite`.
     ///
     /// # Examples
     ///
@@ -363,7 +359,7 @@ impl BerRef {
         unsafe { length::from_bytes_starts_with_unchecked(bytes).0 }
     }
 
-    /// Provides a reference to the 'contents' octets of `self` .
+    /// Provides a reference to the [`ContentsRef`] of `self`.
     ///
     /// # Examples
     ///
@@ -383,7 +379,7 @@ impl BerRef {
         ContentsRef::from_bytes(contents)
     }
 
-    /// Provides a mutable reference to the 'contents' octets of `self` .
+    /// Provides a mutable reference to the [`ContentsRef`] of `self`.
     ///
     /// # Examples
     ///
@@ -430,10 +426,8 @@ impl BerRef {
 ///
 /// The structure of `Ber` is similar to that of `Vec<u8>`.
 ///
-/// User can access to the [`BerRef`] via the [`Deref`] implementation, and to the inner slice via
-/// the [`BerRef`].
-///
-/// [`BerRef`]: struct.BerRef.html
+/// Users can access the [`BerRef`] via the [`Deref`] and [`DerefMut`] implementation
+/// and the inner slice via the [`BerRef`].
 #[derive(Debug, Clone, Eq, Hash)]
 pub struct Ber {
     buffer: Buffer,
@@ -466,9 +460,9 @@ impl TryFrom<&[u8]> for Ber {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`try_from_bytes`] .
+    /// This function is the same as [`try_from_bytes`].
     ///
-    /// [`try_from_bytes`]: #method.try_from_bytes
+    /// [`try_from_bytes`]: Ber::try_from_bytes
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         let ber_ref = <&BerRef>::try_from(bytes)?;
         Ok(ber_ref.to_owned())
@@ -478,14 +472,22 @@ impl TryFrom<&[u8]> for Ber {
 impl Ber {
     /// Creates a new instance from `id` and `contents` with definite length.
     ///
-    /// Note that BER allows both definite and indefinite length, however, this function always
-    /// returns definite length value.
-    /// (Generally speaking, the performance of definite length is better than that of indefinite
-    /// length. Indefinite length is seldom used these days.)
+    /// Note that BER allows both definite length and indefinite length,
+    /// however, this function always returns a definite length value.
+    /// Use [`new_indefinite`] to build an indefinite length value.
+    ///
+    /// Warnings
+    ///
+    /// ASN.1 reserves some universal identifiers and they should not be used,
+    /// however, this function accepts such identifiers.
+    /// For example, the number 15 (0x0f) is reserved for now, but this function creates such
+    /// an instance with the number 15 identifier.
     ///
     /// # Panics
     ///
     /// Panics if the total length exceeds `isize::MAX`.
+    ///
+    /// [`new_indefinite`]: Self::new_indefinite
     ///
     /// # Examples
     ///
@@ -505,6 +507,23 @@ impl Ber {
     }
 
     /// Creates a new instance from `id` and `contents` with indefinite length.
+    ///
+    /// Note that BER allows both definite length and indefinite length,
+    /// however, this function always returns an indefinite length value.
+    /// Use [`new`] to build a definite length value.
+    ///
+    /// Warnings
+    ///
+    /// ASN.1 reserves some universal identifiers and they should not be used,
+    /// however, this function accepts such identifiers.
+    /// For example, the number 15 (0x0f) is reserved for now, but this function creates such
+    /// an instance with the number 15 identifier.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the total length exceeds `isize::MAX`.
+    ///
+    /// [`new`]: Self::new
     ///
     /// # Examples
     ///
@@ -542,21 +561,20 @@ impl Ber {
 
     /// Creates a new instance with definite length from `id` and `contents` of `length` bytes.
     ///
-    /// The `contents` of the return value is not initialized.
-    /// Use [`mut_contents`] to initialize it.
+    /// The `contents` of the return value are not initialized.
+    /// Use [`mut_contents`] via [`DerefMut`] implementation to initialize it.
     ///
     /// # Warnings
     ///
-    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
-    /// such identifiers.
-    /// For example, 'Octet String' must be primitive in DER, but this function will construct a
-    /// new instance even if `id` represenets constructed 'Octet String.'
+    /// ASN.1 reserves some universal identifiers and they should not be used, however, this
+    /// function accepts such identifiers. For example, the number 15 (0x0f) is reserved for now,
+    /// but this function creates such an instance with the number 15 identifier.
     ///
     /// # Panics
     ///
-    /// Panics if the total bytes will exceeds `isize::MAX`.
+    /// Panics if the total bytes exceeds `isize::MAX`.
     ///
-    /// [`mut_contents`]: #method.mut_contents
+    /// [`mut_contents`]: BerRef::mut_contents
     ///
     /// # Examples
     ///
@@ -576,21 +594,20 @@ impl Ber {
 
     /// Creates a new instance with indefinite length from `id` and `contents` of `length` bytes.
     ///
-    /// The `contents` of the return value is not initialized.
-    /// Use [`mut_contents`] to initialize it.
+    /// The `contents` of the return value are not initialized.
+    /// Use [`mut_contents`] via [`DerefMut`] implementation to initialize it.
     ///
     /// # Warnings
     ///
-    /// ASN.1 does not allow some universal identifier for DER, however, this function accepts
-    /// such identifiers.
-    /// For example, 'Octet String' must be primitive in DER, but this function will construct a
-    /// new instance even if `id` represenets constructed 'Octet String.'
+    /// ASN.1 reserves some universal identifiers and they should not be used, however, this
+    /// function accepts such identifiers. For example, the number 15 (0x0f) is reserved for now,
+    /// but this function creates such an instance with the number 15 identifier.
     ///
     /// # Panics
     ///
-    /// Panics if the total bytes will exceeds `isize::MAX`.
+    /// Panics if the total bytes exceeds `isize::MAX`.
     ///
-    /// [`mut_contents`]: #method.mut_contents
+    /// [`mut_contents`]: BerRef::mut_contents
     ///
     /// # Examples
     ///
@@ -621,36 +638,36 @@ impl Ber {
         Self { buffer }
     }
 
-    /// Parses `bytes` starting with BER octets and builds a new instance.
+    /// Parses `bytes` starting with BER octets and returns a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`TryFrom::try_from`] .
+    /// This function is the same as [`TryFrom::try_from`].
     ///
     /// # Warnings
     ///
-    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok`.
+    /// ASN.1 reserves some universal identifiers and they should not be used, however, this
+    /// function accepts such identifiers. For example, the number 15 (0x0f) is reserved for now,
+    /// but this function returns `Ok`.
     ///
-    /// [`TryFrom::try_from`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Ber
+    /// [`TryFrom::try_from`]: #method.try_from
     pub fn try_from_bytes(bytes: &[u8]) -> Result<Self, Error> {
         Self::try_from(bytes)
     }
 
-    /// Builds a new instance holding `bytes` without any check.
+    /// Returns a new instance holding `bytes` without any check.
     ///
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` are valid octets as an 'BER' or not, use [`TryFrom`]
-    /// implementation or [`try_from_bytes`].
+    /// If it is not sure whether `bytes` are valid octets as a 'BER', use [`TryFrom`]
+    /// implementation or [`try_from_bytes`] instead.
     ///
-    /// [`TryFrom`]: #impl-TryFrom%3C%26%5Bu8%5D%3E-for-Ber
-    /// [`try_from_bytes`]: #method.try_from_bytes
+    /// [`TryFrom`]: #method.try_from
+    /// [`try_from_bytes`]: Self::try_from_bytes
     ///
     /// # Safety
     ///
-    /// The behavior is undefined if `bytes` is not formatted as a BER.
+    /// The behaviour is undefined if `bytes` is not formatted as a BER.
     ///
     /// # Examples
     ///
@@ -668,7 +685,13 @@ impl Ber {
         }
     }
 
-    /// Creates a new instance from `id` and `contents` .
+    /// Creates a new instance from `id` and `contents`.
+    ///
+    /// The all length octets will be `definite`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the total length exceeds `isize::MAX`.
     ///
     /// # Examples
     ///
@@ -677,11 +700,11 @@ impl Ber {
     ///
     /// let id = IdRef::sequence();
     ///
-    /// // Build instance using function 'from_id_iterator()'.
+    /// // Builds an instance using function 'from_id_iterator()'.
     /// let contents: &[Ber] = &[Ber::utf8_string("foo"), Ber::integer(29_i32)];
     /// let ber = Ber::from_id_iterator(id, contents.iter());
     ///
-    /// // Build instance using function 'new()'.
+    /// // Builds an instance using function 'new()'.
     /// let contents: Vec<u8> = contents.iter()
     ///                         .map(|i| Vec::from(i.as_bytes()))
     ///                         .flatten().collect();
@@ -718,7 +741,7 @@ impl Ber {
 
     /// Returns a new instance representing an integer.
     ///
-    /// Type `T` should be the builtin primitive integer types (e.g., u8, u32, isize, i128, ...)
+    /// Type `T` should be a built-in primitive integer type (e.g., u8, u32, isize, i128, ...)
     ///
     /// # Examples
     ///
@@ -740,6 +763,10 @@ impl Ber {
 
     /// Returns a new instance representing a utf8_string.
     ///
+    /// # Panics
+    ///
+    /// Panics if the total length exceeds `isize::MAX`.
+    ///
     /// # Examples
     ///
     /// ```
@@ -756,6 +783,10 @@ impl Ber {
     }
 
     /// Returns a new instance representing an octet_string.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the total length exceeds `isize::MAX`.
     ///
     /// # Examples
     ///
@@ -809,7 +840,7 @@ where
 }
 
 impl Ber {
-    /// Consumes `self` , returning `Vec` .
+    /// Consumes `self`, returning `Vec`.
     ///
     /// # Examples
     ///
@@ -828,25 +859,26 @@ impl Ber {
         self.buffer.into_vec()
     }
 
-    /// Force the length of the contents to `new_length`.
+    /// Forces the length of the contents to `new_length`.
     ///
-    /// If `new_length` is greater than the current length of the `contents`, this method enlarges
-    /// the `contents`. The extended octets are not initialized. Use [`mut_contents`] to initialize
-    /// them.
+    /// If `new_length` is less than the current length of the `contents`, this method truncates
+    /// the contents; otherwise, the `contents` is enlarged.
+    /// The extended octets are not initialized. Use [`mut_contents`] via the [`Deref`]
+    /// implementation to initialize them.
     ///
-    /// If the contents length of `self` forms indefinite, the length octets does not changes;
-    /// otherwise the length octets will be updated.
+    /// If the contents length of `self` forms indefinite, the length octets is not changed;
+    /// otherwise, the length octets will be updated.
     ///
     /// # Warnings
     ///
     /// `new_length` specifies the length of the contents.
-    /// The total length of `self` will be greater then `new_length`.
+    /// The total length of `self` will be greater than `new_length`.
     ///
     /// # Panics
     ///
     /// Panics if the new total length exceeds `isize::MAX`.
     ///
-    /// [`mut_contents`]: #method.mut_contents
+    /// [`mut_contents`]: BerRef::mut_contents
     ///
     /// # Examples
     ///
@@ -914,7 +946,7 @@ impl Ber {
 ///
 /// `constructed_ber!(id: &IdRef [, (id_1, contents_1) [, (id_2, contents_2) [...]]]) => Ber`
 ///
-/// `id_n` and `contents_n` must be bounded on `AsRef<[u8]>` .
+/// `id_n` and `contents_n` must be bounded on `AsRef<[u8]>`.
 ///
 /// # Examples
 ///

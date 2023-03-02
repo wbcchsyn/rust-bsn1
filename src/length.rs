@@ -1,4 +1,4 @@
-// Copyright 2021-2022 Shin Yoshida
+// Copyright 2021-2023 Shin Yoshida
 //
 // "LGPL-3.0-or-later OR Apache-2.0"
 //
@@ -60,7 +60,7 @@ impl TryFrom<&[u8]> for Length {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same to [`try_from_bytes`].
+    /// This function is the same as [`try_from_bytes`].
     ///
     /// [`try_from_bytes`]: #method.from_bytes
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
@@ -94,7 +94,7 @@ impl Length {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This method is same to [`TryFrom`] implementation.
+    /// This method is the same as [`TryFrom`] implementation.
     ///
     /// [`TryFrom`]: #impl-TryFrom-for-Length
     ///
@@ -116,7 +116,7 @@ impl Length {
         try_from(bytes).map(|(length, _rest)| length)
     }
 
-    /// Serializes `length` .
+    /// Serializes `length`.
     ///
     /// # Examples
     ///
@@ -268,7 +268,7 @@ impl Length {
 
 /// Tries to parse `bytes` starting with 'length' and returns `(Length, octets_after_length)`.
 ///
-/// This function ignores extra octets at the end of `bytes` .
+/// This function ignores extra octets at the end of `bytes`.
 pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
     let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
     let bytes = &bytes[1..];
@@ -309,11 +309,11 @@ pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
     }
 }
 
-/// Parse `bytes` starting with 'length' and returns `(Length, octets_after_length)` .
+/// Parse `bytes` starting with 'length' and returns `(Length, octets_after_length)`.
 ///
 /// # Safety
 ///
-/// The behavior is undefined if `bytes` does not start with Length octet(s).
+/// The behaviour is undefined if `bytes` does not start with Length octet(s).
 pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> (Length, &[u8]) {
     let first = bytes[0];
     let bytes = &bytes[1..];
