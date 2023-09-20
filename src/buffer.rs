@@ -121,6 +121,13 @@ impl StackBuffer {
     }
 }
 
+use std::mem::ManuallyDrop;
+
+union BufferWithoutLength {
+    stack: ManuallyDrop<StackBuffer>,
+    heap: ManuallyDrop<HeapBuffer>,
+}
+
 #[repr(C)]
 pub struct Buffer {
     len_: isize,
