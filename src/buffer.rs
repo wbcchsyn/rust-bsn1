@@ -105,6 +105,12 @@ impl StackBuffer {
     pub const fn capacity() -> usize {
         std::mem::size_of::<Self>()
     }
+
+    pub const fn new() -> Self {
+        Self {
+            data_: [0; Self::capacity()],
+        }
+    }
 }
 
 #[repr(C)]
