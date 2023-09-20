@@ -111,6 +111,10 @@ impl StackBuffer {
             data_: [0; Self::capacity()],
         }
     }
+
+    pub fn as_ptr(&self) -> *const u8 {
+        self.data_.as_ptr()
+    }
 }
 
 #[repr(C)]
