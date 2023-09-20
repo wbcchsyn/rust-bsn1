@@ -35,7 +35,6 @@ use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
-use std::mem::{align_of, size_of, size_of_val};
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 struct HeapBuffer {
@@ -46,7 +45,7 @@ struct HeapBuffer {
 impl Drop for HeapBuffer {
     fn drop(&mut self) {
         unsafe {
-            let layout = Layout::from_size_align_unchecked(self.cap_, align_of::<u8>());
+            let layout = Layout::from_size_align_unchecked(self.cap_, std::mem::align_of::<u8>());
             alloc::dealloc(self.data_, layout);
         }
     }
