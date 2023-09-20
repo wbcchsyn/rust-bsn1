@@ -115,6 +115,10 @@ impl StackBuffer {
     pub fn as_ptr(&self) -> *const u8 {
         self.data_.as_ptr()
     }
+
+    pub fn as_mut_ptr(&mut self) -> *mut u8 {
+        self.data_.as_mut_ptr()
+    }
 }
 
 #[repr(C)]
