@@ -128,6 +128,12 @@ union BufferWithoutLength {
     heap: ManuallyDrop<HeapBuffer>,
 }
 
+impl Drop for BufferWithoutLength {
+    // `self` cannot know which field is used.
+    // The owner of this union must drop the field.
+    fn drop(&mut self) {}
+}
+
 #[repr(C)]
 pub struct Buffer {
     len_: isize,
