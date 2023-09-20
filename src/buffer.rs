@@ -38,6 +38,11 @@ use std::hash::{Hash, Hasher};
 use std::mem::{align_of, size_of, size_of_val};
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 
+struct HeapBuffer {
+    data_: *mut u8,
+    cap_: usize,
+}
+
 #[repr(C)]
 pub struct Buffer {
     len_: isize,
