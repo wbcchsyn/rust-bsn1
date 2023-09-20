@@ -240,7 +240,7 @@ pub use der::{Der, DerRef};
 pub use id_tags::{ClassTag, PCTag};
 pub use identifier::{Id, IdRef};
 pub use length::Length;
-use stack_buffer::StackBuffer;
+use stack_buffer::LengthBuffer;
 use std::fmt;
 
 /// Errors for this crate.

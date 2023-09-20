@@ -35,16 +35,16 @@ use std::ops::{Deref, DerefMut};
 use std::ops::{Index, IndexMut};
 
 #[derive(Clone, Copy)]
-pub struct StackBuffer {
+pub struct LengthBuffer {
     buffer: [u8; Self::CAPACITY],
     len_: u8,
 }
 
-impl StackBuffer {
+impl LengthBuffer {
     const CAPACITY: usize = Length::Definite(std::usize::MAX).len();
 }
 
-impl StackBuffer {
+impl LengthBuffer {
     pub const fn new() -> Self {
         Self {
             buffer: [0; Self::CAPACITY],
@@ -53,7 +53,7 @@ impl StackBuffer {
     }
 }
 
-impl Deref for StackBuffer {
+impl Deref for LengthBuffer {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {
@@ -61,13 +61,13 @@ impl Deref for StackBuffer {
     }
 }
 
-impl DerefMut for StackBuffer {
+impl DerefMut for LengthBuffer {
     fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
     }
 }
 
-impl Index<usize> for StackBuffer {
+impl Index<usize> for LengthBuffer {
     type Output = u8;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -75,13 +75,13 @@ impl Index<usize> for StackBuffer {
     }
 }
 
-impl IndexMut<usize> for StackBuffer {
+impl IndexMut<usize> for LengthBuffer {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         self.deref_mut().index_mut(index)
     }
 }
 
-impl StackBuffer {
+impl LengthBuffer {
     /// # Safety
     ///
     /// The behaviour is undefined if the length will exceeds the capacity.
@@ -126,16 +126,16 @@ mod stack_buffer_tests {
 
     #[test]
     fn new() {
-        let buffer = StackBuffer::new();
+        let buffer = LengthBuffer::new();
         assert_eq!(0, buffer.len());
     }
 
     #[test]
     fn push() {
-        let mut buffer = StackBuffer::new();
+        let mut buffer = LengthBuffer::new();
         let mut v = Vec::new();
 
-        for i in 0..StackBuffer::CAPACITY {
+        for i in 0..LengthBuffer::CAPACITY {
             assert_eq!(i, buffer.len());
 
             unsafe { buffer.push(i as u8) };

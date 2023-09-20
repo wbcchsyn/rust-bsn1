@@ -32,7 +32,7 @@
 
 //! functions and enum about 'Length' octet of 'ASN.1.'
 
-use crate::{Error, StackBuffer};
+use crate::{Error, LengthBuffer};
 use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::mem::{size_of, size_of_val};
@@ -131,7 +131,7 @@ impl Length {
     /// assert_eq!(length, deserialized);
     /// ```
     pub fn to_bytes(self) -> impl Deref<Target = [u8]> {
-        let mut buffer = StackBuffer::new();
+        let mut buffer = LengthBuffer::new();
 
         match self {
             Length::Indefinite => unsafe { buffer.push(Length::INDEFINITE) },
