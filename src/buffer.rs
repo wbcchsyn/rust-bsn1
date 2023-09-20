@@ -133,7 +133,6 @@ impl Drop for BufferWithoutLength {
     fn drop(&mut self) {}
 }
 
-#[repr(C)]
 pub struct Buffer {
     len_: isize,
     buffer_: BufferWithoutLength,
