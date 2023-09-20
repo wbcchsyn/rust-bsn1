@@ -91,6 +91,10 @@ impl HeapBuffer {
     pub fn as_ptr(&self) -> *const u8 {
         self.data_
     }
+
+    pub fn as_mut_ptr(&mut self) -> *mut u8 {
+        self.data_
+    }
 }
 
 #[repr(C)]
