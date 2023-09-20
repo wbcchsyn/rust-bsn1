@@ -87,6 +87,10 @@ impl HeapBuffer {
             self.cap_ = new_capacity;
         }
     }
+
+    pub fn as_ptr(&self) -> *const u8 {
+        self.data_
+    }
 }
 
 #[repr(C)]
