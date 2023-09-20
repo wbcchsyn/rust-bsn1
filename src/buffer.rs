@@ -73,6 +73,20 @@ impl HeapBuffer {
     pub fn capacity(&self) -> usize {
         self.cap_
     }
+
+    pub fn realloc(&mut self, new_capacity: usize) {
+        let layout = Layout::array::<u8>(self.capacity()).unwrap();
+        unsafe {
+            let data = alloc::realloc(self.data_, layout, new_capacity);
+            if data.is_null() {
+                let layout = Layout::array::<u8>(new_capacity).unwrap();
+                alloc::handle_alloc_error(layout);
+            }
+
+            self.data_ = data;
+            self.cap_ = new_capacity;
+        }
+    }
 }
 
 #[repr(C)]
