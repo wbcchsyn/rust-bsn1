@@ -101,6 +101,12 @@ struct StackBuffer {
     data_: [u8; std::mem::size_of::<HeapBuffer>()],
 }
 
+impl StackBuffer {
+    pub const fn capacity() -> usize {
+        std::mem::size_of::<Self>()
+    }
+}
+
 #[repr(C)]
 pub struct Buffer {
     len_: isize,
