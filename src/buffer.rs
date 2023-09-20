@@ -43,6 +43,15 @@ struct HeapBuffer {
     cap_: usize,
 }
 
+impl Drop for HeapBuffer {
+    fn drop(&mut self) {
+        unsafe {
+            let layout = Layout::from_size_align_unchecked(self.cap_, align_of::<u8>());
+            alloc::dealloc(self.data_, layout);
+        }
+    }
+}
+
 #[repr(C)]
 pub struct Buffer {
     len_: isize,
