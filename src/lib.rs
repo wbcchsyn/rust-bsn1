@@ -230,7 +230,7 @@ mod der;
 mod id_tags;
 mod identifier;
 mod length;
-mod stack_buffer;
+mod length_buffer;
 
 pub use ber::{Ber, BerRef};
 use buffer::Buffer;
@@ -240,7 +240,7 @@ pub use der::{Der, DerRef};
 pub use id_tags::{ClassTag, PCTag};
 pub use identifier::{Id, IdRef};
 pub use length::Length;
-use stack_buffer::StackBuffer;
+use length_buffer::LengthBuffer;
 use std::fmt;
 
 /// Errors for this crate.

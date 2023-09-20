@@ -35,14 +35,107 @@ use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
-use std::mem::{align_of, size_of, size_of_val};
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 
-#[repr(C)]
-pub struct Buffer {
-    len_: isize,
+struct HeapBuffer {
     data_: *mut u8,
     cap_: usize,
+}
+
+impl Drop for HeapBuffer {
+    fn drop(&mut self) {
+        unsafe {
+            let layout = Layout::from_size_align_unchecked(self.cap_, std::mem::align_of::<u8>());
+            alloc::dealloc(self.data_, layout);
+        }
+    }
+}
+
+impl HeapBuffer {
+    pub fn new(capacity: usize) -> Self {
+        debug_assert!(0 < capacity);
+
+        let layout = Layout::array::<u8>(capacity).unwrap();
+        unsafe {
+            let data = alloc::alloc(layout);
+            if data.is_null() {
+                alloc::handle_alloc_error(layout);
+            }
+
+            Self {
+                data_: data,
+                cap_: capacity,
+            }
+        }
+    }
+
+    pub fn capacity(&self) -> usize {
+        self.cap_
+    }
+
+    pub fn realloc(&mut self, new_capacity: usize) {
+        let layout = Layout::array::<u8>(self.capacity()).unwrap();
+        unsafe {
+            let data = alloc::realloc(self.data_, layout, new_capacity);
+            if data.is_null() {
+                let layout = Layout::array::<u8>(new_capacity).unwrap();
+                alloc::handle_alloc_error(layout);
+            }
+
+            self.data_ = data;
+            self.cap_ = new_capacity;
+        }
+    }
+
+    pub fn as_ptr(&self) -> *const u8 {
+        self.data_
+    }
+
+    pub fn as_mut_ptr(&mut self) -> *mut u8 {
+        self.data_
+    }
+}
+
+struct StackBuffer {
+    data_: [u8; std::mem::size_of::<HeapBuffer>()],
+}
+
+impl StackBuffer {
+    pub const fn capacity() -> usize {
+        std::mem::size_of::<Self>()
+    }
+
+    pub const fn new() -> Self {
+        Self {
+            data_: [0; Self::capacity()],
+        }
+    }
+
+    pub fn as_ptr(&self) -> *const u8 {
+        self.data_.as_ptr()
+    }
+
+    pub fn as_mut_ptr(&mut self) -> *mut u8 {
+        self.data_.as_mut_ptr()
+    }
+}
+
+use std::mem::ManuallyDrop;
+
+union BufferWithoutLength {
+    stack: ManuallyDrop<StackBuffer>,
+    heap: ManuallyDrop<HeapBuffer>,
+}
+
+impl Drop for BufferWithoutLength {
+    // `self` cannot know which field is used.
+    // The owner of this union must drop the field.
+    fn drop(&mut self) {}
+}
+
+pub struct Buffer {
+    len_: isize,
+    buffer_: BufferWithoutLength,
 }
 
 unsafe impl Send for Buffer {}
@@ -51,12 +144,13 @@ unsafe impl Sync for Buffer {}
 impl Drop for Buffer {
     fn drop(&mut self) {
         if self.is_stack() {
-            return;
-        }
-
-        unsafe {
-            let layout = Layout::from_size_align_unchecked(self.capacity(), align_of::<u8>());
-            alloc::dealloc(self.as_mut_ptr(), layout);
+            unsafe {
+                ManuallyDrop::drop(&mut self.buffer_.stack);
+            }
+        } else {
+            unsafe {
+                ManuallyDrop::drop(&mut self.buffer_.heap);
+            }
         }
     }
 }
@@ -79,30 +173,22 @@ impl Buffer {
     pub const fn new() -> Self {
         Self {
             len_: 0,
-            data_: std::ptr::null_mut(),
-            cap_: 0,
+            buffer_: BufferWithoutLength {
+                stack: ManuallyDrop::new(StackBuffer::new()),
+            },
         }
     }
 
     pub fn with_capacity(capacity: usize) -> Self {
-        // Don't call method reserve() to skip method copy_from_nonoverlapping().
-        if capacity <= Self::new().capacity() {
-            return Self::new();
-        }
-
-        let layout = Layout::array::<u8>(capacity).unwrap();
-        let data = unsafe {
-            let data = alloc::alloc(layout);
-            if data.is_null() {
-                alloc::handle_alloc_error(layout);
+        if capacity <= StackBuffer::capacity() {
+            Self::new()
+        } else {
+            Self {
+                len_: std::isize::MIN,
+                buffer_: BufferWithoutLength {
+                    heap: ManuallyDrop::new(HeapBuffer::new(capacity)),
+                },
             }
-            data
-        };
-
-        Self {
-            len_: std::isize::MIN,
-            data_: data,
-            cap_: capacity,
         }
     }
 }
@@ -214,19 +300,19 @@ impl Buffer {
 
     pub fn capacity(&self) -> usize {
         if self.is_stack() {
-            (size_of_val(&self.data_) + size_of_val(&self.cap_)) / size_of::<u8>()
+            StackBuffer::capacity()
         } else {
-            self.cap_
+            unsafe { (&*self.buffer_.heap).capacity() }
         }
     }
 
     pub fn as_ptr(&self) -> *const u8 {
-        if self.is_stack() {
-            let data: *const *mut u8 = &self.data_;
-            let data = data as *const u8;
-            data
-        } else {
-            self.data_
+        unsafe {
+            if self.is_stack() {
+                self.buffer_.stack.as_ptr()
+            } else {
+                self.buffer_.heap.as_ptr()
+            }
         }
     }
 
@@ -238,29 +324,15 @@ impl Buffer {
         }
 
         if self.is_stack() {
-            let layout = Layout::array::<u8>(new_cap).unwrap();
+            let mut heap = HeapBuffer::new(new_cap);
             unsafe {
-                let data = alloc::alloc(layout);
-                if data.is_null() {
-                    alloc::handle_alloc_error(layout);
-                }
-
-                data.copy_from_nonoverlapping(self.as_ptr(), self.capacity());
-                self.len_ += std::isize::MIN;
-                self.cap_ = new_cap;
-                self.data_ = data;
+                heap.as_mut_ptr()
+                    .copy_from_nonoverlapping(self.as_ptr(), self.len());
             }
+            self.buffer_.heap = ManuallyDrop::new(heap);
+            self.len_ += std::isize::MIN;
         } else {
-            unsafe {
-                let layout = Layout::from_size_align_unchecked(self.capacity(), align_of::<u8>());
-                let data = alloc::realloc(self.as_mut_ptr(), layout, new_cap);
-                if data.is_null() {
-                    let layout = Layout::from_size_align_unchecked(new_cap, align_of::<u8>());
-                    alloc::handle_alloc_error(layout);
-                }
-                self.data_ = data;
-                self.cap_ = new_cap;
-            }
+            unsafe { (&mut *self.buffer_.heap).realloc(new_cap) };
         }
     }
 
@@ -274,12 +346,12 @@ impl Buffer {
     }
 
     pub fn as_mut_ptr(&mut self) -> *mut u8 {
-        if self.is_stack() {
-            let data: *mut *mut u8 = &mut self.data_;
-            let data = data as *mut u8;
-            data
-        } else {
-            self.data_
+        unsafe {
+            if self.is_stack() {
+                (&mut *self.buffer_.stack).as_mut_ptr()
+            } else {
+                (&mut *self.buffer_.heap).as_mut_ptr()
+            }
         }
     }
 
