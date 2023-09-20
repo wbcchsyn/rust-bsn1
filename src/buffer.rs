@@ -69,6 +69,10 @@ impl HeapBuffer {
             }
         }
     }
+
+    pub fn capacity(&self) -> usize {
+        self.cap_
+    }
 }
 
 #[repr(C)]
