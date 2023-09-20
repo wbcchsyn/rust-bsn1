@@ -97,6 +97,10 @@ impl HeapBuffer {
     }
 }
 
+struct StackBuffer {
+    data_: [u8; std::mem::size_of::<HeapBuffer>()],
+}
+
 #[repr(C)]
 pub struct Buffer {
     len_: isize,
