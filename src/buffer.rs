@@ -52,6 +52,25 @@ impl Drop for HeapBuffer {
     }
 }
 
+impl HeapBuffer {
+    pub fn new(capacity: usize) -> Self {
+        debug_assert!(0 < capacity);
+
+        let layout = Layout::array::<u8>(capacity).unwrap();
+        unsafe {
+            let data = alloc::alloc(layout);
+            if data.is_null() {
+                alloc::handle_alloc_error(layout);
+            }
+
+            Self {
+                data_: data,
+                cap_: capacity,
+            }
+        }
+    }
+}
+
 #[repr(C)]
 pub struct Buffer {
     len_: isize,
