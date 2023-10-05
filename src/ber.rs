@@ -381,9 +381,9 @@ impl Ber {
         }
     }
 
-    /// Creates a new instance from `id` and `contents`.
+    /// Creates a new instance containing concatnated `contents`.
     ///
-    /// The all length octets will be `definite`.
+    /// The length octets will be `definite`.
     ///
     /// # Panics
     ///
@@ -394,20 +394,21 @@ impl Ber {
     /// ```
     /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
-    /// let id = IdRef::sequence();
+    /// // Build an sequence DER containing 2 other DERs.
+    /// let contents0 = vec![Ber::from("foo"), Ber::from(29_i32)];
+    /// let ber0 = Ber::from_id_iterator(IdRef::sequence(), contents0.iter());
     ///
-    /// // Builds an instance using function 'from_id_iterator()'.
-    /// let contents: &[Ber] = &[Ber::from("foo"), Ber::from(29_i32)];
-    /// let ber = Ber::from_id_iterator(id, contents.iter());
+    /// let mut contents1: Vec<u8> = Ber::from("foo").into_vec();
+    /// contents1.extend_from_slice(&Ber::from(29_i32).into_vec());
+    /// let ber1 = Ber::new(IdRef::sequence(), <&ContentsRef>::from(&contents1[..]));
     ///
-    /// // Builds an instance using function 'new()'.
-    /// let contents: Vec<u8> = contents.iter()
-    ///                         .map(|i| Vec::from(i.as_bytes()))
-    ///                         .flatten().collect();
-    /// let contents = <&ContentsRef>::from(&contents as &[u8]);
-    /// let expected = Ber::new(id, contents);
+    /// assert_eq!(ber0, ber1);
     ///
-    /// assert_eq!(expected, ber);
+    /// // Build an utf8-string DER using function `from_id_iterator()`.
+    /// let contents = vec!["Foo", "Bar"];
+    /// let ber = Ber::from_id_iterator(
+    ///             IdRef::utf8_string(), contents.iter().map(|s| s.as_bytes()));
+    /// assert_eq!(ber, Ber::from("FooBar"));
     /// ```
     pub fn from_id_iterator<I>(id: &IdRef, contents: I) -> Self
     where
