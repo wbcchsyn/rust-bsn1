@@ -32,7 +32,6 @@
 
 use crate::{BerRef, Buffer, ContentsRef, Der, DerRef, Error, IdRef, Length};
 use std::borrow::Borrow;
-use std::convert::TryFrom;
 use std::ops::{Deref, DerefMut};
 
 /// `Ber` owns [`BerRef`] and represents a BER.
@@ -154,22 +153,6 @@ impl From<Der> for Ber {
 impl From<&BerRef> for Ber {
     fn from(ber_ref: &BerRef) -> Self {
         ber_ref.to_owned()
-    }
-}
-
-impl TryFrom<&[u8]> for Ber {
-    type Error = Error;
-
-    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a new instance.
-    ///
-    /// This function ignores extra octet(s) at the end of `bytes` if any.
-    ///
-    /// This function is the same as [`parse`].
-    ///
-    /// [`parse`]: Ber::parse
-    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-        let ber_ref = <&BerRef>::try_from(bytes)?;
-        Ok(ber_ref.to_owned())
     }
 }
 
@@ -356,7 +339,8 @@ impl Ber {
     ///
     /// [`TryFrom::try_from`]: #method.try_from
     pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
-        Self::try_from(bytes)
+        let ret = BerRef::parse(bytes)?;
+        Ok(ret.into())
     }
 
     /// Returns a new instance holding `bytes` without any check.
@@ -634,7 +618,7 @@ mod tests {
         for &bytes in byteses {
             let contents = <&ContentsRef>::from(bytes);
             let ber = Ber::new(id, contents);
-            let ber_ref = <&BerRef>::try_from(ber.as_bytes()).unwrap();
+            let ber_ref = BerRef::parse(ber.as_bytes()).unwrap();
             assert_eq!(ber_ref, &ber as &BerRef);
         }
     }
@@ -668,7 +652,7 @@ mod tests {
             }
             bytes.extend(eoc.as_bytes());
 
-            let ber = <&BerRef>::try_from(&bytes as &[u8]).unwrap();
+            let ber = BerRef::parse(&bytes as &[u8]).unwrap();
             assert_eq!(&bytes, ber.as_bytes());
         }
     }
