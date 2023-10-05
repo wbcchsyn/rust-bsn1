@@ -30,7 +30,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{identifier, length, ContentsRef, Der, Error, IdRef, Length};
+use crate::{length, ContentsRef, Der, Error, IdRef, Length};
 use std::borrow::Borrow;
 use std::convert::TryFrom;
 
@@ -282,7 +282,7 @@ impl DerRef {
     /// ```
     pub fn id(&self) -> &IdRef {
         unsafe {
-            let bytes = identifier::shrink_to_fit_unchecked(&self.bytes);
+            let bytes = crate::identifier_ref::shrink_to_fit_unchecked(&self.bytes);
             IdRef::from_bytes_unchecked(bytes)
         }
     }

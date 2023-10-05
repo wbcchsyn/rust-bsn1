@@ -231,6 +231,7 @@ mod der;
 mod der_ref;
 mod id_tags;
 mod identifier;
+mod identifier_ref;
 mod length;
 mod length_buffer;
 
@@ -242,7 +243,8 @@ pub use contents_ref::ContentsRef;
 pub use der::Der;
 pub use der_ref::DerRef;
 pub use id_tags::{ClassTag, PCTag};
-pub use identifier::{Id, IdRef};
+pub use identifier::Id;
+pub use identifier_ref::IdRef;
 pub use length::Length;
 use length_buffer::LengthBuffer;
 use std::fmt;
