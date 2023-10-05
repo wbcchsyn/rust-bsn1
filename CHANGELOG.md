@@ -259,6 +259,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - TryFrom\<&[u8]\> for &BerRef
   - TryFrom\<&mut [u8]\> for &mut BerRef
   - TryFrom\<&[u8]\> for Der
+  - TryFrom\<&[u8]\> for &DerRef
   - TryFrom\<&mut [u8]\> for &mut DerRef
   - TryFrom\<&[u8]\> for Id
   - TryFrom\<&[u8]\> for IdRef

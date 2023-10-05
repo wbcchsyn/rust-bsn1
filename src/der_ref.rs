@@ -32,7 +32,6 @@
 
 use crate::{length, ContentsRef, Der, Error, IdRef, Length};
 use std::borrow::Borrow;
-use std::convert::TryFrom;
 
 /// `DerRef` is a wrapper of `[u8]` and represents DER.
 ///
@@ -40,43 +39,6 @@ use std::convert::TryFrom;
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct DerRef {
     bytes: [u8],
-}
-
-impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
-    type Error = Error;
-
-    /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a reference to `DerRef`.
-    ///
-    /// This function ignores extra octet(s) at the end of `bytes` if any.
-    ///
-    /// This function is the same as [`DerRef::parse`].
-    ///
-    /// # Warnings
-    ///
-    /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
-    /// such an identifier.
-    /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
-    /// constructed Octet String DER.
-    ///
-    /// [`Read more`](std::convert::TryFrom::try_from)
-    fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
-        let id = IdRef::parse(bytes)?;
-        let parsing = &bytes[id.len()..];
-
-        let (len, parsing) = match length::parse_(parsing) {
-            Err(Error::OverFlow) => return Err(Error::UnTerminatedBytes),
-            Err(e) => return Err(e),
-            Ok((Length::Indefinite, _)) => return Err(Error::IndefiniteLength),
-            Ok((Length::Definite(len), parsing)) => (len, parsing),
-        };
-
-        let total_len = bytes.len() - parsing.len() + len;
-        if bytes.len() < total_len {
-            Err(Error::UnTerminatedBytes)
-        } else {
-            unsafe { Ok(DerRef::from_bytes_unchecked(&bytes[..total_len])) }
-        }
-    }
 }
 
 impl DerRef {
@@ -111,7 +73,22 @@ impl DerRef {
     /// assert_eq!(der0, der1);
     /// ```
     pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
-        <&Self>::try_from(bytes)
+        let id = IdRef::parse(bytes)?;
+        let parsing = &bytes[id.len()..];
+
+        let (len, parsing) = match length::parse_(parsing) {
+            Err(Error::OverFlow) => return Err(Error::UnTerminatedBytes),
+            Err(e) => return Err(e),
+            Ok((Length::Indefinite, _)) => return Err(Error::IndefiniteLength),
+            Ok((Length::Definite(len), parsing)) => (len, parsing),
+        };
+
+        let total_len = bytes.len() - parsing.len() + len;
+        if bytes.len() < total_len {
+            Err(Error::UnTerminatedBytes)
+        } else {
+            unsafe { Ok(DerRef::from_bytes_unchecked(&bytes[..total_len])) }
+        }
     }
 
     /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a mutable reference to
