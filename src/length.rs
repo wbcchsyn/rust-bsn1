@@ -328,7 +328,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn try_from_just() {
+    fn parse_just() {
         let empty: &[u8] = &[];
 
         // Indefinite
@@ -383,7 +383,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_extra() {
+    fn parse_extra() {
         let extra: &[u8] = &[1, 2, 3];
 
         // Indefinite
@@ -447,7 +447,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_overflow() {
+    fn parse_overflow() {
         let mut bytes: [u8; size_of::<usize>() + 2] = [0x00; size_of::<usize>() + 2];
         bytes[0] = 0x80 + (size_of::<usize>() as u8) + 1;
         bytes[1] = 0x01;
@@ -461,7 +461,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_redundant() {
+    fn parse_redundant() {
         // 2 bytes
         {
             let bytes: &[u8] = &[0x81, 0x00];
@@ -491,7 +491,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_unterminated() {
+    fn parse_unterminated() {
         // 2 bytes
         {
             let bytes: &[u8] = &[0x82, 0x01];

@@ -810,7 +810,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from() {
+    fn parse() {
         let id = IdRef::octet_string();
 
         let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];

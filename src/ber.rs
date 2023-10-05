@@ -611,7 +611,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn try_from_deinite() {
+    fn parse_deinite() {
         let id = IdRef::octet_string();
 
         let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
@@ -624,7 +624,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_indefinite() {
+    fn parse_indefinite() {
         let eoc = {
             let id = IdRef::eoc();
             let contents: &[u8] = &[];

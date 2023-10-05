@@ -1403,7 +1403,7 @@ mod tests {
     const PCS: &[PCTag] = &[PCTag::Primitive, PCTag::Constructed];
 
     #[test]
-    fn try_from_ok() {
+    fn parse_ok() {
         for &cl in CLASSES {
             for &pc in PCS {
                 // 1 byte
@@ -1460,7 +1460,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_redundant() {
+    fn parse_redundant() {
         for &cl in CLASSES {
             for &pc in PCS {
                 let first = cl as u8 + pc as u8 + 0x1f;
@@ -1504,7 +1504,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_unterminated() {
+    fn parse_unterminated() {
         // Empty
         {
             let bytes: &[u8] = &[];
