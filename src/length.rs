@@ -78,10 +78,6 @@ impl Length {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This method is the same as [`TryFrom`] implementation.
-    ///
-    /// [`TryFrom`]: #impl-TryFrom-for-Length
-    ///
     /// # Examples
     ///
     /// ```

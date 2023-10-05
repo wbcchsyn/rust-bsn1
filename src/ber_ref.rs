@@ -53,15 +53,11 @@ impl BerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is the same as [`TryFrom::try_from`].
-    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
-    ///
-    /// [`TryFrom::try_from`]: #method.try_from
     ///
     /// # Examples
     ///
@@ -118,15 +114,11 @@ impl BerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is the same as [`TryFrom::try_from`].
-    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
-    ///
-    /// [`TryFrom::try_from`]: #method.try_from-1
     ///
     /// # Examples
     ///
@@ -156,14 +148,12 @@ impl BerRef {
     ///
     /// `bytes` must be BER octets and must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` are valid octets as an 'BER', use [`TryFrom`]
-    /// implementation or [`parse`] instead.
+    /// If it is not sure whether `bytes` are valid octets as an 'BER', use [`parse`] instead.
     ///
     /// # Safety
     ///
     /// The behaviour is undefined if `bytes` is not formatted as a BER.
     ///
-    /// [`TryFrom`]: #method.try_from
     /// [`parse`]: Self::parse
     ///
     /// # Examples
@@ -186,14 +176,12 @@ impl BerRef {
     ///
     /// `bytes` must be BER octets and must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` are valid octets as a 'BER', use [`TryFrom`]
-    /// implementation or [`parse_mut`] instead.
+    /// If it is not sure whether `bytes` are valid octets as a 'BER', use [`parse_mut`] instead.
     ///
     /// # Safety
     ///
     /// The behaviour is undefined if `bytes` is not formatted as a BER.
     ///
-    /// [`TryFrom`]: #method.try_from-1
     /// [`parse_mut`]: Self::parse_mut
     ///
     /// # Examples

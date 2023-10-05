@@ -46,16 +46,12 @@ impl DerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is the same as [`TryFrom::try_from`].
-    ///
     /// # Warnings
     ///
     /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
     /// such an identifier.
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
-    ///
-    /// [`TryFrom::try_from`]: #method.try_from
     ///
     /// # Examples
     ///
@@ -96,16 +92,12 @@ impl DerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is the same as [`TryFrom::try_from`].
-    ///
     /// # Warnings
     ///
     /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
     /// such an identifier.
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
-    ///
-    /// [`TryFrom::try_from`]: #method.try_from-1
     ///
     /// # Examples
     ///
@@ -135,10 +127,8 @@ impl DerRef {
     ///
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` is valid octets as a 'DER', use [`TryFrom`]
-    /// implementation or [`parse`] instead.
+    /// If it is not sure whether `bytes` is valid octets as a 'DER', use [`parse`] instead.
     ///
-    /// [`TryFrom`]: #method.try_from
     /// [`parse`]: Self::parse
     ///
     /// # Safety
@@ -163,10 +153,8 @@ impl DerRef {
     ///
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` is valid octets as a 'DER', use [`TryFrom`]
-    /// implementation or [`parse_mut`] instead.
+    /// If it is not sure whether `bytes` is valid octets as a 'DER', use [`parse_mut`] instead.
     ///
-    /// [`TryFrom`]: #method.try_from-1
     /// [`parse_mut`]: Self::parse_mut
     ///
     /// # Safety

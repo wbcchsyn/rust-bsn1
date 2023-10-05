@@ -116,15 +116,11 @@ impl Id {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is the same as [`TryFrom::try_from`].
-    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
-    ///
-    /// [`TryFrom::try_from`]: #method.try_from
     ///
     /// # Examples
     ///
@@ -148,14 +144,12 @@ impl Id {
     /// Provides a reference from `bytes` without any check.
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` is valid octets as an identifer, use [`TryFrom`]
-    /// implementation or [`parse`] instead.
+    /// If it is not sure whether `bytes` is valid octets as an identifer, use [`parse`] instead.
     ///
     /// # Safety
     ///
     /// The behaviour is undefined if the format of `bytes` is not right.
     ///
-    /// [`TryFrom`]: #method.try_from
     /// [`parse`]: Self::parse
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
         Self {

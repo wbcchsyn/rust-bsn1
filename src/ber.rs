@@ -329,15 +329,11 @@ impl Ber {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is the same as [`TryFrom::try_from`].
-    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifiers and they should not be used, however, this
     /// function accepts such identifiers. For example, the number 15 (0x0f) is reserved for now,
     /// but this function returns `Ok`.
-    ///
-    /// [`TryFrom::try_from`]: #method.try_from
     pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
         let ret = BerRef::parse(bytes)?;
         Ok(ret.into())
@@ -347,10 +343,8 @@ impl Ber {
     ///
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` are valid octets as a 'BER', use [`TryFrom`]
-    /// implementation or [`parse`] instead.
+    /// If it is not sure whether `bytes` are valid octets as a 'BER', use [`parse`] instead.
     ///
-    /// [`TryFrom`]: #method.try_from
     /// [`parse`]: Self::parse
     ///
     /// # Safety

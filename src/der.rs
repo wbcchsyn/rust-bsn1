@@ -273,11 +273,9 @@ impl Der {
     ///
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` are valid octets as an 'DER', use [`TryFrom`]
-    /// implementation or [`try_from_bytes`] instead.
+    /// If it is not sure whether `bytes` are valid octets as an 'DER', use [`parse`] instead.
     ///
-    /// [`TryFrom`]: #method.try_from-1
-    /// [`try_from_bytes`]: #Self::try_from_bytes
+    /// [`parse`]: Self::parse
     ///
     /// # Safety
     ///
