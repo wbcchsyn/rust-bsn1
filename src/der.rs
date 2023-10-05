@@ -384,12 +384,6 @@ impl AsMut<DerRef> for Der {
     }
 }
 
-impl Borrow<[u8]> for Der {
-    fn borrow(&self) -> &[u8] {
-        self.buffer.borrow()
-    }
-}
-
 impl Borrow<DerRef> for Der {
     fn borrow(&self) -> &DerRef {
         self.deref()
