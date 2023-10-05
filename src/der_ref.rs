@@ -79,32 +79,6 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
     }
 }
 
-impl<'a> TryFrom<&'a mut [u8]> for &'a mut DerRef {
-    type Error = Error;
-
-    /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a mutable reference to
-    /// `DerRef`.
-    ///
-    /// This function ignores extra octet(s) at the end of `bytes` if any.
-    ///
-    /// This function is the same as [`DerRef::parse_mut`].
-    ///
-    /// # Warnings
-    ///
-    /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
-    /// such an identifier.
-    /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
-    /// constructed Octet String DER.
-    ///
-    /// [`Read more`](std::convert::TryFrom::try_from)
-    fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
-        let ret = DerRef::parse(bytes)?;
-        let ptr = ret as *const DerRef;
-        let ptr = ptr as *mut DerRef;
-        unsafe { Ok(&mut *ptr) }
-    }
-}
-
 impl DerRef {
     /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a reference to `DerRef`.
     ///
@@ -174,7 +148,10 @@ impl DerRef {
     /// assert_eq!(der.contents().as_bytes(), &[0x09]);
     /// ```
     pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
-        <&mut Self>::try_from(bytes)
+        let ret = Self::parse(bytes)?;
+        let ptr = ret as *const Self;
+        let ptr = ptr as *mut Self;
+        unsafe { Ok(&mut *ptr) }
     }
 
     /// Provides a reference from `bytes` without any check.
