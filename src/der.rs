@@ -53,6 +53,13 @@ impl From<&DerRef> for Der {
     }
 }
 
+impl From<bool> for Der {
+    /// Creates a new instance representing boolean containing `contents`.
+    fn from(contents: bool) -> Self {
+        Self::new(IdRef::boolean(), <&ContentsRef>::from(contents))
+    }
+}
+
 impl From<i8> for Der {
     /// Creates a new instance representing integer containing `contents`.
     fn from(contents: i8) -> Self {
@@ -696,6 +703,15 @@ mod tests {
             let der = Der::from_id_iterator(id, contents.iter());
             let expected = Der::new(id, <&ContentsRef>::from(&[1, 2, 3]));
             assert_eq!(expected, der);
+        }
+    }
+
+    #[test]
+    fn from_bool() {
+        for &b in &[false, true] {
+            let der = Der::from(b);
+            assert_eq!(IdRef::boolean(), der.id());
+            assert_eq!(b, der.contents().to_bool_der().unwrap());
         }
     }
 
