@@ -217,3 +217,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - PartialOrd for Contents
   - PartialOrd for ContentsRef
   - Ord for ContentsRef
+
+## 2.0 - 2023-03-02
+
+### Removed
+
+- Delete the following macros
+  - constructed\_ber!()
+  
