@@ -101,31 +101,6 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
     }
 }
 
-impl<'a> TryFrom<&'a mut [u8]> for &'a mut BerRef {
-    type Error = Error;
-
-    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a mutable reference to
-    /// `BerRef`.
-    ///
-    /// This function ignores extra octet(s) at the end of `bytes` if any.
-    ///
-    /// This function is the same as [`BerRef::parse_mut`].
-    ///
-    /// [Read more](std::convert::TryFrom::try_from)
-    ///
-    /// # Warnings
-    ///
-    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok`.
-    fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
-        let ret = <&'a BerRef>::try_from(bytes as &[u8])?;
-        let ptr = ret as *const BerRef;
-        let ptr = ptr as *mut BerRef;
-        unsafe { Ok(&mut *ptr) }
-    }
-}
-
 impl BerRef {
     /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a reference to `BerRef`.
     ///
@@ -193,7 +168,10 @@ impl BerRef {
     /// assert_eq!(ber.contents().as_bytes(), &[0x05]);
     /// ```
     pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
-        <&mut Self>::try_from(bytes)
+        let ret = Self::parse(bytes)?;
+        let ptr = ret as *const Self;
+        let ptr = ptr as *mut Self;
+        unsafe { Ok(&mut *ptr) }
     }
 
     /// Provides a reference from `bytes` without any check.
