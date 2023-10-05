@@ -254,6 +254,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Delete the following functions and methods
   - Ber::boolean()
   - Ber::integer()
+  - Ber::utf8_string()
   - Der::boolean()
   - Der::integer()
   - Contents::from\_bool()

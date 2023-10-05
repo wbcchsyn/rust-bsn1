@@ -397,7 +397,7 @@ impl Ber {
     /// let id = IdRef::sequence();
     ///
     /// // Builds an instance using function 'from_id_iterator()'.
-    /// let contents: &[Ber] = &[Ber::utf8_string("foo"), Ber::from(29_i32)];
+    /// let contents: &[Ber] = &[Ber::from("foo"), Ber::from(29_i32)];
     /// let ber = Ber::from_id_iterator(id, contents.iter());
     ///
     /// // Builds an instance using function 'new()'.
@@ -416,27 +416,6 @@ impl Ber {
     {
         let der = Der::from_id_iterator(id, contents);
         Self::from(der)
-    }
-
-    /// Returns a new instance representing a utf8_string.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the total length exceeds `isize::MAX`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Ber, IdRef};
-    ///
-    /// let val = &"foo";
-    /// let ber = Ber::utf8_string(val);
-    ///
-    /// assert_eq!(IdRef::utf8_string(), ber.id());
-    /// assert_eq!(val.as_bytes(), ber.contents().as_bytes());
-    /// ```
-    pub fn utf8_string(val: &str) -> Self {
-        Self::from(Der::utf8_string(val))
     }
 
     /// Returns a new instance representing an octet_string.
