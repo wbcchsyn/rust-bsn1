@@ -53,6 +53,13 @@ impl From<&DerRef> for Ber {
     }
 }
 
+impl From<bool> for Ber {
+    /// Creates a new instance representing a boolean containing `contents`.
+    fn from(contents: bool) -> Self {
+        Der::from(contents).into()
+    }
+}
+
 impl From<i8> for Ber {
     /// Creates a new instance representing a integer containing `contents`.
     fn from(contents: i8) -> Self {
