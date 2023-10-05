@@ -312,7 +312,7 @@ impl Der {
         }
     }
 
-    /// Creates a new instance from `id` and the iterator of `contents`.
+    /// Creates a new instance containing concatenated `contents`.
     ///
     /// # Warnings
     ///
@@ -330,21 +330,21 @@ impl Der {
     /// ```
     /// use bsn1::{ContentsRef, Der, IdRef};
     ///
-    /// let id = IdRef::sequence();
+    /// // Build an sequence DER containing 2 other DERs.
+    /// let contents0 = vec![Der::from("foo"), Der::from(29_i32)];
+    /// let der0 = Der::from_id_iterator(IdRef::sequence(), contents0.iter());
     ///
-    /// // Build instance using function 'from_id_iterator()'.
-    /// let contents: &[Der] = &[Der::from("foo"), Der::from(29_i32)];
-    /// let der = Der::from_id_iterator(id, contents.iter());
+    /// let mut contents1: Vec<u8> = Der::from("foo").into_vec();
+    /// contents1.extend_from_slice(&Der::from(29_i32).into_vec());
+    /// let der1 = Der::new(IdRef::sequence(), <&ContentsRef>::from(&contents1[..]));
     ///
-    /// // Build instance using function 'new()'.
-    /// let contents: Vec<u8> = contents.iter()
-    ///                         .map(|i| Vec::from(i.as_bytes()))
-    ///                         .flatten().collect();
-    /// let contents = <&ContentsRef>::from(&contents as &[u8]);
-    /// let expected = Der::new(id, contents);
+    /// assert_eq!(der0, der1);
     ///
-    /// // The result are same.
-    /// assert_eq!(expected, der);
+    /// // Build an utf8-string DER using function `from_id_iterator()`.
+    /// let contents = vec!["Foo", "Bar"];
+    /// let der = Der::from_id_iterator(
+    ///             IdRef::utf8_string(), contents.iter().map(|s| s.as_bytes()));
+    /// assert_eq!(der, Der::from("FooBar"));
     /// ```
     pub fn from_id_iterator<I>(id: &IdRef, contents: I) -> Self
     where
