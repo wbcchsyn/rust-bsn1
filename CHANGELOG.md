@@ -225,6 +225,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Implement the following traits
   - AsMut\<BerRef\> for Ber
   - AsRef\<BerRef\> for Ber
+  - AsRef\<DerRef\> for Der
   - From\<bool\> for Ber
   - From\<T: PrimInt\> for Ber (`PrimInt` is `i8` or `u8` or ... `u128` or `isize` or `usize`.)
   - From\<&str\> for Ber

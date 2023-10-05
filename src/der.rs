@@ -372,6 +372,12 @@ impl AsRef<[u8]> for Der {
     }
 }
 
+impl AsRef<DerRef> for Der {
+    fn as_ref(&self) -> &DerRef {
+        self.deref()
+    }
+}
+
 impl Borrow<[u8]> for Der {
     fn borrow(&self) -> &[u8] {
         self.buffer.borrow()
