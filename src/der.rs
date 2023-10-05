@@ -333,7 +333,7 @@ impl Der {
     /// let id = IdRef::sequence();
     ///
     /// // Build instance using function 'from_id_iterator()'.
-    /// let contents: &[Der] = &[Der::utf8_string("foo"), Der::from(29_i32)];
+    /// let contents: &[Der] = &[Der::from("foo"), Der::from(29_i32)];
     /// let der = Der::from_id_iterator(id, contents.iter());
     ///
     /// // Build instance using function 'new()'.
@@ -363,27 +363,6 @@ impl Der {
         contents.for_each(|c| buffer.extend_from_slice(c.as_ref()));
 
         Self { buffer }
-    }
-
-    /// Returns a new instance representing utf8_string.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the total length of the return value exceeds `isize::MAX`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Der, IdRef};
-    ///
-    /// let val = "foo";
-    /// let der = Der::utf8_string(val);
-    ///
-    /// assert_eq!(IdRef::utf8_string(), der.id());
-    /// assert_eq!(val.as_bytes(), der.contents().as_bytes());
-    /// ```
-    pub fn utf8_string(val: &str) -> Self {
-        Self::new(IdRef::utf8_string(), <&ContentsRef>::from(val.as_bytes()))
     }
 }
 
