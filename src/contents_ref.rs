@@ -60,6 +60,12 @@ impl<'a> From<&'a [u8]> for &'a ContentsRef {
     }
 }
 
+impl<'a, const N: usize> From<&'a [u8; N]> for &'a ContentsRef {
+    fn from(bytes: &'a [u8; N]) -> Self {
+        Self::from(&bytes[..])
+    }
+}
+
 impl<'a> From<&'a mut [u8]> for &'a mut ContentsRef {
     /// This function is the same as [`ContentsRef::from_mut_bytes`].
     ///

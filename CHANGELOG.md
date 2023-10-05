@@ -220,6 +220,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 
 ## 2.0 - 2023-03-02
 
+### Added
+
+- Implement the following traits
+  - From\<&[u8; N]\> for &ContentsRef
+
 ### Removed
 
 - Delete the following macros
