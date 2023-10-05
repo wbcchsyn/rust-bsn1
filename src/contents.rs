@@ -54,6 +54,12 @@ impl From<&[u8]> for Contents {
     }
 }
 
+impl<const N: usize> From<&[u8; N]> for Contents {
+    fn from(bytes: &[u8; N]) -> Self {
+        Self::from(bytes as &[u8])
+    }
+}
+
 impl From<u8> for Contents {
     /// This function is the same as [`Contents::from_integer::<u8>`].
     fn from(val: u8) -> Self {
