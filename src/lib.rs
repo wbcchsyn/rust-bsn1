@@ -109,10 +109,7 @@
 //! /// LDAPString ::= OCTET STRING -- UTF-8 encoded,
 //! ///                             -- [ISO10646] characters
 //! fn new_bind_name(name: &str) -> Ber {
-//!     // BER allows both Primitive and Constructed for OCTET STRING.
-//!     // This function returns Primitive BER.
-//!     // Call octet_string_constructed() instead if you prefer Constructed.
-//!     Ber::octet_string(name.as_bytes())
+//!     Ber::from(name.as_bytes())
 //! }
 //!
 //! /// Creates a `simple authentication` for bind request from `password`.

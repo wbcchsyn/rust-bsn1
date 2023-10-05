@@ -417,27 +417,6 @@ impl Ber {
         let der = Der::from_id_iterator(id, contents);
         Self::from(der)
     }
-
-    /// Returns a new instance representing an octet_string.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the total length exceeds `isize::MAX`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Ber, IdRef};
-    ///
-    /// let val = &[1, 2, 3];
-    /// let ber = Ber::octet_string(val);
-    ///
-    /// assert_eq!(IdRef::octet_string(), ber.id());
-    /// assert_eq!(val, ber.contents().as_bytes());
-    /// ```
-    pub fn octet_string(val: &[u8]) -> Self {
-        Self::from(Der::octet_string(val))
-    }
 }
 
 impl AsRef<[u8]> for Ber {
