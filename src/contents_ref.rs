@@ -75,6 +75,12 @@ impl<'a> From<&'a mut [u8]> for &'a mut ContentsRef {
     }
 }
 
+impl<'a, const N: usize> From<&'a mut [u8; N]> for &'a mut ContentsRef {
+    fn from(bytes: &'a mut [u8; N]) -> Self {
+        Self::from(&mut bytes[..])
+    }
+}
+
 impl From<bool> for &'static ContentsRef {
     /// This function is the same as [`ContentsRef::from_bool`].
     ///
