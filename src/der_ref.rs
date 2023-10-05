@@ -63,7 +63,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
         let id = <&IdRef>::try_from(bytes)?;
         let parsing = &bytes[id.len()..];
 
-        let (len, parsing) = match length::try_from(parsing) {
+        let (len, parsing) = match length::parse_(parsing) {
             Err(Error::OverFlow) => return Err(Error::UnTerminatedBytes),
             Err(e) => return Err(e),
             Ok((Length::Indefinite, _)) => return Err(Error::IndefiniteLength),

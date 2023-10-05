@@ -69,7 +69,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
         let id = <&IdRef>::try_from(bytes)?;
         let parsing = &bytes[id.len()..];
 
-        match length::try_from(parsing) {
+        match length::parse_(parsing) {
             Err(e) => Err(e),
             Ok((Length::Definite(len), parsing)) => {
                 let total_len = bytes.len() - parsing.len() + len;
