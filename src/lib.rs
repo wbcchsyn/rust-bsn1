@@ -139,7 +139,7 @@
 //!
 //! /// Tries to parse bind request and returns `(name, password)`.
 //! fn parse_bind_request(req: &[u8]) -> Result<(&str, &[u8]), String> {
-//!     let req = BerRef::try_from_bytes(req)
+//!     let req = BerRef::parse(req)
 //!                 .map_err(|e| format!("Failed to parse the request as a BER: {}", e))?;
 //!
 //!     let id = req.id();
@@ -148,7 +148,7 @@
 //!     }
 //!
 //!     let bytes = req.contents().as_bytes();
-//!     let version_ber = BerRef::try_from_bytes(bytes)
+//!     let version_ber = BerRef::parse(bytes)
 //!                         .map_err(|e| format!("Failed to parse the request version: {}", e))?;
 //!     let version = parse_bind_version(version_ber)?;
 //!     if version != 3 {
@@ -156,12 +156,12 @@
 //!     }
 //!
 //!     let bytes = &bytes[version_ber.as_bytes().len()..];
-//!     let name_ber = BerRef::try_from_bytes(bytes)
+//!     let name_ber = BerRef::parse(bytes)
 //!                      .map_err(|e| format!("Failed to parse the request name: {}", e))?;
 //!     let name = parse_bind_name(name_ber)?;
 //!
 //!     let bytes = &bytes[name_ber.as_bytes().len()..];
-//!     let auth_ber = BerRef::try_from_bytes(bytes)
+//!     let auth_ber = BerRef::parse(bytes)
 //!                      .map_err(|e|
 //!                               format!("Failed to parse the request authentication: {}", e))?;
 //!     let password = parse_bind_authentication(auth_ber)?;

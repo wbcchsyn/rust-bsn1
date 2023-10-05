@@ -56,7 +56,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is the same as [`BerRef::try_from_bytes`].
+    /// This function is the same as [`BerRef::parse`].
     ///
     /// [Read more](std::convert::TryFrom::try_from)
     ///
@@ -148,15 +148,15 @@ impl BerRef {
     ///
     /// // Represents 'True' as a Boolean.
     /// let bytes: &[u8] = &[0x01, 0x01, 0xff];
-    /// let ber0 = BerRef::try_from_bytes(bytes).unwrap();
+    /// let ber0 = BerRef::parse(bytes).unwrap();
     /// assert!(ber0.contents().to_bool_ber().unwrap());
     ///
     /// // The extra octets at the end do not affect the result.
     /// let bytes: &[u8] = &[0x01, 0x01, 0xff, 0x00];
-    /// let ber1 = BerRef::try_from_bytes(bytes).unwrap();
+    /// let ber1 = BerRef::parse(bytes).unwrap();
     /// assert_eq!(ber0, ber1);
     /// ```
-    pub fn try_from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
+    pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
         <&Self>::try_from(bytes)
     }
 
@@ -201,14 +201,14 @@ impl BerRef {
     /// `bytes` must be BER octets and must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` are valid octets as an 'BER', use [`TryFrom`]
-    /// implementation or [`try_from_bytes`] instead.
+    /// implementation or [`parse`] instead.
     ///
     /// # Safety
     ///
     /// The behaviour is undefined if `bytes` is not formatted as a BER.
     ///
     /// [`TryFrom`]: #method.try_from
-    /// [`try_from_bytes`]: Self::try_from_bytes
+    /// [`parse`]: Self::parse
     ///
     /// # Examples
     ///
@@ -290,7 +290,7 @@ impl BerRef {
     ///
     /// // Represents '3' as an Integer.
     /// let bytes: &[u8] = &[0x02, 0x01, 0x03];
-    /// let ber = BerRef::try_from_bytes(bytes).unwrap();
+    /// let ber = BerRef::parse(bytes).unwrap();
     ///
     /// assert_eq!(ber.id(), IdRef::integer());
     /// ```
@@ -346,7 +346,7 @@ impl BerRef {
     ///
     /// // Represents 'False' as a Boolean.
     /// let bytes: &[u8] = &[0x01, 0x01, 0x00];
-    /// let ber = BerRef::try_from_bytes(bytes).unwrap();
+    /// let ber = BerRef::parse(bytes).unwrap();
     ///
     /// assert_eq!(ber.length(), Length::Definite(1));
     /// ```
@@ -365,7 +365,7 @@ impl BerRef {
     ///
     /// // Represents 'False' as a Boolean.
     /// let bytes: &[u8] = &[0x01, 0x01, 0x00];
-    /// let ber = BerRef::try_from_bytes(bytes).unwrap();
+    /// let ber = BerRef::parse(bytes).unwrap();
     ///
     /// assert_eq!(ber.contents().to_bool_ber().unwrap(), false);
     /// ```
