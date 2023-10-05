@@ -53,6 +53,90 @@ impl From<&DerRef> for Der {
     }
 }
 
+impl From<i8> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: i8) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<u8> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: u8) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<i16> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: i16) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<u16> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: u16) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<i32> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: i32) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<u32> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: u32) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<i64> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: i64) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<u64> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: u64) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<i128> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: i128) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<u128> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: u128) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<isize> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: isize) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<usize> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: usize) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
 impl TryFrom<&[u8]> for Der {
     type Error = Error;
 
@@ -612,6 +696,150 @@ mod tests {
             let der = Der::from_id_iterator(id, contents.iter());
             let expected = Der::new(id, <&ContentsRef>::from(&[1, 2, 3]));
             assert_eq!(expected, der);
+        }
+    }
+
+    #[test]
+    fn from_i8() {
+        for i in std::i8::MIN..=std::i8::MAX {
+            let der = Der::from(i);
+            assert_eq!(IdRef::integer(), der.id());
+            assert_eq!(i, der.contents().to_integer().unwrap());
+        }
+    }
+
+    #[test]
+    fn from_u8() {
+        for i in std::u8::MIN..=std::u8::MAX {
+            let der = Der::from(i);
+            assert_eq!(IdRef::integer(), der.id());
+            assert_eq!(i, der.contents().to_integer().unwrap());
+        }
+    }
+
+    #[test]
+    fn from_i16() {
+        for i in std::i16::MIN..=std::i16::MAX {
+            let der = Der::from(i);
+            assert_eq!(IdRef::integer(), der.id());
+            assert_eq!(i, der.contents().to_integer().unwrap());
+        }
+    }
+
+    #[test]
+    fn from_u16() {
+        for i in std::u16::MIN..=std::u16::MAX {
+            let der = Der::from(i);
+            assert_eq!(IdRef::integer(), der.id());
+            assert_eq!(i, der.contents().to_integer().unwrap());
+        }
+    }
+
+    #[test]
+    fn from_i32() {
+        let range = Some(i32::MIN)
+            .into_iter()
+            .chain(Some(i16::MIN as i32 - 1))
+            .chain(i16::MIN as i32..=i16::MAX as i32)
+            .chain(Some(i16::MAX as i32 + 1))
+            .chain(Some(i32::MAX));
+        for i in range {
+            let der = Der::from(i);
+            assert_eq!(IdRef::integer(), der.id());
+            assert_eq!(i, der.contents().to_integer().unwrap());
+        }
+    }
+
+    #[test]
+    fn from_u32() {
+        let range = (0..=u16::MAX as u32)
+            .chain(Some(u16::MAX as u32 + 1))
+            .chain(Some(u32::MAX));
+        for i in range {
+            let der = Der::from(i);
+            assert_eq!(IdRef::integer(), der.id());
+            assert_eq!(i, der.contents().to_integer().unwrap());
+        }
+    }
+
+    #[test]
+    fn from_i64() {
+        let range = Some(i64::MIN)
+            .into_iter()
+            .chain(Some(i16::MIN as i64 - 1))
+            .chain(i16::MIN as i64..=i16::MAX as i64)
+            .chain(Some(i16::MAX as i64 + 1))
+            .chain(Some(i64::MAX));
+        for i in range {
+            let der = Der::from(i);
+            assert_eq!(IdRef::integer(), der.id());
+            assert_eq!(i, der.contents().to_integer().unwrap());
+        }
+    }
+
+    #[test]
+    fn from_u64() {
+        let range = (0..=u16::MAX as u64)
+            .chain(Some(u16::MAX as u64 + 1))
+            .chain(Some(u64::MAX));
+        for i in range {
+            let der = Der::from(i);
+            assert_eq!(IdRef::integer(), der.id());
+            assert_eq!(i, der.contents().to_integer().unwrap());
+        }
+    }
+
+    #[test]
+    fn from_i128() {
+        let range = Some(i128::MIN)
+            .into_iter()
+            .chain(Some(i16::MIN as i128 - 1))
+            .chain(i16::MIN as i128..=i16::MAX as i128)
+            .chain(Some(i16::MAX as i128 + 1))
+            .chain(Some(i128::MAX));
+        for i in range {
+            let der = Der::from(i);
+            assert_eq!(IdRef::integer(), der.id());
+            assert_eq!(i, der.contents().to_integer().unwrap());
+        }
+    }
+
+    #[test]
+    fn from_u128() {
+        let range = (0..=u16::MAX as u128)
+            .chain(Some(u16::MAX as u128 + 1))
+            .chain(Some(u128::MAX));
+        for i in range {
+            let der = Der::from(i);
+            assert_eq!(IdRef::integer(), der.id());
+            assert_eq!(i, der.contents().to_integer().unwrap());
+        }
+    }
+
+    #[test]
+    fn from_isize() {
+        let range = Some(isize::MIN)
+            .into_iter()
+            .chain(Some(i16::MIN as isize - 1))
+            .chain(i16::MIN as isize..=i16::MAX as isize)
+            .chain(Some(i16::MAX as isize + 1))
+            .chain(Some(isize::MAX));
+        for i in range {
+            let der = Der::from(i);
+            assert_eq!(IdRef::integer(), der.id());
+            assert_eq!(i, der.contents().to_integer().unwrap());
+        }
+    }
+
+    #[test]
+    fn from_usize() {
+        let range = (0..=u16::MAX as usize)
+            .chain(Some(u16::MAX as usize + 1))
+            .chain(Some(usize::MAX));
+        for i in range {
+            let der = Der::from(i);
+            assert_eq!(IdRef::integer(), der.id());
+            assert_eq!(i, der.contents().to_integer().unwrap());
         }
     }
 
