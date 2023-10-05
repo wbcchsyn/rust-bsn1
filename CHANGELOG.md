@@ -256,6 +256,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - ContentsRef::from\_mut\_bytes()
 - Ignore the following implementations
   - TryFrom\<&[u8]\> for Ber
+  - TryFrom\<&[u8]\> for Der
   - TryFrom\<&[u8]\> for Id
   - TryFrom\<&[u8]\> for Length
 - Delete the following macros

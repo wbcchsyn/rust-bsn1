@@ -32,7 +32,6 @@
 
 use crate::{Buffer, Contents, ContentsRef, DerRef, Error, IdRef, Length};
 use std::borrow::Borrow;
-use std::convert::TryFrom;
 use std::ops::{Deref, DerefMut};
 
 /// `Der` owns [`DerRef`] and represents ASN.1 DER.
@@ -140,29 +139,6 @@ impl From<usize> for Der {
     /// Creates a new instance representing integer containing `contents`.
     fn from(contents: usize) -> Self {
         Self::new(IdRef::integer(), &Contents::from(contents))
-    }
-}
-
-impl TryFrom<&[u8]> for Der {
-    type Error = Error;
-
-    /// Parses `bytes` starting with DER octets and creates a new instance.
-    ///
-    /// This function ignores extra octet(s) at the end of `bytes` if any.
-    ///
-    /// This function is the same as [`parse`].
-    ///
-    /// # Warnings
-    ///
-    /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
-    /// such an identifier.
-    /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
-    /// constructed Octet String DER.
-    ///
-    /// [`parse`]: Self::parse
-    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-        let der_ref = <&DerRef>::try_from(bytes)?;
-        Ok(der_ref.to_owned())
     }
 }
 
@@ -289,7 +265,8 @@ impl Der {
     /// assert_eq!(der0, der1);
     /// ```
     pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
-        Self::try_from(bytes)
+        let ret = DerRef::parse(bytes)?;
+        Ok(ret.into())
     }
 
     /// Builds a new instance holding `bytes` without any check.
@@ -840,7 +817,7 @@ mod tests {
         for &bytes in byteses {
             let contents = <&ContentsRef>::from(bytes);
             let der = Der::new(id, contents);
-            let der_ref = <&DerRef>::try_from(der.as_bytes()).unwrap();
+            let der_ref = DerRef::parse(der.as_bytes()).unwrap();
             assert_eq!(der_ref, &der as &DerRef);
         }
     }
