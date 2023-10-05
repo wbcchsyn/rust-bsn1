@@ -67,9 +67,6 @@ impl<'a, const N: usize> From<&'a [u8; N]> for &'a ContentsRef {
 }
 
 impl<'a> From<&'a mut [u8]> for &'a mut ContentsRef {
-    /// This function is the same as [`ContentsRef::from_mut_bytes`].
-    ///
-    /// [Read more](std::convert::From::from)
     fn from(bytes: &'a mut [u8]) -> Self {
         unsafe { mem::transmute(bytes) }
     }
@@ -105,30 +102,6 @@ impl ContentsRef {
     /// ```
     pub fn from_bytes(bytes: &[u8]) -> &Self {
         <&ContentsRef>::from(bytes)
-    }
-
-    /// Creates a mutable reference to `ContentsRef` holding `bytes`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::ContentsRef;
-    ///
-    /// let bytes: &mut [u8] = &mut [1, 2, 3];
-    ///
-    /// {
-    ///     let contents = ContentsRef::from_mut_bytes(bytes);
-    ///     assert_eq!(contents.as_bytes(), &[1, 2, 3]);
-    ///
-    ///     contents[0] = 10;
-    ///     assert_eq!(contents.as_bytes(), &[10, 2, 3]);
-    /// }
-    ///
-    /// // 'bytes' is updated as well.
-    /// assert_eq!(bytes, &[10, 2, 3]);
-    /// ```
-    pub fn from_mut_bytes(bytes: &mut [u8]) -> &mut Self {
-        <&mut ContentsRef>::from(bytes)
     }
 
     /// Creates a reference to `ContentsRef` representing `val`.
@@ -443,13 +416,13 @@ impl ContentsRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::ContentsRef;
+    /// use bsn1::{Contents, ContentsRef};
     ///
-    /// let bytes =  &mut [1, 2, 3, 4];
-    /// let contents = ContentsRef::from_mut_bytes(bytes);
+    /// let mut contents = Contents::from(&[1, 2, 3, 4]);
+    /// let contents_ref: &mut ContentsRef = contents.as_mut();
     ///
-    /// contents.as_mut_bytes()[0] = 0;
-    /// assert_eq!(bytes, &[0, 2, 3, 4]);
+    /// contents_ref.as_mut_bytes()[0] = 0;
+    /// assert_eq!(contents.as_bytes(), &[0, 2, 3, 4]);
     /// ```
     pub fn as_mut_bytes(&mut self) -> &mut [u8] {
         &mut self.bytes

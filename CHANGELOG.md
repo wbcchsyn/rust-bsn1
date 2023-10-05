@@ -229,6 +229,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 
 ### Removed
 
+- Delete the following functions and methods
+  - ContentsRef::from\_mut\_bytes()
 - Delete the following macros
   - constructed\_ber!()
   - constructed\_der!()
