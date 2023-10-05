@@ -223,22 +223,28 @@
 //! ```
 
 mod ber;
+mod ber_ref;
 mod buffer;
 mod contents;
 mod contents_ref;
 mod der;
+mod der_ref;
 mod id_tags;
 mod identifier;
+mod identifier_ref;
 mod length;
 mod length_buffer;
 
-pub use ber::{Ber, BerRef};
+pub use ber::Ber;
+pub use ber_ref::BerRef;
 use buffer::Buffer;
 pub use contents::Contents;
 pub use contents_ref::ContentsRef;
-pub use der::{Der, DerRef};
+pub use der::Der;
+pub use der_ref::DerRef;
 pub use id_tags::{ClassTag, PCTag};
-pub use identifier::{Id, IdRef};
+pub use identifier::Id;
+pub use identifier_ref::IdRef;
 pub use length::Length;
 use length_buffer::LengthBuffer;
 use std::fmt;
