@@ -150,7 +150,7 @@ impl TryFrom<&[u8]> for Der {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is the same as [`try_from_bytes`].
+    /// This function is the same as [`parse`].
     ///
     /// # Warnings
     ///
@@ -159,7 +159,7 @@ impl TryFrom<&[u8]> for Der {
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
     ///
-    /// [`try_from_bytes`]: Self::try_from_bytes
+    /// [`parse`]: Self::parse
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         let der_ref = <&DerRef>::try_from(bytes)?;
         Ok(der_ref.to_owned())
@@ -267,8 +267,6 @@ impl Der {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is the same as [`TryFrom::try_from`].
-    ///
     /// # Warnings
     ///
     /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
@@ -276,23 +274,21 @@ impl Der {
     /// For example, 'Octet String' must be primitive in DER, but this function returns `Ok` for
     /// constructed Octet String DER.
     ///
-    /// [`TryFrom::try_from`]: #method.TryFrom
-    ///
     /// # Examples
     ///
     /// ```
     /// use bsn1::Der;
     ///
     /// let bytes: &[u8] = &[0x02, 0x01, 0x0a];  // Represents '10' as Integer.
-    /// let der0 = Der::try_from_bytes(bytes).unwrap();
+    /// let der0 = Der::parse(bytes).unwrap();
     ///
     /// // Extra octets at the end does not affect the result.
     /// let bytes: &[u8] = &[0x02, 0x01, 0x0a, 0x01, 0x02];
-    /// let der1 = Der::try_from_bytes(bytes).unwrap();
+    /// let der1 = Der::parse(bytes).unwrap();
     ///
     /// assert_eq!(der0, der1);
     /// ```
-    pub fn try_from_bytes(bytes: &[u8]) -> Result<Self, Error> {
+    pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
         Self::try_from(bytes)
     }
 

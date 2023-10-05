@@ -231,6 +231,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - From\<&[u8; N]\> for &ContentsRef
   - From\<&mut [u8; N]\> for &mut ContentsRef
 
+### Changed
+
+- Rename the following functions and methods
+  - Rename Der::try\_from\_bytes() Der::parse()
+
 ### Removed
 
 - Delete the following functions and methods
