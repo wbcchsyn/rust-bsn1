@@ -829,13 +829,13 @@ mod tests {
     fn contents_ref_from_bool() {
         // True
         {
-            let contents = ContentsRef::from_bool(true);
+            let contents = <&ContentsRef>::from(true);
             assert_eq!(&[0xff], contents.as_bytes());
         }
 
         // false
         {
-            let contents = ContentsRef::from_bool(false);
+            let contents = <&ContentsRef>::from(false);
             assert_eq!(&[0x00], contents.as_bytes());
         }
     }

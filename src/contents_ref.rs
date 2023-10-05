@@ -76,40 +76,11 @@ impl<'a, const N: usize> From<&'a mut [u8; N]> for &'a mut ContentsRef {
 }
 
 impl From<bool> for &'static ContentsRef {
-    /// This function is the same as [`ContentsRef::from_bool`].
-    ///
-    /// [Read more](std::convert::From::from)
     fn from(val: bool) -> Self {
-        ContentsRef::from_bool(val)
-    }
-}
-
-impl ContentsRef {
-    /// Creates a reference to `ContentsRef` representing `val`.
-    ///
-    /// The rule of 'ASN.1 bool' is slightly different among 'Ber', 'Der', and 'CER', however,
-    /// the return value is valid for all of them.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::ContentsRef;
-    ///
-    /// let true_contents = ContentsRef::from_bool(true);
-    ///
-    /// assert_eq!(Ok(true), true_contents.to_bool_ber());
-    /// assert_eq!(Ok(true), true_contents.to_bool_der());
-    ///
-    /// let false_contents = ContentsRef::from_bool(false);
-    ///
-    /// assert_eq!(Ok(false), false_contents.to_bool_ber());
-    /// assert_eq!(Ok(false), false_contents.to_bool_der());
-    /// ```
-    pub fn from_bool(val: bool) -> &'static Self {
         if val {
-            <&Self>::from(&[0xff])
+            Self::from(&[0xff])
         } else {
-            <&Self>::from(&[0x00])
+            Self::from(&[0x00])
         }
     }
 }
@@ -310,10 +281,10 @@ impl ContentsRef {
     /// ```
     /// use bsn1::ContentsRef;
     ///
-    /// let true_contents = ContentsRef::from_bool(true);
+    /// let true_contents = <&ContentsRef>::from(true);
     /// assert_eq!(Ok(true), true_contents.to_bool_ber());
     ///
-    /// let false_contents = ContentsRef::from_bool(false);
+    /// let false_contents = <&ContentsRef>::from(false);
     /// assert_eq!(Ok(false), false_contents.to_bool_ber());
     ///
     /// // 'BER' regards any octet except for 0x00 as 'True',
@@ -349,10 +320,10 @@ impl ContentsRef {
     /// ```
     /// use bsn1::ContentsRef;
     ///
-    /// let true_contents = ContentsRef::from_bool(true);
+    /// let true_contents = <&ContentsRef>::from(true);
     /// assert_eq!(Ok(true), true_contents.to_bool_der());
     ///
-    /// let false_contents = ContentsRef::from_bool(false);
+    /// let false_contents = <&ContentsRef>::from(false);
     /// assert_eq!(Ok(false), false_contents.to_bool_der());
     ///
     /// // 'BER' regards any octet except for 0x00 as 'True',
