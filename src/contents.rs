@@ -364,7 +364,7 @@ impl Deref for Contents {
     type Target = ContentsRef;
 
     fn deref(&self) -> &Self::Target {
-        ContentsRef::from_bytes(self.buffer.as_bytes())
+        <&ContentsRef>::from(self.buffer.as_bytes())
     }
 }
 
@@ -643,7 +643,7 @@ mod tests {
             let mut bytes = [0xff; 5];
             bytes[1] = 0x7f;
 
-            let contents = ContentsRef::from_bytes(&bytes);
+            let contents = <&ContentsRef>::from(&bytes);
             assert!(contents.to_integer::<i32>().is_err());
             assert!(contents.to_integer::<u32>().is_err());
         }
@@ -653,7 +653,7 @@ mod tests {
             let mut bytes = [0x00; 4];
             bytes[0] = 0x80;
 
-            let contents = ContentsRef::from_bytes(&bytes);
+            let contents = <&ContentsRef>::from(&bytes);
             assert!(contents.to_integer::<i32>().is_ok());
             assert!(contents.to_integer::<u32>().is_err());
         }
@@ -662,7 +662,7 @@ mod tests {
         {
             let bytes = [0xff];
 
-            let contents = ContentsRef::from_bytes(&bytes);
+            let contents = <&ContentsRef>::from(&bytes);
             assert!(contents.to_integer::<i32>().is_ok());
             assert!(contents.to_integer::<u32>().is_err());
         }
@@ -671,7 +671,7 @@ mod tests {
         {
             let bytes = [0x00];
 
-            let contents = ContentsRef::from_bytes(&bytes);
+            let contents = <&ContentsRef>::from(&bytes);
             assert!(contents.to_integer::<i32>().is_ok());
             assert!(contents.to_integer::<u32>().is_ok());
         }
@@ -681,7 +681,7 @@ mod tests {
             let mut bytes = [0xff; 4];
             bytes[0] = 0x7f;
 
-            let contents = ContentsRef::from_bytes(&bytes);
+            let contents = <&ContentsRef>::from(&bytes);
             assert!(contents.to_integer::<i32>().is_ok());
             assert!(contents.to_integer::<u32>().is_ok());
         }
@@ -691,7 +691,7 @@ mod tests {
             let mut bytes = [0x00; 5];
             bytes[1] = 0x80;
 
-            let contents = ContentsRef::from_bytes(&bytes);
+            let contents = <&ContentsRef>::from(&bytes);
             assert!(contents.to_integer::<i32>().is_err());
             assert!(contents.to_integer::<u32>().is_ok());
         }
@@ -844,22 +844,22 @@ mod tests {
     fn contents_to_bool_ber() {
         // Empty
         {
-            let contents = ContentsRef::from_bytes(&[]);
+            let contents = <&ContentsRef>::from(&[]);
             assert!(contents.to_bool_ber().is_err());
         }
 
         // 2 or more than 2 bytes
         {
-            let contents = ContentsRef::from_bytes(&[1, 2]);
+            let contents = <&ContentsRef>::from(&[1, 2]);
             assert!(contents.to_bool_ber().is_err());
 
-            let contents = ContentsRef::from_bytes(&[1, 2, 3]);
+            let contents = <&ContentsRef>::from(&[1, 2, 3]);
             assert!(contents.to_bool_ber().is_err());
         }
 
         // false
         {
-            let contents = ContentsRef::from_bytes(&[0x00]);
+            let contents = <&ContentsRef>::from(&[0x00]);
             assert_eq!(Ok(false), contents.to_bool_ber());
         }
 
@@ -867,7 +867,7 @@ mod tests {
         {
             for i in 1..=u8::MAX {
                 let bytes = &[i];
-                let contents = ContentsRef::from_bytes(bytes);
+                let contents = <&ContentsRef>::from(bytes);
                 assert_eq!(Ok(true), contents.to_bool_ber());
             }
         }
@@ -877,28 +877,28 @@ mod tests {
     fn contents_to_bool_der() {
         // Empty
         {
-            let contents = ContentsRef::from_bytes(&[]);
+            let contents = <&ContentsRef>::from(&[]);
             assert!(contents.to_bool_der().is_err());
         }
 
         // 2 or more than 2 bytes
         {
-            let contents = ContentsRef::from_bytes(&[1, 2]);
+            let contents = <&ContentsRef>::from(&[1, 2]);
             assert!(contents.to_bool_der().is_err());
 
-            let contents = ContentsRef::from_bytes(&[1, 2, 3]);
+            let contents = <&ContentsRef>::from(&[1, 2, 3]);
             assert!(contents.to_bool_der().is_err());
         }
 
         // false
         {
-            let contents = ContentsRef::from_bytes(&[0x00]);
+            let contents = <&ContentsRef>::from(&[0x00]);
             assert_eq!(Ok(false), contents.to_bool_der());
         }
 
         // true
         {
-            let contents = ContentsRef::from_bytes(&[0xff]);
+            let contents = <&ContentsRef>::from(&[0xff]);
             assert_eq!(Ok(true), contents.to_bool_der());
         }
 
@@ -906,7 +906,7 @@ mod tests {
         {
             for i in 1..u8::MAX {
                 let bytes = &[i];
-                let contents = ContentsRef::from_bytes(bytes);
+                let contents = <&ContentsRef>::from(bytes);
                 assert!(contents.to_bool_der().is_err());
             }
         }

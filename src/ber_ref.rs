@@ -373,7 +373,7 @@ impl BerRef {
         let id_len = self.id().len();
         let bytes = &self.bytes[id_len..];
         let contents = unsafe { length::from_bytes_starts_with_unchecked(bytes).1 };
-        ContentsRef::from_bytes(contents)
+        <&ContentsRef>::from(contents)
     }
 
     /// Provides a mutable reference to the [`ContentsRef`] of `self`.

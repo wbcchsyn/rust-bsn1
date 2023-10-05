@@ -132,7 +132,7 @@
 //!    const ID_NUMBER: u32 = 0;
 //!    let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, ID_NUMBER);
 //!
-//!    let contents = ContentsRef::from_bytes(password);
+//!    let contents = <&ContentsRef>::from(password);
 //!
 //!    Ber::new(&id, contents)
 //! }

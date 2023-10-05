@@ -109,7 +109,7 @@ impl Ber {
     /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let contents = <&ContentsRef>::from(&[]);
     /// let ber = Ber::new(id, contents);
     ///
     /// assert_eq!(ber.id(), id);
@@ -145,7 +145,7 @@ impl Ber {
     /// use bsn1::{Ber, ContentsRef, IdRef, Length};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let contents = <&ContentsRef>::from(&[]);
     /// let ber = Ber::new_indefinite(id, contents);
     ///
     /// assert_eq!(ber.id(), id);
@@ -288,7 +288,7 @@ impl Ber {
     /// ```
     /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
-    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let contents = <&ContentsRef>::from(&[]);
     /// let ber0 = Ber::new(IdRef::octet_string(), contents);
     /// let ber1 = unsafe { Ber::from_bytes_unchecked(ber0.as_bytes()) };
     /// assert_eq!(ber0, ber1);
@@ -322,7 +322,7 @@ impl Ber {
     /// let contents: Vec<u8> = contents.iter()
     ///                         .map(|i| Vec::from(i.as_bytes()))
     ///                         .flatten().collect();
-    /// let contents = ContentsRef::from_bytes(&contents);
+    /// let contents = <&ContentsRef>::from(&contents as &[u8]);
     /// let expected = Ber::new(id, contents);
     ///
     /// assert_eq!(expected, ber);
@@ -462,7 +462,7 @@ impl Ber {
     /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = ContentsRef::from_bytes(&[0, 1, 2, 3, 4]);
+    /// let contents = <&ContentsRef>::from(&[0, 1, 2, 3, 4]);
     ///
     /// let ber = Ber::new(id, contents);
     /// let v = ber.clone().into_vec();
@@ -501,7 +501,7 @@ impl Ber {
     /// ```
     /// use bsn1::{Ber, ContentsRef, IdRef, Length};
     ///
-    /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), ContentsRef::from_bytes(&[]));
+    /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), <&ContentsRef>::from(&[]));
     ///
     /// assert_eq!(ber.length().is_indefinite(), true);
     /// assert_eq!(ber.contents().as_bytes(), &[]);
@@ -520,7 +520,7 @@ impl Ber {
     /// use bsn1::{Ber, ContentsRef, IdRef, Length};
     ///
     /// let old_contents: &[u8] = &[0, 1, 2, 3, 4];
-    /// let mut ber = Ber::new(IdRef::octet_string(), ContentsRef::from_bytes(old_contents));
+    /// let mut ber = Ber::new(IdRef::octet_string(), <&ContentsRef>::from(old_contents));
     ///
     /// assert_eq!(ber.length(), Length::Definite(old_contents.len()));
     /// assert_eq!(ber.contents().as_bytes(), old_contents);
@@ -564,7 +564,7 @@ mod tests {
 
         let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
         for &bytes in byteses {
-            let contents = ContentsRef::from_bytes(bytes);
+            let contents = <&ContentsRef>::from(bytes);
             let ber = Ber::new(id, contents);
             let ber_ref = <&BerRef>::try_from(ber.as_bytes()).unwrap();
             assert_eq!(ber_ref, &ber as &BerRef);
@@ -576,7 +576,7 @@ mod tests {
         let eoc = {
             let id = IdRef::eoc();
             let contents: &[u8] = &[];
-            let contents = ContentsRef::from_bytes(contents);
+            let contents = <&ContentsRef>::from(contents);
             Ber::new(id, contents)
         };
 
@@ -584,7 +584,7 @@ mod tests {
             .map(|i| {
                 let id = IdRef::octet_string();
                 let contents: &[u8] = &[i];
-                let contents = ContentsRef::from_bytes(contents);
+                let contents = <&ContentsRef>::from(contents);
                 Ber::new(id, contents)
             })
             .collect();
@@ -607,7 +607,7 @@ mod tests {
 
     #[test]
     fn extend_indefinite_ber() {
-        let mut ber = Ber::new_indefinite(IdRef::octet_string(), ContentsRef::from_bytes(&[]));
+        let mut ber = Ber::new_indefinite(IdRef::octet_string(), <&ContentsRef>::from(&[]));
 
         for i in 0..=256 {
             ber.set_length(i + 1);
@@ -669,7 +669,7 @@ mod tests {
 
     #[test]
     fn extend_definite_ber() {
-        let mut ber = Ber::new(IdRef::octet_string(), ContentsRef::from_bytes(&[]));
+        let mut ber = Ber::new(IdRef::octet_string(), <&ContentsRef>::from(&[]));
 
         for i in 0..=256 {
             ber.set_length(i + 1);
@@ -732,8 +732,10 @@ mod tests {
     #[test]
     fn enshorten_indefinite_der() {
         let contents: Vec<u8> = (0..=255).cycle().take(65537).collect();
-        let mut ber =
-            Ber::new_indefinite(IdRef::octet_string(), ContentsRef::from_bytes(&contents));
+        let mut ber = Ber::new_indefinite(
+            IdRef::octet_string(),
+            <&ContentsRef>::from(&contents as &[u8]),
+        );
 
         {
             ber.set_length(65536);
@@ -772,7 +774,10 @@ mod tests {
     #[test]
     fn enshorten_definite_der() {
         let contents: Vec<u8> = (0..=255).cycle().take(65536).collect();
-        let mut ber = Ber::new(IdRef::octet_string(), ContentsRef::from_bytes(&contents));
+        let mut ber = Ber::new(
+            IdRef::octet_string(),
+            <&ContentsRef>::from(&contents as &[u8]),
+        );
 
         {
             ber.set_length(65536);

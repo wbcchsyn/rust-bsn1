@@ -52,9 +52,6 @@ pub struct ContentsRef {
 }
 
 impl<'a> From<&'a [u8]> for &'a ContentsRef {
-    /// This function is the same as [`ContentsRef::from_bytes`].
-    ///
-    /// [Read more](std::convert::From::from)
     fn from(bytes: &'a [u8]) -> Self {
         unsafe { mem::transmute(bytes) }
     }
@@ -88,22 +85,6 @@ impl From<bool> for &'static ContentsRef {
 }
 
 impl ContentsRef {
-    /// Creates a reference to `ContentsRef` holding `bytes`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::ContentsRef;
-    ///
-    /// let bytes: &[u8] = &[1, 2, 3];
-    /// let contents = ContentsRef::from_bytes(bytes);
-    ///
-    /// assert_eq!(contents.as_bytes(), bytes);
-    /// ```
-    pub fn from_bytes(bytes: &[u8]) -> &Self {
-        <&ContentsRef>::from(bytes)
-    }
-
     /// Creates a reference to `ContentsRef` representing `val`.
     ///
     /// The rule of 'ASN.1 bool' is slightly different among 'Ber', 'Der', and 'CER', however,
@@ -126,9 +107,9 @@ impl ContentsRef {
     /// ```
     pub fn from_bool(val: bool) -> &'static Self {
         if val {
-            Self::from_bytes(&[0xff])
+            <&Self>::from(&[0xff])
         } else {
-            Self::from_bytes(&[0x00])
+            <&Self>::from(&[0x00])
         }
     }
 }
@@ -191,7 +172,7 @@ impl ContentsRef {
     /// use bsn1::ContentsRef;
     ///
     /// let bytes = &[0, 1, 2, 3, 4];
-    /// let contents = ContentsRef::from_bytes(bytes);
+    /// let contents = <&ContentsRef>::from(bytes);
     ///
     /// assert_eq!(contents.len(), bytes.len());
     /// ```    
@@ -207,11 +188,11 @@ impl ContentsRef {
     /// use bsn1::ContentsRef;
     ///
     /// let bytes = &[];
-    /// let contents = ContentsRef::from_bytes(bytes);
+    /// let contents = <&ContentsRef>::from(bytes);
     /// assert_eq!(contents.is_empty(), true);
     ///
     /// let bytes = &[0, 1, 2, 3, 4];
-    /// let contents = ContentsRef::from_bytes(bytes);
+    /// let contents = <&ContentsRef>::from(bytes);
     /// assert_eq!(contents.is_empty(), false);
     /// ```    
     pub fn is_empty(&self) -> bool {
@@ -338,7 +319,7 @@ impl ContentsRef {
     /// // 'BER' regards any octet except for 0x00 as 'True',
     /// // while 'DER' regards octets except for 0x00 and 0xff as an error.
     /// let bytes = &[0x03];
-    /// let ber_contents = ContentsRef::from_bytes(bytes);
+    /// let ber_contents = <&ContentsRef>::from(bytes);
     /// assert!(ber_contents.to_bool_ber().is_ok());
     /// assert!(ber_contents.to_bool_der().is_err());
     /// ```
@@ -377,7 +358,7 @@ impl ContentsRef {
     /// // 'BER' regards any octet except for 0x00 as 'True',
     /// // while 'DER' regards octets except for 0x00 and 0xff as error.
     /// let bytes = &[0x03];
-    /// let ber_contents = ContentsRef::from_bytes(bytes);
+    /// let ber_contents = <&ContentsRef>::from(bytes);
     /// assert!(ber_contents.to_bool_ber().is_ok());
     /// assert!(ber_contents.to_bool_der().is_err());
     /// ```
@@ -403,7 +384,7 @@ impl ContentsRef {
     /// use bsn1::ContentsRef;
     ///
     /// let bytes =  &[1, 2, 3, 4];
-    /// let contents = ContentsRef::from_bytes(bytes);
+    /// let contents = <&ContentsRef>::from(bytes);
     ///
     /// assert_eq!(contents.as_bytes(), bytes);
     /// ```

@@ -348,7 +348,7 @@ impl DerRef {
     ///
     /// let bytes: &[u8] = &[0x04, 0x02, 0x00, 0xff];  // Represents '[0x00, 0xff]' as Octet String
     /// let der = DerRef::try_from_bytes(bytes).unwrap();
-    /// let contents = ContentsRef::from_bytes(&bytes[2..]);
+    /// let contents = <&ContentsRef>::from(&bytes[2..]);
     ///
     /// assert_eq!(contents, der.contents());
     /// ```
@@ -356,7 +356,7 @@ impl DerRef {
         let id_len = self.id().len();
         let bytes = &self.bytes[id_len..];
         let bytes = unsafe { length::from_bytes_starts_with_unchecked(bytes).1 };
-        ContentsRef::from_bytes(bytes)
+        <&ContentsRef>::from(bytes)
     }
 
     /// Returns a mutable reference to the contents octets of `self`.
