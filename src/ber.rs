@@ -404,23 +404,6 @@ impl Ber {
         Self::from(der)
     }
 
-    /// Returns a new instance representing a boolean.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Ber, IdRef};
-    ///
-    /// let val = true;
-    /// let ber = Ber::boolean(val);
-    ///
-    /// assert_eq!(IdRef::boolean(), ber.id());
-    /// assert_eq!(val, ber.contents().to_bool_ber().unwrap());
-    /// ```
-    pub fn boolean(val: bool) -> Self {
-        Self::from(Der::from(val))
-    }
-
     /// Returns a new instance representing a utf8_string.
     ///
     /// # Panics

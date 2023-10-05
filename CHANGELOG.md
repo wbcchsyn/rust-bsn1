@@ -248,6 +248,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 ### Removed
 
 - Delete the following functions and methods
+  - Ber::boolean()
   - Ber::integer()
   - Der::boolean()
   - Der::integer()
