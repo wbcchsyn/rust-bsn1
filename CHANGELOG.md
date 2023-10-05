@@ -224,6 +224,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 
 - Implement the following traits
   - AsMut\<BerRef\> for Ber
+  - AsMut\<DerRef\> for Der
   - AsRef\<BerRef\> for Ber
   - AsRef\<DerRef\> for Der
   - From\<bool\> for Ber

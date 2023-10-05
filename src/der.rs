@@ -378,6 +378,12 @@ impl AsRef<DerRef> for Der {
     }
 }
 
+impl AsMut<DerRef> for Der {
+    fn as_mut(&mut self) -> &mut DerRef {
+        self.deref_mut()
+    }
+}
+
 impl Borrow<[u8]> for Der {
     fn borrow(&self) -> &[u8] {
         self.buffer.borrow()
