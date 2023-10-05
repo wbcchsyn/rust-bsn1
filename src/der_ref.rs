@@ -87,7 +87,7 @@ impl<'a> TryFrom<&'a mut [u8]> for &'a mut DerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is the same as [`DerRef::try_from_mut_bytes`].
+    /// This function is the same as [`DerRef::parse_mut`].
     ///
     /// # Warnings
     ///
@@ -163,7 +163,7 @@ impl DerRef {
     ///
     /// // Represents '8' as Integer.
     /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x08];
-    /// let der = DerRef::try_from_mut_bytes(bytes).unwrap();
+    /// let der = DerRef::parse_mut(bytes).unwrap();
     ///
     /// // The value is 0x08 at first.
     /// assert_eq!(der.contents().as_bytes(), &[0x08]);
@@ -173,7 +173,7 @@ impl DerRef {
     /// // The value is updated.
     /// assert_eq!(der.contents().as_bytes(), &[0x09]);
     /// ```
-    pub fn try_from_mut_bytes(bytes: &mut [u8]) -> Result<&mut Self, Error> {
+    pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
         <&mut Self>::try_from(bytes)
     }
 
@@ -210,10 +210,10 @@ impl DerRef {
     /// `bytes` must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` is valid octets as a 'DER', use [`TryFrom`]
-    /// implementation or [`try_from_mut_bytes`] instead.
+    /// implementation or [`parse_mut`] instead.
     ///
     /// [`TryFrom`]: #method.try_from-1
-    /// [`try_from_mut_bytes`]: Self::try_from_mut_bytes
+    /// [`parse_mut`]: Self::parse_mut
     ///
     /// # Safety
     ///
@@ -296,7 +296,7 @@ impl DerRef {
     ///
     /// // Represents '4' as Integer.
     /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x04];
-    /// let der = DerRef::try_from_mut_bytes(bytes).unwrap();
+    /// let der = DerRef::parse_mut(bytes).unwrap();
     ///
     /// assert_eq!(der.id().class(), ClassTag::Universal);
     /// der.mut_id().set_class(ClassTag::Private);
@@ -368,7 +368,7 @@ impl DerRef {
     ///
     /// // Represents '[0x00, 0xff]' as Octet String
     /// let bytes: &mut [u8] = &mut [0x04, 0x02, 0x00, 0xff];
-    /// let der = DerRef::try_from_mut_bytes(bytes).unwrap();
+    /// let der = DerRef::parse_mut(bytes).unwrap();
     ///
     /// assert_eq!(der.contents().as_bytes(), &[0x00, 0xff]);
     /// der.mut_contents().as_mut_bytes().copy_from_slice(&[0x01, 0x02]);
