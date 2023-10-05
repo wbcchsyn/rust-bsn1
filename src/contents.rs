@@ -54,6 +54,12 @@ impl From<&[u8]> for Contents {
     }
 }
 
+impl<const N: usize> From<&[u8; N]> for Contents {
+    fn from(bytes: &[u8; N]) -> Self {
+        Self::from(bytes as &[u8])
+    }
+}
+
 impl From<u8> for Contents {
     /// This function is the same as [`Contents::from_integer::<u8>`].
     fn from(val: u8) -> Self {
@@ -163,9 +169,13 @@ impl From<isize> for Contents {
 }
 
 impl From<bool> for Contents {
-    /// This function is the same as [`Contents::from_bool`].
     fn from(val: bool) -> Self {
-        Contents::from_bool(val)
+        let buffer = if val {
+            Buffer::from(&[0xff])
+        } else {
+            Buffer::from(&[0x00])
+        };
+        Self { buffer }
     }
 }
 
@@ -186,34 +196,6 @@ impl Contents {
         Self {
             buffer: Buffer::from(bytes),
         }
-    }
-
-    /// Creates a new instance indicating `val`.
-    ///
-    /// The rule of bool is slightly different among BER, DER, and CER, however,
-    /// the return value is valid for all of them.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Contents, ContentsRef};
-    ///
-    /// let true_contents = Contents::from_bool(true);
-    /// assert_eq!(Ok(true), true_contents.to_bool_ber());
-    /// assert_eq!(Ok(true), true_contents.to_bool_der());
-    ///
-    /// let false_contents = Contents::from_bool(false);
-    /// assert_eq!(Ok(false), false_contents.to_bool_ber());
-    /// assert_eq!(Ok(false), false_contents.to_bool_der());
-    /// ```
-    pub fn from_bool(val: bool) -> Self {
-        let mut buffer = Buffer::new();
-        if val {
-            unsafe { buffer.push(0xff) };
-        } else {
-            unsafe { buffer.push(0x00) };
-        }
-        Self { buffer }
     }
 
     /// Serializes integer and creates a new instance.
@@ -358,13 +340,13 @@ impl Deref for Contents {
     type Target = ContentsRef;
 
     fn deref(&self) -> &Self::Target {
-        ContentsRef::from_bytes(self.buffer.as_bytes())
+        <&ContentsRef>::from(self.buffer.as_bytes())
     }
 }
 
 impl DerefMut for Contents {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        ContentsRef::from_mut_bytes(self.buffer.as_mut_bytes())
+        <&mut ContentsRef>::from(self.buffer.as_mut_bytes())
     }
 }
 
@@ -637,7 +619,7 @@ mod tests {
             let mut bytes = [0xff; 5];
             bytes[1] = 0x7f;
 
-            let contents = ContentsRef::from_bytes(&bytes);
+            let contents = <&ContentsRef>::from(&bytes);
             assert!(contents.to_integer::<i32>().is_err());
             assert!(contents.to_integer::<u32>().is_err());
         }
@@ -647,7 +629,7 @@ mod tests {
             let mut bytes = [0x00; 4];
             bytes[0] = 0x80;
 
-            let contents = ContentsRef::from_bytes(&bytes);
+            let contents = <&ContentsRef>::from(&bytes);
             assert!(contents.to_integer::<i32>().is_ok());
             assert!(contents.to_integer::<u32>().is_err());
         }
@@ -656,7 +638,7 @@ mod tests {
         {
             let bytes = [0xff];
 
-            let contents = ContentsRef::from_bytes(&bytes);
+            let contents = <&ContentsRef>::from(&bytes);
             assert!(contents.to_integer::<i32>().is_ok());
             assert!(contents.to_integer::<u32>().is_err());
         }
@@ -665,7 +647,7 @@ mod tests {
         {
             let bytes = [0x00];
 
-            let contents = ContentsRef::from_bytes(&bytes);
+            let contents = <&ContentsRef>::from(&bytes);
             assert!(contents.to_integer::<i32>().is_ok());
             assert!(contents.to_integer::<u32>().is_ok());
         }
@@ -675,7 +657,7 @@ mod tests {
             let mut bytes = [0xff; 4];
             bytes[0] = 0x7f;
 
-            let contents = ContentsRef::from_bytes(&bytes);
+            let contents = <&ContentsRef>::from(&bytes);
             assert!(contents.to_integer::<i32>().is_ok());
             assert!(contents.to_integer::<u32>().is_ok());
         }
@@ -685,7 +667,7 @@ mod tests {
             let mut bytes = [0x00; 5];
             bytes[1] = 0x80;
 
-            let contents = ContentsRef::from_bytes(&bytes);
+            let contents = <&ContentsRef>::from(&bytes);
             assert!(contents.to_integer::<i32>().is_err());
             assert!(contents.to_integer::<u32>().is_ok());
         }
@@ -820,40 +802,25 @@ mod tests {
     }
 
     #[test]
-    fn contents_ref_from_bool() {
-        // True
-        {
-            let contents = ContentsRef::from_bool(true);
-            assert_eq!(&[0xff], contents.as_bytes());
-        }
-
-        // false
-        {
-            let contents = ContentsRef::from_bool(false);
-            assert_eq!(&[0x00], contents.as_bytes());
-        }
-    }
-
-    #[test]
     fn contents_to_bool_ber() {
         // Empty
         {
-            let contents = ContentsRef::from_bytes(&[]);
+            let contents = <&ContentsRef>::from(&[]);
             assert!(contents.to_bool_ber().is_err());
         }
 
         // 2 or more than 2 bytes
         {
-            let contents = ContentsRef::from_bytes(&[1, 2]);
+            let contents = <&ContentsRef>::from(&[1, 2]);
             assert!(contents.to_bool_ber().is_err());
 
-            let contents = ContentsRef::from_bytes(&[1, 2, 3]);
+            let contents = <&ContentsRef>::from(&[1, 2, 3]);
             assert!(contents.to_bool_ber().is_err());
         }
 
         // false
         {
-            let contents = ContentsRef::from_bytes(&[0x00]);
+            let contents = <&ContentsRef>::from(&[0x00]);
             assert_eq!(Ok(false), contents.to_bool_ber());
         }
 
@@ -861,7 +828,7 @@ mod tests {
         {
             for i in 1..=u8::MAX {
                 let bytes = &[i];
-                let contents = ContentsRef::from_bytes(bytes);
+                let contents = <&ContentsRef>::from(bytes);
                 assert_eq!(Ok(true), contents.to_bool_ber());
             }
         }
@@ -871,28 +838,28 @@ mod tests {
     fn contents_to_bool_der() {
         // Empty
         {
-            let contents = ContentsRef::from_bytes(&[]);
+            let contents = <&ContentsRef>::from(&[]);
             assert!(contents.to_bool_der().is_err());
         }
 
         // 2 or more than 2 bytes
         {
-            let contents = ContentsRef::from_bytes(&[1, 2]);
+            let contents = <&ContentsRef>::from(&[1, 2]);
             assert!(contents.to_bool_der().is_err());
 
-            let contents = ContentsRef::from_bytes(&[1, 2, 3]);
+            let contents = <&ContentsRef>::from(&[1, 2, 3]);
             assert!(contents.to_bool_der().is_err());
         }
 
         // false
         {
-            let contents = ContentsRef::from_bytes(&[0x00]);
+            let contents = <&ContentsRef>::from(&[0x00]);
             assert_eq!(Ok(false), contents.to_bool_der());
         }
 
         // true
         {
-            let contents = ContentsRef::from_bytes(&[0xff]);
+            let contents = <&ContentsRef>::from(&[0xff]);
             assert_eq!(Ok(true), contents.to_bool_der());
         }
 
@@ -900,23 +867,23 @@ mod tests {
         {
             for i in 1..u8::MAX {
                 let bytes = &[i];
-                let contents = ContentsRef::from_bytes(bytes);
+                let contents = <&ContentsRef>::from(bytes);
                 assert!(contents.to_bool_der().is_err());
             }
         }
     }
 
     #[test]
-    fn contents_from_bool() {
+    fn from_bool() {
         // True
         {
-            let contents = Contents::from_bool(true);
+            let contents = Contents::from(true);
             assert_eq!(&[0xff], contents.as_bytes());
         }
 
         // false
         {
-            let contents = Contents::from_bool(false);
+            let contents = Contents::from(false);
             assert_eq!(&[0x00], contents.as_bytes());
         }
     }

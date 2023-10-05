@@ -98,7 +98,7 @@
 //! /// Creates a `version` for bind request.
 //! /// This function always returns 3 (the current latest version.)
 //! fn new_bind_version() -> Ber {
-//!     Ber::integer(3_i32)
+//!     Ber::from(3_i32)
 //! }
 //!
 //! /// Creates a `name` for bind request from `name`.
@@ -109,10 +109,7 @@
 //! /// LDAPString ::= OCTET STRING -- UTF-8 encoded,
 //! ///                             -- [ISO10646] characters
 //! fn new_bind_name(name: &str) -> Ber {
-//!     // BER allows both Primitive and Constructed for OCTET STRING.
-//!     // This function returns Primitive BER.
-//!     // Call octet_string_constructed() instead if you prefer Constructed.
-//!     Ber::octet_string(name.as_bytes())
+//!     Ber::from(name.as_bytes())
 //! }
 //!
 //! /// Creates a `simple authentication` for bind request from `password`.
@@ -132,14 +129,14 @@
 //!    const ID_NUMBER: u32 = 0;
 //!    let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, ID_NUMBER);
 //!
-//!    let contents = ContentsRef::from_bytes(password);
+//!    let contents = <&ContentsRef>::from(password);
 //!
 //!    Ber::new(&id, contents)
 //! }
 //!
 //! /// Tries to parse bind request and returns `(name, password)`.
 //! fn parse_bind_request(req: &[u8]) -> Result<(&str, &[u8]), String> {
-//!     let req = BerRef::try_from_bytes(req)
+//!     let req = BerRef::parse(req)
 //!                 .map_err(|e| format!("Failed to parse the request as a BER: {}", e))?;
 //!
 //!     let id = req.id();
@@ -148,7 +145,7 @@
 //!     }
 //!
 //!     let bytes = req.contents().as_bytes();
-//!     let version_ber = BerRef::try_from_bytes(bytes)
+//!     let version_ber = BerRef::parse(bytes)
 //!                         .map_err(|e| format!("Failed to parse the request version: {}", e))?;
 //!     let version = parse_bind_version(version_ber)?;
 //!     if version != 3 {
@@ -156,12 +153,12 @@
 //!     }
 //!
 //!     let bytes = &bytes[version_ber.as_bytes().len()..];
-//!     let name_ber = BerRef::try_from_bytes(bytes)
+//!     let name_ber = BerRef::parse(bytes)
 //!                      .map_err(|e| format!("Failed to parse the request name: {}", e))?;
 //!     let name = parse_bind_name(name_ber)?;
 //!
 //!     let bytes = &bytes[name_ber.as_bytes().len()..];
-//!     let auth_ber = BerRef::try_from_bytes(bytes)
+//!     let auth_ber = BerRef::parse(bytes)
 //!                      .map_err(|e|
 //!                               format!("Failed to parse the request authentication: {}", e))?;
 //!     let password = parse_bind_authentication(auth_ber)?;

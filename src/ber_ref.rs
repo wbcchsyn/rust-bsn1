@@ -32,7 +32,6 @@
 
 use crate::{identifier_ref, length, Ber, ContentsRef, DerRef, Error, IdRef, Length};
 use std::borrow::Borrow;
-use std::convert::TryFrom;
 use std::mem;
 
 /// `BerRef` is a wrapper of `[u8]` and represents a BER.
@@ -49,27 +48,37 @@ impl<'a> From<&'a DerRef> for &'a BerRef {
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
-    type Error = Error;
-
+impl BerRef {
     /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a reference to `BerRef`.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
-    ///
-    /// This function is the same as [`BerRef::try_from_bytes`].
-    ///
-    /// [Read more](std::convert::TryFrom::try_from)
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
-    fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
-        let id = <&IdRef>::try_from(bytes)?;
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::BerRef;
+    ///
+    /// // Represents 'True' as a Boolean.
+    /// let bytes: &[u8] = &[0x01, 0x01, 0xff];
+    /// let ber0 = BerRef::parse(bytes).unwrap();
+    /// assert!(ber0.contents().to_bool_ber().unwrap());
+    ///
+    /// // The extra octets at the end do not affect the result.
+    /// let bytes: &[u8] = &[0x01, 0x01, 0xff, 0x00];
+    /// let ber1 = BerRef::parse(bytes).unwrap();
+    /// assert_eq!(ber0, ber1);
+    /// ```
+    pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
+        let id = IdRef::parse(bytes)?;
         let parsing = &bytes[id.len()..];
 
-        match length::try_from(parsing) {
+        match length::parse_(parsing) {
             Err(e) => Err(e),
             Ok((Length::Definite(len), parsing)) => {
                 let total_len = bytes.len() - parsing.len() + len;
@@ -82,7 +91,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
             }
             Ok((Length::Indefinite, mut parsing)) => {
                 while {
-                    let element = Self::try_from(parsing)?;
+                    let element = Self::parse(parsing)?;
                     let len = element.as_bytes().len();
                     parsing = &parsing[len..];
 
@@ -99,81 +108,17 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
             }
         }
     }
-}
-
-impl<'a> TryFrom<&'a mut [u8]> for &'a mut BerRef {
-    type Error = Error;
 
     /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a mutable reference to
     /// `BerRef`.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is the same as [`BerRef::try_from_mut_bytes`].
-    ///
-    /// [Read more](std::convert::TryFrom::try_from)
-    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
-    fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
-        let ret = <&'a BerRef>::try_from(bytes as &[u8])?;
-        let ptr = ret as *const BerRef;
-        let ptr = ptr as *mut BerRef;
-        unsafe { Ok(&mut *ptr) }
-    }
-}
-
-impl BerRef {
-    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a reference to `BerRef`.
-    ///
-    /// This function ignores extra octet(s) at the end of `bytes` if any.
-    ///
-    /// This function is the same as [`TryFrom::try_from`].
-    ///
-    /// # Warnings
-    ///
-    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok`.
-    ///
-    /// [`TryFrom::try_from`]: #method.try_from
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::BerRef;
-    ///
-    /// // Represents 'True' as a Boolean.
-    /// let bytes: &[u8] = &[0x01, 0x01, 0xff];
-    /// let ber0 = BerRef::try_from_bytes(bytes).unwrap();
-    /// assert!(ber0.contents().to_bool_ber().unwrap());
-    ///
-    /// // The extra octets at the end do not affect the result.
-    /// let bytes: &[u8] = &[0x01, 0x01, 0xff, 0x00];
-    /// let ber1 = BerRef::try_from_bytes(bytes).unwrap();
-    /// assert_eq!(ber0, ber1);
-    /// ```
-    pub fn try_from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
-        <&Self>::try_from(bytes)
-    }
-
-    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a mutable reference to
-    /// `BerRef`.
-    ///
-    /// This function ignores extra octet(s) at the end of `bytes` if any.
-    ///
-    /// This function is the same as [`TryFrom::try_from`].
-    ///
-    /// # Warnings
-    ///
-    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok`.
-    ///
-    /// [`TryFrom::try_from`]: #method.try_from-1
     ///
     /// # Examples
     ///
@@ -182,7 +127,7 @@ impl BerRef {
     ///
     /// // Represents '0x04' as an Integer.
     /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x04];
-    /// let ber = BerRef::try_from_mut_bytes(bytes).unwrap();
+    /// let ber = BerRef::parse_mut(bytes).unwrap();
     ///
     /// // The value is 0x04 at first.
     /// assert_eq!(ber.contents().as_bytes(), &[0x04]);
@@ -192,23 +137,24 @@ impl BerRef {
     /// // The value is updated.
     /// assert_eq!(ber.contents().as_bytes(), &[0x05]);
     /// ```
-    pub fn try_from_mut_bytes(bytes: &mut [u8]) -> Result<&mut Self, Error> {
-        <&mut Self>::try_from(bytes)
+    pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
+        let ret = Self::parse(bytes)?;
+        let ptr = ret as *const Self;
+        let ptr = ptr as *mut Self;
+        unsafe { Ok(&mut *ptr) }
     }
 
     /// Provides a reference from `bytes` without any check.
     ///
     /// `bytes` must be BER octets and must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` are valid octets as an 'BER', use [`TryFrom`]
-    /// implementation or [`try_from_bytes`] instead.
+    /// If it is not sure whether `bytes` are valid octets as an 'BER', use [`parse`] instead.
     ///
     /// # Safety
     ///
     /// The behaviour is undefined if `bytes` is not formatted as a BER.
     ///
-    /// [`TryFrom`]: #method.try_from
-    /// [`try_from_bytes`]: Self::try_from_bytes
+    /// [`parse`]: Self::parse
     ///
     /// # Examples
     ///
@@ -230,15 +176,13 @@ impl BerRef {
     ///
     /// `bytes` must be BER octets and must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` are valid octets as a 'BER', use [`TryFrom`]
-    /// implementation or [`try_from_mut_bytes`] instead.
+    /// If it is not sure whether `bytes` are valid octets as a 'BER', use [`parse_mut`] instead.
     ///
     /// # Safety
     ///
     /// The behaviour is undefined if `bytes` is not formatted as a BER.
     ///
-    /// [`TryFrom`]: #method.try_from-1
-    /// [`try_from_mut_bytes`]: Self::try_from_mut_bytes
+    /// [`parse_mut`]: Self::parse_mut
     ///
     /// # Examples
     ///
@@ -290,7 +234,7 @@ impl BerRef {
     ///
     /// // Represents '3' as an Integer.
     /// let bytes: &[u8] = &[0x02, 0x01, 0x03];
-    /// let ber = BerRef::try_from_bytes(bytes).unwrap();
+    /// let ber = BerRef::parse(bytes).unwrap();
     ///
     /// assert_eq!(ber.id(), IdRef::integer());
     /// ```
@@ -310,7 +254,7 @@ impl BerRef {
     ///
     /// // Represents '3' as an Integer.
     /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x03];
-    /// let ber = BerRef::try_from_mut_bytes(bytes).unwrap();
+    /// let ber = BerRef::parse_mut(bytes).unwrap();
     ///
     /// assert_eq!(ber.id(), IdRef::integer());
     ///
@@ -346,7 +290,7 @@ impl BerRef {
     ///
     /// // Represents 'False' as a Boolean.
     /// let bytes: &[u8] = &[0x01, 0x01, 0x00];
-    /// let ber = BerRef::try_from_bytes(bytes).unwrap();
+    /// let ber = BerRef::parse(bytes).unwrap();
     ///
     /// assert_eq!(ber.length(), Length::Definite(1));
     /// ```
@@ -365,7 +309,7 @@ impl BerRef {
     ///
     /// // Represents 'False' as a Boolean.
     /// let bytes: &[u8] = &[0x01, 0x01, 0x00];
-    /// let ber = BerRef::try_from_bytes(bytes).unwrap();
+    /// let ber = BerRef::parse(bytes).unwrap();
     ///
     /// assert_eq!(ber.contents().to_bool_ber().unwrap(), false);
     /// ```
@@ -373,7 +317,7 @@ impl BerRef {
         let id_len = self.id().len();
         let bytes = &self.bytes[id_len..];
         let contents = unsafe { length::from_bytes_starts_with_unchecked(bytes).1 };
-        ContentsRef::from_bytes(contents)
+        <&ContentsRef>::from(contents)
     }
 
     /// Provides a mutable reference to the [`ContentsRef`] of `self`.
@@ -385,7 +329,7 @@ impl BerRef {
     ///
     /// // Represents 'False' as a Boolean.
     /// let bytes: &mut [u8] = &mut [0x01, 0x01, 0x00];
-    /// let ber = BerRef::try_from_mut_bytes(bytes).unwrap();
+    /// let ber = BerRef::parse_mut(bytes).unwrap();
     ///
     /// assert_eq!(ber.contents().to_bool_ber().unwrap(), false);
     ///

@@ -36,7 +36,6 @@ use num::cast::AsPrimitive;
 use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
 use std::cmp::Ordering;
-use std::convert::TryFrom;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 
@@ -53,29 +52,6 @@ use std::ops::{Deref, DerefMut};
 #[derive(Debug, Clone, Eq, Ord, Hash)]
 pub struct Id {
     buffer: Buffer,
-}
-
-impl TryFrom<&[u8]> for Id {
-    type Error = Error;
-
-    /// Parses `bytes` starting with identifier octets and tries to build a new instance.
-    ///
-    /// This function ignores the extra octet(s) at the end if any.
-    ///
-    /// This function is the same as [`try_from_bytes`].
-    ///
-    /// # Warnings
-    ///
-    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok`.
-    ///
-    /// [`try_from_bytes`]: Self::try_from_bytes
-    ///
-    /// [Read more](std::convert::TryFrom::try_from)
-    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-        <&IdRef>::try_from(bytes).map(|idref| idref.to_owned())
-    }
 }
 
 impl Id {
@@ -140,15 +116,11 @@ impl Id {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is the same as [`TryFrom::try_from`].
-    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
-    ///
-    /// [`TryFrom::try_from`]: #method.try_from
     ///
     /// # Examples
     ///
@@ -157,30 +129,28 @@ impl Id {
     ///
     /// // &[0] represents 'Univedrsal EOC'.
     /// let bytes0: &[u8] = &[0];
-    /// let id0 = Id::try_from_bytes(bytes0).unwrap();
+    /// let id0 = Id::parse(bytes0).unwrap();
     ///
     /// // The extra octets at the end does not affect the result.
     /// let bytes1: &[u8] = &[0, 1, 2];
-    /// let id1 = Id::try_from_bytes(bytes1).unwrap();
+    /// let id1 = Id::parse(bytes1).unwrap();
     ///
     /// assert_eq!(id0, id1);
     /// ```
-    pub fn try_from_bytes(bytes: &[u8]) -> Result<Self, Error> {
-        Self::try_from(bytes).map(|idref| idref.to_owned())
+    pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
+        IdRef::parse(bytes).map(|idref| idref.to_owned())
     }
 
     /// Provides a reference from `bytes` without any check.
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` is valid octets as an identifer, use [`TryFrom`]
-    /// implementation or [`try_from_bytes`] instead.
+    /// If it is not sure whether `bytes` is valid octets as an identifer, use [`parse`] instead.
     ///
     /// # Safety
     ///
     /// The behaviour is undefined if the format of `bytes` is not right.
     ///
-    /// [`TryFrom`]: #method.try_from
-    /// [`try_from_bytes`]: Self::try_from_bytes
+    /// [`parse`]: Self::parse
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
         Self {
             buffer: Buffer::from(bytes),
@@ -376,7 +346,7 @@ mod tests {
                     bytes[0] = cl as u8 | pc as u8 | LONG_FLAG;
                     bytes[1] = 0x84;
                     bytes[19] = 0x00;
-                    let id = Id::try_from(&bytes as &[u8]).unwrap();
+                    let id = Id::parse(&bytes as &[u8]).unwrap();
                     assert!(id.number::<u128>().is_err());
                 }
             }
@@ -399,7 +369,7 @@ mod tests {
                     std::u128::MAX,
                 ] {
                     let id = Id::new(cl, pc, num);
-                    let idref = <&IdRef>::try_from(id.as_bytes()).unwrap();
+                    let idref = IdRef::parse(id.as_bytes()).unwrap();
                     assert_eq!(idref.as_bytes(), id.as_bytes());
                 }
             }

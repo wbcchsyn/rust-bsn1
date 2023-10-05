@@ -34,7 +34,6 @@
 
 use crate::{Error, LengthBuffer};
 use std::cmp::Ordering;
-use std::convert::TryFrom;
 use std::mem::{size_of, size_of_val};
 use std::ops::Deref;
 
@@ -51,21 +50,6 @@ pub enum Length {
     Indefinite,
     /// 'Definite' is for 'BER', 'DER', and 'CER', and represents the byte count of the contents.
     Definite(usize),
-}
-
-impl TryFrom<&[u8]> for Length {
-    type Error = Error;
-
-    /// Parses `bytes` starting with length octets and tries to create a new instance.
-    ///
-    /// This function ignores extra octet(s) at the end of `bytes` if any.
-    ///
-    /// This function is the same as [`try_from_bytes`].
-    ///
-    /// [`try_from_bytes`]: #method.from_bytes
-    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-        try_from(bytes).map(|(length, _rest)| length)
-    }
 }
 
 impl PartialEq for Length {
@@ -94,26 +78,22 @@ impl Length {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This method is the same as [`TryFrom`] implementation.
-    ///
-    /// [`TryFrom`]: #impl-TryFrom-for-Length
-    ///
     /// # Examples
     ///
     /// ```
     /// use bsn1::Length;
     ///
     /// let mut bytes = vec![0x05]; // represents Definite(5).
-    /// let len = Length::try_from_bytes(&bytes).unwrap();
+    /// let len = Length::parse(&bytes).unwrap();
     /// assert_eq!(Length::Definite(5), len);
     ///
     /// // Ignores the last extra octet 0x03.
     /// bytes.push(0x03);
-    /// let len = Length::try_from_bytes(&bytes).unwrap();
+    /// let len = Length::parse(&bytes).unwrap();
     /// assert_eq!(Length::Definite(5), len);
     /// ```
-    pub fn try_from_bytes(bytes: &[u8]) -> Result<Self, Error> {
-        try_from(bytes).map(|(length, _rest)| length)
+    pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
+        parse_(bytes).map(|(length, _rest)| length)
     }
 
     /// Serializes `length`.
@@ -122,12 +102,11 @@ impl Length {
     ///
     /// ```
     /// use bsn1::Length;
-    /// use std::convert::TryFrom;
     ///
     /// let length = Length::Definite(3);
     /// let bytes = length.to_bytes();
     ///
-    /// let deserialized = Length::try_from(&bytes as &[u8]).unwrap();
+    /// let deserialized = Length::parse(&bytes as &[u8]).unwrap();
     /// assert_eq!(length, deserialized);
     /// ```
     pub fn to_bytes(self) -> impl Deref<Target = [u8]> {
@@ -269,7 +248,7 @@ impl Length {
 /// Tries to parse `bytes` starting with 'length' and returns `(Length, octets_after_length)`.
 ///
 /// This function ignores extra octets at the end of `bytes`.
-pub fn try_from(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
+pub fn parse_(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
     let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
     let bytes = &bytes[1..];
 
@@ -345,13 +324,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn try_from_just() {
+    fn parse_just() {
         let empty: &[u8] = &[];
 
         // Indefinite
         {
             let bytes: &[u8] = &[0x80];
-            let (length, left) = try_from(bytes).unwrap();
+            let (length, left) = parse_(bytes).unwrap();
 
             assert_eq!(length.is_indefinite(), true);
             assert_eq!(left, empty);
@@ -360,33 +339,33 @@ mod tests {
         // Short form
         {
             let bytes: &[u8] = &[0x00];
-            let res = try_from(bytes).unwrap();
+            let res = parse_(bytes).unwrap();
             assert_eq!((Length::Definite(0), empty), res);
 
             let bytes: &[u8] = &[0x7f];
-            let res = try_from(bytes).unwrap();
+            let res = parse_(bytes).unwrap();
             assert_eq!((Length::Definite(0x7f), empty), res);
         }
 
         // 2 bytes
         {
             let bytes: &[u8] = &[0x81, 0x80];
-            let res = try_from(bytes).unwrap();
+            let res = parse_(bytes).unwrap();
             assert_eq!((Length::Definite(0x80), empty), res);
 
             let bytes: &[u8] = &[0x81, 0xff];
-            let res = try_from(bytes).unwrap();
+            let res = parse_(bytes).unwrap();
             assert_eq!((Length::Definite(0xff), empty), res);
         }
 
         // 3 bytes
         {
             let bytes: &[u8] = &[0x82, 0x01, 0x00];
-            let res = try_from(bytes).unwrap();
+            let res = parse_(bytes).unwrap();
             assert_eq!((Length::Definite(0x0100), empty), res);
 
             let bytes: &[u8] = &[0x82, 0xff, 0xff];
-            let res = try_from(bytes).unwrap();
+            let res = parse_(bytes).unwrap();
             assert_eq!((Length::Definite(0xffff), empty), res);
         }
 
@@ -394,20 +373,20 @@ mod tests {
         {
             let mut bytes: [u8; size_of::<usize>() + 1] = [0xff; size_of::<usize>() + 1];
             bytes[0] = 0x80 + (size_of::<usize>() as u8);
-            let res = try_from(&bytes).unwrap();
+            let res = parse_(&bytes).unwrap();
             assert_eq!((Length::Definite(std::usize::MAX), empty), res);
         }
     }
 
     #[test]
-    fn try_from_extra() {
+    fn parse_extra() {
         let extra: &[u8] = &[1, 2, 3];
 
         // Indefinite
         {
             let mut bytes = vec![0x80];
             bytes.extend(extra);
-            let (length, left) = try_from(&bytes).unwrap();
+            let (length, left) = parse_(&bytes).unwrap();
 
             assert_eq!(length.is_indefinite(), true);
             assert_eq!(left, extra);
@@ -417,12 +396,12 @@ mod tests {
         {
             let mut bytes = vec![0x00];
             bytes.extend(extra);
-            let res = try_from(&bytes).unwrap();
+            let res = parse_(&bytes).unwrap();
             assert_eq!((Length::Definite(0), extra), res);
 
             let mut bytes = vec![0x7f];
             bytes.extend(extra);
-            let res = try_from(&bytes).unwrap();
+            let res = parse_(&bytes).unwrap();
             assert_eq!((Length::Definite(0x7f), extra), res);
         }
 
@@ -430,12 +409,12 @@ mod tests {
         {
             let mut bytes = vec![0x81, 0x80];
             bytes.extend(extra);
-            let res = try_from(&bytes).unwrap();
+            let res = parse_(&bytes).unwrap();
             assert_eq!((Length::Definite(0x80), extra), res);
 
             let mut bytes = vec![0x81, 0xff];
             bytes.extend(extra);
-            let res = try_from(&bytes).unwrap();
+            let res = parse_(&bytes).unwrap();
             assert_eq!((Length::Definite(0xff), extra), res);
         }
 
@@ -443,12 +422,12 @@ mod tests {
         {
             let mut bytes = vec![0x82, 0x01, 0x00];
             bytes.extend(extra);
-            let res = try_from(&bytes).unwrap();
+            let res = parse_(&bytes).unwrap();
             assert_eq!((Length::Definite(0x0100), extra), res);
 
             let mut bytes = vec![0x82, 0xff, 0xff];
             bytes.extend(extra);
-            let res = try_from(&bytes).unwrap();
+            let res = parse_(&bytes).unwrap();
             assert_eq!((Length::Definite(0xffff), extra), res);
         }
 
@@ -458,42 +437,42 @@ mod tests {
             bytes[0] = 0x80 + (size_of::<usize>() as u8);
             let mut bytes = Vec::from(&bytes as &[u8]);
             bytes.extend(extra);
-            let res = try_from(&bytes).unwrap();
+            let res = parse_(&bytes).unwrap();
             assert_eq!((Length::Definite(std::usize::MAX), extra), res);
         }
     }
 
     #[test]
-    fn try_from_overflow() {
+    fn parse_overflow() {
         let mut bytes: [u8; size_of::<usize>() + 2] = [0x00; size_of::<usize>() + 2];
         bytes[0] = 0x80 + (size_of::<usize>() as u8) + 1;
         bytes[1] = 0x01;
-        let e = try_from(&bytes).unwrap_err();
+        let e = parse_(&bytes).unwrap_err();
         assert_eq!(Error::OverFlow, e);
 
         let mut bytes = Vec::from(&bytes as &[u8]);
         bytes.push(0xff);
-        let e = try_from(&bytes).unwrap_err();
+        let e = parse_(&bytes).unwrap_err();
         assert_eq!(Error::OverFlow, e);
     }
 
     #[test]
-    fn try_from_redundant() {
+    fn parse_redundant() {
         // 2 bytes
         {
             let bytes: &[u8] = &[0x81, 0x00];
-            let e = try_from(bytes).unwrap_err();
+            let e = parse_(bytes).unwrap_err();
             assert_eq!(Error::RedundantBytes, e);
         }
 
         // 3 bytes
         {
             let bytes: &[u8] = &[0x82, 0x00, 0x01];
-            let e = try_from(bytes).unwrap_err();
+            let e = parse_(bytes).unwrap_err();
             assert_eq!(Error::RedundantBytes, e);
 
             let bytes: &[u8] = &[0x82, 0x00, 0xff];
-            let e = try_from(bytes).unwrap_err();
+            let e = parse_(bytes).unwrap_err();
             assert_eq!(Error::RedundantBytes, e);
         }
 
@@ -502,32 +481,32 @@ mod tests {
             let mut bytes: [u8; size_of::<usize>() + 2] = [0xff; size_of::<usize>() + 2];
             bytes[0] = 0x80 + (size_of::<usize>() as u8) + 1;
             bytes[1] = 0x00;
-            let e = try_from(&bytes).unwrap_err();
+            let e = parse_(&bytes).unwrap_err();
             assert_eq!(Error::RedundantBytes, e);
         }
     }
 
     #[test]
-    fn try_from_unterminated() {
+    fn parse_unterminated() {
         // 2 bytes
         {
             let bytes: &[u8] = &[0x82, 0x01];
-            let e = try_from(bytes).unwrap_err();
+            let e = parse_(bytes).unwrap_err();
             assert_eq!(Error::UnTerminatedBytes, e);
 
             let bytes: &[u8] = &[0x82, 0xff];
-            let e = try_from(bytes).unwrap_err();
+            let e = parse_(bytes).unwrap_err();
             assert_eq!(Error::UnTerminatedBytes, e);
         }
 
         // 3 bytes
         {
             let bytes: &[u8] = &[0x83, 0x01, 0x00];
-            let e = try_from(bytes).unwrap_err();
+            let e = parse_(bytes).unwrap_err();
             assert_eq!(Error::UnTerminatedBytes, e);
 
             let bytes: &[u8] = &[0x83, 0xff, 0xff];
-            let e = try_from(bytes).unwrap_err();
+            let e = parse_(bytes).unwrap_err();
             assert_eq!(Error::UnTerminatedBytes, e);
         }
 
@@ -535,7 +514,7 @@ mod tests {
         {
             let mut bytes: [u8; size_of::<usize>() + 1] = [0xff; size_of::<usize>() + 1];
             bytes[0] = 0x80 + (size_of::<usize>() as u8) + 1;
-            let e = try_from(&bytes).unwrap_err();
+            let e = parse_(&bytes).unwrap_err();
             assert_eq!(Error::UnTerminatedBytes, e);
         }
     }
@@ -547,7 +526,7 @@ mod tests {
         // Indefinite
         {
             let bytes = Length::Indefinite.to_bytes();
-            let (length, left) = try_from(&bytes).unwrap();
+            let (length, left) = parse_(&bytes).unwrap();
 
             assert_eq!(length.is_indefinite(), true);
             assert_eq!(left, empty);
@@ -556,7 +535,7 @@ mod tests {
         // Definite
         for &len in &[0, 1, 0x7f, 0x80, 0xff, 0x0100, 0xffff, std::usize::MAX] {
             let bytes = Length::Definite(len).to_bytes();
-            let (length, left) = try_from(&bytes).unwrap();
+            let (length, left) = parse_(&bytes).unwrap();
 
             assert_eq!(Length::Definite(len), length);
             assert_eq!(left, empty);

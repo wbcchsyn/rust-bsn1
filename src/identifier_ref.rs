@@ -34,7 +34,6 @@ use crate::{ClassTag, Error, Id, PCTag};
 use num::{FromPrimitive, PrimInt};
 use std::borrow::Borrow;
 use std::cmp::Ordering;
-use std::convert::TryFrom;
 use std::mem;
 
 pub const LONG_FLAG: u8 = 0x1f;
@@ -54,49 +53,6 @@ pub const PC_MASK: u8 = 0x20;
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct IdRef {
     bytes: [u8],
-}
-
-impl<'a> TryFrom<&'a [u8]> for &'a IdRef {
-    type Error = Error;
-
-    /// Parses `bytes` starting with identifier, and tries to provide a reference to `IdRef`.
-    ///
-    /// This function ignores the extra octet(s) at the end if any.
-    ///
-    /// This function is the same as [`IdRef::try_from_bytes`].
-    ///
-    /// # Warnings
-    ///
-    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok`.
-    ///
-    /// [Read more](std::convert::TryFrom::try_from)
-    fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
-        IdRef::try_from_bytes(bytes)
-    }
-}
-
-impl<'a> TryFrom<&'a mut [u8]> for &'a mut IdRef {
-    type Error = Error;
-
-    /// Parses `bytes` starting with identifier, and tries to provide a mutable reference to
-    /// `IdRef`.
-    ///
-    /// This function ignores the extra octet(s) at the end if any.
-    ///
-    /// This function is the same as [`IdRef::try_from_mut_bytes`].
-    ///
-    /// # Warnings
-    ///
-    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok`.
-    ///
-    /// [Read more](std::convert::TryFrom::try_from)
-    fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
-        IdRef::try_from_mut_bytes(bytes)
-    }
 }
 
 /// Ommits the extra octets at the end of `bytes` and returns octets just one 'ASN.1 Identifier.'
@@ -122,15 +78,11 @@ impl IdRef {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is the same as [`TryFrom::try_from`].
-    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok.
-    ///
-    /// [`TryFrom::try_from`]: #method.try_from
     ///
     /// # Examples
     ///
@@ -139,15 +91,15 @@ impl IdRef {
     ///
     /// // &[0] represents 'EOC'.
     /// let bytes: &[u8] = &[0];
-    /// let idref = IdRef::try_from_bytes(bytes).unwrap();
+    /// let idref = IdRef::parse(bytes).unwrap();
     /// assert_eq!(IdRef::eoc(), idref);
     ///
     /// // The result is not changed if (an) extra octet(s) is added at the end.
     /// let bytes: &[u8] = &[0, 1, 2];
-    /// let idref = IdRef::try_from_bytes(bytes).unwrap();
+    /// let idref = IdRef::parse(bytes).unwrap();
     /// assert_eq!(IdRef::eoc(), idref);
     /// ```
-    pub fn try_from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
+    pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
         let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
 
         if first & LONG_FLAG != LONG_FLAG {
@@ -183,15 +135,11 @@ impl IdRef {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is the same as [`TryFrom::try_from`].
-    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
-    ///
-    /// [`TryFrom::try_from`]: #method.try_from-1
     ///
     /// # Examples
     ///
@@ -201,7 +149,7 @@ impl IdRef {
     /// let bytes: &mut [u8] = &mut [0];
     ///
     /// {
-    ///     let idref = IdRef::try_from_mut_bytes(bytes).unwrap();
+    ///     let idref = IdRef::parse_mut(bytes).unwrap();
     ///     // Update idref
     ///     idref.set_class(ClassTag::Private);
     /// }
@@ -211,11 +159,11 @@ impl IdRef {
     ///
     /// // The result is not changed if (an) extra octet(s) is added at the end.
     /// let bytes: &mut [u8] = &mut [0, 1, 2, 3];
-    /// let idref = IdRef::try_from_mut_bytes(bytes).unwrap();
+    /// let idref = IdRef::parse_mut(bytes).unwrap();
     /// assert_eq!(IdRef::eoc(), idref);
     /// ```
-    pub fn try_from_mut_bytes(bytes: &mut [u8]) -> Result<&mut Self, Error> {
-        let ret = Self::try_from_bytes(bytes)?;
+    pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
+        let ret = Self::parse(bytes)?;
         let ptr = (ret as *const Self) as *mut Self;
         unsafe { Ok(&mut *ptr) }
     }
@@ -223,15 +171,13 @@ impl IdRef {
     /// Provides a reference from `bytes` without any check.
     /// `bytes` must not include any extra octets.
     ///
-    /// If it is not sure whether `bytes` is valid octets as an identifer, use [`TryFrom`]
-    /// implementation or [`try_from_bytes`] instead.
+    /// If it is not sure whether `bytes` is valid octets as an identifer, use [`parse`] instead.
     ///
     /// # Safety
     ///
     /// The behaviour is undefined if the format of `bytes` is not right.
     ///
-    /// [`TryFrom`]: #method.try_from
-    /// [`try_from_bytes`]: Self::try_from_bytes
+    /// [`parse`]: Self::parse
     ///
     /// # Examples
     ///
@@ -250,15 +196,14 @@ impl IdRef {
     /// Provides a mutable reference from `bytes` without any check.
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` is valid octets as an identifer, use [`TryFrom`]
-    /// implementation or [`try_from_mut_bytes`] instead.
+    /// If it is not sure whether `bytes` is valid octets as an identifer,
+    /// use [`parse_mut`] instead.
     ///
     /// # Safety
     ///
     /// The behaviour is undefined if the format of `bytes` is not right.
     ///
-    /// [`TryFrom`]: #method.try_from-1
-    /// [`try_from_mut_bytes`]: Self::try_from_mut_bytes
+    /// [`parse_mut`]: Self::parse_mut
     ///
     /// # Examples
     ///
@@ -1156,7 +1101,7 @@ impl IdRef {
     /// assert_eq!(IdRef::integer().len(), 1);
     ///
     /// let bytes: &[u8] = &[0xff, 0xff, 0x00];
-    /// let id = IdRef::try_from_bytes(bytes).unwrap();
+    /// let id = IdRef::parse(bytes).unwrap();
     /// assert_eq!(id.len(), bytes.len());
     /// ```
     pub fn len(&self) -> usize {
@@ -1395,7 +1340,7 @@ impl IdRef {
     ///
     /// // Creates a '&mut IdRef' representing 'Universal Integer'.
     /// let mut bytes = Vec::from(IdRef::integer().as_bytes());
-    /// let idref = IdRef::try_from_mut_bytes(&mut bytes).unwrap();
+    /// let idref = IdRef::parse_mut(&mut bytes).unwrap();
     ///
     /// assert_eq!(ClassTag::Universal, idref.class());
     ///
@@ -1418,7 +1363,7 @@ impl IdRef {
     ///
     /// // Creates a '&mut IdRef' representing 'Universal Integer'.
     /// let mut bytes = Vec::from(IdRef::integer().as_bytes());
-    /// let idref = IdRef::try_from_mut_bytes(&mut bytes).unwrap();
+    /// let idref = IdRef::parse_mut(&mut bytes).unwrap();
     ///
     /// assert_eq!(PCTag::Primitive, idref.pc());
     ///
@@ -1447,19 +1392,19 @@ mod tests {
     const PCS: &[PCTag] = &[PCTag::Primitive, PCTag::Constructed];
 
     #[test]
-    fn try_from_ok() {
+    fn parse_ok() {
         for &cl in CLASSES {
             for &pc in PCS {
                 // 1 byte
                 {
                     let first = cl as u8 + pc as u8 + 0;
                     let bytes: &[u8] = &[first];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    let id = IdRef::parse(bytes).unwrap();
                     assert_eq!(bytes, id.as_bytes());
 
                     let first = cl as u8 + pc as u8 + 0x1e;
                     let bytes: &[u8] = &[first];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    let id = IdRef::parse(bytes).unwrap();
                     assert_eq!(bytes, id.as_bytes());
                 }
 
@@ -1468,11 +1413,11 @@ mod tests {
                 // 2 bytes
                 {
                     let bytes: &[u8] = &[first, 0x1f];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    let id = IdRef::parse(bytes).unwrap();
                     assert_eq!(bytes, id.as_bytes());
 
                     let bytes: &[u8] = &[first, 0x7f];
-                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    let id = IdRef::parse(bytes).unwrap();
                     assert_eq!(bytes, id.as_bytes());
                 }
 
@@ -1486,7 +1431,7 @@ mod tests {
                     bytes[len - 1] = 0x00;
 
                     let bytes: &[u8] = &bytes;
-                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    let id = IdRef::parse(bytes).unwrap();
                     assert_eq!(bytes, id.as_bytes());
 
                     let mut bytes = vec![first];
@@ -1496,7 +1441,7 @@ mod tests {
                     bytes[len - 1] = 0x7f;
 
                     let bytes: &[u8] = &bytes;
-                    let id = <&IdRef>::try_from(bytes).unwrap();
+                    let id = IdRef::parse(bytes).unwrap();
                     assert_eq!(bytes, id.as_bytes());
                 }
             }
@@ -1504,7 +1449,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_redundant() {
+    fn parse_redundant() {
         for &cl in CLASSES {
             for &pc in PCS {
                 let first = cl as u8 + pc as u8 + 0x1f;
@@ -1512,11 +1457,11 @@ mod tests {
                 // 2 bytes
                 {
                     let bytes: &[u8] = &[first, 0x00];
-                    let e = <&IdRef>::try_from(bytes).unwrap_err();
+                    let e = IdRef::parse(bytes).unwrap_err();
                     assert_eq!(Error::RedundantBytes, e);
 
                     let bytes: &[u8] = &[first, 0x1e];
-                    let e = <&IdRef>::try_from(bytes).unwrap_err();
+                    let e = IdRef::parse(bytes).unwrap_err();
                     assert_eq!(Error::RedundantBytes, e);
                 }
 
@@ -1529,7 +1474,7 @@ mod tests {
                     bytes[len - 1] = 0x00;
 
                     let bytes: &[u8] = &bytes;
-                    let e = <&IdRef>::try_from(bytes).unwrap_err();
+                    let e = IdRef::parse(bytes).unwrap_err();
                     assert_eq!(Error::RedundantBytes, e);
 
                     let mut bytes = vec![first];
@@ -1540,7 +1485,7 @@ mod tests {
                     bytes[len - 1] = 0x7f;
 
                     let bytes: &[u8] = &bytes;
-                    let e = <&IdRef>::try_from(bytes).unwrap_err();
+                    let e = IdRef::parse(bytes).unwrap_err();
                     assert_eq!(Error::RedundantBytes, e);
                 }
             }
@@ -1548,11 +1493,11 @@ mod tests {
     }
 
     #[test]
-    fn try_from_unterminated() {
+    fn parse_unterminated() {
         // Empty
         {
             let bytes: &[u8] = &[];
-            let e = <&IdRef>::try_from(bytes).unwrap_err();
+            let e = IdRef::parse(bytes).unwrap_err();
             assert_eq!(Error::UnTerminatedBytes, e);
         }
 
@@ -1563,7 +1508,7 @@ mod tests {
                 // 1 bytes
                 {
                     let bytes: &[u8] = &[first];
-                    let e = <&IdRef>::try_from(bytes).unwrap_err();
+                    let e = IdRef::parse(bytes).unwrap_err();
                     assert_eq!(Error::UnTerminatedBytes, e);
                 }
 
@@ -1576,7 +1521,7 @@ mod tests {
                     bytes[1] = 0x81;
 
                     let bytes: &[u8] = &bytes;
-                    let e = <&IdRef>::try_from(bytes).unwrap_err();
+                    let e = IdRef::parse(bytes).unwrap_err();
                     assert_eq!(Error::UnTerminatedBytes, e);
 
                     let mut bytes = vec![first];
@@ -1585,7 +1530,7 @@ mod tests {
                     }
 
                     let bytes: &[u8] = &bytes;
-                    let e = <&IdRef>::try_from(bytes).unwrap_err();
+                    let e = IdRef::parse(bytes).unwrap_err();
                     assert_eq!(Error::UnTerminatedBytes, e);
                 }
             }

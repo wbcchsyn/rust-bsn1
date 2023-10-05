@@ -31,9 +31,7 @@
 // limitations under the License.
 
 use crate::{BerRef, Buffer, ContentsRef, Der, DerRef, Error, IdRef, Length};
-use num::PrimInt;
 use std::borrow::Borrow;
-use std::convert::TryFrom;
 use std::ops::{Deref, DerefMut};
 
 /// `Ber` owns [`BerRef`] and represents a BER.
@@ -53,6 +51,111 @@ impl From<&DerRef> for Ber {
     }
 }
 
+impl From<bool> for Ber {
+    /// Creates a new instance representing a boolean containing `contents`.
+    fn from(contents: bool) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<i8> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i8) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u8> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u8) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<i16> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i16) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u16> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u16) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<i32> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i32) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u32> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u32) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<i64> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i64) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u64> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u64) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<i128> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i128) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u128> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u128) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<isize> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: isize) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<usize> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: usize) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<&str> for Ber {
+    /// Creates a new instance representing a utf8-string containing `contents`.
+    fn from(contents: &str) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<&[u8]> for Ber {
+    /// Creates a new instance representing an octet-string containing `contents`.
+    fn from(contents: &[u8]) -> Self {
+        Der::from(contents).into()
+    }
+}
+
 impl From<Der> for Ber {
     fn from(der: Der) -> Self {
         Self {
@@ -64,22 +167,6 @@ impl From<Der> for Ber {
 impl From<&BerRef> for Ber {
     fn from(ber_ref: &BerRef) -> Self {
         ber_ref.to_owned()
-    }
-}
-
-impl TryFrom<&[u8]> for Ber {
-    type Error = Error;
-
-    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a new instance.
-    ///
-    /// This function ignores extra octet(s) at the end of `bytes` if any.
-    ///
-    /// This function is the same as [`try_from_bytes`].
-    ///
-    /// [`try_from_bytes`]: Ber::try_from_bytes
-    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-        let ber_ref = <&BerRef>::try_from(bytes)?;
-        Ok(ber_ref.to_owned())
     }
 }
 
@@ -109,7 +196,7 @@ impl Ber {
     /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let contents = <&ContentsRef>::from(&[]);
     /// let ber = Ber::new(id, contents);
     ///
     /// assert_eq!(ber.id(), id);
@@ -145,7 +232,7 @@ impl Ber {
     /// use bsn1::{Ber, ContentsRef, IdRef, Length};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let contents = <&ContentsRef>::from(&[]);
     /// let ber = Ber::new_indefinite(id, contents);
     ///
     /// assert_eq!(ber.id(), id);
@@ -256,28 +343,23 @@ impl Ber {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is the same as [`TryFrom::try_from`].
-    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifiers and they should not be used, however, this
     /// function accepts such identifiers. For example, the number 15 (0x0f) is reserved for now,
     /// but this function returns `Ok`.
-    ///
-    /// [`TryFrom::try_from`]: #method.try_from
-    pub fn try_from_bytes(bytes: &[u8]) -> Result<Self, Error> {
-        Self::try_from(bytes)
+    pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
+        let ret = BerRef::parse(bytes)?;
+        Ok(ret.into())
     }
 
     /// Returns a new instance holding `bytes` without any check.
     ///
     /// `bytes` must not include any extra octet.
     ///
-    /// If it is not sure whether `bytes` are valid octets as a 'BER', use [`TryFrom`]
-    /// implementation or [`try_from_bytes`] instead.
+    /// If it is not sure whether `bytes` are valid octets as a 'BER', use [`parse`] instead.
     ///
-    /// [`TryFrom`]: #method.try_from
-    /// [`try_from_bytes`]: Self::try_from_bytes
+    /// [`parse`]: Self::parse
     ///
     /// # Safety
     ///
@@ -288,7 +370,7 @@ impl Ber {
     /// ```
     /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
-    /// let contents = ContentsRef::from_bytes(&[]);
+    /// let contents = <&ContentsRef>::from(&[]);
     /// let ber0 = Ber::new(IdRef::octet_string(), contents);
     /// let ber1 = unsafe { Ber::from_bytes_unchecked(ber0.as_bytes()) };
     /// assert_eq!(ber0, ber1);
@@ -299,9 +381,9 @@ impl Ber {
         }
     }
 
-    /// Creates a new instance from `id` and `contents`.
+    /// Creates a new instance containing concatnated `contents`.
     ///
-    /// The all length octets will be `definite`.
+    /// The length octets will be `definite`.
     ///
     /// # Panics
     ///
@@ -312,20 +394,21 @@ impl Ber {
     /// ```
     /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
-    /// let id = IdRef::sequence();
+    /// // Build an sequence DER containing 2 other DERs.
+    /// let contents0 = vec![Ber::from("foo"), Ber::from(29_i32)];
+    /// let ber0 = Ber::from_id_iterator(IdRef::sequence(), contents0.iter());
     ///
-    /// // Builds an instance using function 'from_id_iterator()'.
-    /// let contents: &[Ber] = &[Ber::utf8_string("foo"), Ber::integer(29_i32)];
-    /// let ber = Ber::from_id_iterator(id, contents.iter());
+    /// let mut contents1: Vec<u8> = Ber::from("foo").into_vec();
+    /// contents1.extend_from_slice(&Ber::from(29_i32).into_vec());
+    /// let ber1 = Ber::new(IdRef::sequence(), <&ContentsRef>::from(&contents1[..]));
     ///
-    /// // Builds an instance using function 'new()'.
-    /// let contents: Vec<u8> = contents.iter()
-    ///                         .map(|i| Vec::from(i.as_bytes()))
-    ///                         .flatten().collect();
-    /// let contents = ContentsRef::from_bytes(&contents);
-    /// let expected = Ber::new(id, contents);
+    /// assert_eq!(ber0, ber1);
     ///
-    /// assert_eq!(expected, ber);
+    /// // Build an utf8-string DER using function `from_id_iterator()`.
+    /// let contents = vec!["Foo", "Bar"];
+    /// let ber = Ber::from_id_iterator(
+    ///             IdRef::utf8_string(), contents.iter().map(|s| s.as_bytes()));
+    /// assert_eq!(ber, Ber::from("FooBar"));
     /// ```
     pub fn from_id_iterator<I>(id: &IdRef, contents: I) -> Self
     where
@@ -334,87 +417,6 @@ impl Ber {
     {
         let der = Der::from_id_iterator(id, contents);
         Self::from(der)
-    }
-
-    /// Returns a new instance representing a boolean.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Ber, IdRef};
-    ///
-    /// let val = true;
-    /// let ber = Ber::boolean(val);
-    ///
-    /// assert_eq!(IdRef::boolean(), ber.id());
-    /// assert_eq!(val, ber.contents().to_bool_ber().unwrap());
-    /// ```
-    pub fn boolean(val: bool) -> Self {
-        Self::from(Der::boolean(val))
-    }
-
-    /// Returns a new instance representing an integer.
-    ///
-    /// Type `T` should be a built-in primitive integer type (e.g., u8, u32, isize, i128, ...)
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Ber, IdRef};
-    ///
-    /// let val = 39;
-    /// let ber = Ber::integer(val);
-    ///
-    /// assert_eq!(IdRef::integer(), ber.id());
-    /// assert_eq!(val, ber.contents().to_integer().unwrap());
-    /// ```
-    pub fn integer<T>(val: T) -> Self
-    where
-        T: PrimInt,
-    {
-        Self::from(Der::integer(val))
-    }
-
-    /// Returns a new instance representing a utf8_string.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the total length exceeds `isize::MAX`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Ber, IdRef};
-    ///
-    /// let val = &"foo";
-    /// let ber = Ber::utf8_string(val);
-    ///
-    /// assert_eq!(IdRef::utf8_string(), ber.id());
-    /// assert_eq!(val.as_bytes(), ber.contents().as_bytes());
-    /// ```
-    pub fn utf8_string(val: &str) -> Self {
-        Self::from(Der::utf8_string(val))
-    }
-
-    /// Returns a new instance representing an octet_string.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the total length exceeds `isize::MAX`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Ber, IdRef};
-    ///
-    /// let val = &[1, 2, 3];
-    /// let ber = Ber::octet_string(val);
-    ///
-    /// assert_eq!(IdRef::octet_string(), ber.id());
-    /// assert_eq!(val, ber.contents().as_bytes());
-    /// ```
-    pub fn octet_string(val: &[u8]) -> Self {
-        Self::from(Der::octet_string(val))
     }
 }
 
@@ -462,7 +464,7 @@ impl Ber {
     /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = ContentsRef::from_bytes(&[0, 1, 2, 3, 4]);
+    /// let contents = <&ContentsRef>::from(&[0, 1, 2, 3, 4]);
     ///
     /// let ber = Ber::new(id, contents);
     /// let v = ber.clone().into_vec();
@@ -501,7 +503,7 @@ impl Ber {
     /// ```
     /// use bsn1::{Ber, ContentsRef, IdRef, Length};
     ///
-    /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), ContentsRef::from_bytes(&[]));
+    /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), <&ContentsRef>::from(&[]));
     ///
     /// assert_eq!(ber.length().is_indefinite(), true);
     /// assert_eq!(ber.contents().as_bytes(), &[]);
@@ -520,7 +522,7 @@ impl Ber {
     /// use bsn1::{Ber, ContentsRef, IdRef, Length};
     ///
     /// let old_contents: &[u8] = &[0, 1, 2, 3, 4];
-    /// let mut ber = Ber::new(IdRef::octet_string(), ContentsRef::from_bytes(old_contents));
+    /// let mut ber = Ber::new(IdRef::octet_string(), <&ContentsRef>::from(old_contents));
     ///
     /// assert_eq!(ber.length(), Length::Definite(old_contents.len()));
     /// assert_eq!(ber.contents().as_bytes(), old_contents);
@@ -554,90 +556,29 @@ impl Ber {
     }
 }
 
-/// Builds a `Ber` instance representing a Constructed BER effectively.
-///
-/// # Formula
-///
-/// `constructed_ber!(id: &IdRef [, (id_1, contents_1) [, (id_2, contents_2) [...]]]) => Ber`
-///
-/// `id_n` and `contents_n` must be bounded on `AsRef<[u8]>`.
-///
-/// # Examples
-///
-/// Empty contents.
-///
-/// ```
-/// # #[macro_use] extern crate bsn1;
-/// use bsn1::{Ber, ContentsRef, IdRef};
-///
-/// let id = IdRef::sequence();
-/// let contents = ContentsRef::from_bytes(&[]);
-/// let expected = Ber::new(id, contents);
-/// let ber = constructed_ber!(id);
-///
-/// assert_eq!(expected, ber);
-/// ```
-///
-/// Sequence of 2 BERs.
-///
-/// ```
-/// # #[macro_use] extern crate bsn1;
-/// use bsn1::{Ber, BerRef, Contents, ContentsRef, IdRef};
-/// use std::convert::TryFrom;
-///
-/// let id = IdRef::sequence();
-/// let id1 = IdRef::octet_string();
-/// let contents1 = ContentsRef::from_bytes(&[1, 2, 3]);
-/// let id2 = IdRef::integer();
-/// let contents2 = Contents::from_integer(10_i32);
-///
-/// let ber = constructed_ber!(id, (id1.to_owned(), contents1), (id2, &contents2));
-///
-/// assert_eq!(id, ber.id());
-///
-/// let bytes = ber.contents().as_bytes();
-/// let ber1 = <&BerRef>::try_from(bytes).unwrap();
-/// assert_eq!(id1, ber1.id());
-/// assert_eq!(contents1, ber1.contents());
-///
-/// let bytes = &bytes[ber1.as_bytes().len()..];
-/// let ber2 = <&BerRef>::try_from(bytes).unwrap();
-/// assert_eq!(id2, ber2.id());
-/// assert_eq!(&contents2 as &ContentsRef, ber2.contents());
-/// ```
-#[macro_export]
-macro_rules! constructed_ber {
-    ($id:expr $(, ($id_n:expr, $contents_n:expr))*) => {
-        Ber::from(constructed_der!($id $(, ($id_n, $contents_n))*))
-    };
-    ($id:expr $(, ($id_n:expr, $contents_n:expr))*,) => {
-        Ber::from(constructed_der!($id $(, ($id_n, $contents_n))*,))
-    };
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn try_from_deinite() {
+    fn parse_deinite() {
         let id = IdRef::octet_string();
 
         let byteses: &[&[u8]] = &[&[], &[0x00], &[0xff], &[0x00, 0x00], &[0xff, 0xff]];
         for &bytes in byteses {
-            let contents = ContentsRef::from_bytes(bytes);
+            let contents = <&ContentsRef>::from(bytes);
             let ber = Ber::new(id, contents);
-            let ber_ref = <&BerRef>::try_from(ber.as_bytes()).unwrap();
+            let ber_ref = BerRef::parse(ber.as_bytes()).unwrap();
             assert_eq!(ber_ref, &ber as &BerRef);
         }
     }
 
     #[test]
-    fn try_from_indefinite() {
+    fn parse_indefinite() {
         let eoc = {
             let id = IdRef::eoc();
             let contents: &[u8] = &[];
-            let contents = ContentsRef::from_bytes(contents);
+            let contents = <&ContentsRef>::from(contents);
             Ber::new(id, contents)
         };
 
@@ -645,7 +586,7 @@ mod tests {
             .map(|i| {
                 let id = IdRef::octet_string();
                 let contents: &[u8] = &[i];
-                let contents = ContentsRef::from_bytes(contents);
+                let contents = <&ContentsRef>::from(contents);
                 Ber::new(id, contents)
             })
             .collect();
@@ -661,14 +602,14 @@ mod tests {
             }
             bytes.extend(eoc.as_bytes());
 
-            let ber = <&BerRef>::try_from(&bytes as &[u8]).unwrap();
+            let ber = BerRef::parse(&bytes as &[u8]).unwrap();
             assert_eq!(&bytes, ber.as_bytes());
         }
     }
 
     #[test]
     fn extend_indefinite_ber() {
-        let mut ber = Ber::new_indefinite(IdRef::octet_string(), ContentsRef::from_bytes(&[]));
+        let mut ber = Ber::new_indefinite(IdRef::octet_string(), <&ContentsRef>::from(&[]));
 
         for i in 0..=256 {
             ber.set_length(i + 1);
@@ -706,22 +647,22 @@ mod tests {
         }
 
         {
-            ber.set_length(256.pow(3) - 1);
+            ber.set_length(256_usize.pow(3) - 1);
             assert_eq!(ber.length().is_indefinite(), true);
 
             let contents = ber.contents();
-            assert_eq!(contents.len(), 256.pow(3) - 1);
+            assert_eq!(contents.len(), 256_usize.pow(3) - 1);
             for i in 0..=256 {
                 assert_eq!(contents[i], i as u8);
             }
         }
 
         {
-            ber.set_length(256.pow(3));
+            ber.set_length(256_usize.pow(3));
             assert_eq!(ber.length().is_indefinite(), true);
 
             let contents = ber.contents();
-            assert_eq!(contents.len(), 256.pow(3));
+            assert_eq!(contents.len(), 256_usize.pow(3));
             for i in 0..=256 {
                 assert_eq!(contents[i], i as u8);
             }
@@ -730,7 +671,7 @@ mod tests {
 
     #[test]
     fn extend_definite_ber() {
-        let mut ber = Ber::new(IdRef::octet_string(), ContentsRef::from_bytes(&[]));
+        let mut ber = Ber::new(IdRef::octet_string(), <&ContentsRef>::from(&[]));
 
         for i in 0..=256 {
             ber.set_length(i + 1);
@@ -768,22 +709,22 @@ mod tests {
         }
 
         {
-            ber.set_length(256.pow(3) - 1);
-            assert_eq!(ber.length(), Length::Definite(256.pow(3) - 1));
+            ber.set_length(256_usize.pow(3) - 1);
+            assert_eq!(ber.length(), Length::Definite(256_usize.pow(3) - 1));
 
             let contents = ber.contents();
-            assert_eq!(contents.len(), 256.pow(3) - 1);
+            assert_eq!(contents.len(), 256_usize.pow(3) - 1);
             for i in 0..=256 {
                 assert_eq!(contents[i], i as u8);
             }
         }
 
         {
-            ber.set_length(256.pow(3));
-            assert_eq!(ber.length(), Length::Definite(256.pow(3)));
+            ber.set_length(256_usize.pow(3));
+            assert_eq!(ber.length(), Length::Definite(256_usize.pow(3)));
 
             let contents = ber.contents();
-            assert_eq!(contents.len(), 256.pow(3));
+            assert_eq!(contents.len(), 256_usize.pow(3));
             for i in 0..=256 {
                 assert_eq!(contents[i], i as u8);
             }
@@ -793,8 +734,10 @@ mod tests {
     #[test]
     fn enshorten_indefinite_der() {
         let contents: Vec<u8> = (0..=255).cycle().take(65537).collect();
-        let mut ber =
-            Ber::new_indefinite(IdRef::octet_string(), ContentsRef::from_bytes(&contents));
+        let mut ber = Ber::new_indefinite(
+            IdRef::octet_string(),
+            <&ContentsRef>::from(&contents as &[u8]),
+        );
 
         {
             ber.set_length(65536);
@@ -833,7 +776,10 @@ mod tests {
     #[test]
     fn enshorten_definite_der() {
         let contents: Vec<u8> = (0..=255).cycle().take(65536).collect();
-        let mut ber = Ber::new(IdRef::octet_string(), ContentsRef::from_bytes(&contents));
+        let mut ber = Ber::new(
+            IdRef::octet_string(),
+            <&ContentsRef>::from(&contents as &[u8]),
+        );
 
         {
             ber.set_length(65536);

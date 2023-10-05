@@ -52,98 +52,35 @@ pub struct ContentsRef {
 }
 
 impl<'a> From<&'a [u8]> for &'a ContentsRef {
-    /// This function is the same as [`ContentsRef::from_bytes`].
-    ///
-    /// [Read more](std::convert::From::from)
     fn from(bytes: &'a [u8]) -> Self {
         unsafe { mem::transmute(bytes) }
     }
 }
 
+impl<'a, const N: usize> From<&'a [u8; N]> for &'a ContentsRef {
+    fn from(bytes: &'a [u8; N]) -> Self {
+        Self::from(&bytes[..])
+    }
+}
+
 impl<'a> From<&'a mut [u8]> for &'a mut ContentsRef {
-    /// This function is the same as [`ContentsRef::from_mut_bytes`].
-    ///
-    /// [Read more](std::convert::From::from)
     fn from(bytes: &'a mut [u8]) -> Self {
         unsafe { mem::transmute(bytes) }
     }
 }
 
-impl From<bool> for &'static ContentsRef {
-    /// This function is the same as [`ContentsRef::from_bool`].
-    ///
-    /// [Read more](std::convert::From::from)
-    fn from(val: bool) -> Self {
-        ContentsRef::from_bool(val)
+impl<'a, const N: usize> From<&'a mut [u8; N]> for &'a mut ContentsRef {
+    fn from(bytes: &'a mut [u8; N]) -> Self {
+        Self::from(&mut bytes[..])
     }
 }
 
-impl ContentsRef {
-    /// Creates a reference to `ContentsRef` holding `bytes`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::ContentsRef;
-    ///
-    /// let bytes: &[u8] = &[1, 2, 3];
-    /// let contents = ContentsRef::from_bytes(bytes);
-    ///
-    /// assert_eq!(contents.as_bytes(), bytes);
-    /// ```
-    pub fn from_bytes(bytes: &[u8]) -> &Self {
-        <&ContentsRef>::from(bytes)
-    }
-
-    /// Creates a mutable reference to `ContentsRef` holding `bytes`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::ContentsRef;
-    ///
-    /// let bytes: &mut [u8] = &mut [1, 2, 3];
-    ///
-    /// {
-    ///     let contents = ContentsRef::from_mut_bytes(bytes);
-    ///     assert_eq!(contents.as_bytes(), &[1, 2, 3]);
-    ///
-    ///     contents[0] = 10;
-    ///     assert_eq!(contents.as_bytes(), &[10, 2, 3]);
-    /// }
-    ///
-    /// // 'bytes' is updated as well.
-    /// assert_eq!(bytes, &[10, 2, 3]);
-    /// ```
-    pub fn from_mut_bytes(bytes: &mut [u8]) -> &mut Self {
-        <&mut ContentsRef>::from(bytes)
-    }
-
-    /// Creates a reference to `ContentsRef` representing `val`.
-    ///
-    /// The rule of 'ASN.1 bool' is slightly different among 'Ber', 'Der', and 'CER', however,
-    /// the return value is valid for all of them.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::ContentsRef;
-    ///
-    /// let true_contents = ContentsRef::from_bool(true);
-    ///
-    /// assert_eq!(Ok(true), true_contents.to_bool_ber());
-    /// assert_eq!(Ok(true), true_contents.to_bool_der());
-    ///
-    /// let false_contents = ContentsRef::from_bool(false);
-    ///
-    /// assert_eq!(Ok(false), false_contents.to_bool_ber());
-    /// assert_eq!(Ok(false), false_contents.to_bool_der());
-    /// ```
-    pub fn from_bool(val: bool) -> &'static Self {
+impl From<bool> for &'static ContentsRef {
+    fn from(val: bool) -> Self {
         if val {
-            Self::from_bytes(&[0xff])
+            Self::from(&[0xff])
         } else {
-            Self::from_bytes(&[0x00])
+            Self::from(&[0x00])
         }
     }
 }
@@ -206,7 +143,7 @@ impl ContentsRef {
     /// use bsn1::ContentsRef;
     ///
     /// let bytes = &[0, 1, 2, 3, 4];
-    /// let contents = ContentsRef::from_bytes(bytes);
+    /// let contents = <&ContentsRef>::from(bytes);
     ///
     /// assert_eq!(contents.len(), bytes.len());
     /// ```    
@@ -222,11 +159,11 @@ impl ContentsRef {
     /// use bsn1::ContentsRef;
     ///
     /// let bytes = &[];
-    /// let contents = ContentsRef::from_bytes(bytes);
+    /// let contents = <&ContentsRef>::from(bytes);
     /// assert_eq!(contents.is_empty(), true);
     ///
     /// let bytes = &[0, 1, 2, 3, 4];
-    /// let contents = ContentsRef::from_bytes(bytes);
+    /// let contents = <&ContentsRef>::from(bytes);
     /// assert_eq!(contents.is_empty(), false);
     /// ```    
     pub fn is_empty(&self) -> bool {
@@ -344,16 +281,16 @@ impl ContentsRef {
     /// ```
     /// use bsn1::ContentsRef;
     ///
-    /// let true_contents = ContentsRef::from_bool(true);
+    /// let true_contents = <&ContentsRef>::from(true);
     /// assert_eq!(Ok(true), true_contents.to_bool_ber());
     ///
-    /// let false_contents = ContentsRef::from_bool(false);
+    /// let false_contents = <&ContentsRef>::from(false);
     /// assert_eq!(Ok(false), false_contents.to_bool_ber());
     ///
     /// // 'BER' regards any octet except for 0x00 as 'True',
     /// // while 'DER' regards octets except for 0x00 and 0xff as an error.
     /// let bytes = &[0x03];
-    /// let ber_contents = ContentsRef::from_bytes(bytes);
+    /// let ber_contents = <&ContentsRef>::from(bytes);
     /// assert!(ber_contents.to_bool_ber().is_ok());
     /// assert!(ber_contents.to_bool_der().is_err());
     /// ```
@@ -383,16 +320,16 @@ impl ContentsRef {
     /// ```
     /// use bsn1::ContentsRef;
     ///
-    /// let true_contents = ContentsRef::from_bool(true);
+    /// let true_contents = <&ContentsRef>::from(true);
     /// assert_eq!(Ok(true), true_contents.to_bool_der());
     ///
-    /// let false_contents = ContentsRef::from_bool(false);
+    /// let false_contents = <&ContentsRef>::from(false);
     /// assert_eq!(Ok(false), false_contents.to_bool_der());
     ///
     /// // 'BER' regards any octet except for 0x00 as 'True',
     /// // while 'DER' regards octets except for 0x00 and 0xff as error.
     /// let bytes = &[0x03];
-    /// let ber_contents = ContentsRef::from_bytes(bytes);
+    /// let ber_contents = <&ContentsRef>::from(bytes);
     /// assert!(ber_contents.to_bool_ber().is_ok());
     /// assert!(ber_contents.to_bool_der().is_err());
     /// ```
@@ -418,7 +355,7 @@ impl ContentsRef {
     /// use bsn1::ContentsRef;
     ///
     /// let bytes =  &[1, 2, 3, 4];
-    /// let contents = ContentsRef::from_bytes(bytes);
+    /// let contents = <&ContentsRef>::from(bytes);
     ///
     /// assert_eq!(contents.as_bytes(), bytes);
     /// ```
@@ -431,15 +368,35 @@ impl ContentsRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::ContentsRef;
+    /// use bsn1::{Contents, ContentsRef};
     ///
-    /// let bytes =  &mut [1, 2, 3, 4];
-    /// let contents = ContentsRef::from_mut_bytes(bytes);
+    /// let mut contents = Contents::from(&[1, 2, 3, 4]);
+    /// let contents_ref: &mut ContentsRef = contents.as_mut();
     ///
-    /// contents.as_mut_bytes()[0] = 0;
-    /// assert_eq!(bytes, &[0, 2, 3, 4]);
+    /// contents_ref.as_mut_bytes()[0] = 0;
+    /// assert_eq!(contents.as_bytes(), &[0, 2, 3, 4]);
     /// ```
     pub fn as_mut_bytes(&mut self) -> &mut [u8] {
         &mut self.bytes
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn from_bool() {
+        // True
+        {
+            let contents = <&ContentsRef>::from(true);
+            assert_eq!(&[0xff], contents.as_bytes());
+        }
+
+        // false
+        {
+            let contents = <&ContentsRef>::from(false);
+            assert_eq!(&[0x00], contents.as_bytes());
+        }
     }
 }

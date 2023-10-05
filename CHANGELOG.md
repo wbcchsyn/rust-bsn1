@@ -217,3 +217,63 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - PartialOrd for Contents
   - PartialOrd for ContentsRef
   - Ord for ContentsRef
+
+## 2.0 - 2023-03-02
+
+### Added
+
+- Implement the following traits
+  - From\<bool\> for Ber
+  - From\<T: PrimInt\> for Ber (`PrimInt` is `i8` or `u8` or ... `u128` or `isize` or `usize`.)
+  - From\<&str\> for Ber
+  - From\<&[u8]\> for Ber
+  - From\<bool\> for Der
+  - From\<T: PrimInt\> for Der (`PrimInt` is `i8` or `u8` or ... `u128` or `isize` or `usize`.)
+  - From\<&str\> for Der
+  - From\<&[u8]\> for Der
+  - From\<&[u8; N]\> for Contents
+  - From\<&[u8; N]\> for &ContentsRef
+  - From\<&mut [u8; N]\> for &mut ContentsRef
+
+### Changed
+
+- Rename the following functions and methods
+  - Rename Ber::try\_from\_bytes() Ber::parse()
+  - Rename BerRef::try\_from\_bytes() Ber::parse()
+  - Rename BerRef::try\_from\_mut\_bytes() Ber::parse\_mut()
+  - Rename Der::try\_from\_bytes() Der::parse()
+  - Rename DerRef::try\_from\_bytes() Der::parse()
+  - Rename DerRef::try\_from\_mut\_bytes() Der::parse\_mut()
+  - Rename Id::try\_from\_bytes() Id::parse()
+  - Rename IdRef::try\_from\_bytes() IdRef::parse()
+  - Rename IdRef::try\_from\_mut\_bytes() IdRef::parse\_mut()
+  - Rename Length::try\_from\_bytes() Length::parse()
+
+### Removed
+
+- Delete the following builder functions. Use `From` implementation instead.
+  - Ber::boolean()
+  - Ber::integer()
+  - Ber::octet_string()
+  - Ber::utf8_string()
+  - Der::boolean()
+  - Der::integer()
+  - Der::octet_string()
+  - Der::utf8_string()
+  - Contents::from\_bool()
+  - ContentsRef::from\_bool()
+  - ContentsRef::from\_bytes()
+  - ContentsRef::from\_mut\_bytes()
+- Ignore the following `TryFrom` implementations. Use `parse()` or `parse_mut()` instead.
+  - TryFrom\<&[u8]\> for Ber
+  - TryFrom\<&[u8]\> for &BerRef
+  - TryFrom\<&mut [u8]\> for &mut BerRef
+  - TryFrom\<&[u8]\> for Der
+  - TryFrom\<&[u8]\> for &DerRef
+  - TryFrom\<&mut [u8]\> for &mut DerRef
+  - TryFrom\<&[u8]\> for Id
+  - TryFrom\<&[u8]\> for IdRef
+  - TryFrom\<&[u8]\> for Length
+- Delete the following macros
+  - constructed\_ber!()
+  - constructed\_der!()
