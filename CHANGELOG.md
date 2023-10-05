@@ -251,7 +251,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 
 ### Removed
 
-- Delete the following functions and methods
+- Delete the following builder functions. Use `From` implementation instead.
   - Ber::boolean()
   - Ber::integer()
   - Ber::octet_string()
@@ -264,7 +264,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - ContentsRef::from\_bool()
   - ContentsRef::from\_bytes()
   - ContentsRef::from\_mut\_bytes()
-- Ignore the following implementations
+- Ignore the following `TryFrom` implementations. Use `parse()` or `parse_mut()` instead.
   - TryFrom\<&[u8]\> for Ber
   - TryFrom\<&[u8]\> for &BerRef
   - TryFrom\<&mut [u8]\> for &mut BerRef
