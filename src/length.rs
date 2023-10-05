@@ -34,7 +34,6 @@
 
 use crate::{Error, LengthBuffer};
 use std::cmp::Ordering;
-use std::convert::TryFrom;
 use std::mem::{size_of, size_of_val};
 use std::ops::Deref;
 
@@ -51,21 +50,6 @@ pub enum Length {
     Indefinite,
     /// 'Definite' is for 'BER', 'DER', and 'CER', and represents the byte count of the contents.
     Definite(usize),
-}
-
-impl TryFrom<&[u8]> for Length {
-    type Error = Error;
-
-    /// Parses `bytes` starting with length octets and tries to create a new instance.
-    ///
-    /// This function ignores extra octet(s) at the end of `bytes` if any.
-    ///
-    /// This function is the same as [`parse`].
-    ///
-    /// [`parse`]: #method.from_bytes
-    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-        parse_(bytes).map(|(length, _rest)| length)
-    }
 }
 
 impl PartialEq for Length {
@@ -122,12 +106,11 @@ impl Length {
     ///
     /// ```
     /// use bsn1::Length;
-    /// use std::convert::TryFrom;
     ///
     /// let length = Length::Definite(3);
     /// let bytes = length.to_bytes();
     ///
-    /// let deserialized = Length::try_from(&bytes as &[u8]).unwrap();
+    /// let deserialized = Length::parse(&bytes as &[u8]).unwrap();
     /// assert_eq!(length, deserialized);
     /// ```
     pub fn to_bytes(self) -> impl Deref<Target = [u8]> {

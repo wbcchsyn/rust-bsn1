@@ -254,6 +254,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - ContentsRef::from\_bool()
   - ContentsRef::from\_bytes()
   - ContentsRef::from\_mut\_bytes()
+- Ignore the following implementations
+  - TryFrom\<&[u8]\> for Length
 - Delete the following macros
   - constructed\_ber!()
   - constructed\_der!()
