@@ -49,7 +49,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is the same as [`DerRef::try_from_bytes`].
+    /// This function is the same as [`DerRef::parse`].
     ///
     /// # Warnings
     ///
@@ -98,7 +98,7 @@ impl<'a> TryFrom<&'a mut [u8]> for &'a mut DerRef {
     ///
     /// [`Read more`](std::convert::TryFrom::try_from)
     fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
-        let ret = DerRef::try_from_bytes(bytes)?;
+        let ret = DerRef::parse(bytes)?;
         let ptr = ret as *const DerRef;
         let ptr = ptr as *mut DerRef;
         unsafe { Ok(&mut *ptr) }
@@ -128,15 +128,15 @@ impl DerRef {
     ///
     /// // Represents '8' as Integer.
     /// let bytes0: &[u8] = &[0x02, 0x01, 0x08];
-    /// let der0 = DerRef::try_from_bytes(bytes0).unwrap();
+    /// let der0 = DerRef::parse(bytes0).unwrap();
     ///
     /// // The result is not changed even if extra octets are added to the end.
     /// let bytes1: &[u8] = &[0x02, 0x01, 0x08, 0x00, 0xff];
-    /// let der1 = DerRef::try_from_bytes(bytes1).unwrap();
+    /// let der1 = DerRef::parse(bytes1).unwrap();
     ///
     /// assert_eq!(der0, der1);
     /// ```
-    pub fn try_from_bytes(bytes: &[u8]) -> Result<&Self, Error> {
+    pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
         <&Self>::try_from(bytes)
     }
 
@@ -182,10 +182,10 @@ impl DerRef {
     /// `bytes` must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` is valid octets as a 'DER', use [`TryFrom`]
-    /// implementation or [`try_from_bytes`] instead.
+    /// implementation or [`parse`] instead.
     ///
     /// [`TryFrom`]: #method.try_from
-    /// [`try_from_bytes`]: Self::try_from_bytes
+    /// [`parse`]: Self::parse
     ///
     /// # Safety
     ///
@@ -276,7 +276,7 @@ impl DerRef {
     /// use bsn1::{DerRef, IdRef};
     ///
     /// let bytes: &[u8] = &[0x02, 0x01, 0x04];  // Represents '4' as Integer.
-    /// let der = DerRef::try_from_bytes(bytes).unwrap();
+    /// let der = DerRef::parse(bytes).unwrap();
     ///
     /// assert_eq!(IdRef::integer(), der.id());
     /// ```
@@ -329,7 +329,7 @@ impl DerRef {
     /// use bsn1::{DerRef, Length};
     ///
     /// let bytes: &[u8] = &[0x04, 0x02, 0x00, 0xff];  // Represents '[0x00, 0xff]' as Octet String
-    /// let der = DerRef::try_from_bytes(bytes).unwrap();
+    /// let der = DerRef::parse(bytes).unwrap();
     ///
     /// assert_eq!(Length::Definite(2), der.length());
     /// ```
@@ -347,7 +347,7 @@ impl DerRef {
     /// use bsn1::{ContentsRef, DerRef};
     ///
     /// let bytes: &[u8] = &[0x04, 0x02, 0x00, 0xff];  // Represents '[0x00, 0xff]' as Octet String
-    /// let der = DerRef::try_from_bytes(bytes).unwrap();
+    /// let der = DerRef::parse(bytes).unwrap();
     /// let contents = <&ContentsRef>::from(&bytes[2..]);
     ///
     /// assert_eq!(contents, der.contents());
@@ -391,7 +391,7 @@ impl DerRef {
     /// // This octets represents `3` as integer.
     /// let bytes = vec![0x02, 0x01, 0x03];
     ///
-    /// let der = DerRef::try_from_bytes(&bytes).unwrap();
+    /// let der = DerRef::parse(&bytes).unwrap();
     /// assert_eq!(&bytes, der.as_bytes());
     /// ```
     pub fn as_bytes(&self) -> &[u8] {
