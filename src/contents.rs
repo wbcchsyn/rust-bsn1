@@ -169,9 +169,13 @@ impl From<isize> for Contents {
 }
 
 impl From<bool> for Contents {
-    /// This function is the same as [`Contents::from_bool`].
     fn from(val: bool) -> Self {
-        Contents::from_bool(val)
+        let buffer = if val {
+            Buffer::from(&[0xff])
+        } else {
+            Buffer::from(&[0x00])
+        };
+        Self { buffer }
     }
 }
 
@@ -192,34 +196,6 @@ impl Contents {
         Self {
             buffer: Buffer::from(bytes),
         }
-    }
-
-    /// Creates a new instance indicating `val`.
-    ///
-    /// The rule of bool is slightly different among BER, DER, and CER, however,
-    /// the return value is valid for all of them.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Contents, ContentsRef};
-    ///
-    /// let true_contents = Contents::from_bool(true);
-    /// assert_eq!(Ok(true), true_contents.to_bool_ber());
-    /// assert_eq!(Ok(true), true_contents.to_bool_der());
-    ///
-    /// let false_contents = Contents::from_bool(false);
-    /// assert_eq!(Ok(false), false_contents.to_bool_ber());
-    /// assert_eq!(Ok(false), false_contents.to_bool_der());
-    /// ```
-    pub fn from_bool(val: bool) -> Self {
-        let mut buffer = Buffer::new();
-        if val {
-            unsafe { buffer.push(0xff) };
-        } else {
-            unsafe { buffer.push(0x00) };
-        }
-        Self { buffer }
     }
 
     /// Serializes integer and creates a new instance.
@@ -898,16 +874,16 @@ mod tests {
     }
 
     #[test]
-    fn contents_from_bool() {
+    fn from_bool() {
         // True
         {
-            let contents = Contents::from_bool(true);
+            let contents = Contents::from(true);
             assert_eq!(&[0xff], contents.as_bytes());
         }
 
         // false
         {
-            let contents = Contents::from_bool(false);
+            let contents = Contents::from(false);
             assert_eq!(&[0x00], contents.as_bytes());
         }
     }

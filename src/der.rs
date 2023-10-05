@@ -393,7 +393,7 @@ impl Der {
     /// assert_eq!(val, der.contents().to_bool_der().unwrap());
     /// ```
     pub fn boolean(val: bool) -> Self {
-        Self::new(IdRef::boolean(), &Contents::from_bool(val))
+        Self::new(IdRef::boolean(), <&ContentsRef>::from(val))
     }
 
     /// Returns a new instance representing integer.
