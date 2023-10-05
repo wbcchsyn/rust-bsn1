@@ -53,6 +53,90 @@ impl From<&DerRef> for Ber {
     }
 }
 
+impl From<i8> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i8) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u8> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u8) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<i16> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i16) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u16> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u16) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<i32> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i32) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u32> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u32) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<i64> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i64) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u64> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u64) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<i128> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i128) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u128> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u128) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<isize> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: isize) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<usize> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: usize) -> Self {
+        Der::from(contents).into()
+    }
+}
+
 impl From<Der> for Ber {
     fn from(der: Der) -> Self {
         Self {
