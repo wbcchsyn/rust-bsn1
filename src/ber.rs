@@ -432,6 +432,12 @@ impl AsRef<BerRef> for Ber {
     }
 }
 
+impl AsMut<BerRef> for Ber {
+    fn as_mut(&mut self) -> &mut BerRef {
+        self.deref_mut()
+    }
+}
+
 impl Borrow<BerRef> for Ber {
     fn borrow(&self) -> &BerRef {
         self.deref()
