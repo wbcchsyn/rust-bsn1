@@ -39,7 +39,7 @@ Let's make/parse LDAP Bind Operation (i.e. Login Query.)
 
 See [RFC4511](https://www.rfc-editor.org/rfc/rfc4511) for the details.
 
-```
+```rust
 use bsn1::{Ber, BerRef, ContentsRef, Id, IdRef, ClassTag, PCTag};
 
 /// Creates a BindRequest from `name` and `password`.
@@ -189,4 +189,3 @@ let (name_, password_) = parse_bind_request(bytes).unwrap();
 assert_eq!(name, name_);
 assert_eq!(password, password_);
 ```
-
