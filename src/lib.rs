@@ -223,6 +223,7 @@
 //! ```
 
 mod ber;
+mod ber_ref;
 mod buffer;
 mod contents;
 mod contents_ref;
@@ -232,7 +233,8 @@ mod identifier;
 mod length;
 mod length_buffer;
 
-pub use ber::{Ber, BerRef};
+pub use ber::Ber;
+pub use ber_ref::BerRef;
 use buffer::Buffer;
 pub use contents::Contents;
 pub use contents_ref::ContentsRef;
