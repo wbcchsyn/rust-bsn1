@@ -36,7 +36,6 @@ use num::cast::AsPrimitive;
 use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
 use std::cmp::Ordering;
-use std::convert::TryFrom;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 
@@ -53,29 +52,6 @@ use std::ops::{Deref, DerefMut};
 #[derive(Debug, Clone, Eq, Ord, Hash)]
 pub struct Id {
     buffer: Buffer,
-}
-
-impl TryFrom<&[u8]> for Id {
-    type Error = Error;
-
-    /// Parses `bytes` starting with identifier octets and tries to build a new instance.
-    ///
-    /// This function ignores the extra octet(s) at the end if any.
-    ///
-    /// This function is the same as [`parse`].
-    ///
-    /// # Warnings
-    ///
-    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok`.
-    ///
-    /// [`parse`]: Self::parse
-    ///
-    /// [Read more](std::convert::TryFrom::try_from)
-    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-        <&IdRef>::try_from(bytes).map(|idref| idref.to_owned())
-    }
 }
 
 impl Id {
@@ -166,7 +142,7 @@ impl Id {
     /// assert_eq!(id0, id1);
     /// ```
     pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
-        Self::try_from(bytes).map(|idref| idref.to_owned())
+        IdRef::parse(bytes).map(|idref| idref.to_owned())
     }
 
     /// Provides a reference from `bytes` without any check.
@@ -376,7 +352,7 @@ mod tests {
                     bytes[0] = cl as u8 | pc as u8 | LONG_FLAG;
                     bytes[1] = 0x84;
                     bytes[19] = 0x00;
-                    let id = Id::try_from(&bytes as &[u8]).unwrap();
+                    let id = Id::parse(&bytes as &[u8]).unwrap();
                     assert!(id.number::<u128>().is_err());
                 }
             }
@@ -399,7 +375,7 @@ mod tests {
                     std::u128::MAX,
                 ] {
                     let id = Id::new(cl, pc, num);
-                    let idref = <&IdRef>::try_from(id.as_bytes()).unwrap();
+                    let idref = IdRef::parse(id.as_bytes()).unwrap();
                     assert_eq!(idref.as_bytes(), id.as_bytes());
                 }
             }
