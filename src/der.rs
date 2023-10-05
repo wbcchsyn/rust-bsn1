@@ -142,6 +142,16 @@ impl From<usize> for Der {
     }
 }
 
+impl From<&str> for Der {
+    /// Creates a new instance representing utf8-string containing `contents`.
+    fn from(contents: &str) -> Self {
+        Self::new(
+            IdRef::utf8_string(),
+            <&ContentsRef>::from(contents.as_bytes()),
+        )
+    }
+}
+
 impl Der {
     /// Creates a new instance from `id` and `contents`.
     ///
@@ -788,6 +798,14 @@ mod tests {
             assert_eq!(IdRef::integer(), der.id());
             assert_eq!(i, der.contents().to_integer().unwrap());
         }
+    }
+
+    #[test]
+    fn from_str() {
+        let val = "foo";
+        let der = Der::from(val);
+        assert_eq!(IdRef::utf8_string(), der.id());
+        assert_eq!(val.as_bytes(), der.contents().as_bytes());
     }
 
     #[test]

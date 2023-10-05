@@ -227,6 +227,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - From\<T: PrimInt\> for Ber (`PrimInt` is `i8` or `u8` or ... `u128` or `isize` or `usize`.)
   - From\<bool\> for Der
   - From\<T: PrimInt\> for Der (`PrimInt` is `i8` or `u8` or ... `u128` or `isize` or `usize`.)
+  - From\<&str\> for Der
   - From\<&[u8; N]\> for Contents
   - From\<&[u8; N]\> for &ContentsRef
   - From\<&mut [u8; N]\> for &mut ContentsRef
