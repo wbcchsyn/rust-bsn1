@@ -152,6 +152,12 @@ impl From<&str> for Der {
     }
 }
 
+impl From<&[u8]> for Der {
+    fn from(contents: &[u8]) -> Self {
+        Self::new(IdRef::octet_string(), <&ContentsRef>::from(contents))
+    }
+}
+
 impl Der {
     /// Creates a new instance from `id` and `contents`.
     ///
