@@ -149,6 +149,13 @@ impl From<&str> for Ber {
     }
 }
 
+impl From<&[u8]> for Ber {
+    /// Creates a new instance representing an octet-string containing `contents`.
+    fn from(contents: &[u8]) -> Self {
+        Der::from(contents).into()
+    }
+}
+
 impl From<Der> for Ber {
     fn from(der: Der) -> Self {
         Self {
