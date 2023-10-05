@@ -426,6 +426,12 @@ impl AsRef<[u8]> for Ber {
     }
 }
 
+impl AsRef<BerRef> for Ber {
+    fn as_ref(&self) -> &BerRef {
+        self.deref()
+    }
+}
+
 impl Borrow<BerRef> for Ber {
     fn borrow(&self) -> &BerRef {
         self.deref()
