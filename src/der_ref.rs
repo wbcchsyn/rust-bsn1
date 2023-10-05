@@ -60,7 +60,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a DerRef {
     ///
     /// [`Read more`](std::convert::TryFrom::try_from)
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
-        let id = <&IdRef>::try_from(bytes)?;
+        let id = IdRef::parse(bytes)?;
         let parsing = &bytes[id.len()..];
 
         let (len, parsing) = match length::parse_(parsing) {

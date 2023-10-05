@@ -258,6 +258,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - TryFrom\<&[u8]\> for Ber
   - TryFrom\<&[u8]\> for Der
   - TryFrom\<&[u8]\> for Id
+  - TryFrom\<&[u8]\> for IdRef
   - TryFrom\<&[u8]\> for Length
 - Delete the following macros
   - constructed\_ber!()

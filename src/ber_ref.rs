@@ -66,7 +66,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
     /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
     /// functions returns `Ok`.
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
-        let id = <&IdRef>::try_from(bytes)?;
+        let id = IdRef::parse(bytes)?;
         let parsing = &bytes[id.len()..];
 
         match length::parse_(parsing) {
