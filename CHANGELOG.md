@@ -234,6 +234,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 ### Changed
 
 - Rename the following functions and methods
+  - Rename Ber::try\_from\_bytes() Ber::parse()
   - Rename Der::try\_from\_bytes() Der::parse()
   - Rename DerRef::try\_from\_bytes() Der::parse()
   - Rename DerRef::try\_from\_mut\_bytes() Der::parse\_mut()

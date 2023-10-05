@@ -164,9 +164,9 @@ impl TryFrom<&[u8]> for Ber {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is the same as [`try_from_bytes`].
+    /// This function is the same as [`parse`].
     ///
-    /// [`try_from_bytes`]: Ber::try_from_bytes
+    /// [`parse`]: Ber::parse
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         let ber_ref = <&BerRef>::try_from(bytes)?;
         Ok(ber_ref.to_owned())
@@ -355,7 +355,7 @@ impl Ber {
     /// but this function returns `Ok`.
     ///
     /// [`TryFrom::try_from`]: #method.try_from
-    pub fn try_from_bytes(bytes: &[u8]) -> Result<Self, Error> {
+    pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
         Self::try_from(bytes)
     }
 
@@ -364,10 +364,10 @@ impl Ber {
     /// `bytes` must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` are valid octets as a 'BER', use [`TryFrom`]
-    /// implementation or [`try_from_bytes`] instead.
+    /// implementation or [`parse`] instead.
     ///
     /// [`TryFrom`]: #method.try_from
-    /// [`try_from_bytes`]: Self::try_from_bytes
+    /// [`parse`]: Self::parse
     ///
     /// # Safety
     ///
