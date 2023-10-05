@@ -385,27 +385,6 @@ impl Der {
     pub fn utf8_string(val: &str) -> Self {
         Self::new(IdRef::utf8_string(), <&ContentsRef>::from(val.as_bytes()))
     }
-
-    /// Returns a new instance representing octet_string.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the total length of the return value exceeds `isize::MAX`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Der, IdRef};
-    ///
-    /// let val = &[1, 2, 3];
-    /// let der = Der::octet_string(val);
-    ///
-    /// assert_eq!(IdRef::octet_string(), der.id());
-    /// assert_eq!(val, der.contents().as_bytes());
-    /// ```
-    pub fn octet_string(val: &[u8]) -> Self {
-        Self::new(IdRef::octet_string(), <&ContentsRef>::from(val))
-    }
 }
 
 impl AsRef<[u8]> for Der {
@@ -454,7 +433,7 @@ impl Der {
     /// ```
     /// use bsn1::Der;
     ///
-    /// let der = Der::octet_string(&[0, 1, 2, 3, 4]);
+    /// let der = Der::from("foo");
     /// let v = der.clone().into_vec();
     ///
     /// assert_eq!(der.as_bytes(), &v);
@@ -486,7 +465,7 @@ impl Der {
     /// ```
     /// use bsn1::{Der, Length};
     ///
-    /// let mut der = Der::octet_string(&[]);
+    /// let mut der = Der::from(&[] as &[u8]);
     ///
     /// assert_eq!(der.length(), Length::Definite(0));
     /// assert_eq!(der.contents().as_bytes(), &[]);
@@ -829,7 +808,7 @@ mod tests {
 
     #[test]
     fn extend_der() {
-        let mut der = Der::octet_string(&[]);
+        let mut der = Der::from(&[] as &[u8]);
 
         for i in 0..=256 {
             der.set_length(i + 1);
@@ -890,7 +869,7 @@ mod tests {
             .cycle()
             .take(256_usize.pow(3) + 1)
             .collect();
-        let mut der = Der::octet_string(&contents);
+        let mut der = Der::from(&contents[..]);
 
         {
             let len = 256_usize.pow(3);
