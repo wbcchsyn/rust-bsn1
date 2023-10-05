@@ -234,6 +234,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 ### Removed
 
 - Delete the following functions and methods
+  - Ber::integer()
   - Contents::from\_bool()
   - ContentsRef::from\_bool()
   - ContentsRef::from\_bytes()

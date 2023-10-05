@@ -31,7 +31,6 @@
 // limitations under the License.
 
 use crate::{BerRef, Buffer, ContentsRef, Der, DerRef, Error, IdRef, Length};
-use num::PrimInt;
 use std::borrow::Borrow;
 use std::convert::TryFrom;
 use std::ops::{Deref, DerefMut};
@@ -406,7 +405,7 @@ impl Ber {
     /// let id = IdRef::sequence();
     ///
     /// // Builds an instance using function 'from_id_iterator()'.
-    /// let contents: &[Ber] = &[Ber::utf8_string("foo"), Ber::integer(29_i32)];
+    /// let contents: &[Ber] = &[Ber::utf8_string("foo"), Ber::from(29_i32)];
     /// let ber = Ber::from_id_iterator(id, contents.iter());
     ///
     /// // Builds an instance using function 'new()'.
@@ -442,28 +441,6 @@ impl Ber {
     /// ```
     pub fn boolean(val: bool) -> Self {
         Self::from(Der::boolean(val))
-    }
-
-    /// Returns a new instance representing an integer.
-    ///
-    /// Type `T` should be a built-in primitive integer type (e.g., u8, u32, isize, i128, ...)
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Ber, IdRef};
-    ///
-    /// let val = 39;
-    /// let ber = Ber::integer(val);
-    ///
-    /// assert_eq!(IdRef::integer(), ber.id());
-    /// assert_eq!(val, ber.contents().to_integer().unwrap());
-    /// ```
-    pub fn integer<T>(val: T) -> Self
-    where
-        T: PrimInt,
-    {
-        Self::from(Der::integer(val))
     }
 
     /// Returns a new instance representing a utf8_string.
@@ -736,22 +713,22 @@ mod tests {
         }
 
         {
-            ber.set_length(256.pow(3) - 1);
+            ber.set_length(256_usize.pow(3) - 1);
             assert_eq!(ber.length().is_indefinite(), true);
 
             let contents = ber.contents();
-            assert_eq!(contents.len(), 256.pow(3) - 1);
+            assert_eq!(contents.len(), 256_usize.pow(3) - 1);
             for i in 0..=256 {
                 assert_eq!(contents[i], i as u8);
             }
         }
 
         {
-            ber.set_length(256.pow(3));
+            ber.set_length(256_usize.pow(3));
             assert_eq!(ber.length().is_indefinite(), true);
 
             let contents = ber.contents();
-            assert_eq!(contents.len(), 256.pow(3));
+            assert_eq!(contents.len(), 256_usize.pow(3));
             for i in 0..=256 {
                 assert_eq!(contents[i], i as u8);
             }
@@ -798,22 +775,22 @@ mod tests {
         }
 
         {
-            ber.set_length(256.pow(3) - 1);
-            assert_eq!(ber.length(), Length::Definite(256.pow(3) - 1));
+            ber.set_length(256_usize.pow(3) - 1);
+            assert_eq!(ber.length(), Length::Definite(256_usize.pow(3) - 1));
 
             let contents = ber.contents();
-            assert_eq!(contents.len(), 256.pow(3) - 1);
+            assert_eq!(contents.len(), 256_usize.pow(3) - 1);
             for i in 0..=256 {
                 assert_eq!(contents[i], i as u8);
             }
         }
 
         {
-            ber.set_length(256.pow(3));
-            assert_eq!(ber.length(), Length::Definite(256.pow(3)));
+            ber.set_length(256_usize.pow(3));
+            assert_eq!(ber.length(), Length::Definite(256_usize.pow(3)));
 
             let contents = ber.contents();
-            assert_eq!(contents.len(), 256.pow(3));
+            assert_eq!(contents.len(), 256_usize.pow(3));
             for i in 0..=256 {
                 assert_eq!(contents[i], i as u8);
             }

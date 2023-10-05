@@ -98,7 +98,7 @@
 //! /// Creates a `version` for bind request.
 //! /// This function always returns 3 (the current latest version.)
 //! fn new_bind_version() -> Ber {
-//!     Ber::integer(3_i32)
+//!     Ber::from(3_i32)
 //! }
 //!
 //! /// Creates a `name` for bind request from `name`.
