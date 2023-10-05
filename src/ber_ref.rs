@@ -32,7 +32,6 @@
 
 use crate::{identifier_ref, length, Ber, ContentsRef, DerRef, Error, IdRef, Length};
 use std::borrow::Borrow;
-use std::convert::TryFrom;
 use std::mem;
 
 /// `BerRef` is a wrapper of `[u8]` and represents a BER.
@@ -46,58 +45,6 @@ pub struct BerRef {
 impl<'a> From<&'a DerRef> for &'a BerRef {
     fn from(der: &'a DerRef) -> Self {
         unsafe { BerRef::from_bytes_unchecked(der.as_bytes()) }
-    }
-}
-
-impl<'a> TryFrom<&'a [u8]> for &'a BerRef {
-    type Error = Error;
-
-    /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a reference to `BerRef`.
-    ///
-    /// This function ignores extra octet(s) at the end of `bytes` if any.
-    ///
-    /// This function is the same as [`BerRef::parse`].
-    ///
-    /// [Read more](std::convert::TryFrom::try_from)
-    ///
-    /// # Warnings
-    ///
-    /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok`.
-    fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
-        let id = IdRef::parse(bytes)?;
-        let parsing = &bytes[id.len()..];
-
-        match length::parse_(parsing) {
-            Err(e) => Err(e),
-            Ok((Length::Definite(len), parsing)) => {
-                let total_len = bytes.len() - parsing.len() + len;
-
-                if bytes.len() < total_len {
-                    Err(Error::UnTerminatedBytes)
-                } else {
-                    unsafe { Ok(BerRef::from_bytes_unchecked(&bytes[..total_len])) }
-                }
-            }
-            Ok((Length::Indefinite, mut parsing)) => {
-                while {
-                    let element = Self::try_from(parsing)?;
-                    let len = element.as_bytes().len();
-                    parsing = &parsing[len..];
-
-                    if element.id() != IdRef::eoc() {
-                        true
-                    } else if element.contents().is_empty() {
-                        false
-                    } else {
-                        return Err(Error::BadEoc);
-                    }
-                } {}
-                let total_len = bytes.len() - parsing.len();
-                unsafe { Ok(BerRef::from_bytes_unchecked(&bytes[..total_len])) }
-            }
-        }
     }
 }
 
@@ -132,7 +79,38 @@ impl BerRef {
     /// assert_eq!(ber0, ber1);
     /// ```
     pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
-        <&Self>::try_from(bytes)
+        let id = IdRef::parse(bytes)?;
+        let parsing = &bytes[id.len()..];
+
+        match length::parse_(parsing) {
+            Err(e) => Err(e),
+            Ok((Length::Definite(len), parsing)) => {
+                let total_len = bytes.len() - parsing.len() + len;
+
+                if bytes.len() < total_len {
+                    Err(Error::UnTerminatedBytes)
+                } else {
+                    unsafe { Ok(BerRef::from_bytes_unchecked(&bytes[..total_len])) }
+                }
+            }
+            Ok((Length::Indefinite, mut parsing)) => {
+                while {
+                    let element = Self::parse(parsing)?;
+                    let len = element.as_bytes().len();
+                    parsing = &parsing[len..];
+
+                    if element.id() != IdRef::eoc() {
+                        true
+                    } else if element.contents().is_empty() {
+                        false
+                    } else {
+                        return Err(Error::BadEoc);
+                    }
+                } {}
+                let total_len = bytes.len() - parsing.len();
+                unsafe { Ok(BerRef::from_bytes_unchecked(&bytes[..total_len])) }
+            }
+        }
     }
 
     /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a mutable reference to
