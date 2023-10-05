@@ -235,6 +235,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 
 - Delete the following functions and methods
   - Ber::integer()
+  - Der::integer()
   - Contents::from\_bool()
   - ContentsRef::from\_bool()
   - ContentsRef::from\_bytes()

@@ -31,7 +31,6 @@
 // limitations under the License.
 
 use crate::{Buffer, Contents, ContentsRef, DerRef, Error, IdRef, Length};
-use num::PrimInt;
 use std::borrow::Borrow;
 use std::convert::TryFrom;
 use std::ops::{Deref, DerefMut};
@@ -347,7 +346,7 @@ impl Der {
     /// let id = IdRef::sequence();
     ///
     /// // Build instance using function 'from_id_iterator()'.
-    /// let contents: &[Der] = &[Der::utf8_string("foo"), Der::integer(29_i32)];
+    /// let contents: &[Der] = &[Der::utf8_string("foo"), Der::from(29_i32)];
     /// let der = Der::from_id_iterator(id, contents.iter());
     ///
     /// // Build instance using function 'new()'.
@@ -394,28 +393,6 @@ impl Der {
     /// ```
     pub fn boolean(val: bool) -> Self {
         Self::new(IdRef::boolean(), <&ContentsRef>::from(val))
-    }
-
-    /// Returns a new instance representing integer.
-    ///
-    /// Type `T` should be a built-in primitive integer type (e.g., u8, u32, isize, i128, ...)
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Der, IdRef};
-    ///
-    /// let val = 39;
-    /// let der = Der::integer(val);
-    ///
-    /// assert_eq!(IdRef::integer(), der.id());
-    /// assert_eq!(val, der.contents().to_integer().unwrap());
-    /// ```
-    pub fn integer<T>(val: T) -> Self
-    where
-        T: PrimInt,
-    {
-        Self::new(IdRef::integer(), &Contents::from_integer(val))
     }
 
     /// Returns a new instance representing utf8_string.
@@ -909,8 +886,8 @@ mod tests {
         }
 
         {
-            der.set_length(256.pow(3) - 1);
-            assert_eq!(der.length(), Length::Definite(256.pow(3) - 1));
+            der.set_length(256_usize.pow(3) - 1);
+            assert_eq!(der.length(), Length::Definite(256_usize.pow(3) - 1));
 
             let contents = der.contents();
             for i in 0..=256 {
@@ -919,8 +896,8 @@ mod tests {
         }
 
         {
-            der.set_length(256.pow(3));
-            assert_eq!(der.length(), Length::Definite(256.pow(3)));
+            der.set_length(256_usize.pow(3));
+            assert_eq!(der.length(), Length::Definite(256_usize.pow(3)));
 
             let contents = der.contents();
             for i in 0..=256 {
@@ -931,11 +908,14 @@ mod tests {
 
     #[test]
     fn shrinik_der() {
-        let contents: Vec<u8> = (0..=std::u8::MAX).cycle().take(256.pow(3) + 1).collect();
+        let contents: Vec<u8> = (0..=std::u8::MAX)
+            .cycle()
+            .take(256_usize.pow(3) + 1)
+            .collect();
         let mut der = Der::octet_string(&contents);
 
         {
-            let len = 256.pow(3);
+            let len = 256_usize.pow(3);
             der.set_length(len);
             assert_eq!(der.length(), Length::Definite(len));
 
@@ -946,7 +926,7 @@ mod tests {
         }
 
         {
-            let len = 256.pow(3) - 1;
+            let len = 256_usize.pow(3) - 1;
             der.set_length(len);
             assert_eq!(der.length(), Length::Definite(len));
 
