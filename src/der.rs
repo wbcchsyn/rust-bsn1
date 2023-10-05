@@ -349,23 +349,6 @@ impl Der {
         Self { buffer }
     }
 
-    /// Returns a new instance representing a boolean.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Der, IdRef};
-    ///
-    /// let val = true;
-    /// let der = Der::boolean(val);
-    ///
-    /// assert_eq!(IdRef::boolean(), der.id());
-    /// assert_eq!(val, der.contents().to_bool_der().unwrap());
-    /// ```
-    pub fn boolean(val: bool) -> Self {
-        Self::new(IdRef::boolean(), <&ContentsRef>::from(val))
-    }
-
     /// Returns a new instance representing utf8_string.
     ///
     /// # Panics

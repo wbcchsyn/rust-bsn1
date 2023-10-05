@@ -418,7 +418,7 @@ impl Ber {
     /// assert_eq!(val, ber.contents().to_bool_ber().unwrap());
     /// ```
     pub fn boolean(val: bool) -> Self {
-        Self::from(Der::boolean(val))
+        Self::from(Der::from(val))
     }
 
     /// Returns a new instance representing a utf8_string.
