@@ -85,7 +85,7 @@ impl<'a> TryFrom<&'a mut [u8]> for &'a mut IdRef {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
-    /// This function is the same as [`IdRef::try_from_mut_bytes`].
+    /// This function is the same as [`IdRef::parse_mut`].
     ///
     /// # Warnings
     ///
@@ -95,7 +95,7 @@ impl<'a> TryFrom<&'a mut [u8]> for &'a mut IdRef {
     ///
     /// [Read more](std::convert::TryFrom::try_from)
     fn try_from(bytes: &'a mut [u8]) -> Result<Self, Self::Error> {
-        IdRef::try_from_mut_bytes(bytes)
+        IdRef::parse_mut(bytes)
     }
 }
 
@@ -201,7 +201,7 @@ impl IdRef {
     /// let bytes: &mut [u8] = &mut [0];
     ///
     /// {
-    ///     let idref = IdRef::try_from_mut_bytes(bytes).unwrap();
+    ///     let idref = IdRef::parse_mut(bytes).unwrap();
     ///     // Update idref
     ///     idref.set_class(ClassTag::Private);
     /// }
@@ -211,10 +211,10 @@ impl IdRef {
     ///
     /// // The result is not changed if (an) extra octet(s) is added at the end.
     /// let bytes: &mut [u8] = &mut [0, 1, 2, 3];
-    /// let idref = IdRef::try_from_mut_bytes(bytes).unwrap();
+    /// let idref = IdRef::parse_mut(bytes).unwrap();
     /// assert_eq!(IdRef::eoc(), idref);
     /// ```
-    pub fn try_from_mut_bytes(bytes: &mut [u8]) -> Result<&mut Self, Error> {
+    pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
         let ret = Self::try_from_bytes(bytes)?;
         let ptr = (ret as *const Self) as *mut Self;
         unsafe { Ok(&mut *ptr) }
@@ -251,14 +251,14 @@ impl IdRef {
     /// `bytes` must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` is valid octets as an identifer, use [`TryFrom`]
-    /// implementation or [`try_from_mut_bytes`] instead.
+    /// implementation or [`parse_mut`] instead.
     ///
     /// # Safety
     ///
     /// The behaviour is undefined if the format of `bytes` is not right.
     ///
     /// [`TryFrom`]: #method.try_from-1
-    /// [`try_from_mut_bytes`]: Self::try_from_mut_bytes
+    /// [`parse_mut`]: Self::parse_mut
     ///
     /// # Examples
     ///
@@ -1395,7 +1395,7 @@ impl IdRef {
     ///
     /// // Creates a '&mut IdRef' representing 'Universal Integer'.
     /// let mut bytes = Vec::from(IdRef::integer().as_bytes());
-    /// let idref = IdRef::try_from_mut_bytes(&mut bytes).unwrap();
+    /// let idref = IdRef::parse_mut(&mut bytes).unwrap();
     ///
     /// assert_eq!(ClassTag::Universal, idref.class());
     ///
@@ -1418,7 +1418,7 @@ impl IdRef {
     ///
     /// // Creates a '&mut IdRef' representing 'Universal Integer'.
     /// let mut bytes = Vec::from(IdRef::integer().as_bytes());
-    /// let idref = IdRef::try_from_mut_bytes(&mut bytes).unwrap();
+    /// let idref = IdRef::parse_mut(&mut bytes).unwrap();
     ///
     /// assert_eq!(PCTag::Primitive, idref.pc());
     ///

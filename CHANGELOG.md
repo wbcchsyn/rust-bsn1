@@ -240,6 +240,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - Rename Der::try\_from\_bytes() Der::parse()
   - Rename DerRef::try\_from\_bytes() Der::parse()
   - Rename DerRef::try\_from\_mut\_bytes() Der::parse\_mut()
+  - Rename IdRef::try\_from\_mut\_bytes() IdRef::parse\_mut()
   - Rename Length::try\_from\_bytes() Length::parse()
 
 ### Removed
