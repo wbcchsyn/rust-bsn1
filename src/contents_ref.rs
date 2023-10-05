@@ -380,3 +380,23 @@ impl ContentsRef {
         &mut self.bytes
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn from_bool() {
+        // True
+        {
+            let contents = <&ContentsRef>::from(true);
+            assert_eq!(&[0xff], contents.as_bytes());
+        }
+
+        // false
+        {
+            let contents = <&ContentsRef>::from(false);
+            assert_eq!(&[0x00], contents.as_bytes());
+        }
+    }
+}
