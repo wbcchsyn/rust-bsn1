@@ -109,7 +109,7 @@ impl<'a> TryFrom<&'a mut [u8]> for &'a mut BerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is the same as [`BerRef::try_from_mut_bytes`].
+    /// This function is the same as [`BerRef::parse_mut`].
     ///
     /// [Read more](std::convert::TryFrom::try_from)
     ///
@@ -182,7 +182,7 @@ impl BerRef {
     ///
     /// // Represents '0x04' as an Integer.
     /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x04];
-    /// let ber = BerRef::try_from_mut_bytes(bytes).unwrap();
+    /// let ber = BerRef::parse_mut(bytes).unwrap();
     ///
     /// // The value is 0x04 at first.
     /// assert_eq!(ber.contents().as_bytes(), &[0x04]);
@@ -192,7 +192,7 @@ impl BerRef {
     /// // The value is updated.
     /// assert_eq!(ber.contents().as_bytes(), &[0x05]);
     /// ```
-    pub fn try_from_mut_bytes(bytes: &mut [u8]) -> Result<&mut Self, Error> {
+    pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
         <&mut Self>::try_from(bytes)
     }
 
@@ -231,14 +231,14 @@ impl BerRef {
     /// `bytes` must be BER octets and must not include any extra octet.
     ///
     /// If it is not sure whether `bytes` are valid octets as a 'BER', use [`TryFrom`]
-    /// implementation or [`try_from_mut_bytes`] instead.
+    /// implementation or [`parse_mut`] instead.
     ///
     /// # Safety
     ///
     /// The behaviour is undefined if `bytes` is not formatted as a BER.
     ///
     /// [`TryFrom`]: #method.try_from-1
-    /// [`try_from_mut_bytes`]: Self::try_from_mut_bytes
+    /// [`parse_mut`]: Self::parse_mut
     ///
     /// # Examples
     ///
@@ -310,7 +310,7 @@ impl BerRef {
     ///
     /// // Represents '3' as an Integer.
     /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x03];
-    /// let ber = BerRef::try_from_mut_bytes(bytes).unwrap();
+    /// let ber = BerRef::parse_mut(bytes).unwrap();
     ///
     /// assert_eq!(ber.id(), IdRef::integer());
     ///
@@ -385,7 +385,7 @@ impl BerRef {
     ///
     /// // Represents 'False' as a Boolean.
     /// let bytes: &mut [u8] = &mut [0x01, 0x01, 0x00];
-    /// let ber = BerRef::try_from_mut_bytes(bytes).unwrap();
+    /// let ber = BerRef::parse_mut(bytes).unwrap();
     ///
     /// assert_eq!(ber.contents().to_bool_ber().unwrap(), false);
     ///
