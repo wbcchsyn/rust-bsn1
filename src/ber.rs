@@ -142,6 +142,13 @@ impl From<usize> for Ber {
     }
 }
 
+impl From<&str> for Ber {
+    /// Creates a new instance representing a utf8-string containing `contents`.
+    fn from(contents: &str) -> Self {
+        Der::from(contents).into()
+    }
+}
+
 impl From<Der> for Ber {
     fn from(der: Der) -> Self {
         Self {
