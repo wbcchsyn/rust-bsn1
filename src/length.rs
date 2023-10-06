@@ -75,7 +75,7 @@ impl Length {
 }
 
 impl Length {
-    /// Parses `bytes` starting with length octets and tries to creates a new instance.
+    /// Parses `readable` starting with length octets and tries to creates a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
@@ -84,17 +84,22 @@ impl Length {
     /// ```
     /// use bsn1::Length;
     ///
-    /// let mut bytes = vec![0x05]; // represents Definite(5).
-    /// let len = Length::parse(&bytes).unwrap();
+    /// // Serializes Definite(5).
+    /// let mut bytes = Vec::from(&* Length::Definite(5).to_bytes());
+    ///
+    /// // Parses the serialized bytes. The result is Definite(5).
+    /// let len = Length::parse(&mut &bytes[..]).unwrap();
     /// assert_eq!(Length::Definite(5), len);
     ///
-    /// // Ignores the last extra octet 0x03.
+    /// // The extra octets at the end does not affect the result.
     /// bytes.push(0x03);
-    /// let len = Length::parse(&bytes).unwrap();
+    /// bytes.push(0x04);
+    /// let len = Length::parse(&mut &bytes[..]).unwrap();
     /// assert_eq!(Length::Definite(5), len);
     /// ```
-    pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
-        parse_(bytes).map(|(length, _rest)| length)
+    pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
+        let mut writeable = std::io::sink();
+        unsafe { parse_length(readable, &mut writeable) }
     }
 
     /// Serializes `length`.
@@ -104,11 +109,11 @@ impl Length {
     /// ```
     /// use bsn1::Length;
     ///
-    /// let length = Length::Definite(3);
-    /// let bytes = length.to_bytes();
-    ///
-    /// let deserialized = Length::parse(&bytes as &[u8]).unwrap();
-    /// assert_eq!(length, deserialized);
+    /// // Serializes Definite(3), and deserializes it.
+    /// // The result is Definite(3).
+    /// let bytes = Length::Definite(3).to_bytes();
+    /// let deserialized = Length::parse(&mut &*bytes).unwrap();
+    /// assert_eq!(Length::Definite(3), deserialized);
     /// ```
     pub fn to_bytes(self) -> impl Deref<Target = [u8]> {
         let mut buffer = LengthBuffer::new();
