@@ -34,6 +34,7 @@
 
 use crate::{Error, LengthBuffer};
 use std::cmp::Ordering;
+use std::io::{Read, Write};
 use std::mem::{size_of, size_of_val};
 use std::ops::Deref;
 
@@ -242,6 +243,57 @@ impl Length {
             Self::Indefinite => false,
             _ => true,
         }
+    }
+}
+
+/// Parses `readable` starting with 'length', writes the parsed octets to `writeable`,
+/// and returns `Length`.
+///
+/// # Safety
+///
+/// The behavior is undefined if `writeable` is closed or broken before this function returns.
+/// `writeable` should be `std::io::Sink` or `Buffer`.
+pub unsafe fn parse_length<R: Read, W: Write>(
+    readable: &mut R,
+    writeable: &mut W,
+) -> Result<Length, Error> {
+    use crate::misc::{read_u8, write_u8};
+
+    let first = read_u8(readable)?;
+    write_u8(writeable, first)?;
+
+    if first == Length::INDEFINITE {
+        // Indefinite
+        Ok(Length::Indefinite)
+    } else if first & Length::LONG_FLAG != Length::LONG_FLAG {
+        // Short form
+        Ok(Length::Definite(first as usize))
+    } else {
+        // Long form
+        let second = read_u8(readable)?;
+        if second == 0x00 {
+            // The second octet is not necessary.
+            return Err(Error::RedundantBytes);
+        }
+        write_u8(writeable, second)?;
+
+        let followings_count = (first ^ Length::LONG_FLAG) as usize;
+        if followings_count == 1 && second <= Length::MAX_SHORT {
+            // Short form will do.
+            return Err(Error::RedundantBytes);
+        }
+        if size_of::<usize>() < followings_count {
+            return Err(Error::OverFlow);
+        }
+
+        let mut len = second as usize;
+        for _ in 1..followings_count {
+            let byte = read_u8(readable)?;
+            write_u8(writeable, byte)?;
+            len = (len << 8) + byte as usize;
+        }
+
+        Ok(Length::Definite(len))
     }
 }
 
