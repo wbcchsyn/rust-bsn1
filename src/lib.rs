@@ -247,7 +247,7 @@ use length_buffer::LengthBuffer;
 use std::fmt;
 
 /// Errors for this crate.
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum Error {
     /// The bytes finish before the last octet.
     UnTerminatedBytes,
@@ -279,3 +279,16 @@ impl fmt::Display for Error {
 }
 
 impl std::error::Error for Error {}
+
+impl PartialEq for Error {
+    fn eq(&self, other: &Self) -> bool {
+        match self {
+            Self::UnTerminatedBytes => matches!(other, Self::UnTerminatedBytes),
+            Self::RedundantBytes => matches!(other, Self::RedundantBytes),
+            Self::OverFlow => matches!(other, Self::OverFlow),
+            Self::IndefiniteLength => matches!(other, Self::IndefiniteLength),
+            Self::BadEoc => matches!(other, Self::BadEoc),
+            Self::InvalidContents => matches!(other, Self::InvalidContents),
+        }
+    }
+}
