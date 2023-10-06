@@ -98,9 +98,14 @@ impl IdRef {
     /// assert_eq!(IdRef::eoc(), idref);
     /// ```
     pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
-        let len = Self::do_parse(bytes)?;
-        let bytes = &bytes[..len];
-        unsafe { Ok(Self::from_bytes_unchecked(bytes)) }
+        let mut readable = bytes;
+        let mut writeable = std::io::sink();
+
+        unsafe {
+            let len = parse_id(&mut readable, &mut writeable)?;
+            let bytes = &bytes[..len];
+            Ok(Self::from_bytes_unchecked(bytes))
+        }
     }
 
     /// Parses `bytes` starting with identifier, and tries to provide a mutable reference to
