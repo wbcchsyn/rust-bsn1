@@ -1288,34 +1288,6 @@ impl IdRef {
         }
     }
 
-    /// Provides a mutable reference to the inner slice.
-    ///
-    /// # Safety
-    ///
-    /// The behaviour is undefined if the inner slice will be invalid as an Identifier of 'ASN.1'.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::IdRef;
-    ///
-    /// let bytes: &mut [u8] = &mut [5];
-    ///
-    /// unsafe {
-    ///     let idref = unsafe { IdRef::from_mut_bytes_unchecked(bytes) };
-    ///     assert_eq!(5, idref.as_ref()[0]);
-    ///
-    ///     idref.as_mut_bytes()[0] = 6;
-    ///     assert_eq!(6, idref.as_ref()[0]);
-    /// }
-    ///
-    /// // 'bytes' is updated as well.
-    /// assert_eq!(6, bytes[0]);
-    /// ```
-    pub unsafe fn as_mut_bytes(&mut self) -> &mut [u8] {
-        &mut self.bytes
-    }
-
     /// Update the class tag of `self`.
     ///
     /// # Examples
@@ -1333,7 +1305,7 @@ impl IdRef {
     /// assert_eq!(ClassTag::Application, idref.class());
     /// ```
     pub fn set_class(&mut self, cls: ClassTag) {
-        let bytes = unsafe { self.as_mut_bytes() };
+        let bytes = &mut self.bytes;
 
         bytes[0] &= !CLASS_MASK;
         bytes[0] |= cls as u8;
@@ -1356,7 +1328,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, idref.pc());
     /// ```
     pub fn set_pc(&mut self, pc: PCTag) {
-        let bytes = unsafe { self.as_mut_bytes() };
+        let bytes = &mut self.bytes;
 
         const MASK: u8 = 0xdf;
         bytes[0] &= MASK;
