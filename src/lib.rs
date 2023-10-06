@@ -187,7 +187,7 @@
 //!     if name.id() != IdRef::octet_string() && name.id() != IdRef::octet_string_constructed() {
 //!         Err("The id of the name is bad.".to_string())
 //!     } else {
-//!         let contents = name.contents().as_bytes();
+//!         let contents = name.contents().as_ref();
 //!         std::str::from_utf8(contents).map_err(|e| format!("Failed to parse the name: {}", e))
 //!     }
 //! }
@@ -200,7 +200,7 @@
 //!     } else if id.number() != Ok(0) {
 //!         Err("The id of the authentication is bad".to_string())
 //!     } else {
-//!         Ok(authentication.contents().as_bytes())
+//!         Ok(authentication.contents().as_ref())
 //!     }
 //! }
 //!

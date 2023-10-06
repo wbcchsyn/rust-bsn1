@@ -40,11 +40,9 @@ use std::slice::SliceIndex;
 
 /// `ContentsRef` is a wrapper of `[u8]` and represents 'ASN.1 contents'.
 ///
-/// The user can access the inner slice via [`as_bytes`] or `AsMut` implementation.
+/// The user can access the inner slice via the implementation of `AsRef` or `AsMut`.
 ///
 /// This struct is `Unsized`, and the user will usually use a reference.
-///
-/// [`as_bytes`]: Self::as_bytes
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct ContentsRef {
     bytes: [u8],
@@ -86,7 +84,7 @@ impl From<bool> for &'static ContentsRef {
 
 impl AsRef<[u8]> for ContentsRef {
     fn as_ref(&self) -> &[u8] {
-        self.as_bytes()
+        &self.bytes
     }
 }
 
@@ -103,7 +101,7 @@ where
     type Output = T::Output;
 
     fn index(&self, index: T) -> &Self::Output {
-        &self.as_bytes()[index]
+        &self.as_ref()[index]
     }
 }
 
@@ -121,7 +119,7 @@ where
     T: Borrow<ContentsRef>,
 {
     fn eq(&self, other: &T) -> bool {
-        self.as_bytes() == other.borrow().as_bytes()
+        self.as_ref() == other.borrow().as_ref()
     }
 }
 
@@ -129,7 +127,7 @@ impl ToOwned for ContentsRef {
     type Owned = Contents;
 
     fn to_owned(&self) -> Self::Owned {
-        Contents::from_bytes(self.as_bytes())
+        Contents::from_bytes(self.as_ref())
     }
 }
 
@@ -147,7 +145,7 @@ impl ContentsRef {
     /// assert_eq!(contents.len(), bytes.len());
     /// ```    
     pub fn len(&self) -> usize {
-        self.as_bytes().len()
+        self.as_ref().len()
     }
 
     /// Returns `true` if the inner slice is empty, or `false`.
@@ -166,7 +164,7 @@ impl ContentsRef {
     /// assert_eq!(contents.is_empty(), false);
     /// ```    
     pub fn is_empty(&self) -> bool {
-        self.as_bytes().is_empty()
+        self.as_ref().is_empty()
     }
 
     /// Parses `self` as the ASN.1 contents of integer.
@@ -211,7 +209,7 @@ impl ContentsRef {
         let bytes = if self[0] == 0x00 {
             &self[1..]
         } else {
-            self.as_bytes()
+            self.as_ref()
         };
         if mem::size_of::<T>() < bytes.len() {
             return Err(Error::OverFlow);
@@ -251,7 +249,7 @@ impl ContentsRef {
         let bytes = if self[0] == 0x00 {
             &self[1..]
         } else {
-            self.as_bytes()
+            self.as_ref()
         };
         let filler = if self[0] & 0x80 == 0x00 { 0x00 } else { 0xff };
 
@@ -345,22 +343,6 @@ impl ContentsRef {
             }
         }
     }
-
-    /// Provides a reference to the inner slice.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::ContentsRef;
-    ///
-    /// let bytes =  &[1, 2, 3, 4];
-    /// let contents = <&ContentsRef>::from(bytes);
-    ///
-    /// assert_eq!(contents.as_bytes(), bytes);
-    /// ```
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.bytes
-    }
 }
 
 #[cfg(test)]
@@ -372,13 +354,13 @@ mod tests {
         // True
         {
             let contents = <&ContentsRef>::from(true);
-            assert_eq!(&[0xff], contents.as_bytes());
+            assert_eq!(&[0xff], contents.as_ref());
         }
 
         // false
         {
             let contents = <&ContentsRef>::from(false);
-            assert_eq!(&[0x00], contents.as_bytes());
+            assert_eq!(&[0x00], contents.as_ref());
         }
     }
 }

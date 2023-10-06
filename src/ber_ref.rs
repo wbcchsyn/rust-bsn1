@@ -130,12 +130,12 @@ impl BerRef {
     /// let ber = BerRef::parse_mut(bytes).unwrap();
     ///
     /// // The value is 0x04 at first.
-    /// assert_eq!(ber.contents().as_bytes(), &[0x04]);
+    /// assert_eq!(ber.contents().as_ref(), &[0x04]);
     ///
     /// ber.mut_contents()[0] = 0x05;
     ///
     /// // The value is updated.
-    /// assert_eq!(ber.contents().as_bytes(), &[0x05]);
+    /// assert_eq!(ber.contents().as_ref(), &[0x05]);
     /// ```
     pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
         let ret = Self::parse(bytes)?;

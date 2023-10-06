@@ -201,7 +201,7 @@ impl Der {
             ptr.copy_from_nonoverlapping(len.as_ptr(), len.len());
 
             let ptr = ptr.add(len.len());
-            ptr.copy_from_nonoverlapping(contents.as_bytes().as_ptr(), contents.len());
+            ptr.copy_from_nonoverlapping(contents.as_ref().as_ptr(), contents.len());
         }
 
         Self { buffer }
@@ -453,14 +453,14 @@ impl Der {
     /// let mut der = Der::from(&[] as &[u8]);
     ///
     /// assert_eq!(der.length(), Length::Definite(0));
-    /// assert_eq!(der.contents().as_bytes(), &[]);
+    /// assert_eq!(der.contents().as_ref(), &[]);
     ///
     /// let new_contents: &[u8] = &[1, 2, 3, 4];
     /// der.set_length(new_contents.len());
     /// der.mut_contents().as_mut().copy_from_slice(new_contents);
     ///
     /// assert_eq!(der.length(), Length::Definite(new_contents.len()));
-    /// assert_eq!(der.contents().as_bytes(), new_contents);
+    /// assert_eq!(der.contents().as_ref(), new_contents);
     /// ```
     pub fn set_length(&mut self, new_length: usize) {
         let old_length = self.contents().len();
@@ -775,7 +775,7 @@ mod tests {
         let val = "foo";
         let der = Der::from(val);
         assert_eq!(IdRef::utf8_string(), der.id());
-        assert_eq!(val.as_bytes(), der.contents().as_bytes());
+        assert_eq!(val.as_bytes(), der.contents().as_ref());
     }
 
     #[test]

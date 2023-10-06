@@ -254,7 +254,7 @@ impl Ber {
             ptr.copy_from_nonoverlapping(length.as_ptr(), length.len());
 
             let ptr = ptr.add(length.len());
-            ptr.copy_from_nonoverlapping(contents.as_bytes().as_ptr(), contents.len());
+            ptr.copy_from_nonoverlapping(contents.as_ref().as_ptr(), contents.len());
         }
 
         Self { buffer }
@@ -518,14 +518,14 @@ impl Ber {
     /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), <&ContentsRef>::from(&[]));
     ///
     /// assert_eq!(ber.length().is_indefinite(), true);
-    /// assert_eq!(ber.contents().as_bytes(), &[]);
+    /// assert_eq!(ber.contents().as_ref(), &[]);
     ///
     /// let new_contents: &[u8] = &[0, 1,  2, 3];
     /// ber.set_length(new_contents.len());
     /// ber.mut_contents().as_mut().clone_from_slice(new_contents);
     ///
     /// assert_eq!(ber.length().is_indefinite(), true);
-    /// assert_eq!(ber.contents().as_bytes(), new_contents);
+    /// assert_eq!(ber.contents().as_ref(), new_contents);
     /// ```
     ///
     /// Enshorten definite length Ber object.
@@ -537,14 +537,14 @@ impl Ber {
     /// let mut ber = Ber::new(IdRef::octet_string(), <&ContentsRef>::from(old_contents));
     ///
     /// assert_eq!(ber.length(), Length::Definite(old_contents.len()));
-    /// assert_eq!(ber.contents().as_bytes(), old_contents);
+    /// assert_eq!(ber.contents().as_ref(), old_contents);
     ///
     /// let new_contents = &old_contents[0..2];
     /// ber.set_length(new_contents.len());
     /// ber.mut_contents().as_mut().clone_from_slice(new_contents);
     ///
     /// assert_eq!(ber.length(), Length::Definite(new_contents.len()));
-    /// assert_eq!(ber.contents().as_bytes(), new_contents);
+    /// assert_eq!(ber.contents().as_ref(), new_contents);
     /// ```
     pub fn set_length(&mut self, new_length: usize) {
         match self.length() {

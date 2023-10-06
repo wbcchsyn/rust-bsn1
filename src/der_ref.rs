@@ -109,12 +109,12 @@ impl DerRef {
     /// let der = DerRef::parse_mut(bytes).unwrap();
     ///
     /// // The value is 0x08 at first.
-    /// assert_eq!(der.contents().as_bytes(), &[0x08]);
+    /// assert_eq!(der.contents().as_ref(), &[0x08]);
     ///
     /// der.mut_contents()[0] = 0x09;
     ///
     /// // The value is updated.
-    /// assert_eq!(der.contents().as_bytes(), &[0x09]);
+    /// assert_eq!(der.contents().as_ref(), &[0x09]);
     /// ```
     pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
         let ret = Self::parse(bytes)?;
@@ -171,12 +171,12 @@ impl DerRef {
     /// let der = unsafe { DerRef::from_mut_bytes_unchecked(bytes) };
     ///
     /// // The value is 0x08 at first.
-    /// assert_eq!(der.contents().as_bytes(), &[0x08]);
+    /// assert_eq!(der.contents().as_ref(), &[0x08]);
     ///
     /// der.mut_contents()[0] = 0x09;
     ///
     /// // The value is updated.
-    /// assert_eq!(der.contents().as_bytes(), &[0x09]);
+    /// assert_eq!(der.contents().as_ref(), &[0x09]);
     /// ```
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         std::mem::transmute(bytes)
@@ -312,9 +312,9 @@ impl DerRef {
     /// let bytes: &mut [u8] = &mut [0x04, 0x02, 0x00, 0xff];
     /// let der = DerRef::parse_mut(bytes).unwrap();
     ///
-    /// assert_eq!(der.contents().as_bytes(), &[0x00, 0xff]);
+    /// assert_eq!(der.contents().as_ref(), &[0x00, 0xff]);
     /// der.mut_contents().as_mut().copy_from_slice(&[0x01, 0x02]);
-    /// assert_eq!(der.contents().as_bytes(), &[0x01, 0x02]);
+    /// assert_eq!(der.contents().as_ref(), &[0x01, 0x02]);
     /// ```
     pub fn mut_contents(&mut self) -> &mut ContentsRef {
         let ret = self.contents();
