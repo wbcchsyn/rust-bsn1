@@ -312,6 +312,35 @@ impl Der {
         }
     }
 
+    /// Builds a new instance holding `bytes` without any check.
+    ///
+    /// `bytes` must not includ any extra octet.
+    ///
+    /// If it is not sure whether `bytes` are valid octets as an 'DER', use [`parse`] instead.
+    ///
+    /// [`parse`]: Self::parse
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if `bytes` is not formatted as a DER.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Der;
+    ///
+    /// let der0 = Der::from(5_i32);
+    /// let bytes = der0.clone().into_vec();
+    /// let der1 = unsafe { Der::from_vec_unchecked(bytes) };
+    ///
+    /// assert_eq!(der0, der1);
+    /// ```
+    pub unsafe fn from_vec_unchecked(bytes: Vec<u8>) -> Self {
+        Self {
+            buffer: Buffer::from(bytes),
+        }
+    }
+
     /// Creates a new instance containing concatenated `contents`.
     ///
     /// # Warnings
