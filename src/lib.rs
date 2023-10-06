@@ -248,6 +248,7 @@ use std::fmt;
 
 /// Errors for this crate.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum Error {
     /// The bytes finish before the last octet.
     UnTerminatedBytes,
