@@ -381,6 +381,35 @@ impl Ber {
         }
     }
 
+    /// Builds a new instance holding `bytes` without any check.
+    ///
+    /// `bytes` must not includ any extra octet.
+    ///
+    /// If it is not sure whether `bytes` are valid octets as an 'DER', use [`parse`] instead.
+    ///
+    /// [`parse`]: Self::parse
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if `bytes` is not formatted as a BER.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::Ber;
+    ///
+    /// let ber0 = Ber::from(5_i32);
+    /// let bytes = ber0.clone().into_vec();
+    /// let ber1 = unsafe { Ber::from_vec_unchecked(bytes) };
+    ///
+    /// assert_eq!(ber0, ber1);
+    /// ```
+    pub unsafe fn from_vec_unchecked(bytes: Vec<u8>) -> Self {
+        Self {
+            buffer: Buffer::from(bytes),
+        }
+    }
+
     /// Creates a new instance containing concatnated `contents`.
     ///
     /// The length octets will be `definite`.

@@ -69,6 +69,13 @@ impl HeapBuffer {
         }
     }
 
+    pub fn from_raw_parts(data: *mut u8, capacity: usize) -> Self {
+        Self {
+            data_: data,
+            cap_: capacity,
+        }
+    }
+
     pub fn capacity(&self) -> usize {
         self.cap_
     }
@@ -172,6 +179,25 @@ impl From<&[u8]> for Buffer {
 impl<const N: usize> From<&[u8; N]> for Buffer {
     fn from(val: &[u8; N]) -> Self {
         Self::from(&val[..])
+    }
+}
+
+impl From<Vec<u8>> for Buffer {
+    fn from(mut vals: Vec<u8>) -> Self {
+        if vals.capacity() == 0 {
+            return Self::new();
+        } else {
+            let buffer = HeapBuffer::from_raw_parts(vals.as_mut_ptr(), vals.capacity());
+            let len_ = isize::MIN + vals.len() as isize;
+            std::mem::forget(vals);
+
+            Self {
+                len_: len_,
+                buffer_: BufferWithoutLength {
+                    heap: ManuallyDrop::new(buffer),
+                },
+            }
+        }
     }
 }
 
@@ -459,6 +485,21 @@ mod buffer_tests {
             vec.extend_from_slice(&vals);
 
             assert_eq!(&vec, buffer.as_bytes());
+        }
+    }
+
+    #[test]
+    fn from_vec() {
+        for i in u8::MIN..=u8::MAX {
+            let vals = Vec::from_iter(0..i);
+            let buffer = Buffer::from(vals.clone());
+            assert_eq!(&vals, buffer.as_bytes());
+        }
+
+        for i in 0..500 {
+            let vals = Vec::with_capacity(i);
+            let buffer = Buffer::from(vals);
+            assert!(buffer.len() == 0);
         }
     }
 }
