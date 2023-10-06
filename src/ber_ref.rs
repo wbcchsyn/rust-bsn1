@@ -44,7 +44,7 @@ pub struct BerRef {
 
 impl<'a> From<&'a DerRef> for &'a BerRef {
     fn from(der: &'a DerRef) -> Self {
-        unsafe { BerRef::from_bytes_unchecked(der.as_bytes()) }
+        unsafe { BerRef::from_bytes_unchecked(der.as_ref()) }
     }
 }
 

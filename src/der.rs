@@ -302,9 +302,9 @@ impl Der {
     /// ```
     /// use bsn1::Der;
     ///
-    /// let bytes: &[u8] = &[0x02, 0x01, 0x0a];  // Represents '10' as Integer.
-    /// let der = unsafe { Der::from_bytes_unchecked(bytes) };
-    /// assert_eq!(bytes, der.as_bytes());
+    /// let bytes: Vec<u8> = vec![0x02, 0x01, 0x0a];  // Represents '10' as Integer.
+    /// let der = unsafe { Der::from_bytes_unchecked(&bytes) };
+    /// assert_eq!(der.as_ref() as &[u8], &bytes);
     /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
         Self {
@@ -421,7 +421,7 @@ impl Der {
     /// let der = Der::from("foo");
     /// let v = der.clone().into_vec();
     ///
-    /// assert_eq!(der.as_bytes(), &v);
+    /// assert_eq!(der.as_ref() as &[u8], &v);
     /// ```
     pub fn into_vec(self) -> Vec<u8> {
         self.buffer.into_vec()
@@ -786,7 +786,7 @@ mod tests {
         for &bytes in byteses {
             let contents = <&ContentsRef>::from(bytes);
             let der = Der::new(id, contents);
-            let der_ref = DerRef::parse(der.as_bytes()).unwrap();
+            let der_ref = DerRef::parse(der.as_ref()).unwrap();
             assert_eq!(der_ref, &der as &DerRef);
         }
     }

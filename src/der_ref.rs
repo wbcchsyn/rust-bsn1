@@ -199,7 +199,7 @@ impl ToOwned for DerRef {
     type Owned = Der;
 
     fn to_owned(&self) -> Self::Owned {
-        unsafe { Der::from_bytes_unchecked(self.as_bytes()) }
+        unsafe { Der::from_bytes_unchecked(self.as_ref()) }
     }
 }
 
@@ -321,22 +321,5 @@ impl DerRef {
         let ptr = ret as *const ContentsRef;
         let ptr = ptr as *mut ContentsRef;
         unsafe { &mut *ptr }
-    }
-
-    /// Provides a reference to the inner slice.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use bsn1::DerRef;
-    ///
-    /// // This octets represents `3` as integer.
-    /// let bytes = vec![0x02, 0x01, 0x03];
-    ///
-    /// let der = DerRef::parse(&bytes).unwrap();
-    /// assert_eq!(&bytes, der.as_bytes());
-    /// ```
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.bytes
     }
 }
