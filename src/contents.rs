@@ -314,7 +314,7 @@ impl AsRef<ContentsRef> for Contents {
 
 impl AsMut<[u8]> for Contents {
     fn as_mut(&mut self) -> &mut [u8] {
-        self.as_mut_bytes()
+        self.deref_mut().as_mut()
     }
 }
 

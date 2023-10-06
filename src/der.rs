@@ -457,7 +457,7 @@ impl Der {
     ///
     /// let new_contents: &[u8] = &[1, 2, 3, 4];
     /// der.set_length(new_contents.len());
-    /// der.mut_contents().as_mut_bytes().copy_from_slice(new_contents);
+    /// der.mut_contents().as_mut().copy_from_slice(new_contents);
     ///
     /// assert_eq!(der.length(), Length::Definite(new_contents.len()));
     /// assert_eq!(der.contents().as_bytes(), new_contents);
@@ -483,7 +483,7 @@ impl Der {
         unsafe {
             // Copy the contents if necessary.
             if length_offset != 0 {
-                let src = self.mut_contents().as_mut_bytes().as_mut_ptr();
+                let src = self.mut_contents().as_mut().as_mut_ptr();
                 let dst = src.offset(length_offset);
                 let count = new_length.min(old_length);
                 dst.copy_from(src, count);

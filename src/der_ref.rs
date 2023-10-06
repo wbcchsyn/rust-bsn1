@@ -313,7 +313,7 @@ impl DerRef {
     /// let der = DerRef::parse_mut(bytes).unwrap();
     ///
     /// assert_eq!(der.contents().as_bytes(), &[0x00, 0xff]);
-    /// der.mut_contents().as_mut_bytes().copy_from_slice(&[0x01, 0x02]);
+    /// der.mut_contents().as_mut().copy_from_slice(&[0x01, 0x02]);
     /// assert_eq!(der.contents().as_bytes(), &[0x01, 0x02]);
     /// ```
     pub fn mut_contents(&mut self) -> &mut ContentsRef {

@@ -40,12 +40,11 @@ use std::slice::SliceIndex;
 
 /// `ContentsRef` is a wrapper of `[u8]` and represents 'ASN.1 contents'.
 ///
-/// The user can access the inner slice via [`as_bytes`] and [`as_mut_bytes`].
+/// The user can access the inner slice via [`as_bytes`] or `AsMut` implementation.
 ///
 /// This struct is `Unsized`, and the user will usually use a reference.
 ///
 /// [`as_bytes`]: Self::as_bytes
-/// [`as_mut_bytes`]: Self::as_mut_bytes
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct ContentsRef {
     bytes: [u8],
@@ -93,7 +92,7 @@ impl AsRef<[u8]> for ContentsRef {
 
 impl AsMut<[u8]> for ContentsRef {
     fn as_mut(&mut self) -> &mut [u8] {
-        self.as_mut_bytes()
+        &mut self.bytes
     }
 }
 
@@ -113,7 +112,7 @@ where
     T: SliceIndex<[u8]>,
 {
     fn index_mut(&mut self, index: T) -> &mut Self::Output {
-        &mut self.as_mut_bytes()[index]
+        &mut self.bytes[index]
     }
 }
 
@@ -361,23 +360,6 @@ impl ContentsRef {
     /// ```
     pub fn as_bytes(&self) -> &[u8] {
         &self.bytes
-    }
-
-    /// Provides a mutable reference to the inner slice.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{Contents, ContentsRef};
-    ///
-    /// let mut contents = Contents::from(&[1, 2, 3, 4]);
-    /// let contents_ref: &mut ContentsRef = contents.as_mut();
-    ///
-    /// contents_ref.as_mut_bytes()[0] = 0;
-    /// assert_eq!(contents.as_bytes(), &[0, 2, 3, 4]);
-    /// ```
-    pub fn as_mut_bytes(&mut self) -> &mut [u8] {
-        &mut self.bytes
     }
 }
 
