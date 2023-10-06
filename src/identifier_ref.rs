@@ -34,6 +34,7 @@ use crate::{ClassTag, Error, Id, PCTag};
 use num::{FromPrimitive, PrimInt};
 use std::borrow::Borrow;
 use std::cmp::Ordering;
+use std::io::{Read, Write};
 use std::mem;
 
 pub const LONG_FLAG: u8 = 0x1f;
@@ -1338,6 +1339,51 @@ impl IdRef {
         bytes[0] &= MASK;
         bytes[0] |= pc as u8;
     }
+}
+
+/// Parses `readable` starting with 'id', writes the parsed bytes to `writeable`, and returns the
+/// parsed bytes count.
+///
+/// # Safety
+///
+/// The behavior is undefined if `writeable` is closed or broken before this function returns.
+/// `writeable` should be `std::io::Sink` or `Buffer`.
+pub unsafe fn parse_id<R: Read, W: Write>(
+    readable: &mut R,
+    writeable: &mut W,
+) -> Result<usize, Error> {
+    use crate::misc::{read_u8, write_u8};
+
+    let first = read_u8(readable)?;
+    write_u8(writeable, first)?;
+
+    if first & LONG_FLAG != LONG_FLAG {
+        // short form
+        return Ok(1);
+    }
+
+    let mut octet = read_u8(readable)?;
+
+    if octet <= MAX_SHORT {
+        // Short form will do.
+        return Err(Error::RedundantBytes);
+    }
+    if octet == MORE_FLAG {
+        // The second octet is not necessary.
+        return Err(Error::RedundantBytes);
+    }
+
+    for i in 2.. {
+        write_u8(writeable, octet)?;
+
+        if octet & MORE_FLAG != MORE_FLAG {
+            return Ok(i);
+        }
+
+        octet = read_u8(readable)?;
+    }
+
+    unreachable!();
 }
 
 #[cfg(test)]
