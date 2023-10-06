@@ -31,7 +31,7 @@
 // limitations under the License.
 
 use crate::Error;
-use std::io::Read;
+use std::io::{Read, Write};
 
 /// Tries to read one byte from `readable`.
 pub fn read_u8<T: Read>(readable: &mut T) -> Result<u8, Error> {
@@ -41,5 +41,20 @@ pub fn read_u8<T: Read>(readable: &mut T) -> Result<u8, Error> {
         Ok(0) => Err(Error::UnTerminatedBytes),
         Ok(1) => Ok(buf[0]),
         _ => unreachable!(),
+    }
+}
+
+/// Tries to write `byte` to `writeable`.
+///
+/// # Safety
+///
+/// The behavior is undefined if `writeable` is closed or broken before this function returns.
+/// `writeable` should be `std::io::Sink` or `Buffer`.
+pub unsafe fn write_u8<T: Write>(writeable: &mut T, byte: u8) -> Result<(), Error> {
+    let buf = [byte];
+    match writeable.write(&buf) {
+        Err(e) => Err(e.into()),
+        Ok(1) => Ok(()),
+        _ => unimplemented!(),
     }
 }
