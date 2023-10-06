@@ -239,6 +239,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - From\<&[u8; N]\> for &ContentsRef
   - From\<&mut [u8; N]\> for &mut ContentsRef
 - Create the following functions and methods
+  - Ber::from\_vec\_unchecked()
   - Der::from\_vec\_unchecked()
 
 ### Changed
