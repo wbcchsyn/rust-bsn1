@@ -44,12 +44,9 @@ pub const PC_MASK: u8 = 0x20;
 
 /// `IdRef` is a wrapper of `[u8]` representing Identifier.
 ///
-/// The user can access the inner slice via method [`as_bytes`] or [`as_mut_bytes`]
+/// The user can access the inner slice via `AsRef` implementation.
 ///
 /// This struct is `Unsized`, and the user will usually use a reference to it.
-///
-/// [`as_bytes`]: Self::as_bytes
-/// [`as_mut_bytes`]: Self::as_mut_bytes
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct IdRef {
     bytes: [u8],
