@@ -97,7 +97,7 @@ impl BerRef {
 
                     if element.id() != IdRef::eoc() {
                         true
-                    } else if element.contents().is_empty() {
+                    } else if element.length() == Length::Definite(0) {
                         false
                     } else {
                         return Err(Error::BadEoc);

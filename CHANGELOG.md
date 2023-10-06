@@ -305,3 +305,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Delete the following macros
   - constructed\_ber!()
   - constructed\_der!()
+
+### Fixed
+
+- According to X.690, the length octets of 'end-of-contents' should be 0x00, i.e. 0 as definite length.
+  Add the sanitization of that when parsing BER.
