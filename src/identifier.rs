@@ -36,6 +36,7 @@ use num::cast::AsPrimitive;
 use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
 use std::cmp::Ordering;
+use std::io::Read;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 
@@ -120,7 +121,7 @@ impl Id {
         Self { buffer }
     }
 
-    /// Parses `bytes` starting with identifier and tries to build a new instance.
+    /// Parses `readable` starting with identifier and tries to build a new instance.
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
@@ -133,20 +134,29 @@ impl Id {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::Id;
+    /// use bsn1::{Id, IdRef};
     ///
-    /// // &[0] represents 'Univedrsal EOC'.
-    /// let bytes0: &[u8] = &[0];
-    /// let id0 = Id::parse(bytes0).unwrap();
+    /// // Serialize id representing NULL and store it to `bytes`.
+    /// let mut bytes = Vec::from(IdRef::null().as_ref());
     ///
-    /// // The extra octets at the end does not affect the result.
-    /// let bytes1: &[u8] = &[0, 1, 2];
-    /// let id1 = Id::parse(bytes1).unwrap();
+    /// // Deserialize `bytes`. The result is also NULL.
+    /// let mut bytes0: &[u8] = &bytes[..];
+    /// let id0 = Id::parse(&mut bytes0).unwrap();
+    /// assert_eq!(id0, IdRef::null());
+    ///
+    /// // Store extra octets to the end of `bytes`.
+    /// // The result does not changes.
+    /// bytes.push(0x01);
+    /// bytes.push(0x02);
+    /// let mut bytes1: &[u8] = &bytes[..];
+    /// let id1 = Id::parse(&mut bytes1).unwrap();
     ///
     /// assert_eq!(id0, id1);
     /// ```
-    pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
-        IdRef::parse(bytes).map(|idref| idref.to_owned())
+    pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
+        let mut buffer = Buffer::new();
+        unsafe { crate::identifier_ref::parse_id(readable, &mut buffer)? };
+        Ok(Self { buffer })
     }
 
     /// Provides a reference from `bytes` without any check.
@@ -354,7 +364,8 @@ mod tests {
                     bytes[0] = cl as u8 | pc as u8 | LONG_FLAG;
                     bytes[1] = 0x84;
                     bytes[19] = 0x00;
-                    let id = Id::parse(&bytes as &[u8]).unwrap();
+                    let mut bytes = &bytes as &[u8];
+                    let id = Id::parse(&mut bytes).unwrap();
                     assert!(id.number::<u128>().is_err());
                 }
             }
