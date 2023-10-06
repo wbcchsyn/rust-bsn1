@@ -287,6 +287,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - TryFrom\<&[u8]\> for Length
 - Ignore the following implementations
   - Borrow<[u8]> for Der
+  - Borrow<[u8]> for DerRef
   - BorrowMut\<ContentsRef\> for Contents
 - Delete the following macros
   - constructed\_ber!()

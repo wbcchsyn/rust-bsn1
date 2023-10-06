@@ -31,7 +31,6 @@
 // limitations under the License.
 
 use crate::{length, ContentsRef, Der, Error, IdRef, Length};
-use std::borrow::Borrow;
 
 /// `DerRef` is a wrapper of `[u8]` and represents DER.
 ///
@@ -185,12 +184,6 @@ impl DerRef {
 
 impl AsRef<[u8]> for DerRef {
     fn as_ref(&self) -> &[u8] {
-        &self.bytes
-    }
-}
-
-impl Borrow<[u8]> for DerRef {
-    fn borrow(&self) -> &[u8] {
         &self.bytes
     }
 }
