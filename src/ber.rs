@@ -248,7 +248,7 @@ impl Ber {
             buffer.set_len(total_len);
 
             let ptr = buffer.as_mut_ptr();
-            ptr.copy_from_nonoverlapping(id.as_bytes().as_ptr(), id.len());
+            ptr.copy_from_nonoverlapping(id.as_ref().as_ptr(), id.len());
 
             let ptr = ptr.add(id.len());
             ptr.copy_from_nonoverlapping(length.as_ptr(), length.len());
@@ -328,7 +328,7 @@ impl Ber {
 
         unsafe {
             let dst = buffer.as_mut_ptr();
-            dst.copy_from_nonoverlapping(id.as_bytes().as_ptr(), id.len());
+            dst.copy_from_nonoverlapping(id.as_ref().as_ptr(), id.len());
 
             let dst = dst.add(id.len());
             dst.copy_from_nonoverlapping(length_.as_ptr(), length_.len());
@@ -605,7 +605,7 @@ mod tests {
 
         for i in 0..10 {
             let id = IdRef::sequence();
-            let mut bytes: Vec<u8> = Vec::from(id.as_bytes());
+            let mut bytes: Vec<u8> = Vec::from(id.as_ref());
 
             bytes.extend(Length::Indefinite.to_bytes().iter());
 

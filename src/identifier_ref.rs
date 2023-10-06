@@ -1067,7 +1067,7 @@ impl ToOwned for IdRef {
     type Owned = Id;
 
     fn to_owned(&self) -> Self::Owned {
-        unsafe { Self::Owned::from_bytes_unchecked(self.as_bytes()) }
+        unsafe { Self::Owned::from_bytes_unchecked(self.as_ref()) }
     }
 }
 
@@ -1105,7 +1105,7 @@ impl IdRef {
     /// assert_eq!(id.len(), bytes.len());
     /// ```
     pub fn len(&self) -> usize {
-        return self.as_bytes().len();
+        return self.as_ref().len();
     }
 
     /// Returns the `ClassTag` of `self`.
@@ -1276,9 +1276,9 @@ impl IdRef {
             debug_assert_eq!(self.bytes[0] & LONG_FLAG, LONG_FLAG);
 
             let mask: u8 = !MORE_FLAG;
-            let mut ret = T::from_u8(self.as_bytes()[1] & mask).unwrap();
+            let mut ret = T::from_u8(self.as_ref()[1] & mask).unwrap();
 
-            for &octet in self.as_bytes()[2..].iter() {
+            for &octet in self.as_ref()[2..].iter() {
                 let shft_mul = T::from_u8(128).ok_or(Error::OverFlow)?;
                 ret = ret.checked_mul(&shft_mul).ok_or(Error::OverFlow)?;
                 ret = ret + T::from_u8(octet & mask).unwrap();
@@ -1286,21 +1286,6 @@ impl IdRef {
 
             Ok(ret)
         }
-    }
-
-    /// Provides a reference to the inner slice.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::IdRef;
-    ///
-    /// let bytes: &[u8] = &[3];
-    /// let idref = unsafe { IdRef::from_bytes_unchecked(bytes) };
-    /// assert_eq!(bytes, idref.as_bytes());
-    /// ```
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.bytes
     }
 
     /// Provides a mutable reference to the inner slice.
@@ -1318,10 +1303,10 @@ impl IdRef {
     ///
     /// unsafe {
     ///     let idref = unsafe { IdRef::from_mut_bytes_unchecked(bytes) };
-    ///     assert_eq!(5, idref.as_bytes()[0]);
+    ///     assert_eq!(5, idref.as_ref()[0]);
     ///
     ///     idref.as_mut_bytes()[0] = 6;
-    ///     assert_eq!(6, idref.as_bytes()[0]);
+    ///     assert_eq!(6, idref.as_ref()[0]);
     /// }
     ///
     /// // 'bytes' is updated as well.
@@ -1339,7 +1324,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, IdRef};
     ///
     /// // Creates a '&mut IdRef' representing 'Universal Integer'.
-    /// let mut bytes = Vec::from(IdRef::integer().as_bytes());
+    /// let mut bytes = Vec::from(IdRef::integer().as_ref());
     /// let idref = IdRef::parse_mut(&mut bytes).unwrap();
     ///
     /// assert_eq!(ClassTag::Universal, idref.class());
@@ -1362,7 +1347,7 @@ impl IdRef {
     /// use bsn1::{PCTag, IdRef};
     ///
     /// // Creates a '&mut IdRef' representing 'Universal Integer'.
-    /// let mut bytes = Vec::from(IdRef::integer().as_bytes());
+    /// let mut bytes = Vec::from(IdRef::integer().as_ref());
     /// let idref = IdRef::parse_mut(&mut bytes).unwrap();
     ///
     /// assert_eq!(PCTag::Primitive, idref.pc());
@@ -1400,12 +1385,12 @@ mod tests {
                     let first = cl as u8 + pc as u8 + 0;
                     let bytes: &[u8] = &[first];
                     let id = IdRef::parse(bytes).unwrap();
-                    assert_eq!(bytes, id.as_bytes());
+                    assert_eq!(bytes, id.as_ref());
 
                     let first = cl as u8 + pc as u8 + 0x1e;
                     let bytes: &[u8] = &[first];
                     let id = IdRef::parse(bytes).unwrap();
-                    assert_eq!(bytes, id.as_bytes());
+                    assert_eq!(bytes, id.as_ref());
                 }
 
                 let first = cl as u8 + pc as u8 + 0x1f;
@@ -1414,11 +1399,11 @@ mod tests {
                 {
                     let bytes: &[u8] = &[first, 0x1f];
                     let id = IdRef::parse(bytes).unwrap();
-                    assert_eq!(bytes, id.as_bytes());
+                    assert_eq!(bytes, id.as_ref());
 
                     let bytes: &[u8] = &[first, 0x7f];
                     let id = IdRef::parse(bytes).unwrap();
-                    assert_eq!(bytes, id.as_bytes());
+                    assert_eq!(bytes, id.as_ref());
                 }
 
                 // len bytes
@@ -1432,7 +1417,7 @@ mod tests {
 
                     let bytes: &[u8] = &bytes;
                     let id = IdRef::parse(bytes).unwrap();
-                    assert_eq!(bytes, id.as_bytes());
+                    assert_eq!(bytes, id.as_ref());
 
                     let mut bytes = vec![first];
                     for _ in 1..len {
@@ -1442,7 +1427,7 @@ mod tests {
 
                     let bytes: &[u8] = &bytes;
                     let id = IdRef::parse(bytes).unwrap();
-                    assert_eq!(bytes, id.as_bytes());
+                    assert_eq!(bytes, id.as_ref());
                 }
             }
         }

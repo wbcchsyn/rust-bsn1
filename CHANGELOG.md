@@ -271,6 +271,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Delete the following methods. Use `AsRef` or `AsMut` implementation instead.
   - BerRef.as\_bytes()
   - DerRef.as\_bytes()
+  - IdRef.as\_bytes()
 - Ignore the following `TryFrom` implementations. Use `parse()` or `parse_mut()` instead.
   - TryFrom\<&[u8]\> for Ber
   - TryFrom\<&[u8]\> for &BerRef
