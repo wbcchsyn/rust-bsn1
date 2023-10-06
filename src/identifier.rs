@@ -49,7 +49,7 @@ use std::ops::{Deref, DerefMut};
 /// [`IdRef`]: struct.IdRef.html
 /// [`Deref`]: #impl-Deref-for-Id
 /// [`DerefMut`]: #impl-DerefMut-for-Id
-#[derive(Debug, Clone, Eq, Ord, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id {
     buffer: Buffer,
 }
@@ -196,21 +196,15 @@ impl DerefMut for Id {
     }
 }
 
-impl<T> PartialEq<T> for Id
-where
-    T: Borrow<IdRef>,
-{
-    fn eq(&self, other: &T) -> bool {
-        self.deref().eq(other.borrow())
+impl PartialEq<IdRef> for Id {
+    fn eq(&self, other: &IdRef) -> bool {
+        self.deref().eq(other)
     }
 }
 
-impl<T> PartialOrd<T> for Id
-where
-    T: Borrow<IdRef>,
-{
-    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
-        self.deref().partial_cmp(other.borrow())
+impl PartialOrd<IdRef> for Id {
+    fn partial_cmp(&self, other: &IdRef) -> Option<Ordering> {
+        self.deref().partial_cmp(other)
     }
 }
 
