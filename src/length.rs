@@ -380,222 +380,231 @@ pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> (Length, &[u8]) 
 mod tests {
     use super::*;
 
-    #[test]
-    fn parse_just() {
-        let empty: &[u8] = &[];
+    mod parse {
+        use super::*;
 
-        // Indefinite
-        {
-            let bytes: &[u8] = &[0x80];
-            let (length, left) = parse_(bytes).unwrap();
-
-            assert_eq!(length.is_indefinite(), true);
-            assert_eq!(left, empty);
-        }
-
-        // Short form
-        {
-            let bytes: &[u8] = &[0x00];
-            let res = parse_(bytes).unwrap();
-            assert_eq!((Length::Definite(0), empty), res);
-
-            let bytes: &[u8] = &[0x7f];
-            let res = parse_(bytes).unwrap();
-            assert_eq!((Length::Definite(0x7f), empty), res);
-        }
-
-        // 2 bytes
-        {
-            let bytes: &[u8] = &[0x81, 0x80];
-            let res = parse_(bytes).unwrap();
-            assert_eq!((Length::Definite(0x80), empty), res);
-
-            let bytes: &[u8] = &[0x81, 0xff];
-            let res = parse_(bytes).unwrap();
-            assert_eq!((Length::Definite(0xff), empty), res);
-        }
-
-        // 3 bytes
-        {
-            let bytes: &[u8] = &[0x82, 0x01, 0x00];
-            let res = parse_(bytes).unwrap();
-            assert_eq!((Length::Definite(0x0100), empty), res);
-
-            let bytes: &[u8] = &[0x82, 0xff, 0xff];
-            let res = parse_(bytes).unwrap();
-            assert_eq!((Length::Definite(0xffff), empty), res);
-        }
-
-        // max
-        {
-            let mut bytes: [u8; size_of::<usize>() + 1] = [0xff; size_of::<usize>() + 1];
-            bytes[0] = 0x80 + (size_of::<usize>() as u8);
-            let res = parse_(&bytes).unwrap();
-            assert_eq!((Length::Definite(std::usize::MAX), empty), res);
-        }
-    }
-
-    #[test]
-    fn parse_extra() {
-        let extra: &[u8] = &[1, 2, 3];
-
-        // Indefinite
-        {
-            let mut bytes = vec![0x80];
-            bytes.extend(extra);
-            let (length, left) = parse_(&bytes).unwrap();
+        #[test]
+        fn indefinite_without_extra_octet() {
+            let mut bytes: &[u8] = &[0x80];
+            let mut writeable = Vec::new();
+            let length = unsafe { parse_length(&mut bytes, &mut writeable).unwrap() };
 
             assert_eq!(length.is_indefinite(), true);
-            assert_eq!(left, extra);
+            assert_eq!(&writeable[..], &[0x80]);
+            assert!(bytes.is_empty());
         }
 
-        // Short form
-        {
-            let mut bytes = vec![0x00];
-            bytes.extend(extra);
-            let res = parse_(&bytes).unwrap();
-            assert_eq!((Length::Definite(0), extra), res);
+        #[test]
+        fn indefinite_and_extra_octet() {
+            for i in 0..=u8::MAX {
+                let mut bytes: &[u8] = &[0x80, i];
+                let mut writeable = Vec::new();
+                let length = unsafe { parse_length(&mut bytes, &mut writeable).unwrap() };
 
-            let mut bytes = vec![0x7f];
-            bytes.extend(extra);
-            let res = parse_(&bytes).unwrap();
-            assert_eq!((Length::Definite(0x7f), extra), res);
+                assert_eq!(length.is_indefinite(), true);
+                assert_eq!(&writeable[..], &[0x80]);
+                assert_eq!(bytes, &[i]);
+            }
         }
 
-        // 2 bytes
-        {
-            let mut bytes = vec![0x81, 0x80];
-            bytes.extend(extra);
-            let res = parse_(&bytes).unwrap();
-            assert_eq!((Length::Definite(0x80), extra), res);
+        #[test]
+        fn short_form_without_extra_octet() {
+            for i in 0..=Length::MAX_SHORT {
+                let mut bytes: &[u8] = &[i];
+                let mut writeable = Vec::new();
+                let length = unsafe { parse_length(&mut bytes, &mut writeable).unwrap() };
 
-            let mut bytes = vec![0x81, 0xff];
-            bytes.extend(extra);
-            let res = parse_(&bytes).unwrap();
-            assert_eq!((Length::Definite(0xff), extra), res);
+                assert_eq!(length, Length::Definite(i as usize));
+                assert_eq!(&writeable[..], &[i]);
+                assert!(bytes.is_empty());
+            }
         }
 
-        // 3 bytes
-        {
-            let mut bytes = vec![0x82, 0x01, 0x00];
-            bytes.extend(extra);
-            let res = parse_(&bytes).unwrap();
-            assert_eq!((Length::Definite(0x0100), extra), res);
+        #[test]
+        fn short_form_and_extra_octet() {
+            for i in 0..=Length::MAX_SHORT {
+                for j in 0..=u8::MAX {
+                    let mut bytes: &[u8] = &[i, j];
+                    let mut writeable = Vec::new();
+                    let length = unsafe { parse_length(&mut bytes, &mut writeable).unwrap() };
 
-            let mut bytes = vec![0x82, 0xff, 0xff];
-            bytes.extend(extra);
-            let res = parse_(&bytes).unwrap();
-            assert_eq!((Length::Definite(0xffff), extra), res);
+                    assert_eq!(length, Length::Definite(i as usize));
+                    assert_eq!(&writeable[..], &[i]);
+                    assert_eq!(bytes, &[j]);
+                }
+            }
         }
 
-        // max
-        {
-            let mut bytes: [u8; size_of::<usize>() + 1] = [0xff; size_of::<usize>() + 1];
-            bytes[0] = 0x80 + (size_of::<usize>() as u8);
-            let mut bytes = Vec::from(&bytes as &[u8]);
-            bytes.extend(extra);
-            let res = parse_(&bytes).unwrap();
-            assert_eq!((Length::Definite(std::usize::MAX), extra), res);
+        #[test]
+        fn two_bytes_without_extra_octet() {
+            for i in Length::MAX_SHORT + 1..=u8::MAX {
+                let mut bytes: &[u8] = &[0x81, i];
+                let mut writeable = Vec::new();
+                let length = unsafe { parse_length(&mut bytes, &mut writeable).unwrap() };
+
+                assert_eq!(length, Length::Definite(i as usize));
+                assert_eq!(&writeable[..], &[0x81, i]);
+                assert!(bytes.is_empty());
+            }
+        }
+
+        #[test]
+        fn two_bytes_and_extra_octet() {
+            for i in Length::MAX_SHORT + 1..=u8::MAX {
+                for j in 0..=u8::MAX {
+                    let mut bytes: &[u8] = &[0x81, i, j];
+                    let mut writeable = Vec::new();
+                    let length = unsafe { parse_length(&mut bytes, &mut writeable).unwrap() };
+
+                    assert_eq!(length, Length::Definite(i as usize));
+                    assert_eq!(&writeable[..], &[0x81, i]);
+                    assert_eq!(bytes, &[j]);
+                }
+            }
+        }
+
+        #[test]
+        fn three_bytes_without_extra_octet() {
+            for &i in &[0x0100_usize, 0xffff_usize] {
+                let i0 = (i >> 8) as u8;
+                let i1 = i as u8;
+
+                let mut bytes: &[u8] = &[0x82, i0, i1];
+                let mut writeable = Vec::new();
+                let length = unsafe { parse_length(&mut bytes, &mut writeable).unwrap() };
+
+                assert_eq!(length, Length::Definite(i));
+                assert_eq!(&writeable[..], &[0x82, i0, i1]);
+                assert!(bytes.is_empty());
+            }
+        }
+
+        #[test]
+        fn three_bytes_and_extra_octet() {
+            for &i in &[0x0100_usize, 0xffff_usize] {
+                for j in 0..=u8::MAX {
+                    let i0 = (i >> 8) as u8;
+                    let i1 = i as u8;
+
+                    let mut bytes: &[u8] = &[0x82, i0, i1, j];
+                    let mut writeable = Vec::new();
+                    let length = unsafe { parse_length(&mut bytes, &mut writeable).unwrap() };
+
+                    assert_eq!(length, Length::Definite(i));
+                    assert_eq!(&writeable[..], &[0x82, i0, i1]);
+                    assert_eq!(bytes, &[j]);
+                }
+            }
+        }
+
+        #[test]
+        fn max_without_extra_octet() {
+            let mut bytes_org = [0xff; size_of::<usize>() + 1];
+            bytes_org[0] = 0x80 + (size_of::<usize>() as u8);
+            let mut bytes = &bytes_org as &[u8];
+
+            let mut writeable = Vec::new();
+            let length = unsafe { parse_length(&mut bytes, &mut writeable).unwrap() };
+
+            assert_eq!(length, Length::Definite(usize::MAX));
+            assert_eq!(&writeable[..], &bytes_org[..]);
+            assert!(bytes.is_empty());
+        }
+
+        #[test]
+        fn max_and_extra_octet() {
+            for j in 0..=u8::MAX {
+                let mut bytes_org = [0xff; size_of::<usize>() + 2];
+                bytes_org[0] = 0x80 + (size_of::<usize>() as u8);
+                *bytes_org.last_mut().unwrap() = j;
+                let mut bytes = &bytes_org as &[u8];
+
+                let mut writeable = Vec::new();
+                let length = unsafe { parse_length(&mut bytes, &mut writeable).unwrap() };
+
+                assert_eq!(length, Length::Definite(usize::MAX));
+                assert_eq!(&writeable[..], &bytes_org[..bytes_org.len() - 1]);
+                assert_eq!(bytes, &[j]);
+            }
+        }
+
+        #[test]
+        fn overflow() {
+            for i in 1..=u8::MAX {
+                for j in 0..=u8::MAX {
+                    let mut bytes: [u8; size_of::<usize>() + 2] = [j; size_of::<usize>() + 2];
+                    bytes[0] = 0x80 + (size_of::<usize>() as u8) + 1;
+                    bytes[1] = i;
+
+                    let mut writeable = Vec::new();
+                    let err = unsafe { parse_length(&mut &bytes[..], &mut writeable) };
+                    assert_eq!(Error::OverFlow, err.unwrap_err());
+                }
+            }
+        }
+
+        #[test]
+        fn long_form_for_small_length() {
+            for i in 0..=Length::MAX_SHORT {
+                let mut bytes: &[u8] = &[0x81, i];
+                let mut writeable = Vec::new();
+
+                let err = unsafe { parse_length(&mut bytes, &mut writeable).unwrap_err() };
+                assert_eq!(err, Error::RedundantBytes);
+            }
+        }
+
+        #[test]
+        fn long_form_starting_with_0x00() {
+            for i in 0..=u8::MAX {
+                for j in 3..10 {
+                    let mut bytes: Vec<u8> = std::iter::repeat(i).take(j as usize).collect();
+                    bytes[0] = 0x80 + j - 1;
+                    bytes[1] = 0x00;
+                    let mut writeable = Vec::new();
+
+                    let err = unsafe { parse_length(&mut &bytes[..], &mut writeable).unwrap_err() };
+                    assert_eq!(err, Error::RedundantBytes);
+                }
+            }
+        }
+
+        #[test]
+        fn unterminated() {
+            for i in (0..=(i8::MAX as usize + 1)).chain(Some(usize::MAX)) {
+                let length = Length::Definite(i);
+                let bytes = Vec::from(&*length.to_bytes());
+
+                let mut writeable = Vec::new();
+                let mut bytes: &[u8] = &bytes[..bytes.len() - 1];
+                let err = unsafe { parse_length(&mut bytes, &mut writeable).unwrap_err() };
+                assert_eq!(err, Error::UnTerminatedBytes);
+            }
         }
     }
 
-    #[test]
-    fn parse_overflow() {
-        let mut bytes: [u8; size_of::<usize>() + 2] = [0x00; size_of::<usize>() + 2];
-        bytes[0] = 0x80 + (size_of::<usize>() as u8) + 1;
-        bytes[1] = 0x01;
-        let e = parse_(&bytes).unwrap_err();
-        assert_eq!(Error::OverFlow, e);
+    mod to_bytes {
+        use super::*;
 
-        let mut bytes = Vec::from(&bytes as &[u8]);
-        bytes.push(0xff);
-        let e = parse_(&bytes).unwrap_err();
-        assert_eq!(Error::OverFlow, e);
-    }
-
-    #[test]
-    fn parse_redundant() {
-        // 2 bytes
-        {
-            let bytes: &[u8] = &[0x81, 0x00];
-            let e = parse_(bytes).unwrap_err();
-            assert_eq!(Error::RedundantBytes, e);
-        }
-
-        // 3 bytes
-        {
-            let bytes: &[u8] = &[0x82, 0x00, 0x01];
-            let e = parse_(bytes).unwrap_err();
-            assert_eq!(Error::RedundantBytes, e);
-
-            let bytes: &[u8] = &[0x82, 0x00, 0xff];
-            let e = parse_(bytes).unwrap_err();
-            assert_eq!(Error::RedundantBytes, e);
-        }
-
-        // max
-        {
-            let mut bytes: [u8; size_of::<usize>() + 2] = [0xff; size_of::<usize>() + 2];
-            bytes[0] = 0x80 + (size_of::<usize>() as u8) + 1;
-            bytes[1] = 0x00;
-            let e = parse_(&bytes).unwrap_err();
-            assert_eq!(Error::RedundantBytes, e);
-        }
-    }
-
-    #[test]
-    fn parse_unterminated() {
-        // 2 bytes
-        {
-            let bytes: &[u8] = &[0x82, 0x01];
-            let e = parse_(bytes).unwrap_err();
-            assert_eq!(Error::UnTerminatedBytes, e);
-
-            let bytes: &[u8] = &[0x82, 0xff];
-            let e = parse_(bytes).unwrap_err();
-            assert_eq!(Error::UnTerminatedBytes, e);
-        }
-
-        // 3 bytes
-        {
-            let bytes: &[u8] = &[0x83, 0x01, 0x00];
-            let e = parse_(bytes).unwrap_err();
-            assert_eq!(Error::UnTerminatedBytes, e);
-
-            let bytes: &[u8] = &[0x83, 0xff, 0xff];
-            let e = parse_(bytes).unwrap_err();
-            assert_eq!(Error::UnTerminatedBytes, e);
-        }
-
-        // max
-        {
-            let mut bytes: [u8; size_of::<usize>() + 1] = [0xff; size_of::<usize>() + 1];
-            bytes[0] = 0x80 + (size_of::<usize>() as u8) + 1;
-            let e = parse_(&bytes).unwrap_err();
-            assert_eq!(Error::UnTerminatedBytes, e);
-        }
-    }
-
-    #[test]
-    fn to_bytes() {
-        let empty: &[u8] = &[];
-
-        // Indefinite
-        {
+        #[test]
+        fn indefinite() {
             let bytes = Length::Indefinite.to_bytes();
-            let (length, left) = parse_(&bytes).unwrap();
-
-            assert_eq!(length.is_indefinite(), true);
-            assert_eq!(left, empty);
+            assert_eq!(&bytes[..], &[0x80]);
         }
 
-        // Definite
-        for &len in &[0, 1, 0x7f, 0x80, 0xff, 0x0100, 0xffff, std::usize::MAX] {
-            let bytes = Length::Definite(len).to_bytes();
-            let (length, left) = parse_(&bytes).unwrap();
+        #[test]
+        fn definite() {
+            for i in (0..=(u8::MAX as usize + 1)).chain(Some(usize::MAX)) {
+                let length = Length::Definite(i);
+                let bytes = length.to_bytes();
 
-            assert_eq!(Length::Definite(len), length);
-            assert_eq!(left, empty);
+                let mut writeable = Vec::new();
+                let mut readable: &[u8] = &bytes[..];
+                let deserialized = unsafe { parse_length(&mut readable, &mut writeable).unwrap() };
+
+                assert_eq!(length, deserialized);
+                assert_eq!(&bytes[..], &writeable[..]);
+            }
         }
     }
 
