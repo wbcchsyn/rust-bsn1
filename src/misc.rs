@@ -29,3 +29,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+use crate::Error;
+use std::io::Read;
+
+/// Tries to read one byte from `readable`.
+pub fn read_u8<T: Read>(readable: &mut T) -> Result<u8, Error> {
+    let mut buf = [0; 1];
+    match readable.read(&mut buf) {
+        Err(e) => Err(e.into()),
+        Ok(0) => Err(Error::UnTerminatedBytes),
+        Ok(1) => Ok(buf[0]),
+        _ => unreachable!(),
+    }
+}
