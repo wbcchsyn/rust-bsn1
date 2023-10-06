@@ -195,13 +195,13 @@ impl Der {
 
         unsafe {
             let ptr = buffer.as_mut_ptr();
-            ptr.copy_from_nonoverlapping(id.as_bytes().as_ptr(), id.len());
+            ptr.copy_from_nonoverlapping(id.as_ref().as_ptr(), id.len());
 
             let ptr = ptr.add(id.len());
             ptr.copy_from_nonoverlapping(len.as_ptr(), len.len());
 
             let ptr = ptr.add(len.len());
-            ptr.copy_from_nonoverlapping(contents.as_bytes().as_ptr(), contents.len());
+            ptr.copy_from_nonoverlapping(contents.as_ref().as_ptr(), contents.len());
         }
 
         Self { buffer }
@@ -244,7 +244,7 @@ impl Der {
 
         unsafe {
             let dst = buffer.as_mut_ptr();
-            dst.copy_from_nonoverlapping(id.as_bytes().as_ptr(), id.len());
+            dst.copy_from_nonoverlapping(id.as_ref().as_ptr(), id.len());
 
             let dst = dst.add(id.len());
             dst.copy_from_nonoverlapping(length_.as_ptr(), length_.len());
@@ -302,9 +302,9 @@ impl Der {
     /// ```
     /// use bsn1::Der;
     ///
-    /// let bytes: &[u8] = &[0x02, 0x01, 0x0a];  // Represents '10' as Integer.
-    /// let der = unsafe { Der::from_bytes_unchecked(bytes) };
-    /// assert_eq!(bytes, der.as_bytes());
+    /// let bytes: Vec<u8> = vec![0x02, 0x01, 0x0a];  // Represents '10' as Integer.
+    /// let der = unsafe { Der::from_bytes_unchecked(&bytes) };
+    /// assert_eq!(der.as_ref() as &[u8], &bytes);
     /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
         Self {
@@ -358,7 +358,7 @@ impl Der {
         let total_len = id.len() + length_bytes.len() + length;
 
         let mut buffer = Buffer::with_capacity(total_len);
-        buffer.extend_from_slice(id.as_bytes());
+        buffer.extend_from_slice(id.as_ref());
         buffer.extend_from_slice(&length_bytes);
         contents.for_each(|c| buffer.extend_from_slice(c.as_ref()));
 
@@ -372,9 +372,15 @@ impl AsRef<[u8]> for Der {
     }
 }
 
-impl Borrow<[u8]> for Der {
-    fn borrow(&self) -> &[u8] {
-        self.buffer.borrow()
+impl AsRef<DerRef> for Der {
+    fn as_ref(&self) -> &DerRef {
+        self.deref()
+    }
+}
+
+impl AsMut<DerRef> for Der {
+    fn as_mut(&mut self) -> &mut DerRef {
+        self.deref_mut()
     }
 }
 
@@ -415,7 +421,7 @@ impl Der {
     /// let der = Der::from("foo");
     /// let v = der.clone().into_vec();
     ///
-    /// assert_eq!(der.as_bytes(), &v);
+    /// assert_eq!(der.as_ref() as &[u8], &v);
     /// ```
     pub fn into_vec(self) -> Vec<u8> {
         self.buffer.into_vec()
@@ -447,14 +453,14 @@ impl Der {
     /// let mut der = Der::from(&[] as &[u8]);
     ///
     /// assert_eq!(der.length(), Length::Definite(0));
-    /// assert_eq!(der.contents().as_bytes(), &[]);
+    /// assert_eq!(der.contents().as_ref(), &[]);
     ///
     /// let new_contents: &[u8] = &[1, 2, 3, 4];
     /// der.set_length(new_contents.len());
-    /// der.mut_contents().as_mut_bytes().copy_from_slice(new_contents);
+    /// der.mut_contents().as_mut().copy_from_slice(new_contents);
     ///
     /// assert_eq!(der.length(), Length::Definite(new_contents.len()));
-    /// assert_eq!(der.contents().as_bytes(), new_contents);
+    /// assert_eq!(der.contents().as_ref(), new_contents);
     /// ```
     pub fn set_length(&mut self, new_length: usize) {
         let old_length = self.contents().len();
@@ -477,7 +483,7 @@ impl Der {
         unsafe {
             // Copy the contents if necessary.
             if length_offset != 0 {
-                let src = self.mut_contents().as_mut_bytes().as_mut_ptr();
+                let src = self.mut_contents().as_mut().as_mut_ptr();
                 let dst = src.offset(length_offset);
                 let count = new_length.min(old_length);
                 dst.copy_from(src, count);
@@ -769,7 +775,7 @@ mod tests {
         let val = "foo";
         let der = Der::from(val);
         assert_eq!(IdRef::utf8_string(), der.id());
-        assert_eq!(val.as_bytes(), der.contents().as_bytes());
+        assert_eq!(val.as_bytes(), der.contents().as_ref());
     }
 
     #[test]
@@ -780,7 +786,7 @@ mod tests {
         for &bytes in byteses {
             let contents = <&ContentsRef>::from(bytes);
             let der = Der::new(id, contents);
-            let der_ref = DerRef::parse(der.as_bytes()).unwrap();
+            let der_ref = DerRef::parse(der.as_ref()).unwrap();
             assert_eq!(der_ref, &der as &DerRef);
         }
     }

@@ -369,8 +369,8 @@ mod tests {
                     std::u128::MAX,
                 ] {
                     let id = Id::new(cl, pc, num);
-                    let idref = IdRef::parse(id.as_bytes()).unwrap();
-                    assert_eq!(idref.as_bytes(), id.as_bytes());
+                    let idref = IdRef::parse(id.as_ref()).unwrap();
+                    assert_eq!(idref, &id);
                 }
             }
         }
@@ -383,17 +383,17 @@ mod tests {
                 for i in 0..=MAX_SHORT {
                     let id = Id::new(cl, pc, i);
                     let expected: &[u8] = &[cl as u8 + pc as u8 + i];
-                    assert_eq!(id.as_bytes(), expected);
+                    assert_eq!(id.as_ref() as &[u8], expected);
                 }
                 for i in (MAX_SHORT + 1)..0x80 {
                     let id = Id::new(cl, pc, i);
                     let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, i];
-                    assert_eq!(id.as_bytes(), expected);
+                    assert_eq!(id.as_ref() as &[u8], expected);
                 }
                 for i in 0x80..=u8::MAX {
                     let id = Id::new(cl, pc, i);
                     let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, 0x81, i - 0x80];
-                    assert_eq!(id.as_bytes(), expected);
+                    assert_eq!(id.as_ref() as &[u8], expected);
                 }
             }
         }
@@ -408,17 +408,17 @@ mod tests {
                     for i in 0..=MAX_SHORT {
                         let id = Id::new(cl, pc, i as u16);
                         let expected: &[u8] = &[cl as u8 + pc as u8 + i];
-                        assert_eq!(id.as_bytes(), expected);
+                        assert_eq!(id.as_ref() as &[u8], expected);
                     }
                     for i in (MAX_SHORT + 1)..0x80 {
                         let id = Id::new(cl, pc, i as u16);
                         let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, i];
-                        assert_eq!(id.as_bytes(), expected);
+                        assert_eq!(id.as_ref() as &[u8], expected);
                     }
                     for i in 0x80..=u8::MAX {
                         let id = Id::new(cl, pc, i as u16);
                         let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, 0x81, i - 0x80];
-                        assert_eq!(id.as_bytes(), expected);
+                        assert_eq!(id.as_ref() as &[u8], expected);
                     }
                 }
 
@@ -427,7 +427,7 @@ mod tests {
                     let i = u8::MAX as u16 + 1;
                     let id = Id::new(cl, pc, i);
                     let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, 0x82, 0];
-                    assert_eq!(id.as_bytes(), expected);
+                    assert_eq!(id.as_ref() as &[u8], expected);
                 }
 
                 // i16::MAX
@@ -435,7 +435,7 @@ mod tests {
                     let i = i16::MAX as u16;
                     let id = Id::new(cl, pc, i);
                     let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, 0x81, 0xff, 0x7f];
-                    assert_eq!(id.as_bytes(), expected);
+                    assert_eq!(id.as_ref() as &[u8], expected);
                 }
 
                 // i16::MAX + 1
@@ -443,7 +443,7 @@ mod tests {
                     let i = i16::MAX as u16 + 1;
                     let id = Id::new(cl, pc, i);
                     let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, 0x82, 0x80, 0x00];
-                    assert_eq!(id.as_bytes(), expected);
+                    assert_eq!(id.as_ref() as &[u8], expected);
                 }
 
                 // u16::MAX
@@ -451,7 +451,7 @@ mod tests {
                     let i = u16::MAX;
                     let id = Id::new(cl, pc, i);
                     let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, 0x83, 0xff, 0x7f];
-                    assert_eq!(id.as_bytes(), expected);
+                    assert_eq!(id.as_ref() as &[u8], expected);
                 }
             }
         }
@@ -469,7 +469,7 @@ mod tests {
                     expected[0] = cl as u8 + pc as u8 + LONG_FLAG;
                     expected[1] = 0x81;
                     expected[10] = 0x7f;
-                    assert_eq!(id.as_bytes(), expected);
+                    assert_eq!(id.as_ref() as &[u8], expected);
                 }
 
                 // u64::MAX + 1
@@ -480,7 +480,7 @@ mod tests {
                     expected[0] = cl as u8 + pc as u8 + LONG_FLAG;
                     expected[1] = 0x82;
                     expected[10] = 0x00;
-                    assert_eq!(id.as_bytes(), expected);
+                    assert_eq!(id.as_ref() as &[u8], expected);
                 }
 
                 // u128::MAX
@@ -491,7 +491,7 @@ mod tests {
                     expected[0] = cl as u8 + pc as u8 + LONG_FLAG;
                     expected[1] = 0x83;
                     expected[19] = 0x7f;
-                    assert_eq!(id.as_bytes(), expected);
+                    assert_eq!(id.as_ref() as &[u8], expected);
                 }
             }
         }

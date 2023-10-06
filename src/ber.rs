@@ -248,13 +248,13 @@ impl Ber {
             buffer.set_len(total_len);
 
             let ptr = buffer.as_mut_ptr();
-            ptr.copy_from_nonoverlapping(id.as_bytes().as_ptr(), id.len());
+            ptr.copy_from_nonoverlapping(id.as_ref().as_ptr(), id.len());
 
             let ptr = ptr.add(id.len());
             ptr.copy_from_nonoverlapping(length.as_ptr(), length.len());
 
             let ptr = ptr.add(length.len());
-            ptr.copy_from_nonoverlapping(contents.as_bytes().as_ptr(), contents.len());
+            ptr.copy_from_nonoverlapping(contents.as_ref().as_ptr(), contents.len());
         }
 
         Self { buffer }
@@ -328,7 +328,7 @@ impl Ber {
 
         unsafe {
             let dst = buffer.as_mut_ptr();
-            dst.copy_from_nonoverlapping(id.as_bytes().as_ptr(), id.len());
+            dst.copy_from_nonoverlapping(id.as_ref().as_ptr(), id.len());
 
             let dst = dst.add(id.len());
             dst.copy_from_nonoverlapping(length_.as_ptr(), length_.len());
@@ -372,7 +372,7 @@ impl Ber {
     ///
     /// let contents = <&ContentsRef>::from(&[]);
     /// let ber0 = Ber::new(IdRef::octet_string(), contents);
-    /// let ber1 = unsafe { Ber::from_bytes_unchecked(ber0.as_bytes()) };
+    /// let ber1 = unsafe { Ber::from_bytes_unchecked(ber0.as_ref()) };
     /// assert_eq!(ber0, ber1);
     /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
@@ -426,6 +426,18 @@ impl AsRef<[u8]> for Ber {
     }
 }
 
+impl AsRef<BerRef> for Ber {
+    fn as_ref(&self) -> &BerRef {
+        self.deref()
+    }
+}
+
+impl AsMut<BerRef> for Ber {
+    fn as_mut(&mut self) -> &mut BerRef {
+        self.deref_mut()
+    }
+}
+
 impl Borrow<BerRef> for Ber {
     fn borrow(&self) -> &BerRef {
         self.deref()
@@ -469,7 +481,7 @@ impl Ber {
     /// let ber = Ber::new(id, contents);
     /// let v = ber.clone().into_vec();
     ///
-    /// assert_eq!(ber.as_bytes(), &v);
+    /// assert_eq!(ber.as_ref() as &[u8], &v);
     /// ```
     pub fn into_vec(self) -> Vec<u8> {
         self.buffer.into_vec()
@@ -506,14 +518,14 @@ impl Ber {
     /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), <&ContentsRef>::from(&[]));
     ///
     /// assert_eq!(ber.length().is_indefinite(), true);
-    /// assert_eq!(ber.contents().as_bytes(), &[]);
+    /// assert_eq!(ber.contents().as_ref(), &[]);
     ///
     /// let new_contents: &[u8] = &[0, 1,  2, 3];
     /// ber.set_length(new_contents.len());
-    /// ber.mut_contents().as_mut_bytes().clone_from_slice(new_contents);
+    /// ber.mut_contents().as_mut().clone_from_slice(new_contents);
     ///
     /// assert_eq!(ber.length().is_indefinite(), true);
-    /// assert_eq!(ber.contents().as_bytes(), new_contents);
+    /// assert_eq!(ber.contents().as_ref(), new_contents);
     /// ```
     ///
     /// Enshorten definite length Ber object.
@@ -525,14 +537,14 @@ impl Ber {
     /// let mut ber = Ber::new(IdRef::octet_string(), <&ContentsRef>::from(old_contents));
     ///
     /// assert_eq!(ber.length(), Length::Definite(old_contents.len()));
-    /// assert_eq!(ber.contents().as_bytes(), old_contents);
+    /// assert_eq!(ber.contents().as_ref(), old_contents);
     ///
     /// let new_contents = &old_contents[0..2];
     /// ber.set_length(new_contents.len());
-    /// ber.mut_contents().as_mut_bytes().clone_from_slice(new_contents);
+    /// ber.mut_contents().as_mut().clone_from_slice(new_contents);
     ///
     /// assert_eq!(ber.length(), Length::Definite(new_contents.len()));
-    /// assert_eq!(ber.contents().as_bytes(), new_contents);
+    /// assert_eq!(ber.contents().as_ref(), new_contents);
     /// ```
     pub fn set_length(&mut self, new_length: usize) {
         match self.length() {
@@ -545,7 +557,7 @@ impl Ber {
                     self.buffer.reserve(diff as usize);
                 }
 
-                let total_len = self.as_bytes().len() as isize + diff;
+                let total_len = (self.as_ref() as &[u8]).len() as isize + diff;
                 unsafe { self.buffer.set_len(total_len as usize) };
             }
             _ => {
@@ -568,7 +580,7 @@ mod tests {
         for &bytes in byteses {
             let contents = <&ContentsRef>::from(bytes);
             let ber = Ber::new(id, contents);
-            let ber_ref = BerRef::parse(ber.as_bytes()).unwrap();
+            let ber_ref = BerRef::parse(ber.as_ref()).unwrap();
             assert_eq!(ber_ref, &ber as &BerRef);
         }
     }
@@ -593,17 +605,17 @@ mod tests {
 
         for i in 0..10 {
             let id = IdRef::sequence();
-            let mut bytes: Vec<u8> = Vec::from(id.as_bytes());
+            let mut bytes: Vec<u8> = Vec::from(id.as_ref());
 
             bytes.extend(Length::Indefinite.to_bytes().iter());
 
             for ber in bers[0..i].iter() {
-                bytes.extend(ber.as_bytes());
+                bytes.extend(ber.as_ref() as &[u8]);
             }
-            bytes.extend(eoc.as_bytes());
+            bytes.extend(eoc.as_ref() as &[u8]);
 
-            let ber = BerRef::parse(&bytes as &[u8]).unwrap();
-            assert_eq!(&bytes, ber.as_bytes());
+            let ber = BerRef::parse(&bytes[..]).unwrap();
+            assert_eq!(&bytes, ber.as_ref());
         }
     }
 

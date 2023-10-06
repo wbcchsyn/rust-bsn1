@@ -223,6 +223,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 ### Added
 
 - Implement the following traits
+  - AsMut\<BerRef\> for Ber
+  - AsMut\<DerRef\> for Der
+  - AsRef\<BerRef\> for Ber
+  - AsRef\<DerRef\> for Der
   - From\<bool\> for Ber
   - From\<T: PrimInt\> for Ber (`PrimInt` is `i8` or `u8` or ... `u128` or `isize` or `usize`.)
   - From\<&str\> for Ber
@@ -264,6 +268,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - ContentsRef::from\_bool()
   - ContentsRef::from\_bytes()
   - ContentsRef::from\_mut\_bytes()
+- Delete the following methods. Use `AsRef` or `AsMut` implementation instead.
+  - BerRef.as\_bytes()
+  - DerRef.as\_bytes()
+  - ContentsRef.as\_bytes()
+  - ContentsRef.as\_mut\_bytes()
+  - IdRef.as\_bytes()
+  - IdRef.as\_mut\_bytes()
 - Ignore the following `TryFrom` implementations. Use `parse()` or `parse_mut()` instead.
   - TryFrom\<&[u8]\> for Ber
   - TryFrom\<&[u8]\> for &BerRef
@@ -274,6 +285,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - TryFrom\<&[u8]\> for Id
   - TryFrom\<&[u8]\> for IdRef
   - TryFrom\<&[u8]\> for Length
+- Ignore the following implementations
+  - Borrow<[u8]> for Der
+  - Borrow<[u8]> for DerRef
+  - BorrowMut\<ContentsRef\> for Contents
 - Delete the following macros
   - constructed\_ber!()
   - constructed\_der!()

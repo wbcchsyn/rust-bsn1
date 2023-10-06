@@ -31,7 +31,6 @@
 // limitations under the License.
 
 use crate::{length, ContentsRef, Der, Error, IdRef, Length};
-use std::borrow::Borrow;
 
 /// `DerRef` is a wrapper of `[u8]` and represents DER.
 ///
@@ -109,12 +108,12 @@ impl DerRef {
     /// let der = DerRef::parse_mut(bytes).unwrap();
     ///
     /// // The value is 0x08 at first.
-    /// assert_eq!(der.contents().as_bytes(), &[0x08]);
+    /// assert_eq!(der.contents().as_ref(), &[0x08]);
     ///
     /// der.mut_contents()[0] = 0x09;
     ///
     /// // The value is updated.
-    /// assert_eq!(der.contents().as_bytes(), &[0x09]);
+    /// assert_eq!(der.contents().as_ref(), &[0x09]);
     /// ```
     pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
         let ret = Self::parse(bytes)?;
@@ -171,12 +170,12 @@ impl DerRef {
     /// let der = unsafe { DerRef::from_mut_bytes_unchecked(bytes) };
     ///
     /// // The value is 0x08 at first.
-    /// assert_eq!(der.contents().as_bytes(), &[0x08]);
+    /// assert_eq!(der.contents().as_ref(), &[0x08]);
     ///
     /// der.mut_contents()[0] = 0x09;
     ///
     /// // The value is updated.
-    /// assert_eq!(der.contents().as_bytes(), &[0x09]);
+    /// assert_eq!(der.contents().as_ref(), &[0x09]);
     /// ```
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         std::mem::transmute(bytes)
@@ -189,17 +188,11 @@ impl AsRef<[u8]> for DerRef {
     }
 }
 
-impl Borrow<[u8]> for DerRef {
-    fn borrow(&self) -> &[u8] {
-        &self.bytes
-    }
-}
-
 impl ToOwned for DerRef {
     type Owned = Der;
 
     fn to_owned(&self) -> Self::Owned {
-        unsafe { Der::from_bytes_unchecked(self.as_bytes()) }
+        unsafe { Der::from_bytes_unchecked(self.as_ref()) }
     }
 }
 
@@ -312,31 +305,14 @@ impl DerRef {
     /// let bytes: &mut [u8] = &mut [0x04, 0x02, 0x00, 0xff];
     /// let der = DerRef::parse_mut(bytes).unwrap();
     ///
-    /// assert_eq!(der.contents().as_bytes(), &[0x00, 0xff]);
-    /// der.mut_contents().as_mut_bytes().copy_from_slice(&[0x01, 0x02]);
-    /// assert_eq!(der.contents().as_bytes(), &[0x01, 0x02]);
+    /// assert_eq!(der.contents().as_ref(), &[0x00, 0xff]);
+    /// der.mut_contents().as_mut().copy_from_slice(&[0x01, 0x02]);
+    /// assert_eq!(der.contents().as_ref(), &[0x01, 0x02]);
     /// ```
     pub fn mut_contents(&mut self) -> &mut ContentsRef {
         let ret = self.contents();
         let ptr = ret as *const ContentsRef;
         let ptr = ptr as *mut ContentsRef;
         unsafe { &mut *ptr }
-    }
-
-    /// Provides a reference to the inner slice.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use bsn1::DerRef;
-    ///
-    /// // This octets represents `3` as integer.
-    /// let bytes = vec![0x02, 0x01, 0x03];
-    ///
-    /// let der = DerRef::parse(&bytes).unwrap();
-    /// assert_eq!(&bytes, der.as_bytes());
-    /// ```
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.bytes
     }
 }
