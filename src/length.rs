@@ -302,49 +302,6 @@ pub unsafe fn parse_length<R: Read, W: Write>(
     }
 }
 
-/// Tries to parse `bytes` starting with 'length' and returns `(Length, octets_after_length)`.
-///
-/// This function ignores extra octets at the end of `bytes`.
-pub fn parse_(bytes: &[u8]) -> Result<(Length, &[u8]), Error> {
-    let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
-    let bytes = &bytes[1..];
-
-    if first == Length::INDEFINITE {
-        // Indefinite
-        Ok((Length::Indefinite, bytes))
-    } else if first & Length::LONG_FLAG != Length::LONG_FLAG {
-        // Short form
-        Ok((Length::Definite(first as usize), bytes))
-    } else {
-        // Long form
-        let second = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
-        if second == 0x00 {
-            return Err(Error::RedundantBytes);
-        }
-
-        let followings_count = (first & !Length::LONG_FLAG) as usize;
-        if bytes.len() < followings_count {
-            return Err(Error::UnTerminatedBytes);
-        }
-
-        if size_of::<usize>() < followings_count {
-            return Err(Error::OverFlow);
-        }
-
-        let mut len: usize = 0;
-        unsafe {
-            let src = bytes.as_ptr();
-            let dst = (&mut len as *mut usize) as *mut u8;
-            let dst = dst.add(size_of::<usize>() - followings_count);
-            dst.copy_from_nonoverlapping(src, followings_count);
-        }
-        let len = usize::from_be(len);
-
-        let bytes = &bytes[followings_count..];
-        Ok((Length::Definite(len), bytes))
-    }
-}
-
 /// Parse `bytes` starting with 'length' and returns `(Length, octets_after_length)`.
 ///
 /// # Safety
