@@ -257,6 +257,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - Rename IdRef::try\_from\_bytes() IdRef::parse()
   - Rename IdRef::try\_from\_mut\_bytes() IdRef::parse\_mut()
   - Rename Length::try\_from\_bytes() Length::parse()
+- Add variant `Io` to enum `Error`
 
 ### Removed
 
