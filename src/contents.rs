@@ -32,7 +32,7 @@
 
 use crate::{Buffer, ContentsRef};
 use num::PrimInt;
-use std::borrow::{Borrow, BorrowMut};
+use std::borrow::Borrow;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 
@@ -326,12 +326,6 @@ impl AsMut<ContentsRef> for Contents {
 
 impl Borrow<ContentsRef> for Contents {
     fn borrow(&self) -> &ContentsRef {
-        self
-    }
-}
-
-impl BorrowMut<ContentsRef> for Contents {
-    fn borrow_mut(&mut self) -> &mut ContentsRef {
         self
     }
 }
