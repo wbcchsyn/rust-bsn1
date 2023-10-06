@@ -144,7 +144,7 @@
 //!         return Err("The id of the request is bad.".to_string());
 //!     }
 //!
-//!     let bytes = req.contents().as_bytes();
+//!     let bytes = req.contents().as_ref();
 //!     let version_ber = BerRef::parse(bytes)
 //!                         .map_err(|e| format!("Failed to parse the request version: {}", e))?;
 //!     let version = parse_bind_version(version_ber)?;
@@ -152,18 +152,18 @@
 //!         return Err("This function supports only version 3.".to_string());
 //!     }
 //!
-//!     let bytes = &bytes[version_ber.as_bytes().len()..];
+//!     let bytes = &bytes[version_ber.as_ref().len()..];
 //!     let name_ber = BerRef::parse(bytes)
 //!                      .map_err(|e| format!("Failed to parse the request name: {}", e))?;
 //!     let name = parse_bind_name(name_ber)?;
 //!
-//!     let bytes = &bytes[name_ber.as_bytes().len()..];
+//!     let bytes = &bytes[name_ber.as_ref().len()..];
 //!     let auth_ber = BerRef::parse(bytes)
 //!                      .map_err(|e|
 //!                               format!("Failed to parse the request authentication: {}", e))?;
 //!     let password = parse_bind_authentication(auth_ber)?;
 //!
-//!     let bytes = &bytes[auth_ber.as_bytes().len()..];
+//!     let bytes = &bytes[auth_ber.as_ref().len()..];
 //!     if bytes.is_empty() == false {
 //!         return Err("There are some bad octets at the end of the request.".to_string());
 //!     }
@@ -210,7 +210,7 @@
 //! let request = new_bind_request(name, password);
 //!
 //! // The client will send the byte to the server actually.
-//! let bytes = request.as_bytes();
+//! let bytes = request.as_ref();
 //!
 //! // The LDAP server will parse the request.
 //! let (name_, password_) = parse_bind_request(bytes).unwrap();

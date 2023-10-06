@@ -92,7 +92,7 @@ impl BerRef {
             Ok((Length::Indefinite, mut parsing)) => {
                 while {
                     let element = Self::parse(parsing)?;
-                    let len = element.as_bytes().len();
+                    let len = element.as_ref().len();
                     parsing = &parsing[len..];
 
                     if element.id() != IdRef::eoc() {
@@ -211,7 +211,7 @@ impl ToOwned for BerRef {
     type Owned = Ber;
 
     fn to_owned(&self) -> Self::Owned {
-        unsafe { Ber::from_bytes_unchecked(self.as_bytes()) }
+        unsafe { Ber::from_bytes_unchecked(self.as_ref()) }
     }
 }
 
@@ -343,22 +343,5 @@ impl BerRef {
             let ptr = ptr as *mut ContentsRef;
             &mut *ptr
         }
-    }
-
-    /// Provides a reference to the inner slice.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::BerRef;
-    ///
-    /// // This octets represents '3' as an integer.
-    /// let bytes = vec![0x02, 0x01, 0x03];
-    ///
-    /// let ber = unsafe { BerRef::from_bytes_unchecked(&bytes) };
-    /// assert_eq!(&bytes, ber.as_bytes());
-    /// ```
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.bytes
     }
 }
