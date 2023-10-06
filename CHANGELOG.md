@@ -296,6 +296,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - Borrow<[u8]> for Der
   - Borrow<[u8]> for DerRef
   - BorrowMut\<ContentsRef\> for Contents
+  - Clone for Error
+  - Copy for Error
+  - Eq for Error
+  - Hash for Error
 - Delete the following macros
   - constructed\_ber!()
   - constructed\_der!()

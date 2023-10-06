@@ -247,7 +247,7 @@ use length_buffer::LengthBuffer;
 use std::fmt;
 
 /// Errors for this crate.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq)]
 pub enum Error {
     /// The bytes finish before the last octet.
     UnTerminatedBytes,
