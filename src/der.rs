@@ -534,39 +534,6 @@ pub fn disassemble_der(der: Der) -> Buffer {
     der.buffer
 }
 
-#[doc(hidden)]
-#[macro_export]
-macro_rules! __bsn1__expand_constructed_der {
-    (; $id:tt $($contents:tt)*) => {{
-        let contents: &[&[u8]] = &[$($contents),*];
-        bsn1::Der::from_id_iterator($id, contents.iter())
-    }};
-
-    (($id_1:expr, $contents_1:expr) $(, ($id_n:expr, $contents_n:expr))* ; $id:tt $($acc:tt)*) => {{
-        use bsn1::Length;
-
-        let id_1 = $id_1;
-        let id_1: &[u8] = id_1.as_ref();
-
-        let contents_1 = $contents_1;
-        let contents_1: &[u8] = contents_1.as_ref();
-
-        let length_1 = Length::Definite(contents_1.len());
-        let length_1 = length_1.to_bytes();
-        let length_1: &[u8] = length_1.as_ref();
-
-        __bsn1__expand_constructed_der!(
-            $(($id_n, $contents_n)),*
-            ;
-            $id
-            $($acc)*
-            id_1
-            length_1
-            contents_1
-        )
-    }};
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
