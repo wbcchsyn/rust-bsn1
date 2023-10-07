@@ -240,7 +240,7 @@ pub use contents::Contents;
 pub use contents_ref::ContentsRef;
 pub use der::Der;
 pub use der_ref::DerRef;
-pub use id_tags::{ClassTag, PCTag};
+pub use id_tags::{ClassTag, IdNumber, PCTag};
 pub use identifier::Id;
 pub use identifier_ref::IdRef;
 pub use length::Length;
