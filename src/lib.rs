@@ -87,7 +87,7 @@
 //!     // The RFC does not refer to the Primitive/Constructed flag,
 //!     // but SEQUENCE is usually Constructed.
 //!     const ID_NUMBER: u32 = 0;
-//!     let id = Id::new(ClassTag::Application, PCTag::Constructed, ID_NUMBER);
+//!     let id = Id::new(ClassTag::Application, PCTag::Constructed, ID_NUMBER.into());
 //!
 //!     let contents = [new_bind_version(), new_bind_name(name),
 //!                     new_bind_authentication(password)];
@@ -127,7 +127,7 @@
 //!    // RFC does not refer to the class and Primitive/Constructed flag.
 //!    // This function returns ContextSpecific and Primitive BER.
 //!    const ID_NUMBER: u32 = 0;
-//!    let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, ID_NUMBER);
+//!    let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, ID_NUMBER.into());
 //!
 //!    let contents = <&ContentsRef>::from(password);
 //!

@@ -31,7 +31,7 @@
 // limitations under the License.
 
 use crate::identifier_ref::{LONG_FLAG, MAX_SHORT, MORE_FLAG};
-use crate::{Buffer, ClassTag, Error, IdRef, PCTag};
+use crate::{Buffer, ClassTag, Error, IdNumber, IdRef, PCTag};
 use num::cast::AsPrimitive;
 use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
@@ -81,17 +81,15 @@ impl Id {
     /// use bsn1::{Id, IdRef};
     ///
     /// let idref = IdRef::integer();
-    /// let id = Id::new(idref.class(), idref.pc(), idref.number().unwrap().get());
+    /// let id = Id::new(idref.class(), idref.pc(), idref.number().unwrap());
     /// assert_eq!(idref, &id);
     /// ```
-    pub fn new<T>(class: ClassTag, pc: PCTag, number: T) -> Self
-    where
-        T: Unsigned + FromPrimitive + PrimInt + AsPrimitive<u8>,
-    {
+    pub fn new(class: ClassTag, pc: PCTag, number: IdNumber) -> Self {
         let mut buffer = Buffer::new();
+        let number = number.get();
 
-        if number <= T::from_u8(MAX_SHORT).unwrap() {
-            let o = class as u8 + pc as u8 + number.as_();
+        if number <= MAX_SHORT as u128 {
+            let o = class as u8 + pc as u8 + number as u8;
             unsafe { buffer.push(o) };
         } else {
             let long_flag = class as u8 + pc as u8 + LONG_FLAG;
@@ -111,11 +109,11 @@ impl Id {
 
             let mut num = number;
             for i in (1..len).rev() {
-                let o = num.as_() | MORE_FLAG;
+                let o = num as u8 | MORE_FLAG;
                 buffer[i] = o;
                 num = num.unsigned_shr(7);
             }
-            buffer[len - 1] &= !(MORE_FLAG);
+            buffer[len - 1] ^= MORE_FLAG;
         }
 
         Self { buffer }
@@ -251,7 +249,7 @@ impl Id {
     /// ```
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
-    /// let mut id = Id::new(ClassTag::Private, PCTag::Primitive, 13_u8);
+    /// let mut id = Id::new(ClassTag::Private, PCTag::Primitive, 13_u8.into());
     /// assert_eq!(id.number().unwrap(), 13_u8.into());
     ///
     /// id.set_number(34_u8);
@@ -313,17 +311,17 @@ mod tests {
             for &pc in PCS {
                 // u8
                 for i in 0..=u8::MAX {
-                    let id = Id::new(cl, pc, i);
+                    let id = Id::new(cl, pc, i.into());
                     assert_eq!(Ok(i.into()), id.number());
                 }
                 // u16
                 for i in 0..=u16::MAX {
-                    let id = Id::new(cl, pc, i);
+                    let id = Id::new(cl, pc, i.into());
                     assert_eq!(Ok(i.into()), id.number());
                 }
                 // u128::MAX
                 {
-                    let id = Id::new(cl, pc, u128::MAX);
+                    let id = Id::new(cl, pc, u128::MAX.into());
                     assert_eq!(Ok(u128::MAX.into()), id.number());
                 }
             }
@@ -349,42 +347,81 @@ mod tests {
     fn new() {
         for &cl in CLASSES {
             for &pc in PCS {
-                for &num in &[
-                    0,
-                    30,
-                    31,
-                    0x7f,
-                    0x80,
-                    0x3fff,
-                    0x8000,
-                    0x1fffff,
-                    std::u128::MAX,
-                ] {
-                    let id = Id::new(cl, pc, num);
+                for i in (0..=u16::MAX as u128).chain(Some(u128::MAX)) {
+                    let id = Id::new(cl, pc, i.into());
+                    assert_eq!(cl, id.class());
+                    assert_eq!(pc, id.pc());
+                    assert_eq!(Ok(i.into()), id.number());
+
                     let idref = IdRef::parse(id.as_ref()).unwrap();
-                    assert_eq!(idref, &id);
+                    assert_eq!(id, idref);
                 }
             }
         }
     }
 
     #[test]
-    fn id_new_u8() {
+    fn new_1_byte() {
         for &cl in CLASSES {
             for &pc in PCS {
                 for i in 0..=MAX_SHORT {
-                    let id = Id::new(cl, pc, i);
-                    let expected: &[u8] = &[cl as u8 + pc as u8 + i];
+                    let id = Id::new(cl, pc, i.into());
+                    let expected = &[cl as u8 + pc as u8 + i];
                     assert_eq!(id.as_ref() as &[u8], expected);
                 }
-                for i in (MAX_SHORT + 1)..0x80 {
-                    let id = Id::new(cl, pc, i);
-                    let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, i];
+            }
+        }
+    }
+
+    const MAX_2_BYTES: u128 = 0x7f;
+
+    #[test]
+    fn new_2_byte() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                for i in (MAX_SHORT as u128 + 1)..=MAX_2_BYTES {
+                    let id = Id::new(cl, pc, i.into());
+                    let expected = &[cl as u8 + pc as u8 + LONG_FLAG, i as u8];
+                    assert_eq!(expected[1] & MORE_FLAG, 0);
                     assert_eq!(id.as_ref() as &[u8], expected);
                 }
-                for i in 0x80..=u8::MAX {
-                    let id = Id::new(cl, pc, i);
-                    let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, 0x81, i - 0x80];
+            }
+        }
+    }
+
+    const MAX_3_BYTES: u128 = 0x3fff;
+
+    #[test]
+    fn new_3_byte() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                for i in (MAX_2_BYTES + 1)..=MAX_3_BYTES {
+                    let id = Id::new(cl, pc, i.into());
+                    let expected = &[
+                        cl as u8 + pc as u8 | LONG_FLAG,
+                        (i >> 7) as u8 | MORE_FLAG,
+                        i as u8 & !MORE_FLAG,
+                    ];
+                    assert_eq!(id.as_ref() as &[u8], expected);
+                }
+            }
+        }
+    }
+
+    const MAX_4_BYTES: u128 = 0x1fffff;
+
+    #[test]
+    fn new_4_bytes() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                for &i in &[MAX_3_BYTES + 1, MAX_4_BYTES] {
+                    let id = Id::new(cl, pc, i.into());
+                    let expected = &[
+                        cl as u8 + pc as u8 + LONG_FLAG,
+                        (i >> 14) as u8 | MORE_FLAG,
+                        (i >> 7) as u8 | MORE_FLAG,
+                        i as u8 & !MORE_FLAG,
+                    ];
                     assert_eq!(id.as_ref() as &[u8], expected);
                 }
             }
@@ -392,99 +429,26 @@ mod tests {
     }
 
     #[test]
-    fn id_new_u16() {
+    fn new_max_bytes() {
         for &cl in CLASSES {
             for &pc in PCS {
-                // Same to u8 (Check again.)
-                {
-                    for i in 0..=MAX_SHORT {
-                        let id = Id::new(cl, pc, i as u16);
-                        let expected: &[u8] = &[cl as u8 + pc as u8 + i];
-                        assert_eq!(id.as_ref() as &[u8], expected);
-                    }
-                    for i in (MAX_SHORT + 1)..0x80 {
-                        let id = Id::new(cl, pc, i as u16);
-                        let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, i];
-                        assert_eq!(id.as_ref() as &[u8], expected);
-                    }
-                    for i in 0x80..=u8::MAX {
-                        let id = Id::new(cl, pc, i as u16);
-                        let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, 0x81, i - 0x80];
-                        assert_eq!(id.as_ref() as &[u8], expected);
-                    }
+                let id = Id::new(cl, pc, u128::MAX.into());
+
+                let mut bytes = Vec::from(id.as_ref() as &[u8]);
+                let mut num = u128::MAX;
+
+                // Check the last octet.
+                assert_eq!(bytes.pop().unwrap(), num as u8 & !MORE_FLAG);
+                num >>= 7;
+
+                // Check the middle octets.
+                while 1 < bytes.len() {
+                    assert_eq!(bytes.pop().unwrap(), num as u8 | MORE_FLAG);
+                    num >>= 7;
                 }
 
-                // u8::MAX + 1
-                {
-                    let i = u8::MAX as u16 + 1;
-                    let id = Id::new(cl, pc, i);
-                    let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, 0x82, 0];
-                    assert_eq!(id.as_ref() as &[u8], expected);
-                }
-
-                // i16::MAX
-                {
-                    let i = i16::MAX as u16;
-                    let id = Id::new(cl, pc, i);
-                    let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, 0x81, 0xff, 0x7f];
-                    assert_eq!(id.as_ref() as &[u8], expected);
-                }
-
-                // i16::MAX + 1
-                {
-                    let i = i16::MAX as u16 + 1;
-                    let id = Id::new(cl, pc, i);
-                    let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, 0x82, 0x80, 0x00];
-                    assert_eq!(id.as_ref() as &[u8], expected);
-                }
-
-                // u16::MAX
-                {
-                    let i = u16::MAX;
-                    let id = Id::new(cl, pc, i);
-                    let expected: &[u8] = &[cl as u8 + pc as u8 + LONG_FLAG, 0x83, 0xff, 0x7f];
-                    assert_eq!(id.as_ref() as &[u8], expected);
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn id_new_u128() {
-        for &cl in CLASSES {
-            for &pc in PCS {
-                // u64::MAX
-                {
-                    let i = u64::MAX as u128;
-                    let id = Id::new(cl, pc, i);
-                    let expected: &mut [u8] = &mut [0xff; 11];
-                    expected[0] = cl as u8 + pc as u8 + LONG_FLAG;
-                    expected[1] = 0x81;
-                    expected[10] = 0x7f;
-                    assert_eq!(id.as_ref() as &[u8], expected);
-                }
-
-                // u64::MAX + 1
-                {
-                    let i = u64::MAX as u128 + 1;
-                    let id = Id::new(cl, pc, i);
-                    let expected: &mut [u8] = &mut [0x80; 11];
-                    expected[0] = cl as u8 + pc as u8 + LONG_FLAG;
-                    expected[1] = 0x82;
-                    expected[10] = 0x00;
-                    assert_eq!(id.as_ref() as &[u8], expected);
-                }
-
-                // u128::MAX
-                {
-                    let i = u128::MAX;
-                    let id = Id::new(cl, pc, i);
-                    let expected: &mut [u8] = &mut [0xff; 20];
-                    expected[0] = cl as u8 + pc as u8 + LONG_FLAG;
-                    expected[1] = 0x83;
-                    expected[19] = 0x7f;
-                    assert_eq!(id.as_ref() as &[u8], expected);
-                }
+                assert_eq!(num, 0);
+                assert_eq!(bytes.pop().unwrap(), cl as u8 + pc as u8 + LONG_FLAG);
             }
         }
     }
@@ -493,7 +457,7 @@ mod tests {
     fn set_number() {
         for &cl in CLASSES {
             for &pc in PCS {
-                let mut id = Id::new(cl, pc, 0_u8);
+                let mut id = Id::new(cl, pc, 0_u8.into());
 
                 for i in 0..=u16::MAX {
                     id.set_number(i);

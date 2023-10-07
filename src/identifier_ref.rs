@@ -1156,7 +1156,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8.into());
     /// assert_eq!(true, id.is_universal());
     /// ```
     pub fn is_universal(&self) -> bool {
@@ -1172,7 +1172,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 0_u8);
+    /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 0_u8.into());
     /// assert_eq!(true, id.is_application());
     /// ```
     pub fn is_application(&self) -> bool {
@@ -1188,7 +1188,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 0_u8);
+    /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 0_u8.into());
     /// assert_eq!(true, id.is_context_specific());
     /// ```
     pub fn is_context_specific(&self) -> bool {
@@ -1204,7 +1204,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Private, PCTag::Primitive, 0_u8);
+    /// let id = Id::new(ClassTag::Private, PCTag::Primitive, 0_u8.into());
     /// assert_eq!(true, id.is_private());
     /// ```
     pub fn is_private(&self) -> bool {
@@ -1220,10 +1220,10 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8.into());
     /// assert_eq!(PCTag::Primitive, id.pc());
     ///
-    /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1_u8);
+    /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1_u8.into());
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// ```
     pub fn pc(&self) -> PCTag {
@@ -1242,7 +1242,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8.into());
     /// assert_eq!(true, id.is_primitive());
     /// ```
     pub fn is_primitive(&self) -> bool {
@@ -1258,7 +1258,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// // 'Id' implements 'Deref<Target = IdRef>'.
-    /// let id = Id::new(ClassTag::Universal, PCTag::Constructed, 0_u8);
+    /// let id = Id::new(ClassTag::Universal, PCTag::Constructed, 0_u8.into());
     /// assert_eq!(true, id.is_constructed());
     /// ```
     pub fn is_constructed(&self) -> bool {
@@ -1276,7 +1276,7 @@ impl IdRef {
     /// use bsn1::{ClassTag, Id, IdRef, PCTag};
     /// use std::ops::Deref;
     ///
-    /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 49_u8);
+    /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 49_u8.into());
     /// let idref: &IdRef = id.deref();
     /// assert_eq!(49, idref.number().unwrap().get());
     /// ```
@@ -1559,7 +1559,7 @@ mod tests {
             for &pc in PCS {
                 for &cl1 in CLASSES {
                     for i in 0..=u16::MAX {
-                        let mut id = Id::new(cl0, pc, i);
+                        let mut id = Id::new(cl0, pc, i.into());
                         id.set_class(cl1);
 
                         assert_eq!(cl1, id.class());
@@ -1577,7 +1577,7 @@ mod tests {
             for &pc0 in PCS {
                 for &pc1 in PCS {
                     for i in 0..=u16::MAX {
-                        let mut id = Id::new(cl, pc0, i);
+                        let mut id = Id::new(cl, pc0, i.into());
                         id.set_pc(pc1);
 
                         assert_eq!(cl, id.class());
