@@ -56,17 +56,22 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::DerRef;
+    /// use bsn1::{Der, DerRef};
     ///
-    /// // Represents '8' as Integer.
-    /// let bytes0: &[u8] = &[0x02, 0x01, 0x08];
-    /// let der0 = DerRef::parse(bytes0).unwrap();
+    /// // Serializes '8' as Integer.
+    /// let der = Der::from(8_i32);
+    /// let mut serialized = Vec::from(der.as_ref() as &[u8]);
+    ///
+    /// // Deserialize `der`.
+    /// let deserialized = DerRef::parse(&serialized[..]).unwrap();
+    /// assert_eq!(der, deserialized);
     ///
     /// // The result is not changed even if extra octets are added to the end.
-    /// let bytes1: &[u8] = &[0x02, 0x01, 0x08, 0x00, 0xff];
-    /// let der1 = DerRef::parse(bytes1).unwrap();
+    /// serialized.push(0xff);
+    /// serialized.push(0x00);
     ///
-    /// assert_eq!(der0, der1);
+    /// let deserialized = DerRef::parse(&serialized[..]).unwrap();
+    /// assert_eq!(der, deserialized);
     /// ```
     pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
         let mut readable = bytes;
@@ -81,6 +86,10 @@ impl DerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
+    /// This function is same as [`parse`] except that it returns a mutable reference.
+    ///
+    /// [`parse`]: Self::parse
+    ///
     /// # Warnings
     ///
     /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
@@ -91,19 +100,23 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{DerRef, IdRef};
+    /// use bsn1::{Der, DerRef};
     ///
-    /// // Represents '8' as Integer.
-    /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x08];
-    /// let der = DerRef::parse_mut(bytes).unwrap();
+    /// // Serialize "Foo" as utf8-string.
+    /// let der = Der::from("Foo");
+    /// let mut serialized = Vec::from(der.as_ref() as &[u8]);
     ///
-    /// // The value is 0x08 at first.
-    /// assert_eq!(der.contents().as_ref(), &[0x08]);
+    /// // Deserialize.
+    /// let deserialized = DerRef::parse_mut(&mut serialized[..]).unwrap();
+    /// assert_eq!(der, deserialized);
     ///
-    /// der.mut_contents()[0] = 0x09;
+    /// // You can update it because 'deserialized' is a mutable reference.
+    /// deserialized.mut_contents()[0] = 'B' as u8;
+    /// // Now deserialize represents "Boo", not "Foo".
     ///
-    /// // The value is updated.
-    /// assert_eq!(der.contents().as_ref(), &[0x09]);
+    /// // Deserialize again.
+    /// let deserialized = DerRef::parse_mut(&mut serialized[..]).unwrap();
+    /// assert!(der != deserialized);
     /// ```
     pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
         let mut readable = bytes as &[u8];

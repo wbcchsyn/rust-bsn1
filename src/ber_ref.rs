@@ -68,17 +68,22 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::BerRef;
+    /// use bsn1::{Ber, BerRef};
     ///
-    /// // Represents 'True' as a Boolean.
-    /// let bytes: &[u8] = &[0x01, 0x01, 0xff];
-    /// let ber0 = BerRef::parse(bytes).unwrap();
-    /// assert!(ber0.contents().to_bool_ber().unwrap());
+    /// // Serializes '8' as an Integer.
+    /// let ber = Ber::from(8_u8);
+    /// let mut serialized = Vec::from(ber.as_ref() as &[u8]);
     ///
-    /// // The extra octets at the end do not affect the result.
-    /// let bytes: &[u8] = &[0x01, 0x01, 0xff, 0x00];
-    /// let ber1 = BerRef::parse(bytes).unwrap();
-    /// assert_eq!(ber0, ber1);
+    /// // Deserializes `ber`.
+    /// let deserialized = BerRef::parse(&serialized[..]).unwrap();
+    /// assert_eq!(ber, deserialized);
+    ///
+    /// // Extra octets at the end does not affect the result.
+    /// serialized.push(0x00);
+    /// serialized.push(0xff);
+    ///
+    /// let deserialized = BerRef::parse(&serialized[..]).unwrap();
+    /// assert_eq!(ber, deserialized);
     /// ```
     pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
         let mut readable = bytes;
@@ -98,6 +103,8 @@ impl BerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
+    /// This function is same as [`parse`] except that it returns a mutable reference.
+    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
@@ -107,19 +114,23 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::BerRef;
+    /// use bsn1::{Ber, BerRef};
     ///
-    /// // Represents '0x04' as an Integer.
-    /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x04];
-    /// let ber = BerRef::parse_mut(bytes).unwrap();
+    /// // Serialize "Foo" as utf8-string.
+    /// let ber = Ber::from("Foo");
+    /// let mut serialized = Vec::from(ber.as_ref() as &[u8]);
     ///
-    /// // The value is 0x04 at first.
-    /// assert_eq!(ber.contents().as_ref(), &[0x04]);
+    /// // Deserialize.
+    /// let deserialized = BerRef::parse_mut(&mut serialized[..]).unwrap();
+    /// assert_eq!(ber, deserialized);
     ///
-    /// ber.mut_contents()[0] = 0x05;
+    /// // You can update it because 'deserialized' is a mutable reference.
+    /// deserialized.mut_contents()[0] = 'B' as u8;
+    /// // Now deserialize represents "Boo", not "Foo".
     ///
-    /// // The value is updated.
-    /// assert_eq!(ber.contents().as_ref(), &[0x05]);
+    /// // Deserialize again.
+    /// let deserialized = BerRef::parse_mut(&mut serialized[..]).unwrap();
+    /// assert!(ber != deserialized);
     /// ```
     pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
         let mut readable = bytes as &[u8];

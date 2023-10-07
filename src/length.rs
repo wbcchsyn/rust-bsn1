@@ -85,17 +85,18 @@ impl Length {
     /// use bsn1::Length;
     ///
     /// // Serializes Definite(5).
-    /// let mut bytes = Vec::from(&* Length::Definite(5).to_bytes());
+    /// let length = Length::Definite(5);
+    /// let mut serialized = Vec::from(&length.to_bytes()[..]);
     ///
-    /// // Parses the serialized bytes. The result is Definite(5).
-    /// let len = Length::parse(&mut &bytes[..]).unwrap();
-    /// assert_eq!(Length::Definite(5), len);
+    /// // Parses the serialized bytes.
+    /// let deserialized = Length::parse(&mut &serialized[..]).unwrap();
+    /// assert_eq!(length, deserialized);
     ///
     /// // The extra octets at the end does not affect the result.
-    /// bytes.push(0x03);
-    /// bytes.push(0x04);
-    /// let len = Length::parse(&mut &bytes[..]).unwrap();
-    /// assert_eq!(Length::Definite(5), len);
+    /// serialized.push(0x03);
+    /// serialized.push(0x04);
+    /// let deserialized = Length::parse(&mut &serialized[..]).unwrap();
+    /// assert_eq!(length, deserialized);
     /// ```
     pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
         let mut writeable = std::io::sink();
