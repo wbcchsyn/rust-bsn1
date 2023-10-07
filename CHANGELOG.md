@@ -318,6 +318,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - constructed\_der!()
 - Delete the following functions and methods.
   - Ber::set\_length() (Use `Ber::truncate` or `Ber::push` or `Ber::extend\_from\_slice` instead)
+  - Der::set\_length() (Use `Der::truncate` or `Der::push` or `Der::extend\_from\_slice` instead)
 
 ### Fixed
 
