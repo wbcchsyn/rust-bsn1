@@ -1073,7 +1073,7 @@ where
     T: Borrow<IdRef>,
 {
     fn eq(&self, other: &T) -> bool {
-        self.eq(other.borrow())
+        self == other.borrow()
     }
 }
 

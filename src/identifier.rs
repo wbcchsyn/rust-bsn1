@@ -201,7 +201,7 @@ where
     T: Borrow<IdRef>,
 {
     fn eq(&self, other: &T) -> bool {
-        self.deref().eq(other.borrow())
+        self.deref() == other.borrow()
     }
 }
 
