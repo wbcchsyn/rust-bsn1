@@ -53,3 +53,7 @@ pub enum PCTag {
     /// Constructed data type.
     Constructed = 0x20,
 }
+
+/// `IdNumber` represents the number of identifier.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+struct IdNumber(u128);
