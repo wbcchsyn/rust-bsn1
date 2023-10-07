@@ -204,8 +204,7 @@ impl Ber {
     /// assert!(ber.contents().is_empty());
     /// ```
     pub fn new(id: &IdRef, contents: &ContentsRef) -> Self {
-        let der = Der::new(id, contents);
-        Self::from(der)
+        Der::new(id, contents).into()
     }
 
     /// Creates a new instance from `id` and `contents` with indefinite length.
