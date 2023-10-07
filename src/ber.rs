@@ -240,24 +240,12 @@ impl Ber {
     /// assert!(ber.contents().is_empty());
     /// ```
     pub fn new_indefinite(id: &IdRef, contents: &ContentsRef) -> Self {
-        let length = Length::Indefinite.to_bytes();
-        let total_len = id.len() + length.len() + contents.len();
-        let mut buffer = Buffer::with_capacity(total_len);
+        let mut ret = Self::with_id_length_indefinite(id, contents.len());
+        ret.mut_contents()
+            .as_mut()
+            .copy_from_slice(contents.as_ref());
 
-        unsafe {
-            buffer.set_len(total_len);
-
-            let ptr = buffer.as_mut_ptr();
-            ptr.copy_from_nonoverlapping(id.as_ref().as_ptr(), id.len());
-
-            let ptr = ptr.add(id.len());
-            ptr.copy_from_nonoverlapping(length.as_ptr(), length.len());
-
-            let ptr = ptr.add(length.len());
-            ptr.copy_from_nonoverlapping(contents.as_ref().as_ptr(), contents.len());
-        }
-
-        Self { buffer }
+        ret
     }
 
     /// Creates a new instance with definite length from `id` and `contents` of `length` bytes.
