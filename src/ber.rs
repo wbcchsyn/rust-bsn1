@@ -289,8 +289,7 @@ impl Ber {
     /// assert_eq!(ber.contents().len(), 36);
     /// ```
     pub fn with_id_length(id: &IdRef, length: usize) -> Self {
-        let der = Der::with_id_length(id, length);
-        Self::from(der)
+        Der::with_id_length(id, length).into()
     }
 
     /// Creates a new instance with indefinite length from `id` and `contents` of `length` bytes.
