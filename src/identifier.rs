@@ -54,6 +54,14 @@ pub struct Id {
     buffer: Buffer,
 }
 
+impl From<&'_ IdRef> for Id {
+    fn from(idref: &'_ IdRef) -> Self {
+        Self {
+            buffer: Buffer::from(idref.as_ref()),
+        }
+    }
+}
+
 impl Id {
     /// Creates a new instance from `class` , `pc` , and `number`.
     ///
