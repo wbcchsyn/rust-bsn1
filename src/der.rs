@@ -492,6 +492,34 @@ impl Der {
         self.buffer.into_vec()
     }
 
+    /// Appends `byte` to the end of the 'contents octets'.
+    ///
+    /// Note that this method may shift the 'contents octets',
+    /// and the performance is `O(n)` where `n` is the length of 'contents octets'
+    /// in the worst-case;
+    /// because the length of 'length octets' may change.
+    /// (DER is composed of 'identifier octets', 'length octets' and 'contents octets'
+    /// in this order.)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef, Length};
+    ///
+    /// let bytes: Vec<u8> = (0..10).collect();
+    /// let mut der = Der::from(&bytes[..]);
+    /// der.push(0xff);
+    ///
+    /// assert_eq!(der.id(), IdRef::octet_string());
+    /// assert_eq!(der.length(), Length::Definite(bytes.len() + 1));
+    ///
+    /// assert_eq!(&der.contents().as_ref()[..bytes.len()], &bytes[..]);
+    /// assert_eq!(der.contents().as_ref().last().unwrap(), &0xff);
+    /// ```
+    pub fn push(&mut self, byte: u8) {
+        self.extend_from_slice(&[byte]);
+    }
+
     /// Appends `bytes` to the end of the 'contents octets'.
     ///
     /// Note that this method may shift the 'contents octets',
