@@ -140,7 +140,7 @@
 //!                 .map_err(|e| format!("Failed to parse the request as a BER: {}", e))?;
 //!
 //!     let id = req.id();
-//!     if id.class() != ClassTag::Application || id.number() != Ok(0) {
+//!     if id.class() != ClassTag::Application || id.number() != Ok(0_u8.into()) {
 //!         return Err("The id of the request is bad.".to_string());
 //!     }
 //!
@@ -195,9 +195,9 @@
 //! /// Tries to parse the password of bind request.
 //! fn parse_bind_authentication(authentication: &BerRef) -> Result<&[u8], String> {
 //!     let id = authentication.id();
-//!     if id.number() == Ok(3) {
+//!     if id.number() == Ok(3_u8.into()) {
 //!         Err("This function supports only simple authentication".to_string())
-//!     } else if id.number() != Ok(0) {
+//!     } else if id.number() != Ok(0_u8.into()) {
 //!         Err("The id of the authentication is bad".to_string())
 //!     } else {
 //!         Ok(authentication.contents().as_ref())

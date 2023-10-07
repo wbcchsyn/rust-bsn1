@@ -81,7 +81,7 @@ impl Id {
     /// use bsn1::{Id, IdRef};
     ///
     /// let idref = IdRef::integer();
-    /// let id = Id::new(idref.class(), idref.pc(), idref.number::<u64>().unwrap());
+    /// let id = Id::new(idref.class(), idref.pc(), idref.number().unwrap().get());
     /// assert_eq!(idref, &id);
     /// ```
     pub fn new<T>(class: ClassTag, pc: PCTag, number: T) -> Self
@@ -252,10 +252,10 @@ impl Id {
     /// use bsn1::{ClassTag, Id, PCTag};
     ///
     /// let mut id = Id::new(ClassTag::Private, PCTag::Primitive, 13_u8);
-    /// assert_eq!(id.number::<u8>().unwrap(), 13_u8);
+    /// assert_eq!(id.number().unwrap(), 13_u8.into());
     ///
     /// id.set_number(34_u8);
-    /// assert_eq!(id.number::<u8>().unwrap(), 34_u8);
+    /// assert_eq!(id.number().unwrap(), 34_u8.into());
     /// ```
     pub fn set_number<T>(&mut self, num: T)
     where
@@ -311,30 +311,20 @@ mod tests {
     fn number_ok() {
         for &cl in CLASSES {
             for &pc in PCS {
-                // i8
-                for i in 0..=i8::MAX {
-                    let id = Id::new(cl, pc, i as u8);
-                    assert_eq!(Ok(i), id.number());
-                }
                 // u8
                 for i in 0..=u8::MAX {
                     let id = Id::new(cl, pc, i);
-                    assert_eq!(Ok(i), id.number());
-                }
-                // i16
-                for i in 0..=i16::MAX {
-                    let id = Id::new(cl, pc, i as u16);
-                    assert_eq!(Ok(i), id.number());
+                    assert_eq!(Ok(i.into()), id.number());
                 }
                 // u16
                 for i in 0..=u16::MAX {
                     let id = Id::new(cl, pc, i);
-                    assert_eq!(Ok(i), id.number());
+                    assert_eq!(Ok(i.into()), id.number());
                 }
                 // u128::MAX
                 {
                     let id = Id::new(cl, pc, u128::MAX);
-                    assert_eq!(Ok(u128::MAX), id.number());
+                    assert_eq!(Ok(u128::MAX.into()), id.number());
                 }
             }
         }
@@ -344,41 +334,13 @@ mod tests {
     fn number_overflow() {
         for &cl in CLASSES {
             for &pc in PCS {
-                // i8
-                {
-                    let id = Id::new(cl, pc, i8::MAX as u128 + 1);
-                    assert!(id.number::<i8>().is_err());
-                }
-                // u8
-                {
-                    let id = Id::new(cl, pc, u8::MAX as u128 + 1);
-                    assert!(id.number::<u8>().is_err());
-                }
-                // i16
-                {
-                    let id = Id::new(cl, pc, i16::MAX as u128 + 1);
-                    assert!(id.number::<i16>().is_err());
-                }
-                // u16
-                {
-                    let id = Id::new(cl, pc, u16::MAX as u128 + 1);
-                    assert!(id.number::<u16>().is_err());
-                }
-                // i128
-                {
-                    let id = Id::new(cl, pc, i128::MAX as u128 + 1);
-                    assert!(id.number::<i128>().is_err());
-                }
-                // u128
-                {
-                    let mut bytes = [0x80; 20];
-                    bytes[0] = cl as u8 | pc as u8 | LONG_FLAG;
-                    bytes[1] = 0x84;
-                    bytes[19] = 0x00;
-                    let mut bytes = &bytes as &[u8];
-                    let id = Id::parse(&mut bytes).unwrap();
-                    assert!(id.number::<u128>().is_err());
-                }
+                let mut bytes = [0x80; 20];
+                bytes[0] = cl as u8 | pc as u8 | LONG_FLAG;
+                bytes[1] = 0x84;
+                bytes[19] = 0x00;
+                let mut bytes = &bytes as &[u8];
+                let id = Id::parse(&mut bytes).unwrap();
+                assert!(id.number().is_err());
             }
         }
     }
@@ -537,14 +499,14 @@ mod tests {
                     id.set_number(i);
                     assert_eq!(cl, id.class());
                     assert_eq!(pc, id.pc());
-                    assert_eq!(Ok(i), id.number());
+                    assert_eq!(Ok(i.into()), id.number());
                 }
 
                 for i in (0..=u16::MAX).rev() {
                     id.set_number(i);
                     assert_eq!(cl, id.class());
                     assert_eq!(pc, id.pc());
-                    assert_eq!(Ok(i), id.number());
+                    assert_eq!(Ok(i.into()), id.number());
                 }
             }
         }

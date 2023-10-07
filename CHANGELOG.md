@@ -246,6 +246,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - BerRef::eoc()
   - Der::from\_vec\_unchecked()
 - Create struct `IdNumber`, and change the following functions and methods type.
+  - The return type of `IdRef::number()`
 
 ### Changed
 

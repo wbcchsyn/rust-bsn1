@@ -30,8 +30,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{ClassTag, Error, Id, PCTag};
-use num::{FromPrimitive, PrimInt};
+use crate::{ClassTag, Error, Id, IdNumber, PCTag};
 use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::io::{Read, Write};
@@ -255,7 +254,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x00, id.number().unwrap());
+    /// assert_eq!(0x00, id.number().unwrap().get());
     /// ```
     pub fn eoc() -> &'static Self {
         const BYTES: [u8; 1] = [0x00];
@@ -273,7 +272,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x01, id.number().unwrap());
+    /// assert_eq!(0x01, id.number().unwrap().get());
     /// ```
     pub fn boolean() -> &'static Self {
         const BYTES: [u8; 1] = [0x01];
@@ -291,7 +290,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x02, id.number().unwrap());
+    /// assert_eq!(0x02, id.number().unwrap().get());
     /// ```
     pub fn integer() -> &'static Self {
         const BYTES: [u8; 1] = [0x02];
@@ -309,7 +308,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x03, id.number().unwrap());
+    /// assert_eq!(0x03, id.number().unwrap().get());
     /// ```
     pub fn bit_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x03];
@@ -327,7 +326,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x03, id.number().unwrap());
+    /// assert_eq!(0x03, id.number().unwrap().get());
     /// ```
     pub fn bit_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x23];
@@ -345,7 +344,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x04, id.number().unwrap());
+    /// assert_eq!(0x04, id.number().unwrap().get());
     /// ```
     pub fn octet_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x04];
@@ -363,7 +362,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x04, id.number().unwrap());
+    /// assert_eq!(0x04, id.number().unwrap().get());
     /// ```
     pub fn octet_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x24];
@@ -381,7 +380,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x05, id.number().unwrap());
+    /// assert_eq!(0x05, id.number().unwrap().get());
     /// ```
     pub fn null() -> &'static Self {
         const BYTES: [u8; 1] = [0x05];
@@ -399,7 +398,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x06, id.number().unwrap());
+    /// assert_eq!(0x06, id.number().unwrap().get());
     /// ```
     pub fn object_identifier() -> &'static Self {
         const BYTES: [u8; 1] = [0x06];
@@ -418,7 +417,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x07, id.number().unwrap());
+    /// assert_eq!(0x07, id.number().unwrap().get());
     /// ```
     pub fn object_descriptor() -> &'static Self {
         const BYTES: [u8; 1] = [0x07];
@@ -436,7 +435,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x08, id.number().unwrap());
+    /// assert_eq!(0x08, id.number().unwrap().get());
     /// ```
     pub fn external() -> &'static Self {
         const BYTES: [u8; 1] = [0x28];
@@ -454,7 +453,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x09, id.number().unwrap());
+    /// assert_eq!(0x09, id.number().unwrap().get());
     /// ```
     pub fn real() -> &'static Self {
         const BYTES: [u8; 1] = [0x09];
@@ -472,7 +471,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x0a, id.number().unwrap());
+    /// assert_eq!(0x0a, id.number().unwrap().get());
     /// ```
     pub fn enumerated() -> &'static Self {
         const BYTES: [u8; 1] = [0x0a];
@@ -490,7 +489,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x0b, id.number().unwrap());
+    /// assert_eq!(0x0b, id.number().unwrap().get());
     /// ```
     pub fn embedded_pdv() -> &'static Self {
         const BYTES: [u8; 1] = [0x2b];
@@ -508,7 +507,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x0c, id.number().unwrap());
+    /// assert_eq!(0x0c, id.number().unwrap().get());
     /// ```
     pub fn utf8_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x0c];
@@ -526,7 +525,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x0c, id.number().unwrap());
+    /// assert_eq!(0x0c, id.number().unwrap().get());
     /// ```
     pub fn utf8_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x2c];
@@ -544,7 +543,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x0d, id.number().unwrap());
+    /// assert_eq!(0x0d, id.number().unwrap().get());
     /// ```
     pub fn relative_oid() -> &'static Self {
         const BYTES: [u8; 1] = [0x0d];
@@ -563,7 +562,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x10, id.number().unwrap());
+    /// assert_eq!(0x10, id.number().unwrap().get());
     /// ```
     pub fn sequence() -> &'static Self {
         const BYTES: [u8; 1] = [0x30];
@@ -581,7 +580,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x11, id.number().unwrap());
+    /// assert_eq!(0x11, id.number().unwrap().get());
     /// ```
     pub fn set() -> &'static Self {
         const BYTES: [u8; 1] = [0x31];
@@ -600,7 +599,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x12, id.number().unwrap());
+    /// assert_eq!(0x12, id.number().unwrap().get());
     /// ```
     pub fn numeric_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x12];
@@ -619,7 +618,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x12, id.number().unwrap());
+    /// assert_eq!(0x12, id.number().unwrap().get());
     /// ```
     pub fn numeric_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x32];
@@ -638,7 +637,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x13, id.number().unwrap());
+    /// assert_eq!(0x13, id.number().unwrap().get());
     /// ```
     pub fn printable_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x13];
@@ -657,7 +656,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x13, id.number().unwrap());
+    /// assert_eq!(0x13, id.number().unwrap().get());
     /// ```
     pub fn printable_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x33];
@@ -675,7 +674,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x14, id.number().unwrap());
+    /// assert_eq!(0x14, id.number().unwrap().get());
     /// ```
     pub fn t61_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x14];
@@ -693,7 +692,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x14, id.number().unwrap());
+    /// assert_eq!(0x14, id.number().unwrap().get());
     /// ```
     pub fn t61_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x34];
@@ -712,7 +711,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x15, id.number().unwrap());
+    /// assert_eq!(0x15, id.number().unwrap().get());
     /// ```
     pub fn videotex_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x15];
@@ -731,7 +730,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x15, id.number().unwrap());
+    /// assert_eq!(0x15, id.number().unwrap().get());
     /// ```
     pub fn videotex_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x35];
@@ -749,7 +748,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x16, id.number().unwrap());
+    /// assert_eq!(0x16, id.number().unwrap().get());
     /// ```
     pub fn ia5_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x16];
@@ -767,7 +766,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x16, id.number().unwrap());
+    /// assert_eq!(0x16, id.number().unwrap().get());
     /// ```
     pub fn ia5_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x36];
@@ -785,7 +784,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x17, id.number().unwrap());
+    /// assert_eq!(0x17, id.number().unwrap().get());
     /// ```
     pub fn utc_time() -> &'static Self {
         const BYTES: [u8; 1] = [0x17];
@@ -803,7 +802,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x17, id.number().unwrap());
+    /// assert_eq!(0x17, id.number().unwrap().get());
     /// ```
     pub fn utc_time_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x37];
@@ -822,7 +821,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x18, id.number().unwrap());
+    /// assert_eq!(0x18, id.number().unwrap().get());
     /// ```
     pub fn generalized_time() -> &'static Self {
         const BYTES: [u8; 1] = [0x18];
@@ -841,7 +840,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x18, id.number().unwrap());
+    /// assert_eq!(0x18, id.number().unwrap().get());
     /// ```
     pub fn generalized_time_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x38];
@@ -860,7 +859,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x19, id.number().unwrap());
+    /// assert_eq!(0x19, id.number().unwrap().get());
     /// ```
     pub fn graphic_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x19];
@@ -879,7 +878,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x19, id.number().unwrap());
+    /// assert_eq!(0x19, id.number().unwrap().get());
     /// ```
     pub fn graphic_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x39];
@@ -898,7 +897,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x1a, id.number().unwrap());
+    /// assert_eq!(0x1a, id.number().unwrap().get());
     /// ```
     pub fn visible_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1a];
@@ -917,7 +916,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x1a, id.number().unwrap());
+    /// assert_eq!(0x1a, id.number().unwrap().get());
     /// ```
     pub fn visible_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3a];
@@ -936,7 +935,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x1b, id.number().unwrap());
+    /// assert_eq!(0x1b, id.number().unwrap().get());
     /// ```
     pub fn general_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1b];
@@ -955,7 +954,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x1b, id.number().unwrap());
+    /// assert_eq!(0x1b, id.number().unwrap().get());
     /// ```
     pub fn general_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3b];
@@ -974,7 +973,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x1c, id.number().unwrap());
+    /// assert_eq!(0x1c, id.number().unwrap().get());
     /// ```
     pub fn universal_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1c];
@@ -993,7 +992,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x1c, id.number().unwrap());
+    /// assert_eq!(0x1c, id.number().unwrap().get());
     /// ```
     pub fn universal_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3c];
@@ -1012,7 +1011,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x1d, id.number().unwrap());
+    /// assert_eq!(0x1d, id.number().unwrap().get());
     /// ```
     pub fn character_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1d];
@@ -1031,7 +1030,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x1d, id.number().unwrap());
+    /// assert_eq!(0x1d, id.number().unwrap().get());
     /// ```
     pub fn character_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3d];
@@ -1049,7 +1048,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Primitive, id.pc());
-    /// assert_eq!(0x1e, id.number().unwrap());
+    /// assert_eq!(0x1e, id.number().unwrap().get());
     /// ```
     pub fn bmp_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1e];
@@ -1067,7 +1066,7 @@ impl IdRef {
     ///
     /// assert_eq!(ClassTag::Universal, id.class());
     /// assert_eq!(PCTag::Constructed, id.pc());
-    /// assert_eq!(0x1e, id.number().unwrap());
+    /// assert_eq!(0x1e, id.number().unwrap().get());
     /// ```
     pub fn bmp_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3e];
@@ -1279,30 +1278,27 @@ impl IdRef {
     ///
     /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 49_u8);
     /// let idref: &IdRef = id.deref();
-    /// assert_eq!(49, idref.number().unwrap());
+    /// assert_eq!(49, idref.number().unwrap().get());
     /// ```
-    pub fn number<T>(&self) -> Result<T, Error>
-    where
-        T: PrimInt + FromPrimitive,
-    {
+    pub fn number(&self) -> Result<IdNumber, Error> {
         debug_assert!(0 < self.len());
 
         if self.bytes.len() == 1 {
             let ret = self.bytes[0] & LONG_FLAG;
-            Ok(T::from_u8(ret).unwrap())
+            Ok(ret.into())
         } else {
             debug_assert_eq!(self.bytes[0] & LONG_FLAG, LONG_FLAG);
 
-            let mask: u8 = !MORE_FLAG;
-            let mut ret = T::from_u8(self.as_ref()[1] & mask).unwrap();
+            let mut ret: u128 = 0;
 
-            for &octet in self.as_ref()[2..].iter() {
-                let shft_mul = T::from_u8(128).ok_or(Error::OverFlow)?;
-                ret = ret.checked_mul(&shft_mul).ok_or(Error::OverFlow)?;
-                ret = ret + T::from_u8(octet & mask).unwrap();
+            for &octet in self.as_ref()[1..].iter() {
+                const MASK: u8 = !MORE_FLAG;
+                const SHIFT_MUL: u128 = 128;
+                ret = ret.checked_mul(SHIFT_MUL).ok_or(Error::OverFlow)?;
+                ret += (octet & MASK) as u128;
             }
 
-            Ok(ret)
+            Ok(ret.into())
         }
     }
 
@@ -1568,7 +1564,7 @@ mod tests {
 
                         assert_eq!(cl1, id.class());
                         assert_eq!(pc, id.pc());
-                        assert_eq!(Ok(i), id.number());
+                        assert_eq!(Ok(i.into()), id.number());
                     }
                 }
             }
@@ -1586,7 +1582,7 @@ mod tests {
 
                         assert_eq!(cl, id.class());
                         assert_eq!(pc1, id.pc());
-                        assert_eq!(Ok(i), id.number());
+                        assert_eq!(Ok(i.into()), id.number());
                     }
                 }
             }
