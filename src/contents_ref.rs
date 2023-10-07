@@ -176,15 +176,15 @@ impl ContentsRef {
     /// ```
     /// use bsn1::{Contents, ContentsRef};
     ///
-    /// let contents = Contents::from_integer(17);
+    /// let contents = Contents::from(17_i32);
     /// assert_eq!(Ok(17_i32), contents.to_integer::<i32>());
     ///
     /// // Overflow to convert i32::MAX into i16.
-    /// let contents = Contents::from_integer(i32::MAX);
+    /// let contents = Contents::from(i32::MAX);
     /// assert!(contents.to_integer::<i16>().is_err());
     ///
     /// // Cannot convert a negatibe value into unsigned type.
-    /// let contents = Contents::from_integer(-5);
+    /// let contents = Contents::from(-5_i32);
     /// assert!(contents.to_integer::<u32>().is_err());
     /// ```
     pub fn to_integer<T>(&self) -> Result<T, Error>
