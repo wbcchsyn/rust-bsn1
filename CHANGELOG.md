@@ -227,6 +227,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - AsMut\<DerRef\> for Der
   - AsRef\<BerRef\> for Ber
   - AsRef\<DerRef\> for Der
+  - From\<IdRef\> for Id
   - From\<bool\> for Ber
   - From\<T: PrimInt\> for Ber (`PrimInt` is `i8` or `u8` or ... `u128` or `isize` or `usize`.)
   - From\<&str\> for Ber
@@ -235,6 +236,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - From\<T: PrimInt\> for Der (`PrimInt` is `i8` or `u8` or ... `u128` or `isize` or `usize`.)
   - From\<&str\> for Der
   - From\<&[u8]\> for Der
+  - From\<&ContentsRef\> for Contents
   - From\<&[u8; N]\> for Contents
   - From\<&[u8; N]\> for &ContentsRef
   - From\<&mut [u8; N]\> for &mut ContentsRef
@@ -268,6 +270,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - Der::octet_string()
   - Der::utf8_string()
   - Contents::from\_bool()
+  - Contents::from\_bytes()
+  - Contents::from\_integer()
   - ContentsRef::from\_bool()
   - ContentsRef::from\_bytes()
   - ContentsRef::from\_mut\_bytes()
