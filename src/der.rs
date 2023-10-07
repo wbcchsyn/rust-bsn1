@@ -492,6 +492,79 @@ impl Der {
         self.buffer.into_vec()
     }
 
+    /// Appends `bytes` to the end of the 'contents octets'.
+    ///
+    /// Note that this method may shift the 'contents octets',
+    /// and the performance is `O(n)` where `n` is the length of 'contents octets'
+    /// in the worst-case;
+    /// because the length of 'length octets' may change.
+    /// (DER is composed of 'identifier octets', 'length octets' and 'contents octets'
+    /// in this order.)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef, Length};
+    ///
+    /// let bytes: Vec<u8> = (0..10).collect();
+    /// let mut der = Der::from(&bytes[..5]);
+    /// der.extend_from_slice(&bytes[5..]);
+    ///
+    /// assert_eq!(der.id(), IdRef::octet_string());
+    /// assert_eq!(der.length(), Length::Definite(bytes.len()));
+    /// assert_eq!(der.contents().as_ref(), &bytes[..]);
+    /// ```
+    pub fn extend_from_slice(&mut self, bytes: &[u8]) {
+        let id_len = self.id().len();
+        let old_length = self.length();
+        let new_length = Length::Definite(old_length.definite().unwrap() + bytes.len());
+
+        // Update the length of `buffer`
+        {
+            let offset = bytes.len() + new_length.len() - old_length.len();
+            self.buffer.reserve(offset);
+            unsafe { self.buffer.set_len(self.buffer.len() + offset) };
+        }
+
+        unsafe {
+            // Copy the contents
+            {
+                let mut dest = self.buffer.as_mut_ptr().add(id_len).add(new_length.len());
+
+                // Copy the old  contents octets if necessary.
+                {
+                    let src = self.buffer.as_ptr().add(id_len + old_length.len());
+                    let count = old_length.definite().unwrap();
+                    if src != dest {
+                        src.copy_to(dest, count);
+                    }
+                    dest = dest.add(count);
+                }
+
+                // Copy `bytes`
+                {
+                    let src = bytes.as_ptr();
+                    let count = bytes.len();
+                    src.copy_to_nonoverlapping(dest, count);
+                    dest = dest.add(count);
+                }
+
+                debug_assert_eq!(
+                    dest.offset_from(self.buffer.as_ptr()),
+                    self.buffer.len() as isize
+                );
+            }
+
+            // Copy the length octets
+            {
+                let new_length_bytes = new_length.to_bytes();
+                let src = new_length_bytes.as_ptr();
+                let dest = self.buffer.as_mut_ptr().add(id_len);
+                src.copy_to(dest, new_length_bytes.len());
+            }
+        }
+    }
+
     /// Enshorten the `contents`, keeping the first `new_length` and discarding the rest
     /// if `new_length` is less than the length of the current 'contents octets';
     /// otherwise, does nothing.
@@ -883,6 +956,23 @@ mod tests {
             let der = Der::new(id, contents);
             let der_ref = DerRef::parse(der.as_ref()).unwrap();
             assert_eq!(der_ref, &der as &DerRef);
+        }
+    }
+
+    #[test]
+    fn extend_from_slice() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
+
+        for i in 0..bytes.len() {
+            for j in 0..bytes.len() {
+                let mut der = Der::from(&bytes[..i]);
+                der.extend_from_slice(&bytes[..j]);
+
+                assert_eq!(der.id(), IdRef::octet_string());
+                assert_eq!(der.length(), Length::Definite(i + j));
+                assert_eq!(&der.contents().as_ref()[..i], &bytes[..i]);
+                assert_eq!(&der.contents().as_ref()[i..], &bytes[..j]);
+            }
         }
     }
 
