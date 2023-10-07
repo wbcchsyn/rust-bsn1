@@ -51,6 +51,20 @@ impl From<&DerRef> for Ber {
     }
 }
 
+impl From<Der> for Ber {
+    fn from(der: Der) -> Self {
+        Self {
+            buffer: crate::der::disassemble_der(der),
+        }
+    }
+}
+
+impl From<&BerRef> for Ber {
+    fn from(ber_ref: &BerRef) -> Self {
+        ber_ref.to_owned()
+    }
+}
+
 impl From<bool> for Ber {
     /// Creates a new instance representing a boolean containing `contents`.
     fn from(contents: bool) -> Self {
@@ -153,20 +167,6 @@ impl From<&[u8]> for Ber {
     /// Creates a new instance representing an octet-string containing `contents`.
     fn from(contents: &[u8]) -> Self {
         Der::from(contents).into()
-    }
-}
-
-impl From<Der> for Ber {
-    fn from(der: Der) -> Self {
-        Self {
-            buffer: crate::der::disassemble_der(der),
-        }
-    }
-}
-
-impl From<&BerRef> for Ber {
-    fn from(ber_ref: &BerRef) -> Self {
-        ber_ref.to_owned()
     }
 }
 
