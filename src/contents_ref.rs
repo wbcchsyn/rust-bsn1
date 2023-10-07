@@ -127,7 +127,7 @@ impl ToOwned for ContentsRef {
     type Owned = Contents;
 
     fn to_owned(&self) -> Self::Owned {
-        Contents::from_bytes(self.as_ref())
+        Contents::from(self)
     }
 }
 

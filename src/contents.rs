@@ -56,9 +56,10 @@ impl From<&'_ ContentsRef> for Contents {
 }
 
 impl From<&[u8]> for Contents {
-    /// This function is the same as [`Contents::from_bytes`].
     fn from(bytes: &[u8]) -> Self {
-        Self::from_bytes(bytes)
+        Self {
+            buffer: Buffer::from(bytes),
+        }
     }
 }
 
@@ -188,24 +189,6 @@ impl From<bool> for Contents {
 }
 
 impl Contents {
-    /// Creates a new instance holding `bytes`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::Contents;
-    ///
-    /// let bytes: &[u8] = &[1, 2, 3];
-    /// let contents = Contents::from_bytes(bytes);
-    ///
-    /// assert_eq!(contents.as_ref() as &[u8], bytes);
-    /// ```
-    pub fn from_bytes(bytes: &[u8]) -> Self {
-        Self {
-            buffer: Buffer::from(bytes),
-        }
-    }
-
     /// Serializes integer and creates a new instance.
     ///
     /// type `T` should be a built-in primitive integer type (e.g., u8, i32, isize, u128, ...)
@@ -583,34 +566,34 @@ mod tests {
 
     #[test]
     fn empty_contents_to_integer() {
-        let contents = Contents::from_bytes(&[]);
+        let contents = Contents::from(&[]);
         assert!(contents.to_integer::<i32>().is_err());
     }
 
     #[test]
     fn redundant_contents_to_integer() {
-        let contents = Contents::from_bytes(&[0x00, 0x00]);
+        let contents = Contents::from(&[0x00, 0x00]);
         assert!(contents.to_integer::<i32>().is_err());
 
-        let contents = Contents::from_bytes(&[0x00, 0x7f]);
+        let contents = Contents::from(&[0x00, 0x7f]);
         assert!(contents.to_integer::<i32>().is_err());
 
-        let contents = Contents::from_bytes(&[0x00, 0x80]);
+        let contents = Contents::from(&[0x00, 0x80]);
         assert!(contents.to_integer::<i32>().is_ok());
 
-        let contents = Contents::from_bytes(&[0x00, 0xff]);
+        let contents = Contents::from(&[0x00, 0xff]);
         assert!(contents.to_integer::<i32>().is_ok());
 
-        let contents = Contents::from_bytes(&[0xff, 0xff]);
+        let contents = Contents::from(&[0xff, 0xff]);
         assert!(contents.to_integer::<i32>().is_err());
 
-        let contents = Contents::from_bytes(&[0xff, 0x80]);
+        let contents = Contents::from(&[0xff, 0x80]);
         assert!(contents.to_integer::<i32>().is_err());
 
-        let contents = Contents::from_bytes(&[0xff, 0x7f]);
+        let contents = Contents::from(&[0xff, 0x7f]);
         assert!(contents.to_integer::<i32>().is_ok());
 
-        let contents = Contents::from_bytes(&[0xff, 0x00]);
+        let contents = Contents::from(&[0xff, 0x00]);
         assert!(contents.to_integer::<i32>().is_ok());
     }
 
