@@ -40,7 +40,7 @@ use std::ops::{Deref, DerefMut};
 ///
 /// User can access the [`DerRef`] via the [`Deref`] and [`DerefMut`] implementation,
 /// and to the inner slice via the [`DerRef`].
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Eq, Hash)]
 pub struct Der {
     buffer: Buffer,
 }
@@ -433,9 +433,12 @@ impl DerefMut for Der {
     }
 }
 
-impl PartialEq<DerRef> for Der {
-    fn eq(&self, other: &DerRef) -> bool {
-        self as &DerRef == other
+impl<T> PartialEq<T> for Der
+where
+    T: Borrow<DerRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.deref() == other.borrow()
     }
 }
 
