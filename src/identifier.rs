@@ -32,8 +32,6 @@
 
 use crate::identifier_ref::{LONG_FLAG, MAX_SHORT, MORE_FLAG};
 use crate::{Buffer, ClassTag, Error, IdNumber, IdRef, PCTag};
-use num::cast::AsPrimitive;
-use num::{FromPrimitive, PrimInt, Unsigned};
 use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::io::Read;
@@ -111,7 +109,7 @@ impl Id {
             for i in (1..len).rev() {
                 let o = num as u8 | MORE_FLAG;
                 buffer[i] = o;
-                num = num.unsigned_shr(7);
+                num >>= 7;
             }
             buffer[len - 1] ^= MORE_FLAG;
         }
@@ -252,15 +250,14 @@ impl Id {
     /// let mut id = Id::new(ClassTag::Private, PCTag::Primitive, 13_u8.into());
     /// assert_eq!(id.number().unwrap(), 13_u8.into());
     ///
-    /// id.set_number(34_u8);
+    /// id.set_number(34_u8.into());
     /// assert_eq!(id.number().unwrap(), 34_u8.into());
     /// ```
-    pub fn set_number<T>(&mut self, num: T)
-    where
-        T: Unsigned + FromPrimitive + PrimInt + AsPrimitive<u8>,
-    {
-        if num <= T::from_u8(MAX_SHORT).unwrap() {
-            let o = self.class() as u8 + self.pc() as u8 + num.as_();
+    pub fn set_number(&mut self, num: IdNumber) {
+        let num = num.get();
+
+        if num <= MAX_SHORT as u128 {
+            let o = self.class() as u8 + self.pc() as u8 + num as u8;
             self.buffer[0] = o;
             unsafe { self.buffer.set_len(1) };
         } else {
@@ -283,12 +280,12 @@ impl Id {
 
             let mut n = num;
             for i in (1..len).rev() {
-                let o = n.as_() | MORE_FLAG;
+                let o = n as u8 | MORE_FLAG;
                 self.buffer[i] = o;
-                n = n.unsigned_shr(7);
+                n >>= 7;
             }
             self.buffer[len - 1] &= !(MORE_FLAG);
-            debug_assert!(n == T::from_u8(0).unwrap());
+            debug_assert!(n == 0);
         }
     }
 }
@@ -460,14 +457,14 @@ mod tests {
                 let mut id = Id::new(cl, pc, 0_u8.into());
 
                 for i in 0..=u16::MAX {
-                    id.set_number(i);
+                    id.set_number(i.into());
                     assert_eq!(cl, id.class());
                     assert_eq!(pc, id.pc());
                     assert_eq!(Ok(i.into()), id.number());
                 }
 
                 for i in (0..=u16::MAX).rev() {
-                    id.set_number(i);
+                    id.set_number(i.into());
                     assert_eq!(cl, id.class());
                     assert_eq!(pc, id.pc());
                     assert_eq!(Ok(i.into()), id.number());

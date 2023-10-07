@@ -248,6 +248,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Create struct `IdNumber`, and change the following functions and methods type.
   - The return type of `IdRef::number`
   - The argument type of `Id::new`
+  - The argument type of `Id::set_number`
 
 ### Changed
 
