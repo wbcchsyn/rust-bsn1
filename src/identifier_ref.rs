@@ -32,6 +32,7 @@
 
 use crate::{ClassTag, Error, Id, PCTag};
 use num::{FromPrimitive, PrimInt};
+use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::mem;
 
@@ -1067,15 +1068,21 @@ impl ToOwned for IdRef {
     }
 }
 
-impl PartialEq<Id> for IdRef {
-    fn eq(&self, other: &Id) -> bool {
-        self.eq(other as &IdRef)
+impl<T> PartialEq<T> for IdRef
+where
+    T: Borrow<IdRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self == other.borrow()
     }
 }
 
-impl PartialOrd<Id> for IdRef {
-    fn partial_cmp(&self, other: &Id) -> Option<Ordering> {
-        self.partial_cmp(other as &IdRef)
+impl<T> PartialOrd<T> for IdRef
+where
+    T: Borrow<IdRef>,
+{
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        self.partial_cmp(other.borrow())
     }
 }
 
