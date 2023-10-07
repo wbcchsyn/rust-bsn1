@@ -40,9 +40,14 @@ use std::ops::Deref;
 
 /// `Length` represents ASN.1 length.
 ///
-/// Note that `Length` represents the byte count of the contents in ASN.1.
+/// Note that `Length` represents the count of the contents octets in ASN.1.
 /// The total byte size of BER, DER, and CER is greater than that.
-/// (BER, DER, and CER are constituted of identifier, length, and contents.)
+/// (BER, DER, and CER are composed of identifier, length, and contents.)
+///
+/// # Caution
+///
+/// `Length` implements `PartialEq` and `PartialOrd`, but `Eq` nor `Ord`,
+/// because 'Indefinite length' is not comparable.
 #[derive(Debug, Clone, Copy, Hash)]
 pub enum Length {
     /// Represents 'Indefinite' length.
@@ -77,7 +82,7 @@ impl Length {
 impl Length {
     /// Parses `readable` starting with length octets and tries to creates a new instance.
     ///
-    /// This function ignores extra octet(s) at the end of `bytes` if any.
+    /// This function ignores extra octet(s) at the end of `readable` if any.
     ///
     /// # Examples
     ///
@@ -103,7 +108,7 @@ impl Length {
         unsafe { parse_length(readable, &mut writeable) }
     }
 
-    /// Serializes `length`.
+    /// Serializes `self`.
     ///
     /// # Examples
     ///
