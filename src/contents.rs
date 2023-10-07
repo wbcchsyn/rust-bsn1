@@ -346,10 +346,10 @@ impl DerefMut for Contents {
 
 impl<T> PartialEq<T> for Contents
 where
-    T: Borrow<T>,
+    T: Borrow<ContentsRef>,
 {
     fn eq(&self, other: &T) -> bool {
-        self == other.borrow()
+        self.deref() == other.borrow()
     }
 }
 
