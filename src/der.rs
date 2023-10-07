@@ -492,6 +492,69 @@ impl Der {
         self.buffer.into_vec()
     }
 
+    /// Enshorten the `contents`, keeping the first `new_length` and discarding the rest
+    /// if `new_length` is less than the length of the current 'contents octets';
+    /// otherwise, does nothing.
+    ///
+    /// Note that this method may shift the 'contents octets',
+    /// and the performance is `O(n)` where `n` is the length of 'contents octets'
+    /// in the worst-case;
+    /// because the length of 'length octets' may change.
+    /// (DER is composed of 'identifier octets', 'length octets' and 'contents octets'
+    /// in this order.)
+    ///
+    /// # Warnings
+    ///
+    /// `new_length` specifies the length of the 'contents octets' after this method returns.
+    /// The total length of `self` will be greater than `new_length`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef, Length};
+    ///
+    /// // Create a DER of '0..=255' as Octet String.
+    /// let bytes: Vec<u8> = (0..=255).collect();
+    /// let mut der = Der::from(&bytes[..]);
+    ///
+    /// // Truncate the length
+    /// der.truncate(100);
+    ///
+    /// assert_eq!(der.id(), IdRef::octet_string());        // The identifier is not changed.
+    /// assert_eq!(der.length(), Length::Definite(100));    // The length is changed.
+    /// assert_eq!(der.contents().as_ref(), &bytes[..100]); // The contents is changed.
+    /// ```
+    pub fn truncate(&mut self, new_length: usize) {
+        let id_len = self.id().len();
+        let old_length = self.length().definite().unwrap();
+
+        if old_length <= new_length {
+            return;
+        }
+
+        let old_length_ = Length::Definite(old_length).to_bytes();
+        let new_length_ = Length::Definite(new_length).to_bytes();
+
+        unsafe {
+            let mut dest = self.buffer.as_mut_ptr();
+
+            // Copy the new_length octets
+            let src = new_length_.as_ptr();
+            dest = dest.add(id_len);
+            src.copy_to(dest, new_length_.len());
+
+            // Copy the contents octets if necessary.
+            if new_length_.len() < old_length_.len() {
+                let src = dest.add(old_length_.len()) as *const u8;
+                dest = dest.add(new_length_.len());
+                src.copy_to(dest, new_length);
+            }
+
+            let new_total_len = id_len + new_length_.len() + new_length;
+            self.buffer.set_len(new_total_len);
+        }
+    }
+
     /// Forces to set the length of the `contents` to `new_length`.
     ///
     /// If `new_length` is less than the length of current `contents`, this method truncates the
@@ -820,6 +883,29 @@ mod tests {
             let der = Der::new(id, contents);
             let der_ref = DerRef::parse(der.as_ref()).unwrap();
             assert_eq!(der_ref, &der as &DerRef);
+        }
+    }
+
+    #[test]
+    fn truncate() {
+        let contents: Vec<u8> = (0..=u8::MAX).collect();
+        for i in 0..contents.len() {
+            let mut der = Der::from(&contents[..]);
+
+            der.truncate(i as usize);
+            assert_eq!(der.id(), IdRef::octet_string());
+            assert_eq!(der.length(), Length::Definite(i as usize));
+            assert_eq!(der.contents().as_ref(), &contents[..i as usize]);
+        }
+
+        for &i in &[contents.len(), contents.len() + 1] {
+            let mut der = Der::from(&contents[..]);
+            der.truncate(i);
+
+            der.truncate((der.as_ref() as &[u8]).len() + 1);
+            assert_eq!(der.id(), IdRef::octet_string());
+            assert_eq!(der.length(), Length::Definite(contents.len()));
+            assert_eq!(der.contents().as_ref(), &contents[..]);
         }
     }
 
