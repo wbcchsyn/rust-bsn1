@@ -47,6 +47,14 @@ pub struct Contents {
     buffer: Buffer,
 }
 
+impl From<&'_ ContentsRef> for Contents {
+    fn from(value: &'_ ContentsRef) -> Self {
+        Self {
+            buffer: Buffer::from(value.as_ref()),
+        }
+    }
+}
+
 impl From<&[u8]> for Contents {
     /// This function is the same as [`Contents::from_bytes`].
     fn from(bytes: &[u8]) -> Self {
