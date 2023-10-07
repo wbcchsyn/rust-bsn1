@@ -566,6 +566,61 @@ impl Ber {
         self.buffer.into_vec()
     }
 
+    /// Appends `bytes` to the end of the 'contents octets'.
+    ///
+    /// If `self` had indefinite length, the length octets will not be changed;
+    /// otherwise, the length octets will be `Length::Definite(new_length)`
+    /// where `new_length` is the current length of the 'contents octets' plus `bytes.len()`.
+    ///
+    /// Note that this method may shift the 'contents octets',
+    /// and the performance is `O(n)` where `n` is the length of 'contents octets'
+    /// in the worst-case;
+    /// because the length of 'length octets' may change.
+    /// (BER is composed of 'identifier octets', 'length octets' and 'contents octets'
+    /// in this order.)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, IdRef, Length};
+    ///
+    /// let bytes: Vec<u8> = (0..10).collect();
+    ///
+    /// // Extends BER with definite length.
+    /// let mut ber = Ber::from(&bytes[..5]);
+    /// ber.extend_from_slice(&bytes[5..]);
+    ///
+    /// assert_eq!(ber.id(), IdRef::octet_string());
+    /// assert_eq!(ber.length(), Length::Definite(bytes.len()));
+    /// assert_eq!(ber.contents().as_ref(), &bytes[..]);
+    ///
+    /// // Extends BER with indefinite length.
+    /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), (&bytes[..5]).into());
+    /// ber.extend_from_slice(&bytes[5..]);
+    ///
+    /// assert_eq!(ber.id(), IdRef::octet_string());
+    /// assert!(ber.length().is_indefinite());
+    /// assert_eq!(ber.contents().as_ref(), &bytes[..]);
+    /// ```
+    pub fn extend_from_slice(&mut self, bytes: &[u8]) {
+        match self.length() {
+            Length::Definite(_) => unsafe {
+                let this = std::mem::transmute::<&mut Self, &mut Der>(self);
+                this.extend_from_slice(bytes);
+            },
+            Length::Indefinite => {
+                self.buffer.reserve(bytes.len());
+
+                let src = bytes.as_ptr();
+                let dst = unsafe { self.buffer.as_mut_ptr().add(self.buffer.len()) };
+                unsafe {
+                    src.copy_to_nonoverlapping(dst, bytes.len());
+                    self.buffer.set_len(self.buffer.len() + bytes.len());
+                }
+            }
+        }
+    }
+
     /// Enshorten the `contents`, keeping the first `new_length` and discarding the rest
     /// if `new_length` is less than the length of the current 'contents octets';
     /// otherwise, does nothing.
@@ -803,6 +858,40 @@ mod tests {
             assert_eq!(ber.id(), IdRef::octet_string());
             assert!(ber.length().is_indefinite());
             assert_eq!(ber.contents().as_ref(), &contents[..]);
+        }
+    }
+
+    #[test]
+    fn extend_definite_from_slice() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
+
+        for i in 0..bytes.len() {
+            for j in 0..bytes.len() {
+                let mut ber = Ber::from(&bytes[..i]);
+                ber.extend_from_slice(&bytes[..j]);
+
+                assert_eq!(ber.id(), IdRef::octet_string());
+                assert_eq!(ber.length(), Length::Definite(i + j));
+                assert_eq!(&ber.contents().as_ref()[..i], &bytes[..i]);
+                assert_eq!(&ber.contents().as_ref()[i..], &bytes[..j]);
+            }
+        }
+    }
+
+    #[test]
+    fn extend_indefinite_from_slice() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
+
+        for i in 0..bytes.len() {
+            for j in 0..bytes.len() {
+                let mut ber = Ber::new_indefinite(IdRef::octet_string(), (&bytes[..i]).into());
+                ber.extend_from_slice(&bytes[..j]);
+
+                assert_eq!(ber.id(), IdRef::octet_string());
+                assert!(ber.length().is_indefinite());
+                assert_eq!(&ber.contents().as_ref()[..i], &bytes[..i]);
+                assert_eq!(&ber.contents().as_ref()[i..], &bytes[..j]);
+            }
         }
     }
 
