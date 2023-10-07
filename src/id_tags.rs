@@ -93,3 +93,10 @@ impl From<usize> for IdNumber {
         Self(n as u128)
     }
 }
+
+impl IdNumber {
+    /// Returns the inner number.
+    pub fn get(&self) -> u128 {
+        self.0
+    }
+}
