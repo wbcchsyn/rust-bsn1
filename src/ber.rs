@@ -566,6 +566,50 @@ impl Ber {
         self.buffer.into_vec()
     }
 
+    /// Appends `byte` to the end of the 'contents octets'.
+    ///
+    /// If `self` had indefinite length, the length octets will not be changed;
+    /// otherwise, the length octets will be `Length::Definite(new_length)`
+    /// where `new_length` is the current length of the 'contents octets' plus 1.
+    ///
+    /// Note that this method may shift the 'contents octets',
+    /// and the performance is `O(n)` where `n` is the length of 'contents octets'
+    /// in the worst-case;
+    /// because the length of 'length octets' may change.
+    /// (BER is composed of 'identifier octets', 'length octets' and 'contents octets'
+    /// in this order.)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, IdRef, Length};
+    ///
+    /// let bytes: Vec<u8> = (0..10).collect();
+    ///
+    /// // Push to BER with definite length.
+    /// let mut ber = Ber::from(&bytes[..]);
+    /// ber.push(0xff);
+    ///
+    /// assert_eq!(ber.id(), IdRef::octet_string());
+    /// assert_eq!(ber.length(), Length::Definite(bytes.len() + 1));
+    ///
+    /// assert_eq!(&ber.contents().as_ref()[..bytes.len()], &bytes[..]);
+    /// assert_eq!(ber.contents().as_ref().last().unwrap(), &0xff);
+    ///
+    /// // Push to BER with indefinite length.
+    /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), (&bytes[..]).into());
+    /// ber.push(0xff);
+    ///
+    /// assert_eq!(ber.id(), IdRef::octet_string());
+    /// assert!(ber.length().is_indefinite());
+    ///
+    /// assert_eq!(&ber.contents().as_ref()[..bytes.len()], &bytes[..]);
+    /// assert_eq!(ber.contents().as_ref().last().unwrap(), &0xff);
+    /// ```
+    pub fn push(&mut self, byte: u8) {
+        self.extend_from_slice(&[byte]);
+    }
+
     /// Appends `bytes` to the end of the 'contents octets'.
     ///
     /// If `self` had indefinite length, the length octets will not be changed;
