@@ -31,6 +31,7 @@
 // limitations under the License.
 
 use crate::{length, ContentsRef, Der, Error, IdRef, Length};
+use std::borrow::Borrow;
 
 /// `DerRef` is a wrapper of `[u8]` and represents DER.
 ///
@@ -196,9 +197,12 @@ impl ToOwned for DerRef {
     }
 }
 
-impl PartialEq<Der> for DerRef {
-    fn eq(&self, other: &Der) -> bool {
-        self == other as &DerRef
+impl<T> PartialEq<T> for DerRef
+where
+    T: Borrow<DerRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self == other.borrow()
     }
 }
 
