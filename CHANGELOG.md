@@ -316,6 +316,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Delete the following macros
   - constructed\_ber!()
   - constructed\_der!()
+- Delete the following functions and methods.
+  - Ber::set\_length() (Use `Ber::truncate` or `Ber::push` or `Ber::extend\_from\_slice` instead)
 
 ### Fixed
 
