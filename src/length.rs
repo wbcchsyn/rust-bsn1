@@ -339,37 +339,6 @@ pub unsafe fn parse_length_unchecked<'a>(bytes: &mut &'a [u8]) -> Length {
     }
 }
 
-/// Parse `bytes` starting with 'length' and returns `(Length, octets_after_length)`.
-///
-/// # Safety
-///
-/// The behaviour is undefined if `bytes` does not start with Length octet(s).
-pub unsafe fn from_bytes_starts_with_unchecked(bytes: &[u8]) -> (Length, &[u8]) {
-    let first = bytes[0];
-    let bytes = &bytes[1..];
-
-    if first == Length::INDEFINITE {
-        // Indefinite
-        (Length::Indefinite, bytes)
-    } else if first & Length::LONG_FLAG != Length::LONG_FLAG {
-        // Short form
-        (Length::Definite(first as usize), bytes)
-    } else {
-        // Long form
-        let followings_count = (first & !Length::LONG_FLAG) as usize;
-
-        let mut len: usize = 0;
-        let src = bytes.as_ptr();
-        let dst = (&mut len as *mut usize) as *mut u8;
-        let dst = dst.add(size_of::<usize>() - followings_count);
-        dst.copy_from_nonoverlapping(src, followings_count);
-
-        let len = usize::from_be(len);
-        let bytes = &bytes[followings_count..];
-        (Length::Definite(len), bytes)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
