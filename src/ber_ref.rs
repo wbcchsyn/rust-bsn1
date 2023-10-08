@@ -37,6 +37,17 @@ use std::mem;
 /// `BerRef` is a wrapper of `[u8]` and represents a BER.
 ///
 /// This struct is 'Unsized' and the user will usually use a reference to the instance.
+///
+/// # Warnings
+///
+/// ASN.1 allows BER both 'definite' and 'indefinite' length octets.
+/// In case of 'indefinite', the contents must be a sequence of BERs,
+/// and must be terminated by 'EOC BER'.
+/// (Single 'EOC BER' is allowed.)
+///
+/// A reference to `BerRef` works well even if the user violates the rule,
+/// however, the inner slice is invalid as a BER then.
+/// Such a slice can not be parsed as a BER again.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct BerRef {
     bytes: [u8],
