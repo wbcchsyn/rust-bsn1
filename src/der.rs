@@ -39,8 +39,7 @@ use std::ops::{Deref, DerefMut};
 ///
 /// The structure of `Der` is similar to that of `Vec<u8>`.
 ///
-/// User can access the [`DerRef`] via the [`Deref`] and [`DerefMut`] implementation,
-/// and to the inner slice via the [`DerRef`].
+/// User can access the inner [`DerRef`] via the `Deref` and `DerefMut` implementation.
 #[derive(Debug, Clone, Eq, Hash)]
 pub struct Der {
     buffer: Buffer,
@@ -199,7 +198,7 @@ impl Der {
     /// Creates a new instance from `id` and `contents` of `length` bytes.
     ///
     /// The `contents` of the return value is not initialized.
-    /// Use [`mut_contents`] via [`DerefMut`] implementation to initialize them.
+    /// Use [`mut_contents`] via `DerefMut` implementation to initialize them.
     ///
     /// # Warnings
     ///
@@ -219,11 +218,14 @@ impl Der {
     /// ```
     /// use bsn1::{Der, IdRef, Length};
     ///
-    /// let der = Der::with_id_length(IdRef::utf8_string(), 36);
+    /// let mut der = Der::with_id_length(IdRef::octet_string(), 5);
     ///
-    /// assert_eq!(der.id(), IdRef::utf8_string());
-    /// assert_eq!(der.length(), Length::Definite(36));
-    /// assert_eq!(der.contents().len(), 36);
+    /// assert_eq!(der.id(), IdRef::octet_string());
+    /// assert_eq!(der.length(), Length::Definite(5));
+    /// assert_eq!(der.contents().len(), 5);
+    ///
+    /// der.mut_contents().as_mut().copy_from_slice(&[1, 2, 3, 4, 5]);
+    /// assert_eq!(der.contents().as_ref(), &[1, 2, 3, 4, 5]);
     /// ```
     pub fn with_id_length(id: &IdRef, length: usize) -> Self {
         let length_ = Length::Definite(length).to_bytes();
@@ -273,7 +275,7 @@ impl Der {
     /// let der = Der::from(10_i32);
     /// let mut serialized = Vec::from(der.as_ref() as &[u8]);
     ///
-    /// // Deserialize it.
+    /// // Deserialize.
     /// let deserialized = Der::parse(&mut &serialized[..]).unwrap();
     /// assert_eq!(der, deserialized);
     ///
@@ -335,9 +337,10 @@ impl Der {
     /// ```
     /// use bsn1::Der;
     ///
-    /// let bytes: Vec<u8> = vec![0x02, 0x01, 0x0a];  // Represents '10' as Integer.
-    /// let der = unsafe { Der::from_bytes_unchecked(&bytes) };
-    /// assert_eq!(der.as_ref() as &[u8], &bytes);
+    /// let der = Der::from(10_i32);
+    /// let serialized: &[u8]  = der.as_ref();
+    /// let deserialized = unsafe { Der::from_bytes_unchecked(&serialized) };
+    /// assert_eq!(der, deserialized);
     /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
         Self {
@@ -362,11 +365,11 @@ impl Der {
     /// ```
     /// use bsn1::Der;
     ///
-    /// let der0 = Der::from(5_i32);
-    /// let bytes = der0.clone().into_vec();
-    /// let der1 = unsafe { Der::from_vec_unchecked(bytes) };
+    /// let der = Der::from(5_i32);
+    /// let serialized = der.clone().into_vec();
+    /// let deserialized = unsafe { Der::from_vec_unchecked(serialized) };
     ///
-    /// assert_eq!(der0, der1);
+    /// assert_eq!(der, deserialized);
     /// ```
     pub unsafe fn from_vec_unchecked(bytes: Vec<u8>) -> Self {
         Self {
@@ -495,9 +498,9 @@ impl Der {
     /// Appends `byte` to the end of the 'contents octets'.
     ///
     /// Note that this method may shift the 'contents octets',
-    /// and the performance is `O(n)` where `n` is the length of 'contents octets'
-    /// in the worst-case;
-    /// because the length of 'length octets' may change.
+    /// and the performance is `O(n)` where `n` is the byte count of 'contents octets'
+    /// in the worst-case,
+    /// because the byte count of 'length octets' may change.
     /// (DER is composed of 'identifier octets', 'length octets' and 'contents octets'
     /// in this order.)
     ///
@@ -523,9 +526,9 @@ impl Der {
     /// Appends `bytes` to the end of the 'contents octets'.
     ///
     /// Note that this method may shift the 'contents octets',
-    /// and the performance is `O(n)` where `n` is the length of 'contents octets'
-    /// in the worst-case;
-    /// because the length of 'length octets' may change.
+    /// and the performance is `O(n)` where `n` is the byte count of 'contents octets'
+    /// in the worst-case,
+    /// because the byte count of 'length octets' may change.
     /// (DER is composed of 'identifier octets', 'length octets' and 'contents octets'
     /// in this order.)
     ///
@@ -598,9 +601,9 @@ impl Der {
     /// otherwise, does nothing.
     ///
     /// Note that this method may shift the 'contents octets',
-    /// and the performance is `O(n)` where `n` is the length of 'contents octets'
-    /// in the worst-case;
-    /// because the length of 'length octets' may change.
+    /// and the performance is `O(n)` where `n` is the byte count of 'contents octets'
+    /// in the worst-case,
+    /// because the byte count of 'length octets' may change.
     /// (DER is composed of 'identifier octets', 'length octets' and 'contents octets'
     /// in this order.)
     ///
