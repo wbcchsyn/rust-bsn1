@@ -76,27 +76,27 @@ impl BerRef {
     /// let mut serialized = Vec::from(ber.as_ref() as &[u8]);
     ///
     /// // Deserializes `ber`.
-    /// let deserialized = BerRef::parse(&serialized[..]).unwrap();
+    /// let deserialized = BerRef::parse(&mut &serialized[..]).unwrap();
     /// assert_eq!(ber, deserialized);
     ///
     /// // Extra octets at the end does not affect the result.
     /// serialized.push(0x00);
     /// serialized.push(0xff);
     ///
-    /// let deserialized = BerRef::parse(&serialized[..]).unwrap();
+    /// let deserialized = BerRef::parse(&mut &serialized[..]).unwrap();
     /// assert_eq!(ber, deserialized);
     /// ```
-    pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
-        let mut readable = bytes;
+    pub fn parse<'a>(bytes: &mut &'a [u8]) -> Result<&'a Self, Error> {
+        let init_bytes = *bytes;
         let mut stack_depth: isize = 0;
 
         while {
-            stack_depth += Self::do_parse(&mut readable)? as isize;
+            stack_depth += Self::do_parse(bytes)? as isize;
             stack_depth > 0
         } {}
 
-        let total_len = bytes.len() - readable.len();
-        unsafe { Ok(Self::from_bytes_unchecked(&bytes[..total_len])) }
+        let total_len = init_bytes.len() - bytes.len();
+        unsafe { Ok(Self::from_bytes_unchecked(&init_bytes[..total_len])) }
     }
 
     /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a mutable reference to

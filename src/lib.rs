@@ -136,71 +136,71 @@
 //!
 //! /// Tries to parse bind request and returns `(name, password)`.
 //! fn parse_bind_request(req: &[u8]) -> Result<(&str, &[u8]), String> {
-//!     let req = BerRef::parse(req)
+//!     // `req` should be a 'BER' and must not include any extra octets.
+//!     let mut bytes = req;
+//!     let req = BerRef::parse(&mut bytes)
 //!                 .map_err(|e| format!("Failed to parse the request as a BER: {}", e))?;
+//!     if bytes.is_empty() == false {
+//!         return Err("There are some bad octets at the end of the request.".to_string());
+//!     }
 //!
+//!     // Check the identifier of the request.
 //!     let id = req.id();
 //!     if id.class() != ClassTag::Application || id.number() != Ok(0_u8.into()) {
 //!         return Err("The id of the request is bad.".to_string());
 //!     }
 //!
-//!     let bytes = req.contents().as_ref();
-//!     let version_ber = BerRef::parse(bytes)
-//!                         .map_err(|e| format!("Failed to parse the request version: {}", e))?;
-//!     let version = parse_bind_version(version_ber)?;
+//!     // Parse the contents of the request.
+//!     // The contents should be composed of version, name, and authentication in this order.
+//!     let mut bytes: &[u8] = req.contents().as_ref();
+//!
+//!     let version = parse_bind_version(&mut bytes)?;
 //!     if version != 3 {
 //!         return Err("This function supports only version 3.".to_string());
 //!     }
 //!
-//!     let bytes = &bytes[version_ber.as_ref().len()..];
-//!     let name_ber = BerRef::parse(bytes)
-//!                      .map_err(|e| format!("Failed to parse the request name: {}", e))?;
-//!     let name = parse_bind_name(name_ber)?;
-//!
-//!     let bytes = &bytes[name_ber.as_ref().len()..];
-//!     let auth_ber = BerRef::parse(bytes)
-//!                      .map_err(|e|
-//!                               format!("Failed to parse the request authentication: {}", e))?;
-//!     let password = parse_bind_authentication(auth_ber)?;
-//!
-//!     let bytes = &bytes[auth_ber.as_ref().len()..];
-//!     if bytes.is_empty() == false {
-//!         return Err("There are some bad octets at the end of the request.".to_string());
-//!     }
+//!     let name = parse_bind_name(&mut bytes)?;
+//!     let password = parse_bind_authentication(&mut bytes)?;
 //!
 //!     Ok((name, password))
 //! }
 //!
 //! /// Tries to parse the version of bind request.
-//! fn parse_bind_version(version: &BerRef) -> Result<i32, String> {
-//!     if version.id() != IdRef::integer() {
+//! fn parse_bind_version(bytes: &mut &[u8]) -> Result<i32, String> {
+//!     let ber = BerRef::parse(bytes).map_err(|e| format!("Failed to parse the version: {}", e))?;
+//!
+//!     if ber.id() != IdRef::integer() {
 //!         Err("The id of the version is bad.".to_string())
 //!     } else {
-//!         version.contents()
-//!                .to_integer()
-//!                .map_err(|e| format!("Failed to parse the version: {}", e))
+//!         ber.contents()
+//!            .to_integer()
+//!            .map_err(|e| format!("Failed to parse the version: {}", e))
 //!     }
 //! }
 //!
 //! /// Tries to parse the name of bind request.
-//! fn parse_bind_name(name: &BerRef) -> Result<&str, String> {
-//!     if name.id() != IdRef::octet_string() && name.id() != IdRef::octet_string_constructed() {
+//! fn parse_bind_name<'a>(bytes: &mut &'a [u8]) -> Result<&'a str, String> {
+//!     let ber = BerRef::parse(bytes).map_err(|e| format!("Failed to parse the name: {}", e))?;
+//!
+//!     if ber.id() != IdRef::octet_string() && ber.id() != IdRef::octet_string_constructed() {
 //!         Err("The id of the name is bad.".to_string())
 //!     } else {
-//!         let contents = name.contents().as_ref();
+//!         let contents = ber.contents().as_ref();
 //!         std::str::from_utf8(contents).map_err(|e| format!("Failed to parse the name: {}", e))
 //!     }
 //! }
 //!
 //! /// Tries to parse the password of bind request.
-//! fn parse_bind_authentication(authentication: &BerRef) -> Result<&[u8], String> {
-//!     let id = authentication.id();
-//!     if id.number() == Ok(3_u8.into()) {
+//! fn parse_bind_authentication<'a>(bytes: &mut &'a [u8]) -> Result<&'a [u8], String> {
+//!     let ber = BerRef::parse(bytes)
+//!                      .map_err(|e| format!("Failed to parse the authentication: {}", e))?;
+//!
+//!     if ber.id().number() == Ok(3_u8.into()) {
 //!         Err("This function supports only simple authentication".to_string())
-//!     } else if id.number() != Ok(0_u8.into()) {
-//!         Err("The id of the authentication is bad".to_string())
+//!     } else if ber.id().number() == Ok(0_u8.into()) {
+//!         Ok(ber.contents().as_ref())
 //!     } else {
-//!         Ok(authentication.contents().as_ref())
+//!         Err("The id of the authentication is bad".to_string())
 //!     }
 //! }
 //!

@@ -372,7 +372,7 @@ impl Ber {
     /// // We can access to the inner slice of `serialized`.
     /// // We can use `BerRef::parse` instead of this function.
     /// // (`BerRef::parse` is more efficient than this function.)
-    /// let deserialized = BerRef::parse(&serialized[..]).map(ToOwned::to_owned).unwrap();
+    /// let deserialized = BerRef::parse(&mut &serialized[..]).map(ToOwned::to_owned).unwrap();
     /// assert_eq!(ber, deserialized);
     /// ```
     pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
@@ -747,7 +747,7 @@ mod tests {
         for &bytes in byteses {
             let contents = <&ContentsRef>::from(bytes);
             let ber = Ber::new(id, contents);
-            let ber_ref = BerRef::parse(ber.as_ref()).unwrap();
+            let ber_ref = BerRef::parse(&mut ber.as_ref()).unwrap();
             assert_eq!(ber_ref, &ber as &BerRef);
         }
     }
@@ -781,7 +781,7 @@ mod tests {
             }
             bytes.extend(eoc.as_ref() as &[u8]);
 
-            let ber = BerRef::parse(&bytes[..]).unwrap();
+            let ber = BerRef::parse(&mut &bytes[..]).unwrap();
             assert_eq!(&bytes, ber.as_ref());
         }
     }
