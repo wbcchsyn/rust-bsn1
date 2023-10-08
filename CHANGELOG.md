@@ -241,6 +241,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - From\<&[u8; N]\> for Contents
   - From\<&[u8; N]\> for &ContentsRef
   - From\<&mut [u8; N]\> for &mut ContentsRef
+  - From\<&str\> for &ContentsRef
 - Create the following functions and methods
   - Ber::from\_vec\_unchecked()
   - BerRef::eoc()
