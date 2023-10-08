@@ -71,15 +71,15 @@ pub unsafe fn shrink_to_fit_unchecked(bytes: &[u8]) -> &[u8] {
 }
 
 impl IdRef {
-    /// Parses `bytes` starting with identifier and tries to provide a reference to `IdRef`.
+    /// Parses `bytes` starting with identifier octets and provides a reference to `IdRef`.
     ///
-    /// This function ignores the extra octet(s) at the end if any.
+    /// This function ignores extra octet(s) at the end if any.
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok.
+    /// this function ignores the rule. For example, number 15 (0x0f) is reserved for now,
+    /// but this functions returns `Ok`.
     ///
     /// # Examples
     ///
@@ -111,20 +111,15 @@ impl IdRef {
         }
     }
 
-    /// Parses `bytes` starting with identifier, and tries to provide a mutable reference to
-    /// `IdRef`.
+    /// Parses `bytes` starting with identifier, and provides a mutable reference to `IdRef`.
     ///
-    /// This function ignores the extra octet(s) at the end if any.
-    ///
-    /// This function is same to [`parse`] except that it returns a mutable reference.
-    ///
-    /// [`parse`]: Self::parse
+    /// This function ignores extra octet(s) at the end if any.
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok`.
+    /// this function ignores the rule. For example, number 15 (0x0f) is reserved for now,
+    /// but this functions returns `Ok`.
     ///
     /// # Examples
     ///
@@ -142,8 +137,7 @@ impl IdRef {
     /// // You can update the identifier, because 'deserialized' is a mutable reference.
     /// deserialized.set_class(ClassTag::Private);
     ///
-    /// // Deserialize again.
-    /// // The result is not same, because `serialized` is updated via `deserialized`.
+    /// // Deserialize again, and the result is not same to before.
     /// let deserialized = IdRef::parse_mut(&mut serialized[..]).unwrap();
     /// assert!(id != deserialized);
     /// ```
@@ -192,7 +186,7 @@ impl IdRef {
     ///
     /// # Safety
     ///
-    /// The behaviour is undefined if the format of `bytes` is not right.
+    /// The behaviour is undefined if the format of `bytes` is invalid as 'identifier octets'.
     ///
     /// [`parse`]: Self::parse
     ///
@@ -201,10 +195,10 @@ impl IdRef {
     /// ```
     /// use bsn1::IdRef;
     ///
-    /// // '&[0]' represents 'EOC'.
-    /// let bytes: &[u8] = &[0];
-    /// let idref = unsafe { IdRef::from_bytes_unchecked(bytes) };
-    /// assert_eq!(IdRef::eoc(), idref);
+    /// let id = IdRef::eoc();
+    /// let serialized = id.as_ref();
+    /// let deserialized = unsafe { IdRef::from_bytes_unchecked(serialized) };
+    /// assert_eq!(id, deserialized);
     /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         mem::transmute(bytes)
@@ -218,7 +212,7 @@ impl IdRef {
     ///
     /// # Safety
     ///
-    /// The behaviour is undefined if the format of `bytes` is not right.
+    /// The behaviour is undefined if the format of `bytes` is bad as 'identifier octets'.
     ///
     /// [`parse_mut`]: Self::parse_mut
     ///
@@ -227,17 +221,23 @@ impl IdRef {
     /// ```
     /// use bsn1::{ClassTag, IdRef};
     ///
-    /// let bytes: &mut [u8] = &mut [0];
+    /// // Serialize and deserialize `id` representing 'EOC'.
+    /// let id = IdRef::eoc();
+    /// let mut serialized: Vec<u8> = Vec::from(id.as_ref());
+    /// let deserialized = unsafe { IdRef::from_mut_bytes_unchecked(&mut serialized[..]) };
     ///
-    /// {
-    ///     let idref = unsafe { IdRef::from_mut_bytes_unchecked(bytes) };
+    /// // `deserialized` is same to `id` and the class is 'universal'.
+    /// assert_eq!(id, deserialized);
+    /// assert_eq!(ClassTag::Universal, deserialized.class());
     ///
-    ///     // Update idref
-    ///     idref.set_class(ClassTag::Application);
-    /// }
+    /// // Update deserialized
+    /// deserialized.set_class(ClassTag::Application);
     ///
-    /// // 'bytes' is updated as well.
-    /// assert_eq!(bytes[0], ClassTag::Application as u8);
+    /// assert_ne!(id, deserialized);
+    /// assert_eq!(ClassTag::Application, deserialized.class());
+    ///
+    /// // `serialized` was changed as well.
+    /// assert_ne!(id.as_ref(), &serialized[..]);
     /// ```
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         mem::transmute(bytes)
@@ -1148,7 +1148,7 @@ impl IdRef {
         }
     }
 
-    /// Returns `true` if `self` is 'Universal' class, or `false`.
+    /// Returns `true` if `self` is 'Universal class', or `false`.
     ///
     /// # Examples
     ///
@@ -1164,7 +1164,7 @@ impl IdRef {
         first & CLASS_MASK == ClassTag::Universal as u8
     }
 
-    /// Returns `true` if `self` is 'Application' class, or `false`.
+    /// Returns `true` if `self` is 'Application class', or `false`.
     ///
     /// # Examples
     ///
@@ -1180,7 +1180,7 @@ impl IdRef {
         first & CLASS_MASK == ClassTag::Application as u8
     }
 
-    /// Returns `true` if `self` is 'Context Specific' class, or `false`.
+    /// Returns `true` if `self` is 'Context Specific class', or `false`.
     ///
     /// # Examples
     ///
@@ -1196,7 +1196,7 @@ impl IdRef {
         first & CLASS_MASK == ClassTag::ContextSpecific as u8
     }
 
-    /// Returns `true` if `self` is 'Private' class, or `false`.
+    /// Returns `true` if `self` is 'Private class', or `false`.
     ///
     /// # Examples
     ///
@@ -1268,8 +1268,6 @@ impl IdRef {
 
     /// Returns the number of `self` unless overflow.
     ///
-    /// Type `T` should be a built-in primitive integer type (e.g., u8, i32, isize, i128...)
-    ///
     /// # Examples
     ///
     /// ```
@@ -1302,7 +1300,7 @@ impl IdRef {
         }
     }
 
-    /// Update the class tag of `self`.
+    /// Update the class of `self`.
     ///
     /// # Examples
     ///
@@ -1325,26 +1323,28 @@ impl IdRef {
         bytes[0] |= cls as u8;
     }
 
-    /// Update the PC tag of `self`.
+    /// Update the Primitive/Constructed flag of `self`.
     ///
     /// # Examples
     ///
     /// ```
     /// use bsn1::{PCTag, IdRef};
     ///
-    /// // Creates a '&mut IdRef' representing 'Universal Integer'.
-    /// let mut bytes = Vec::from(IdRef::integer().as_ref());
-    /// let idref = IdRef::parse_mut(&mut bytes).unwrap();
+    /// let id = IdRef::integer();
+    /// let mut serialized = Vec::from(id.as_ref());
+    /// let deserialized = IdRef::parse_mut(&mut serialized[..]).unwrap();
     ///
-    /// assert_eq!(PCTag::Primitive, idref.pc());
+    /// // 'Integer' is primitive.
+    /// assert_eq!(PCTag::Primitive, deserialized.pc());
     ///
-    /// idref.set_pc(PCTag::Constructed);
-    /// assert_eq!(PCTag::Constructed, idref.pc());
+    /// // Force to change into constructed.
+    /// deserialized.set_pc(PCTag::Constructed);
+    /// assert_eq!(PCTag::Constructed, deserialized.pc());
     /// ```
     pub fn set_pc(&mut self, pc: PCTag) {
         let bytes = &mut self.bytes;
 
-        const MASK: u8 = 0xdf;
+        const MASK: u8 = !PC_MASK;
         bytes[0] &= MASK;
         bytes[0] |= pc as u8;
     }
