@@ -79,6 +79,8 @@ impl<'a> From<&'a str> for &'a ContentsRef {
 }
 
 impl From<bool> for &'static ContentsRef {
+    /// The encoding rule of boolean is different between BER and DER.
+    /// The return value is valid both as BER and DER.
     fn from(val: bool) -> Self {
         if val {
             Self::from(&[0xff])
@@ -275,6 +277,8 @@ impl ContentsRef {
     /// # Warnings
     ///
     /// The rule of BER bool is different from that of DER and CER.
+    /// BER regards 0x00 as `False`, and any octet except for 0x00 as `True`.
+    ///
     /// See also [`to_bool_der`].
     ///
     /// [`to_bool_der`]: Self::to_bool_der
@@ -289,13 +293,6 @@ impl ContentsRef {
     ///
     /// let false_contents = <&ContentsRef>::from(false);
     /// assert_eq!(Ok(false), false_contents.to_bool_ber());
-    ///
-    /// // 'BER' regards any octet except for 0x00 as 'True',
-    /// // while 'DER' regards octets except for 0x00 and 0xff as an error.
-    /// let bytes = &[0x03];
-    /// let ber_contents = <&ContentsRef>::from(bytes);
-    /// assert!(ber_contents.to_bool_ber().is_ok());
-    /// assert!(ber_contents.to_bool_der().is_err());
     /// ```
     pub fn to_bool_ber(&self) -> Result<bool, Error> {
         if self.is_empty() {
@@ -314,6 +311,8 @@ impl ContentsRef {
     /// # Warnings
     ///
     /// The rule of BER bool is different from that of DER and CER.
+    /// DER regards 0xFF as `True`, and 0x00 as `False`.
+    ///
     /// See also [`to_bool_ber`].
     ///
     /// [`to_bool_ber`]: Self::to_bool_ber
@@ -328,13 +327,6 @@ impl ContentsRef {
     ///
     /// let false_contents = <&ContentsRef>::from(false);
     /// assert_eq!(Ok(false), false_contents.to_bool_der());
-    ///
-    /// // 'BER' regards any octet except for 0x00 as 'True',
-    /// // while 'DER' regards octets except for 0x00 and 0xff as error.
-    /// let bytes = &[0x03];
-    /// let ber_contents = <&ContentsRef>::from(bytes);
-    /// assert!(ber_contents.to_bool_ber().is_ok());
-    /// assert!(ber_contents.to_bool_der().is_err());
     /// ```
     pub fn to_bool_der(&self) -> Result<bool, Error> {
         if self.is_empty() {
