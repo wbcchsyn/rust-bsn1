@@ -83,6 +83,14 @@ impl From<Vec<u8>> for Contents {
     }
 }
 
+impl From<String> for Contents {
+    fn from(value: String) -> Self {
+        Self {
+            buffer: Buffer::from(value.into_bytes()),
+        }
+    }
+}
+
 impl From<u8> for Contents {
     fn from(val: u8) -> Self {
         if val == 0 {
