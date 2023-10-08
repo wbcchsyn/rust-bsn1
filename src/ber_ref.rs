@@ -365,3 +365,121 @@ impl BerRef {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_deinite() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
+        for i in 0..bytes.len() {
+            let ber = Ber::from(&bytes[..i]);
+            let mut bytes: &[u8] = ber.as_ref();
+            let parsed = BerRef::parse(&mut bytes).unwrap();
+
+            assert_eq!(ber, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
+    }
+
+    #[test]
+    fn parse_indefinite() {
+        let bers: Vec<Ber> = (0..10).map(Ber::from).collect();
+
+        for i in 0..10 {
+            let contents: Vec<u8> = bers[..i]
+                .iter()
+                .map(|ber| ber.as_ref() as &[u8])
+                .flatten()
+                .copied()
+                .collect();
+            let mut ber = Ber::new_indefinite(IdRef::sequence(), contents.as_slice().into());
+            ber.extend_from_slice(BerRef::eoc().as_ref());
+
+            let mut bytes: &[u8] = ber.as_ref();
+            let parsed = BerRef::parse(&mut bytes).unwrap();
+
+            assert_eq!(ber, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
+    }
+
+    #[test]
+    fn parse_deinite_in_definite() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
+        for i in 0..bytes.len() {
+            let inner = Ber::from(&bytes[..i]);
+
+            let ber = Ber::new(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
+            let mut bytes: &[u8] = ber.as_ref();
+
+            let parsed = BerRef::parse(&mut bytes).unwrap();
+            assert_eq!(ber, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
+    }
+
+    #[test]
+    fn parse_indeinite_in_definite() {
+        let bers: Vec<Ber> = (0..10).map(Ber::from).collect();
+        for i in 0..bers.len() {
+            let contents: Vec<u8> = bers[..i]
+                .iter()
+                .map(|ber| ber.as_ref() as &[u8])
+                .flatten()
+                .copied()
+                .collect();
+            let mut inner = Ber::new_indefinite(IdRef::octet_string(), contents.as_slice().into());
+            inner.extend_from_slice(BerRef::eoc().as_ref());
+
+            let ber = Ber::new(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
+            let mut bytes: &[u8] = ber.as_ref();
+
+            let parsed = BerRef::parse(&mut bytes).unwrap();
+            assert_eq!(ber, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
+    }
+
+    #[test]
+    fn parse_deinite_in_indefinite() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
+        for i in 0..bytes.len() {
+            let inner = Ber::from(&bytes[..i]);
+
+            let mut ber = Ber::new_indefinite(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
+            ber.extend_from_slice(BerRef::eoc().as_ref());
+
+            let mut bytes: &[u8] = ber.as_ref();
+            let parsed = BerRef::parse(&mut bytes).unwrap();
+
+            assert_eq!(ber, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
+    }
+
+    #[test]
+    fn parse_indeinite_in_indefinite() {
+        let bers: Vec<Ber> = (0..10).map(Ber::from).collect();
+        for i in 0..bers.len() {
+            let contents: Vec<u8> = bers[..i]
+                .iter()
+                .map(|ber| ber.as_ref() as &[u8])
+                .flatten()
+                .copied()
+                .collect();
+            let mut inner = Ber::new_indefinite(IdRef::octet_string(), contents.as_slice().into());
+            inner.extend_from_slice(BerRef::eoc().as_ref());
+
+            let mut ber = Ber::new_indefinite(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
+            ber.extend_from_slice(BerRef::eoc().as_ref());
+
+            let mut bytes: &[u8] = ber.as_ref();
+            let parsed = BerRef::parse(&mut bytes).unwrap();
+
+            assert_eq!(ber, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
+    }
+}
