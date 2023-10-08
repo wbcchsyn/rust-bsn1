@@ -126,6 +126,9 @@ impl IdRef {
     ///
     /// This function ignores extra octet(s) at the end if any.
     ///
+    /// On success, `bytes` will be updated to point the next octet of `IdRef`;
+    /// otehrwise, `bytes` will not be updated.
+    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
@@ -142,52 +145,38 @@ impl IdRef {
     /// let mut serialized = Vec::from(id.as_ref());
     ///
     /// // Deserialize.
-    /// let deserialized = IdRef::parse_mut(&mut serialized[..]).unwrap();
-    /// assert_eq!(id, deserialized);
+    /// {
+    ///     let mut serialized: &mut [u8] = &mut serialized[..];
+    ///     let deserialized = IdRef::parse_mut(&mut serialized).unwrap();
+    ///     assert_eq!(id, deserialized);
+    ///     assert_eq!(serialized.len(), 0);
     ///
-    /// // You can update the identifier, because 'deserialized' is a mutable reference.
-    /// deserialized.set_class(ClassTag::Private);
+    ///     deserialized.set_class(ClassTag::Private);
+    /// }
     ///
+    /// // Now, `serialized` is changed.
     /// // Deserialize again, and the result is not same to before.
-    /// let deserialized = IdRef::parse_mut(&mut serialized[..]).unwrap();
-    /// assert!(id != deserialized);
+    /// {
+    ///     let mut serialized: &mut [u8] = &mut serialized[..];
+    ///     let deserialized = IdRef::parse_mut(&mut serialized).unwrap();
+    ///     assert_ne!(id, deserialized);
+    ///     assert_eq!(serialized, &serialized[..]);
+    /// }
     /// ```
-    pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
-        let len = Self::do_parse(bytes)?;
-        let bytes = &mut bytes[..len];
-        unsafe { Ok(Self::from_mut_bytes_unchecked(bytes)) }
-    }
+    pub fn parse_mut<'a>(bytes: &mut &'a mut [u8]) -> Result<&'a mut Self, Error> {
+        let read_bytes = {
+            let mut readable: &[u8] = *bytes;
+            unsafe { parse_id(&mut readable, &mut std::io::sink())? }
+        };
 
-    /// Parses `bytes` starting with identifier, and tries to return the byte length.
-    fn do_parse(bytes: &[u8]) -> Result<usize, Error> {
-        let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
+        unsafe {
+            let init_ptr = bytes.as_mut_ptr();
+            let left_bytes = bytes.len() - read_bytes;
+            *bytes = std::slice::from_raw_parts_mut(init_ptr.add(read_bytes), left_bytes);
 
-        if first & LONG_FLAG != LONG_FLAG {
-            // Short From
-            return Ok(1);
+            let read = std::slice::from_raw_parts_mut(init_ptr, read_bytes);
+            Ok(Self::from_mut_bytes_unchecked(read))
         }
-
-        let second = *bytes.get(1).ok_or(Error::UnTerminatedBytes)?;
-
-        if second <= MAX_SHORT {
-            // Short form will do.
-            return Err(Error::RedundantBytes);
-        }
-
-        if second == MORE_FLAG {
-            // The second octet is not necessary.
-            return Err(Error::RedundantBytes);
-        }
-
-        // Find the last octet
-        for i in 1..bytes.len() {
-            if bytes[i] & MORE_FLAG != MORE_FLAG {
-                return Ok(i + 1);
-            }
-        }
-
-        // The last octet is not found.
-        Err(Error::UnTerminatedBytes)
     }
 
     /// Provides a reference from `bytes` without any check.
@@ -1317,7 +1306,7 @@ impl IdRef {
     ///
     /// // Creates a '&mut IdRef' representing 'Universal Integer'.
     /// let mut bytes = Vec::from(IdRef::integer().as_ref());
-    /// let idref = IdRef::parse_mut(&mut bytes).unwrap();
+    /// let idref = IdRef::parse_mut(&mut &mut bytes[..]).unwrap();
     ///
     /// assert_eq!(ClassTag::Universal, idref.class());
     ///
@@ -1340,7 +1329,7 @@ impl IdRef {
     ///
     /// let id = IdRef::integer();
     /// let mut serialized = Vec::from(id.as_ref());
-    /// let deserialized = IdRef::parse_mut(&mut serialized[..]).unwrap();
+    /// let deserialized = IdRef::parse_mut(&mut &mut serialized[..]).unwrap();
     ///
     /// // 'Integer' is primitive.
     /// assert_eq!(PCTag::Primitive, deserialized.pc());
