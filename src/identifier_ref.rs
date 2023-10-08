@@ -75,6 +75,8 @@ impl IdRef {
     ///
     /// This function ignores extra octet(s) at the end if any.
     ///
+    /// On success, `bytes` will be updated to point the next octet of `IdRef`;
+    /// otehrwise, `bytes` will not be updated.
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
@@ -91,23 +93,32 @@ impl IdRef {
     /// let mut serialized = Vec::from(id.as_ref());
     ///
     /// // Deserialize.
-    /// let deserialized = IdRef::parse(&serialized[..]).unwrap();
-    /// assert_eq!(id, deserialized);
+    /// {
+    ///     let mut serialized: &[u8] = &serialized[..];
+    ///     let deserialized = IdRef::parse(&mut serialized).unwrap();
+    ///     assert_eq!(id, deserialized);
+    ///     assert_eq!(serialized.len(), 0);
+    /// }
     ///
     /// // Extra octets at the end does not affect the result.
-    /// serialized.push(0);
-    /// serialized.push(1);
-    /// let deserialized = IdRef::parse(&serialized[..]).unwrap();
-    /// assert_eq!(id, deserialized);
+    /// serialized.push(0x00);
+    /// serialized.push(0x01);
+    /// {
+    ///     let mut serialized: &[u8] = &serialized[..];
+    ///     let deserialized = IdRef::parse(&mut serialized).unwrap();
+    ///     assert_eq!(id, deserialized);
+    ///     assert_eq!(serialized, &[0x00, 0x01]);
+    /// }
     /// ```
-    pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
-        let mut readable = bytes;
-        let mut writeable = std::io::sink();
+    pub fn parse<'a>(bytes: &mut &'a [u8]) -> Result<&'a Self, Error> {
+        let mut readable: &[u8] = bytes;
 
         unsafe {
-            let len = parse_id(&mut readable, &mut writeable)?;
-            let bytes = &bytes[..len];
-            Ok(Self::from_bytes_unchecked(bytes))
+            let len = parse_id(&mut readable, &mut std::io::sink())?;
+            let ret = Self::from_bytes_unchecked(&bytes[..len]);
+
+            *bytes = readable;
+            Ok(ret)
         }
     }
 
@@ -1114,12 +1125,9 @@ impl IdRef {
     /// ```
     /// use bsn1::IdRef;
     ///
-    /// // Id of Universal Integer is [0x02].
-    /// assert_eq!(IdRef::integer().len(), 1);
-    ///
-    /// let bytes: &[u8] = &[0xff, 0xff, 0x00];
-    /// let id = IdRef::parse(bytes).unwrap();
-    /// assert_eq!(id.len(), bytes.len());
+    /// // Id of Universal Integer is [0x02]. It is 1 byte long.
+    /// let id = IdRef::integer();
+    /// assert_eq!(id.len(), 1);
     /// ```
     pub fn len(&self) -> usize {
         return self.as_ref().len();
@@ -1407,147 +1415,162 @@ mod tests {
     ];
     const PCS: &[PCTag] = &[PCTag::Primitive, PCTag::Constructed];
 
+    const MAX_2BYTES: u8 = 0x7f;
+    const MAX_3BYTES: u32 = 0x3fff;
+
     #[test]
-    fn parse_ok() {
+    fn parse_1byte_ok() {
         for &cl in CLASSES {
             for &pc in PCS {
-                // 1 byte
-                {
-                    let first = cl as u8 + pc as u8 + 0;
-                    let bytes: &[u8] = &[first];
-                    let id = IdRef::parse(bytes).unwrap();
-                    assert_eq!(bytes, id.as_ref());
+                for i in 0..=MAX_SHORT {
+                    let first = cl as u8 + pc as u8 + i;
+                    let mut bytes: &[u8] = &[first];
+                    let id = IdRef::parse(&mut bytes).unwrap();
 
-                    let first = cl as u8 + pc as u8 + 0x1e;
-                    let bytes: &[u8] = &[first];
-                    let id = IdRef::parse(bytes).unwrap();
-                    assert_eq!(bytes, id.as_ref());
-                }
-
-                let first = cl as u8 + pc as u8 + 0x1f;
-
-                // 2 bytes
-                {
-                    let bytes: &[u8] = &[first, 0x1f];
-                    let id = IdRef::parse(bytes).unwrap();
-                    assert_eq!(bytes, id.as_ref());
-
-                    let bytes: &[u8] = &[first, 0x7f];
-                    let id = IdRef::parse(bytes).unwrap();
-                    assert_eq!(bytes, id.as_ref());
-                }
-
-                // len bytes
-                for len in 3..20 {
-                    let mut bytes = vec![first];
-                    for _ in 1..len {
-                        bytes.push(0x80);
-                    }
-                    bytes[1] = 0x81;
-                    bytes[len - 1] = 0x00;
-
-                    let bytes: &[u8] = &bytes;
-                    let id = IdRef::parse(bytes).unwrap();
-                    assert_eq!(bytes, id.as_ref());
-
-                    let mut bytes = vec![first];
-                    for _ in 1..len {
-                        bytes.push(0xff);
-                    }
-                    bytes[len - 1] = 0x7f;
-
-                    let bytes: &[u8] = &bytes;
-                    let id = IdRef::parse(bytes).unwrap();
-                    assert_eq!(bytes, id.as_ref());
+                    assert_eq!(id.as_ref(), &[first]);
+                    assert_eq!(bytes.len(), 0);
                 }
             }
         }
     }
 
     #[test]
-    fn parse_redundant() {
+    fn parse_2byte_ok() {
         for &cl in CLASSES {
             for &pc in PCS {
-                let first = cl as u8 + pc as u8 + 0x1f;
+                for i in (MAX_SHORT + 1)..=MAX_2BYTES {
+                    let first = cl as u8 + pc as u8 + LONG_FLAG;
+                    let mut bytes: &[u8] = &[first, i];
+                    let id = IdRef::parse(&mut bytes).unwrap();
 
-                // 2 bytes
-                {
-                    let bytes: &[u8] = &[first, 0x00];
-                    let e = IdRef::parse(bytes).unwrap_err();
-                    assert_eq!(Error::RedundantBytes, e);
-
-                    let bytes: &[u8] = &[first, 0x1e];
-                    let e = IdRef::parse(bytes).unwrap_err();
-                    assert_eq!(Error::RedundantBytes, e);
-                }
-
-                // len bytes
-                for len in 3..20 {
-                    let mut bytes = vec![first];
-                    for _ in 1..len {
-                        bytes.push(0x80);
-                    }
-                    bytes[len - 1] = 0x00;
-
-                    let bytes: &[u8] = &bytes;
-                    let e = IdRef::parse(bytes).unwrap_err();
-                    assert_eq!(Error::RedundantBytes, e);
-
-                    let mut bytes = vec![first];
-                    for _ in 1..len {
-                        bytes.push(0xff);
-                    }
-                    bytes[1] = 0x80;
-                    bytes[len - 1] = 0x7f;
-
-                    let bytes: &[u8] = &bytes;
-                    let e = IdRef::parse(bytes).unwrap_err();
-                    assert_eq!(Error::RedundantBytes, e);
+                    assert_eq!(id.as_ref(), &[first, i]);
+                    assert_eq!(bytes.len(), 0);
                 }
             }
         }
     }
 
     #[test]
-    fn parse_unterminated() {
-        // Empty
-        {
-            let bytes: &[u8] = &[];
-            let e = IdRef::parse(bytes).unwrap_err();
-            assert_eq!(Error::UnTerminatedBytes, e);
-        }
-
+    fn parse_3byte_ok() {
         for &cl in CLASSES {
             for &pc in PCS {
-                let first = cl as u8 + pc as u8 + 0x1f;
+                for i in (MAX_2BYTES as u32 + 1)..=MAX_3BYTES {
+                    let first = cl as u8 + pc as u8 + LONG_FLAG;
+                    let j = (i >> 7) as u8 | MORE_FLAG;
+                    let k = i as u8 & !MORE_FLAG;
 
-                // 1 bytes
-                {
-                    let bytes: &[u8] = &[first];
-                    let e = IdRef::parse(bytes).unwrap_err();
-                    assert_eq!(Error::UnTerminatedBytes, e);
+                    let mut bytes: &[u8] = &[first, j, k];
+                    let id = IdRef::parse(&mut bytes).unwrap();
+
+                    assert_eq!(id.as_ref(), &[first, j, k]);
+                    assert_eq!(bytes.len(), 0);
                 }
+            }
+        }
+    }
 
-                // len bytes
-                for len in 2..20 {
-                    let mut bytes = vec![first];
-                    for _ in 1..len {
-                        bytes.push(0x80);
+    #[test]
+    fn parse_4byte_ok() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                let i = MAX_3BYTES + 1;
+                let first = cl as u8 + pc as u8 + LONG_FLAG;
+                let j = (i >> 14) as u8 | MORE_FLAG;
+                let k = (i >> 7) as u8 | MORE_FLAG;
+                let l = i as u8 & !MORE_FLAG;
+
+                let mut bytes: &[u8] = &[first, j, k, l];
+                let id = IdRef::parse(&mut bytes).unwrap();
+
+                assert_eq!(id.as_ref(), &[first, j, k, l]);
+                assert_eq!(bytes.len(), 0);
+            }
+        }
+    }
+
+    #[test]
+    fn parse_2byte_redundant() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                for i in 0..=MAX_SHORT {
+                    let first = cl as u8 + pc as u8 + LONG_FLAG;
+                    let mut bytes: &[u8] = &[first, i];
+                    let e = IdRef::parse(&mut bytes);
+
+                    assert_eq!(Err(Error::RedundantBytes), e);
+                    assert_eq!(bytes, &[first, i]);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn parse_3byte_redundant() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                for i in 0..=u8::MAX {
+                    let first = cl as u8 + pc as u8 + LONG_FLAG;
+                    let mut bytes: &[u8] = &[first, 0x00, i];
+                    let e = IdRef::parse(&mut bytes);
+
+                    assert_eq!(Err(Error::RedundantBytes), e);
+                    assert_eq!(bytes, &[first, 0x00, i]);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn parse_empty_unterminated() {
+        let mut bytes: &[u8] = &[];
+        let e = IdRef::parse(&mut bytes);
+        assert_eq!(Err(Error::UnTerminatedBytes), e);
+        assert_eq!(bytes, &[]);
+    }
+
+    #[test]
+    fn parse_1byte_unterminated() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                let first = cl as u8 + pc as u8 + LONG_FLAG;
+                let mut bytes: &[u8] = &[first];
+
+                let e = IdRef::parse(&mut bytes);
+                assert_eq!(Err(Error::UnTerminatedBytes), e);
+                assert_eq!(bytes, &[first]);
+            }
+        }
+    }
+
+    #[test]
+    fn parse_2byte_unterminated() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                for i in (MORE_FLAG + 1)..=u8::MAX {
+                    let first = cl as u8 + pc as u8 + LONG_FLAG;
+                    let mut bytes: &[u8] = &[first, i];
+
+                    let e = IdRef::parse(&mut bytes);
+                    assert_eq!(Err(Error::UnTerminatedBytes), e);
+                    assert_eq!(bytes, &[first, i]);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn parse_3byte_unterminated() {
+        for &cl in CLASSES {
+            for &pc in PCS {
+                for i in (MORE_FLAG + 1)..=u8::MAX {
+                    for j in MORE_FLAG..=u8::MAX {
+                        let first = cl as u8 + pc as u8 + LONG_FLAG;
+                        let mut bytes: &[u8] = &[first, i, j];
+
+                        let e = IdRef::parse(&mut bytes);
+                        assert_eq!(Err(Error::UnTerminatedBytes), e);
+                        assert_eq!(bytes, &[first, i, j]);
                     }
-                    bytes[1] = 0x81;
-
-                    let bytes: &[u8] = &bytes;
-                    let e = IdRef::parse(bytes).unwrap_err();
-                    assert_eq!(Error::UnTerminatedBytes, e);
-
-                    let mut bytes = vec![first];
-                    for _ in 1..len {
-                        bytes.push(0xff);
-                    }
-
-                    let bytes: &[u8] = &bytes;
-                    let e = IdRef::parse(bytes).unwrap_err();
-                    assert_eq!(Error::UnTerminatedBytes, e);
                 }
             }
         }
