@@ -52,24 +52,6 @@ pub struct IdRef {
     bytes: [u8],
 }
 
-/// Ommits the extra octets at the end of `bytes` and returns octets just one 'ASN.1 Identifier.'
-///
-/// # Safety
-///
-/// The behaviour is undefined if `bytes` does not starts with 'ASN.1 Identifier.'
-pub unsafe fn shrink_to_fit_unchecked(bytes: &[u8]) -> &[u8] {
-    if bytes[0] & LONG_FLAG != LONG_FLAG {
-        &bytes[0..1]
-    } else {
-        for i in 1.. {
-            if bytes[i] & MORE_FLAG != MORE_FLAG {
-                return &bytes[..=i];
-            }
-        }
-        unreachable!();
-    }
-}
-
 impl IdRef {
     /// Parses `bytes` starting with identifier octets and provides a reference to `IdRef`.
     ///
@@ -1390,6 +1372,49 @@ pub unsafe fn parse_id<R: Read, W: Write>(
     }
 
     unreachable!();
+}
+
+/// Parses `bytes` starting with 'id', and reutrns a reference to the id.
+///
+/// `bytes` will be updated to point the next octet of `IdRef`;
+///
+/// # Safety
+///
+/// The behaviour is undefined if `bytes` does not starts with 'ASN.1 Identifier.'
+pub unsafe fn parse_id_unchecked<'a>(bytes: &mut &'a [u8]) -> &'a IdRef {
+    if bytes[0] & LONG_FLAG != LONG_FLAG {
+        let parsed = &bytes[..1];
+        *bytes = &bytes[1..];
+        return IdRef::from_bytes_unchecked(parsed);
+    } else {
+        for i in 1.. {
+            if bytes[i] & MORE_FLAG != MORE_FLAG {
+                let parsed = &bytes[..=i];
+                *bytes = &bytes[i + 1..];
+                return IdRef::from_bytes_unchecked(parsed);
+            }
+        }
+    }
+
+    unreachable!()
+}
+
+/// Ommits the extra octets at the end of `bytes` and returns octets just one 'ASN.1 Identifier.'
+///
+/// # Safety
+///
+/// The behaviour is undefined if `bytes` does not starts with 'ASN.1 Identifier.'
+pub unsafe fn shrink_to_fit_unchecked(bytes: &[u8]) -> &[u8] {
+    if bytes[0] & LONG_FLAG != LONG_FLAG {
+        &bytes[0..1]
+    } else {
+        for i in 1.. {
+            if bytes[i] & MORE_FLAG != MORE_FLAG {
+                return &bytes[..=i];
+            }
+        }
+        unreachable!();
+    }
 }
 
 #[cfg(test)]
