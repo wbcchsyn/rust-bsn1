@@ -62,8 +62,9 @@ impl BerRef {
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok`.
+    /// this function ignores the rule.
+    /// For example, number 15 (0x0f) is reserved for now,
+    /// but this functions returns `Ok`.
     ///
     /// # Examples
     ///
@@ -103,13 +104,12 @@ impl BerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same as [`parse`] except that it returns a mutable reference.
-    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok`.
+    /// this function ignores the rule.
+    /// For example, number 15 (0x0f) is reserved for now,
+    /// but this functions returns `Ok`.
     ///
     /// # Examples
     ///
@@ -183,14 +183,13 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{BerRef, IdRef};
+    /// use bsn1::{Ber, BerRef, IdRef};
     ///
-    /// // Represents '0x34' as an Integer.
-    /// let bytes: &[u8] = &[0x02, 0x01, 0x34];
-    /// let ber = unsafe { BerRef::from_bytes_unchecked(bytes) };
+    /// let ber = Ber::from(0x34_u8);
+    /// let serialized: &[u8] = ber.as_ref();
+    /// let deserialized = unsafe { BerRef::from_bytes_unchecked(serialized) };
     ///
-    /// assert_eq!(ber.id(), IdRef::integer());
-    /// assert_eq!(ber.contents().to_integer::<i32>().unwrap(), 0x34);
+    /// assert_eq!(ber, deserialized);
     /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         mem::transmute(bytes)
@@ -211,14 +210,16 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{BerRef, IdRef};
+    /// use bsn1::{Ber, BerRef, IdRef};
     ///
-    /// // Represents '0x34' as an Integer.
-    /// let bytes: &[u8] = &[0x02, 0x01, 0x34];
-    /// let ber = unsafe { BerRef::from_bytes_unchecked(bytes) };
+    /// let ber = Ber::from(0x34_u8);
+    /// let mut serialized: Vec<u8> = Vec::from(ber.as_ref() as &[u8]);
+    /// let deserialized = unsafe { BerRef::from_mut_bytes_unchecked(&mut serialized[..]) };
     ///
-    /// assert_eq!(ber.id(), IdRef::integer());
-    /// assert_eq!(ber.contents().to_integer::<i32>().unwrap(), 0x34);
+    /// assert_eq!(ber, deserialized);
+    ///
+    /// *deserialized.mut_contents().as_mut().last_mut().unwrap() += 1;
+    /// assert_ne!(ber, deserialized);
     /// ```
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         mem::transmute(bytes)
@@ -254,11 +255,10 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{BerRef, IdRef};
+    /// use bsn1::{Ber, BerRef, IdRef};
     ///
-    /// // Represents '3' as an Integer.
-    /// let bytes: &[u8] = &[0x02, 0x01, 0x03];
-    /// let ber = BerRef::parse(bytes).unwrap();
+    /// let ber = Ber::from(0x05_u8);
+    /// let ber: &BerRef = &ber;
     ///
     /// assert_eq!(ber.id(), IdRef::integer());
     /// ```
@@ -274,11 +274,10 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{BerRef, ClassTag, IdRef, PCTag};
+    /// use bsn1::{Ber, BerRef, ClassTag, IdRef, PCTag};
     ///
-    /// // Represents '3' as an Integer.
-    /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x03];
-    /// let ber = BerRef::parse_mut(bytes).unwrap();
+    /// let mut ber = Ber::from(0x05_u8);
+    /// let ber: &mut BerRef = &mut ber;
     ///
     /// assert_eq!(ber.id(), IdRef::integer());
     ///
@@ -310,13 +309,12 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{BerRef, Length};
+    /// use bsn1::{Ber, BerRef, Length};
     ///
-    /// // Represents 'False' as a Boolean.
-    /// let bytes: &[u8] = &[0x01, 0x01, 0x00];
-    /// let ber = BerRef::parse(bytes).unwrap();
+    /// let ber = Ber::from(false);
+    /// let ber: &BerRef = &ber;
     ///
-    /// assert_eq!(ber.length(), Length::Definite(1));
+    /// assert_eq!(ber.length(), Length::Definite(ber.contents().len()));
     /// ```
     pub fn length(&self) -> Length {
         let id_len = self.id().len();
@@ -329,13 +327,12 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::BerRef;
+    /// use bsn1::{Ber, BerRef};
     ///
-    /// // Represents 'False' as a Boolean.
-    /// let bytes: &[u8] = &[0x01, 0x01, 0x00];
-    /// let ber = BerRef::parse(bytes).unwrap();
+    /// let ber = Ber::from(false);
+    /// let ber: &BerRef = &ber;
     ///
-    /// assert_eq!(ber.contents().to_bool_ber().unwrap(), false);
+    /// assert_eq!(ber.contents().to_bool_ber(), Ok(false));
     /// ```
     pub fn contents(&self) -> &ContentsRef {
         let id_len = self.id().len();
@@ -349,16 +346,16 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::BerRef;
+    /// use bsn1::{Ber, BerRef, ContentsRef};
     ///
-    /// // Represents 'False' as a Boolean.
-    /// let bytes: &mut [u8] = &mut [0x01, 0x01, 0x00];
-    /// let ber = BerRef::parse_mut(bytes).unwrap();
+    /// let mut ber = Ber::from(false);
+    /// let ber: &mut BerRef = &mut ber;
     ///
-    /// assert_eq!(ber.contents().to_bool_ber().unwrap(), false);
+    /// assert_eq!(ber.contents().to_bool_ber(), Ok(false));
     ///
-    /// ber.mut_contents()[0] = 0xff;
-    /// assert_eq!(ber.contents().to_bool_ber().unwrap(), true);
+    /// let true_contents: &ContentsRef = true.into();
+    /// ber.mut_contents().as_mut().copy_from_slice(true_contents.as_ref());
+    /// assert_eq!(ber.contents().to_bool_ber(), Ok(true));
     /// ```
     pub fn mut_contents(&mut self) -> &mut ContentsRef {
         unsafe {
