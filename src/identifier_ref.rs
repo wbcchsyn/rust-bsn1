@@ -1399,24 +1399,6 @@ pub unsafe fn parse_id_unchecked<'a>(bytes: &mut &'a [u8]) -> &'a IdRef {
     unreachable!()
 }
 
-/// Ommits the extra octets at the end of `bytes` and returns octets just one 'ASN.1 Identifier.'
-///
-/// # Safety
-///
-/// The behaviour is undefined if `bytes` does not starts with 'ASN.1 Identifier.'
-pub unsafe fn shrink_to_fit_unchecked(bytes: &[u8]) -> &[u8] {
-    if bytes[0] & LONG_FLAG != LONG_FLAG {
-        &bytes[0..1]
-    } else {
-        for i in 1.. {
-            if bytes[i] & MORE_FLAG != MORE_FLAG {
-                return &bytes[..=i];
-            }
-        }
-        unreachable!();
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
