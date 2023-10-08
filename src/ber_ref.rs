@@ -331,9 +331,11 @@ impl BerRef {
     /// assert_eq!(ber.length(), Length::Definite(ber.contents().len()));
     /// ```
     pub fn length(&self) -> Length {
-        let id_len = self.id().len();
-        let bytes = &self.bytes[id_len..];
-        unsafe { length::from_bytes_starts_with_unchecked(bytes).0 }
+        let mut bytes = &self.bytes;
+        unsafe {
+            identifier_ref::parse_id_unchecked(&mut bytes);
+            length::parse_length_unchecked(&mut bytes)
+        }
     }
 
     /// Provides a reference to the [`ContentsRef`] of `self`.
@@ -349,10 +351,12 @@ impl BerRef {
     /// assert_eq!(ber.contents().to_bool_ber(), Ok(false));
     /// ```
     pub fn contents(&self) -> &ContentsRef {
-        let id_len = self.id().len();
-        let bytes = &self.bytes[id_len..];
-        let contents = unsafe { length::from_bytes_starts_with_unchecked(bytes).1 };
-        <&ContentsRef>::from(contents)
+        let mut bytes = &self.bytes;
+        unsafe {
+            identifier_ref::parse_id_unchecked(&mut bytes);
+            length::parse_length_unchecked(&mut bytes);
+        }
+        bytes.into()
     }
 
     /// Provides a mutable reference to the [`ContentsRef`] of `self`.

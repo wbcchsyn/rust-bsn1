@@ -318,9 +318,11 @@ impl DerRef {
     /// assert_eq!(Length::Definite("Foo".len()), der.length());
     /// ```
     pub fn length(&self) -> Length {
-        let id_len = self.id().len();
-        let bytes = &self.bytes[id_len..];
-        unsafe { length::from_bytes_starts_with_unchecked(bytes).0 }
+        let mut bytes = &self.bytes;
+        unsafe {
+            identifier_ref::parse_id_unchecked(&mut bytes);
+            length::parse_length_unchecked(&mut bytes)
+        }
     }
 
     /// Returns a reference to the contents octets of `self`.
@@ -336,10 +338,12 @@ impl DerRef {
     /// assert_eq!(der.contents().as_ref(), "Foo".as_bytes());
     /// ```
     pub fn contents(&self) -> &ContentsRef {
-        let id_len = self.id().len();
-        let bytes = &self.bytes[id_len..];
-        let bytes = unsafe { length::from_bytes_starts_with_unchecked(bytes).1 };
-        <&ContentsRef>::from(bytes)
+        let mut bytes = &self.bytes;
+        unsafe {
+            identifier_ref::parse_id_unchecked(&mut bytes);
+            length::parse_length_unchecked(&mut bytes);
+        }
+        bytes.into()
     }
 
     /// Returns a mutable reference to the 'contents octets' of `self`.
