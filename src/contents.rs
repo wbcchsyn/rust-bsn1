@@ -75,6 +75,14 @@ impl<'a> From<&'a str> for Contents {
     }
 }
 
+impl From<Vec<u8>> for Contents {
+    fn from(value: Vec<u8>) -> Self {
+        Self {
+            buffer: Buffer::from(value),
+        }
+    }
+}
+
 impl From<u8> for Contents {
     fn from(val: u8) -> Self {
         if val == 0 {
