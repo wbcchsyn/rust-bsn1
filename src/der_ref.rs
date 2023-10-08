@@ -63,22 +63,23 @@ impl DerRef {
     /// let mut serialized = Vec::from(der.as_ref() as &[u8]);
     ///
     /// // Deserialize `der`.
-    /// let deserialized = DerRef::parse(&serialized[..]).unwrap();
+    /// let deserialized = DerRef::parse(&mut &serialized[..]).unwrap();
     /// assert_eq!(der, deserialized);
     ///
     /// // The result is not changed even if extra octets are added to the end.
     /// serialized.push(0xff);
     /// serialized.push(0x00);
     ///
-    /// let deserialized = DerRef::parse(&serialized[..]).unwrap();
+    /// let deserialized = DerRef::parse(&mut &serialized[..]).unwrap();
     /// assert_eq!(der, deserialized);
     /// ```
-    pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
-        let mut readable = bytes;
-        Self::do_parse(&mut readable)?;
+    pub fn parse<'a>(bytes: &mut &'a [u8]) -> Result<&'a Self, Error> {
+        let init_bytes = *bytes;
+        Self::do_parse(bytes)?;
 
-        let bytes = &bytes[..(bytes.len() - readable.len())];
-        unsafe { Ok(Self::from_bytes_unchecked(bytes)) }
+        let total_len = init_bytes.len() - bytes.len();
+        let read = &init_bytes[..total_len];
+        unsafe { Ok(Self::from_bytes_unchecked(read)) }
     }
 
     /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a mutable reference to
