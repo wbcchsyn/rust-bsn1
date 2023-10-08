@@ -280,10 +280,7 @@ impl BerRef {
     /// assert_eq!(ber.id(), IdRef::integer());
     /// ```
     pub fn id(&self) -> &IdRef {
-        unsafe {
-            let bytes = identifier_ref::shrink_to_fit_unchecked(&self.bytes);
-            IdRef::from_bytes_unchecked(bytes)
-        }
+        unsafe { identifier_ref::parse_id_unchecked(&mut &self.bytes) }
     }
 
     /// Provides a mutable reference to the [`IdRef`] of `self`.

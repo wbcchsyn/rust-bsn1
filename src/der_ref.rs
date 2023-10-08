@@ -30,7 +30,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{length, ContentsRef, Der, Error, IdRef, Length};
+use crate::{identifier_ref, length, ContentsRef, Der, Error, IdRef, Length};
 use std::borrow::Borrow;
 
 /// `DerRef` is a wrapper of `[u8]` and represents DER.
@@ -269,10 +269,7 @@ impl DerRef {
     /// assert_eq!(IdRef::integer(), der.id());
     /// ```
     pub fn id(&self) -> &IdRef {
-        unsafe {
-            let bytes = crate::identifier_ref::shrink_to_fit_unchecked(&self.bytes);
-            IdRef::from_bytes_unchecked(bytes)
-        }
+        unsafe { identifier_ref::parse_id_unchecked(&mut &self.bytes) }
     }
 
     /// Returns a mutable reference to the `IdRef` of `self`.
