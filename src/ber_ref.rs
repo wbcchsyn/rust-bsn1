@@ -124,28 +124,40 @@ impl BerRef {
     /// let mut serialized = Vec::from(ber.as_ref() as &[u8]);
     ///
     /// // Deserialize.
-    /// let deserialized = BerRef::parse_mut(&mut serialized[..]).unwrap();
+    /// let deserialized = BerRef::parse_mut(&mut &mut serialized[..]).unwrap();
     /// assert_eq!(ber, deserialized);
     ///
     /// // You can update it because 'deserialized' is a mutable reference.
     /// deserialized.mut_contents()[0] = 'B' as u8;
+    /// assert_eq!(Ber::from("Boo").as_ref() as &BerRef, deserialized);
+    /// 
     /// // Now deserialize represents "Boo", not "Foo".
     ///
     /// // Deserialize again.
-    /// let deserialized = BerRef::parse_mut(&mut serialized[..]).unwrap();
-    /// assert!(ber != deserialized);
+    /// let deserialized = BerRef::parse_mut(&mut &mut serialized[..]).unwrap();
+    /// assert_eq!(Ber::from("Boo").as_ref() as &BerRef, deserialized);
     /// ```
-    pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
-        let mut readable = bytes as &[u8];
-        let mut stack_depth: isize = 0;
+    pub fn parse_mut<'a>(bytes: &mut &'a mut [u8]) -> Result<&'a mut Self, Error> {
+        let read_bytes = {
+            let mut readable: &[u8] = *bytes;
+            let mut stack_depth: isize = 0;
 
-        while {
-            stack_depth += Self::do_parse(&mut readable)? as isize;
-            stack_depth > 0
-        } {}
+            while {
+                stack_depth += Self::do_parse(&mut readable)? as isize;
+                stack_depth > 0
+            } {}
 
-        let total_len = bytes.len() - readable.len();
-        unsafe { Ok(Self::from_mut_bytes_unchecked(&mut bytes[..total_len])) }
+            bytes.len() - readable.len()
+        };
+
+        unsafe {
+            let init_ptr = bytes.as_mut_ptr();
+            let left_bytes = bytes.len() - read_bytes;
+            *bytes = std::slice::from_raw_parts_mut(init_ptr.add(read_bytes), left_bytes);
+
+            let read = std::slice::from_raw_parts_mut(init_ptr, read_bytes);
+            Ok(Self::from_mut_bytes_unchecked(read))
+        }
     }
 
     fn do_parse(readable: &mut &[u8]) -> Result<i8, Error> {
