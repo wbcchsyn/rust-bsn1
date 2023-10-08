@@ -239,6 +239,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - From\<&[u8]\> for Der
   - From\<&ContentsRef\> for Contents
   - From\<&[u8; N]\> for Contents
+  - From\<&str\> for Content
   - From\<&[u8; N]\> for &ContentsRef
   - From\<&mut [u8; N]\> for &mut ContentsRef
   - From\<&str\> for &ContentsRef
