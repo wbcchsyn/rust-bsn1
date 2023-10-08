@@ -107,6 +107,9 @@ impl BerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
+    /// On success, `bytes` will be updated to point the next octet of `BerRef`;
+    /// otehrwise, `bytes` will not be updated.
+    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
@@ -130,7 +133,7 @@ impl BerRef {
     /// // You can update it because 'deserialized' is a mutable reference.
     /// deserialized.mut_contents()[0] = 'B' as u8;
     /// assert_eq!(Ber::from("Boo").as_ref() as &BerRef, deserialized);
-    /// 
+    ///
     /// // Now deserialize represents "Boo", not "Foo".
     ///
     /// // Deserialize again.
