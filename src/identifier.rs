@@ -42,12 +42,9 @@ use std::ops::{Deref, DerefMut};
 ///
 /// The structure of `Id` is similar to that of `Vec<u8>`.
 ///
-/// The user can access the [`IdRef`] via the [`Deref`] and [`DerefMut`] implementations, and
-/// the inner slice via [`IdRef`].
+/// The user can access the inner [`IdRef`] via the `Deref` and `DerefMut` implementations.
 ///
-/// [`IdRef`]: struct.IdRef.html
-/// [`Deref`]: #impl-Deref-for-Id
-/// [`DerefMut`]: #impl-DerefMut-for-Id
+/// [`IdRef`]: crate::IdRef
 #[derive(Debug, Clone, Eq, Ord, Hash)]
 pub struct Id {
     buffer: Buffer,
@@ -64,14 +61,12 @@ impl From<&'_ IdRef> for Id {
 impl Id {
     /// Creates a new instance from `class` , `pc` , and `number`.
     ///
-    /// type `T` should be a built-in primitive unsigned integer type
-    /// (e.g., u8, u16, u32, u64, u128, usize.)
-    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// function accepts such a number.
+    /// this function ignores the rule.
+    /// For example, number 15 (0x0f) is reserved for now,
+    /// but this function accepts such a number without any error.
     ///
     /// # Examples
     ///
@@ -119,7 +114,7 @@ impl Id {
 
     /// Parses `readable` starting with identifier and tries to build a new instance.
     ///
-    /// This function ignores the extra octet(s) at the end if any.
+    /// This function ignores extra octet(s) at the end if any.
     ///
     /// # Performance
     ///
@@ -133,8 +128,9 @@ impl Id {
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
-    /// this function ignores that. For example, number 15 (0x0f) is reserved for now, but this
-    /// functions returns `Ok`.
+    /// this function ignores the rule.
+    /// For example, number 15 (0x0f) is reserved for now,
+    /// but this functions returns `Ok`.
     ///
     /// # Examples
     ///
@@ -155,7 +151,6 @@ impl Id {
     /// let deserialized = Id::parse(&mut &serialized[..]).unwrap();
     /// assert_eq!(id, &deserialized);
     ///
-    /// // We can access to the inner slice of `serialized`.
     /// // We can use `IdRef::parse` instead. It is more efficient.
     /// let deserialized: Id = IdRef::parse(&mut &serialized[..]).map(ToOwned::to_owned).unwrap();
     /// assert_eq!(id, &deserialized);
@@ -173,9 +168,20 @@ impl Id {
     ///
     /// # Safety
     ///
-    /// The behaviour is undefined if the format of `bytes` is not right.
+    /// The behaviour is undefined if the format of `bytes` is bad as 'identifier octets'.
     ///
     /// [`parse`]: Self::parse
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Id, IdRef};
+    ///
+    /// let id = IdRef::eoc();
+    /// let serialized = id.as_ref();
+    /// let deserialized = unsafe { Id::from_bytes_unchecked(serialized) };
+    /// assert_eq!(deserialized, id);
+    /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
         Self {
             buffer: Buffer::from(bytes),
