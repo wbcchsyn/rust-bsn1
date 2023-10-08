@@ -65,16 +65,24 @@ impl DerRef {
     /// let der = Der::from(8_i32);
     /// let mut serialized = Vec::from(der.as_ref() as &[u8]);
     ///
-    /// // Deserialize `der`.
-    /// let deserialized = DerRef::parse(&mut &serialized[..]).unwrap();
-    /// assert_eq!(der, deserialized);
+    /// // Deserialize
+    /// {
+    ///     let mut serialized: &[u8] = &serialized[..];
+    ///     let deserialized = DerRef::parse(&mut serialized).unwrap();
+    ///     assert_eq!(der, deserialized);
+    ///     assert_eq!(serialized.len(), 0);
+    /// }
     ///
     /// // The result is not changed even if extra octets are added to the end.
     /// serialized.push(0xff);
     /// serialized.push(0x00);
     ///
-    /// let deserialized = DerRef::parse(&mut &serialized[..]).unwrap();
-    /// assert_eq!(der, deserialized);
+    /// {
+    ///     let mut serialized: &[u8] = &serialized[..];
+    ///     let deserialized = DerRef::parse(&mut serialized).unwrap();
+    ///     assert_eq!(der, deserialized);
+    ///     assert_eq!(serialized, &[0xff, 0x00]);
+    /// }
     /// ```
     pub fn parse<'a>(bytes: &mut &'a [u8]) -> Result<&'a Self, Error> {
         let init_bytes = *bytes;
@@ -334,5 +342,38 @@ impl DerRef {
         let ptr = ret as *const ContentsRef;
         let ptr = ptr as *mut ContentsRef;
         unsafe { &mut *ptr }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_single() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
+        for i in 0..bytes.len() {
+            let der = Der::from(&bytes[..i]);
+            let mut bytes: &[u8] = der.as_ref();
+            let parsed = DerRef::parse(&mut bytes).unwrap();
+
+            assert_eq!(der, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
+    }
+
+    #[test]
+    fn parse_recursive() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
+        for i in 0..bytes.len() {
+            let inner = Der::from(&bytes[..i]);
+            let der = Der::new(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
+
+            let mut bytes: &[u8] = der.as_ref();
+            let parsed = DerRef::parse(&mut bytes).unwrap();
+
+            assert_eq!(der, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
     }
 }
