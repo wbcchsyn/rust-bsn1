@@ -308,6 +308,37 @@ pub unsafe fn parse_length<R: Read, W: Write>(
     }
 }
 
+/// Parse `bytes` starting with 'length octets' and returns the parsed `Length`
+/// without any check.
+///
+/// `bytes` will be updated to point the next octet of `Length`
+///
+/// # Safety
+///
+/// The behavior is undefined if `bytes` does not start with Length octet(s).
+pub unsafe fn parse_length_unchecked<'a>(bytes: &mut &'a [u8]) -> Length {
+    let first = bytes[0];
+    *bytes = &bytes[1..];
+
+    if first == Length::INDEFINITE {
+        // Indefinite
+        Length::Indefinite
+    } else if first & Length::LONG_FLAG != Length::LONG_FLAG {
+        // Short form
+        Length::Definite(first as usize)
+    } else {
+        // Long form
+        let followings_count = (first & !Length::LONG_FLAG) as usize;
+
+        let ret = bytes[..followings_count]
+            .iter()
+            .fold(0, |acc, &byte| (acc << 8) + byte as usize);
+
+        *bytes = &bytes[followings_count..];
+        Length::Definite(ret)
+    }
+}
+
 /// Parse `bytes` starting with 'length' and returns `(Length, octets_after_length)`.
 ///
 /// # Safety
