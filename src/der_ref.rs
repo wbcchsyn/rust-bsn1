@@ -158,7 +158,7 @@ impl DerRef {
     ///
     /// let der = Der::from(8_i32);
     /// let serialized: Vec<u8> = Vec::from(der.as_ref() as &[u8]);
-    /// let deserialized = DerRef::parse(&serialized[..]).unwrap();
+    /// let deserialized = unsafe { DerRef::from_bytes_unchecked(&serialized[..]) };
     ///
     /// assert_eq!(der, deserialized);
     /// ```
@@ -185,7 +185,7 @@ impl DerRef {
     ///
     /// let der = Der::from(8_i32);
     /// let mut serialized: Vec<u8> = Vec::from(der.as_ref() as &[u8]);
-    /// let deserialized = DerRef::parse_mut(&mut serialized[..]).unwrap();
+    /// let deserialized = unsafe { DerRef::from_mut_bytes_unchecked(&mut serialized[..]) };
     ///
     /// assert_eq!(der, deserialized);
     ///
