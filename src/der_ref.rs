@@ -46,6 +46,9 @@ impl DerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
+    /// On success, `bytes` is updated to point the next octet of `DerRef`;
+    /// otherwise, `bytes` is not updated.
+    ///
     /// # Warnings
     ///
     /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
