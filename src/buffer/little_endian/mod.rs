@@ -31,6 +31,7 @@
 // limitations under the License.
 
 use std::alloc::{self, Layout};
+use std::borrow::Borrow;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 
@@ -113,6 +114,12 @@ impl fmt::Debug for Buffer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let contents: &[u8] = self.as_slice();
         f.debug_tuple("Buffer").field(&contents).finish()
+    }
+}
+
+impl Borrow<[u8]> for Buffer {
+    fn borrow(&self) -> &[u8] {
+        self.as_slice()
     }
 }
 
