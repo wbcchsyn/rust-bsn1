@@ -1205,7 +1205,7 @@ impl IdRef {
     /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1_u8.into());
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// ```
-    pub fn pc(&self) -> PCTag {
+    pub const fn pc(&self) -> PCTag {
         if self.is_primitive() {
             PCTag::Primitive
         } else {
