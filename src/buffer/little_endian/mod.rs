@@ -41,6 +41,16 @@ pub struct Buffer {
 }
 
 impl Buffer {
+    pub const fn new() -> Self {
+        Self {
+            data_: std::ptr::null_mut(),
+            cap_: 0,
+            len_: 0,
+        }
+    }
+}
+
+impl Buffer {
     pub fn len(&self) -> usize {
         if self.is_stack() {
             self.len_ >> (usize::BITS - u8::BITS)
@@ -83,5 +93,19 @@ impl Buffer {
 
     fn is_stack(&self) -> bool {
         self.len_ & HEAP_FLAG == 0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Buffer;
+
+    const MIN_CAP: usize = std::mem::size_of::<Buffer>() - std::mem::size_of::<u8>();
+
+    #[test]
+    fn new() {
+        let buffer = Buffer::new();
+        assert_eq!(0, buffer.len());
+        assert_eq!(MIN_CAP, buffer.capacity());
     }
 }
