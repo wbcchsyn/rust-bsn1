@@ -30,6 +30,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! This module provides a tests for `Buffer`.
+//! Both `buffer::little_endian::Buffer` and `buffer::universal_endian::Buffer`
+//! use this file in common.
+
 use super::*;
 use std::iter::FromIterator;
 
