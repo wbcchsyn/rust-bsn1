@@ -1170,7 +1170,7 @@ impl IdRef {
     /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 0_u8.into());
     /// assert_eq!(true, id.is_context_specific());
     /// ```
-    pub fn is_context_specific(&self) -> bool {
+    pub const fn is_context_specific(&self) -> bool {
         let first = self.bytes[0];
         first & CLASS_MASK == ClassTag::ContextSpecific as u8
     }
