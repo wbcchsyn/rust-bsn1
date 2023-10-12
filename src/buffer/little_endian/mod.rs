@@ -84,6 +84,15 @@ impl Buffer {
         self.as_mut_slice()[old_len] = v;
     }
 
+    /// # Safety
+    ///
+    /// The behaviour is undefined if the length will exceeds the capacity.
+    pub unsafe fn extend_from_slice(&mut self, vals: &[u8]) {
+        let ptr = self.as_mut_ptr().add(self.len());
+        ptr.copy_from_nonoverlapping(vals.as_ptr(), vals.len());
+        self.set_len(self.len() + vals.len());
+    }
+
     pub fn len(&self) -> usize {
         if self.is_stack() {
             self.len_ >> (usize::BITS - u8::BITS)
@@ -223,6 +232,21 @@ mod tests {
             v.iter().for_each(|&c| unsafe { buffer.push(c) });
             assert_eq!(&v, buffer.as_slice());
             assert_eq!(MIN_CAP.max(v.len()), buffer.capacity());
+        }
+    }
+
+    #[test]
+    fn extend_from_slice() {
+        let mut buffer = Buffer::new();
+        let mut vec = Vec::new();
+
+        for i in 0..40 {
+            let vals = [i; 10];
+            buffer.reserve(10);
+            unsafe { buffer.extend_from_slice(&vals) };
+            vec.extend_from_slice(&vals);
+
+            assert_eq!(&vec, buffer.as_slice());
         }
     }
 }
