@@ -179,6 +179,12 @@ where
     }
 }
 
+impl Ord for Buffer {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.as_slice().cmp(other.as_slice())
+    }
+}
+
 impl std::io::Write for Buffer {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         self.reserve(buf.len());
