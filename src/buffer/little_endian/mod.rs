@@ -32,7 +32,7 @@
 
 use std::alloc::{self, Layout};
 use std::fmt;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 const HEAP_FLAG: usize = 1 << (usize::BITS - 1);
 const LEN_MASK: usize = !HEAP_FLAG;
@@ -121,6 +121,12 @@ impl Deref for Buffer {
 
     fn deref(&self) -> &Self::Target {
         self.as_slice()
+    }
+}
+
+impl DerefMut for Buffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.as_mut_slice()
     }
 }
 
