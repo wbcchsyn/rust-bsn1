@@ -266,7 +266,7 @@ impl Buffer {
         if self.is_stack() {
             INIT_CAPACITY
         } else {
-            unsafe { (&*self.buffer_.heap).capacity() }
+            unsafe { self.buffer_.heap.capacity() }
         }
     }
 
