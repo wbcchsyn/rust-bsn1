@@ -426,60 +426,71 @@ mod buffer_tests {
     use super::*;
     use std::iter::FromIterator;
 
+    const MIN_CAP: usize = StackBuffer::capacity();
+
     #[test]
     fn new() {
         let buffer = Buffer::new();
         assert_eq!(0, buffer.len());
-        assert!(0 < buffer.capacity());
+        assert_eq!(MIN_CAP, buffer.capacity());
+    }
+
+    #[test]
+    fn with_capacity() {
+        for i in 0..100 {
+            let buffer = Buffer::with_capacity(i);
+            assert_eq!(0, buffer.len());
+            assert_eq!(MIN_CAP.max(i), buffer.capacity());
+        }
     }
 
     #[test]
     fn reserve() {
-        let mut buffer = Buffer::new();
         for i in 0..40 {
+            let mut buffer = Buffer::new();
             buffer.reserve(i);
+
             assert_eq!(0, buffer.len());
-            assert!(i <= buffer.capacity());
+            assert_eq!(MIN_CAP.max(i), buffer.capacity());
         }
 
-        let v = vec![1];
-        let mut buffer = Buffer::from(&v as &[u8]);
         for i in 0..40 {
+            let v = vec![1];
+            let mut buffer = Buffer::from(&v as &[u8]);
+
             buffer.reserve(i);
             assert_eq!(&v, buffer.as_bytes());
-            assert!(i <= buffer.capacity());
+            assert_eq!(MIN_CAP.max(i + v.len()), buffer.capacity());
         }
 
-        let v = Vec::from_iter(0..200);
-        let mut buffer = Buffer::from(&v as &[u8]);
         for i in 0..40 {
+            let v = Vec::from_iter(0..200);
+            let mut buffer = Buffer::from(&v as &[u8]);
+
             buffer.reserve(i);
             assert_eq!(&v, buffer.as_bytes());
-            assert!(i <= buffer.capacity());
+            assert_eq!(MIN_CAP.max(i + v.len()), buffer.capacity());
         }
     }
 
     #[test]
     fn push() {
-        for i in 0..Buffer::new().capacity() {
+        for i in 0..MIN_CAP {
             let v = Vec::from_iter(0..i as u8);
-
             let mut buffer = Buffer::new();
-            for &c in v.iter() {
-                unsafe { buffer.push(c) };
-            }
 
+            v.iter().for_each(|&c| unsafe { buffer.push(c) });
             assert_eq!(&v, buffer.as_bytes());
+            assert_eq!(MIN_CAP, buffer.capacity());
         }
 
         for i in 0..100 {
             let v = Vec::from_iter(0..i);
             let mut buffer = Buffer::with_capacity(v.len());
-            for &c in v.iter() {
-                unsafe { buffer.push(c) };
-            }
 
+            v.iter().for_each(|&c| unsafe { buffer.push(c) });
             assert_eq!(&v, buffer.as_bytes());
+            assert_eq!(MIN_CAP.max(v.len()), buffer.capacity());
         }
     }
 
@@ -498,17 +509,34 @@ mod buffer_tests {
     }
 
     #[test]
-    fn from_vec() {
-        for i in u8::MIN..=u8::MAX {
-            let vals = Vec::from_iter(0..i);
-            let buffer = Buffer::from(vals.clone());
-            assert_eq!(&vals, buffer.as_bytes());
-        }
+    fn from_empty_vec() {
+        let vals = Vec::new();
+        let buffer = Buffer::from(vals);
+        assert_eq!(buffer.len(), 0);
+        assert_eq!(buffer.capacity(), MIN_CAP);
+    }
 
-        for i in 0..500 {
+    #[test]
+    fn from_capacity_vec() {
+        for i in 1..100 {
             let vals = Vec::with_capacity(i);
+            let cap = vals.capacity();
             let buffer = Buffer::from(vals);
-            assert!(buffer.len() == 0);
+
+            assert_eq!(buffer.len(), 0);
+            assert_eq!(cap, buffer.capacity());
+        }
+    }
+
+    #[test]
+    fn from_filled_vec() {
+        for i in 1..=u8::MAX {
+            let vals = Vec::from_iter(0..i);
+            let cap = vals.capacity();
+            let buffer = Buffer::from(vals);
+
+            assert_eq!(Vec::from_iter(0..i), buffer.as_bytes());
+            assert_eq!(cap, buffer.capacity());
         }
     }
 }
