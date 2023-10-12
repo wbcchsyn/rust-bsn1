@@ -1100,8 +1100,8 @@ impl IdRef {
     /// let id = IdRef::integer();
     /// assert_eq!(id.len(), 1);
     /// ```
-    pub fn len(&self) -> usize {
-        return self.as_ref().len();
+    pub const fn len(&self) -> usize {
+        self.bytes.len()
     }
 
     /// Returns the `ClassTag` of `self`.
