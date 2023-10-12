@@ -32,6 +32,7 @@
 
 use std::alloc::{self, Layout};
 use std::fmt;
+use std::ops::Deref;
 
 const HEAP_FLAG: usize = 1 << (usize::BITS - 1);
 const LEN_MASK: usize = !HEAP_FLAG;
@@ -112,6 +113,14 @@ impl fmt::Debug for Buffer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let contents: &[u8] = self.as_slice();
         f.debug_tuple("Buffer").field(&contents).finish()
+    }
+}
+
+impl Deref for Buffer {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        self.as_slice()
     }
 }
 
