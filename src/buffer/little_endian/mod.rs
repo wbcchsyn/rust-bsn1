@@ -69,6 +69,12 @@ impl Drop for Buffer {
     }
 }
 
+impl Clone for Buffer {
+    fn clone(&self) -> Self {
+        Self::from(self.as_slice())
+    }
+}
+
 impl From<&[u8]> for Buffer {
     fn from(vals: &[u8]) -> Self {
         let mut ret = Self::with_capacity(vals.len());
