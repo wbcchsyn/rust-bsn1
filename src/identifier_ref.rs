@@ -182,7 +182,7 @@ impl IdRef {
     /// let deserialized = unsafe { IdRef::from_bytes_unchecked(serialized) };
     /// assert_eq!(id, deserialized);
     /// ```
-    pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
+    pub const unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         mem::transmute(bytes)
     }
 
