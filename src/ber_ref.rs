@@ -45,8 +45,8 @@ use std::mem;
 /// and must be terminated by 'EOC BER'.
 /// (Single 'EOC BER' is allowed.)
 ///
-/// A reference to `BerRef` works well even if the user violates the rule,
-/// however, the inner slice is invalid as a BER then.
+/// A reference to `BerRef` works fine even if the user violates the rule,
+/// however, the inner slice will be invalid as a BER then.
 /// Such a slice can not be parsed as a BER again.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct BerRef {

@@ -195,9 +195,10 @@ impl Der {
         ret
     }
 
-    /// Creates a new instance from `id` and `contents` of `length` bytes.
+    /// Creates a new instance with `id` and 'definite `length`'.
     ///
-    /// The `contents` of the return value is not initialized.
+    /// The 'contents octets' of the return value holds `length` bytes,
+    /// but they are not initialized.
     /// Use [`mut_contents`] via `DerefMut` implementation to initialize them.
     ///
     /// # Warnings
@@ -250,14 +251,16 @@ impl Der {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
+    /// On error, the state of `readable` is unspecified;
+    /// otherwise, `readable` is advanced to the end of the DER octets.
+    ///
     /// # Performance
     ///
     /// This function is not so efficient compared with [`DerRef::parse`].
     /// If you have a slice of serialized DER, use [`DerRef::parse`]
-    /// and then call [`ToOwned::to_owned`] instead.
+    /// and then call `Der::from` instead.
     ///
     /// [`DerRef::parse`]: DerRef::parse
-    /// [`ToOwned::to_owned`]: std::borrow::ToOwned::to_owned
     ///
     /// # Warnings
     ///

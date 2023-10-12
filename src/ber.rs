@@ -48,8 +48,8 @@ use std::ops::{Deref, DerefMut};
 /// and must be terminated by 'EOC BER'.
 /// (Single 'EOC BER' is allowed.)
 ///
-/// `Ber` instance works well even if the user violates the rule,
-/// however, the holding octets are invalid as a BER then.
+/// `Ber` instance works fine even if the user violates the rule,
+/// however, the holding octets will be invalid as a BER then.
 /// Such octets can not be parsed as a BER again.
 #[derive(Debug, Clone, Eq, Hash)]
 pub struct Ber {
@@ -182,7 +182,7 @@ impl From<&[u8]> for Ber {
 }
 
 impl Ber {
-    /// Creates a new instance from `id` and `contents` with definite length.
+    /// Creates a new instance with definite length from `id` and `contents`.
     ///
     /// Note that BER allows both definite length and indefinite length,
     /// however, this function always returns a definite length value.
@@ -259,10 +259,11 @@ impl Ber {
         ret
     }
 
-    /// Creates a new instance with definite length from `id` and `contents` of `length` bytes.
+    /// Creates a new instance with `id` and 'definite `length`'.
     ///
-    /// The `contents` of the return value are not initialized.
-    /// Use [`mut_contents`] via `DerefMut` implementation to initialize it.
+    /// The 'contents octets' of the return value holds `length` bytes,
+    /// but they are not initialized.
+    /// Use [`mut_contents`] via `DerefMut` implementation to initialize them.
     ///
     /// # Warnings
     ///
@@ -294,10 +295,11 @@ impl Ber {
         Der::with_id_length(id, length).into()
     }
 
-    /// Creates a new instance with indefinite length from `id` and `contents` of `length` bytes.
+    /// Creates a new instance with `id` and 'indefinite length'.
     ///
-    /// The `contents` of the return value are not initialized.
-    /// Use [`mut_contents`] via [`DerefMut`] implementation to initialize it.
+    /// The 'contents octets' of the return value holds `length` bytes,
+    /// but they are not initialized.
+    /// Use [`mut_contents`] via `DerefMut` implementation to initialize them.
     ///
     /// # Warnings
     ///
@@ -348,11 +350,14 @@ impl Ber {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
+    /// On error, the state of `readable` is unspecified;
+    /// otherwise, `readable` is advanced to the end of BER octets.
+    ///
     /// # Performance
     ///
     /// This function is not so efficient compared with [`Ber::parse`].
     /// If you have a slice of serialized BER, use [`BerRef::parse`]
-    /// and then call `ToOwned::to_owned` instead.
+    /// and then call `Ber::from` instead.
     ///
     /// # Warnings
     ///
