@@ -51,6 +51,12 @@ impl Buffer {
             len_: 0,
         }
     }
+
+    pub fn with_capacity(cap: usize) -> Self {
+        let mut buffer = Self::new();
+        buffer.reserve(cap);
+        buffer
+    }
 }
 
 impl Drop for Buffer {
@@ -165,6 +171,15 @@ mod tests {
         let buffer = Buffer::new();
         assert_eq!(0, buffer.len());
         assert_eq!(MIN_CAP, buffer.capacity());
+    }
+
+    #[test]
+    fn with_capacity() {
+        for i in 0..100 {
+            let buffer = Buffer::with_capacity(i);
+            assert_eq!(0, buffer.len());
+            assert_eq!(MIN_CAP.max(i), buffer.capacity());
+        }
     }
 
     #[test]
