@@ -49,6 +49,14 @@ impl Buffer {
         }
     }
 
+    pub fn capacity(&self) -> usize {
+        if self.is_stack() {
+            std::mem::size_of::<Self>() - std::mem::size_of::<u8>()
+        } else {
+            self.cap_
+        }
+    }
+
     fn is_stack(&self) -> bool {
         self.len_ & HEAP_FLAG == 0
     }
