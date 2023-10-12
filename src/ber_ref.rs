@@ -219,7 +219,7 @@ impl BerRef {
     ///
     /// assert_eq!(ber, deserialized);
     /// ```
-    pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
+    pub const unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         mem::transmute(bytes)
     }
 
