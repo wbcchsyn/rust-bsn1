@@ -30,8 +30,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::alloc::{self, Layout};
+
 const HEAP_FLAG: usize = 1 << (usize::BITS - 1);
 const LEN_MASK: usize = !HEAP_FLAG;
+const ALIGN: usize = std::mem::align_of::<u8>();
 
 #[repr(C)]
 pub struct Buffer {
@@ -46,6 +49,19 @@ impl Buffer {
             data_: std::ptr::null_mut(),
             cap_: 0,
             len_: 0,
+        }
+    }
+}
+
+impl Drop for Buffer {
+    fn drop(&mut self) {
+        if self.is_stack() {
+            return;
+        }
+
+        unsafe {
+            let layout = Layout::from_size_align_unchecked(self.cap_, ALIGN);
+            alloc::dealloc(self.data_, layout);
         }
     }
 }
