@@ -66,6 +66,11 @@ impl Buffer {
         }
     }
 
+    pub fn as_mut_ptr(&mut self) -> *mut u8 {
+        let ptr = self.as_ptr();
+        ptr as *mut u8
+    }
+
     fn is_stack(&self) -> bool {
         self.len_ & HEAP_FLAG == 0
     }
