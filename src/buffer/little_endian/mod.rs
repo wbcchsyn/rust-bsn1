@@ -57,6 +57,16 @@ impl Buffer {
         }
     }
 
+    pub unsafe fn set_len(&mut self, len: usize) {
+        if self.is_stack() {
+            const MASK: usize = (u8::MAX as usize) << (usize::BITS - u8::BITS);
+            self.len_ &= !MASK;
+            self.len_ |= len << (usize::BITS - u8::BITS);
+        } else {
+            self.len_ = len | HEAP_FLAG;
+        }
+    }
+
     pub fn as_ptr(&self) -> *const u8 {
         if self.is_stack() {
             let ptr = self as *const Self;
