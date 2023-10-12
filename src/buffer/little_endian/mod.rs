@@ -73,6 +73,24 @@ impl<const N: usize> From<&[u8; N]> for Buffer {
     }
 }
 
+impl From<Vec<u8>> for Buffer {
+    fn from(mut vals: Vec<u8>) -> Self {
+        if vals.capacity() == 0 {
+            Self::new()
+        } else {
+            let ret = Self {
+                data_: vals.as_mut_ptr(),
+                cap_: vals.capacity(),
+                len_: vals.len() | HEAP_FLAG,
+            };
+
+            std::mem::forget(vals);
+
+            ret
+        }
+    }
+}
+
 impl Buffer {
     pub const fn new() -> Self {
         Self {
@@ -282,6 +300,38 @@ mod tests {
             vec.extend_from_slice(&vals);
 
             assert_eq!(&vec, buffer.as_slice());
+        }
+    }
+
+    #[test]
+    fn from_empty_vec() {
+        let vals = Vec::new();
+        let buffer = Buffer::from(vals);
+        assert_eq!(buffer.len(), 0);
+        assert_eq!(buffer.capacity(), MIN_CAP);
+    }
+
+    #[test]
+    fn from_capacity_vec() {
+        for i in 1..100 {
+            let vals = Vec::with_capacity(i);
+            let cap = vals.capacity();
+            let buffer = Buffer::from(vals);
+
+            assert_eq!(buffer.len(), 0);
+            assert_eq!(cap, buffer.capacity());
+        }
+    }
+
+    #[test]
+    fn from_filled_vec() {
+        for i in 1..=u8::MAX {
+            let vals = Vec::from_iter(0..i);
+            let cap = vals.capacity();
+            let buffer = Buffer::from(vals);
+
+            assert_eq!(Vec::from_iter(0..i), buffer.as_slice());
+            assert_eq!(cap, buffer.capacity());
         }
     }
 }
