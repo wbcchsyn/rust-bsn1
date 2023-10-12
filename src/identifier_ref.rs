@@ -1115,7 +1115,7 @@ impl IdRef {
     /// let eoc = IdRef::eoc();
     /// assert_eq!(ClassTag::Universal, eoc.class());
     /// ```
-    pub fn class(&self) -> ClassTag {
+    pub const fn class(&self) -> ClassTag {
         if self.is_universal() {
             ClassTag::Universal
         } else if self.is_application() {
