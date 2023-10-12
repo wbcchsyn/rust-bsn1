@@ -32,6 +32,7 @@
 
 use std::alloc::{self, Layout};
 use std::borrow::Borrow;
+use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut, Index, IndexMut};
@@ -168,6 +169,15 @@ where
 }
 
 impl Eq for Buffer {}
+
+impl<T> PartialOrd<T> for Buffer
+where
+    T: Borrow<[u8]>,
+{
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        self.as_slice().partial_cmp(other.borrow())
+    }
+}
 
 impl std::io::Write for Buffer {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
