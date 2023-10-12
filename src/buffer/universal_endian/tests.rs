@@ -149,3 +149,12 @@ fn from_filled_vec() {
         assert_eq!(cap, buffer.capacity());
     }
 }
+
+#[test]
+fn into_vec() {
+    for i in 1..=u8::MAX {
+        let vec = Vec::from_iter(0..i);
+        let buffer = Buffer::from(&vec[..]);
+        assert_eq!(vec, buffer.into_vec());
+    }
+}
