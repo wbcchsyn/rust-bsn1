@@ -395,7 +395,7 @@ impl Ber {
     /// // We can access to the inner slice of `serialized`.
     /// // We can use `BerRef::parse` instead of this function.
     /// // (`BerRef::parse` is more efficient than this function.)
-    /// let deserialized = BerRef::parse(&mut &serialized[..]).map(ToOwned::to_owned).unwrap();
+    /// let deserialized: Ber = BerRef::parse(&mut &serialized[..]).unwrap().into();
     /// assert_eq!(ber, deserialized);
     /// ```
     pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
@@ -617,24 +617,21 @@ impl Ber {
     /// let bytes: Vec<u8> = (0..10).collect();
     ///
     /// // Push to BER with definite length.
-    /// let mut ber = Ber::from(&bytes[..]);
-    /// ber.push(0xff);
+    /// let mut ber = Ber::from(&bytes[..9]);
+    /// ber.push(bytes[9]);
     ///
     /// assert_eq!(ber.id(), IdRef::octet_string());
-    /// assert_eq!(ber.length(), Length::Definite(bytes.len() + 1));
-    ///
-    /// assert_eq!(&ber.contents().as_ref()[..bytes.len()], &bytes[..]);
-    /// assert_eq!(ber.contents().as_ref().last().unwrap(), &0xff);
+    /// assert_eq!(ber.length(), Length::Definite(bytes.len()));
+    /// assert_eq!(ber.contents().as_ref(), &bytes[..]);
     ///
     /// // Push to BER with indefinite length.
-    /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), (&bytes[..]).into());
-    /// ber.push(0xff);
+    /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), (&bytes[..9]).into());
+    /// ber.push(bytes[9]);
     ///
     /// assert_eq!(ber.id(), IdRef::octet_string());
     /// assert!(ber.length().is_indefinite());
     ///
-    /// assert_eq!(&ber.contents().as_ref()[..bytes.len()], &bytes[..]);
-    /// assert_eq!(ber.contents().as_ref().last().unwrap(), &0xff);
+    /// assert_eq!(ber.contents().as_ref(), &bytes[..]);
     /// ```
     pub fn push(&mut self, byte: u8) {
         self.extend_from_slice(&[byte]);
@@ -720,11 +717,10 @@ impl Ber {
     /// ```
     /// use bsn1::{Ber, IdRef, Length};
     ///
-    /// // Create a DER of '0..=255' as Octet String.
     /// let bytes: Vec<u8> = (0..=255).collect();
-    /// let mut ber = Ber::from(&bytes[..]);
     ///
     /// // Truncate BER with definite length.
+    /// let mut ber = Ber::from(&bytes[..]);
     /// ber.truncate(100);
     ///
     /// assert_eq!(ber.id(), IdRef::octet_string());

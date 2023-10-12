@@ -89,16 +89,23 @@ impl BerRef {
     /// let ber = Ber::from(8_u8);
     /// let mut serialized = Vec::from(ber.as_ref() as &[u8]);
     ///
-    /// // Deserializes `ber`.
-    /// let deserialized = BerRef::parse(&mut &serialized[..]).unwrap();
-    /// assert_eq!(ber, deserialized);
+    /// // Deserializes
+    /// {
+    ///     let mut serialized: &[u8] = &serialized[..];
+    ///     let deserialized = BerRef::parse(&mut serialized).unwrap();
+    ///     assert_eq!(ber, deserialized);
+    ///     assert_eq!(serialized.len(), 0);
+    /// }
     ///
     /// // Extra octets at the end does not affect the result.
     /// serialized.push(0x00);
     /// serialized.push(0xff);
-    ///
-    /// let deserialized = BerRef::parse(&mut &serialized[..]).unwrap();
-    /// assert_eq!(ber, deserialized);
+    /// {
+    ///     let mut serialized: &[u8] = &serialized[..];
+    ///     let deserialized = BerRef::parse(&mut serialized).unwrap();
+    ///     assert_eq!(ber, deserialized);
+    ///     assert_eq!(serialized, &[0x00, 0xff]);
+    /// }
     /// ```
     pub fn parse<'a>(bytes: &mut &'a [u8]) -> Result<&'a Self, Error> {
         let init_bytes = *bytes;
@@ -246,7 +253,7 @@ impl BerRef {
     ///
     /// assert_eq!(ber, deserialized);
     ///
-    /// *deserialized.mut_contents().as_mut().last_mut().unwrap() += 1;
+    /// deserialized.mut_contents()[0] += 1;
     /// assert_ne!(ber, deserialized);
     /// ```
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {

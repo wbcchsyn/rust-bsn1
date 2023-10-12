@@ -292,7 +292,7 @@ impl Der {
     /// // We can access to the inner slice of `serialized`.
     /// // We can use `DerRef::parse` instead of this function.
     /// // (`DerRef::parse` is more efficient than this function.)
-    /// let deserialized = DerRef::parse(&mut &serialized[..]).map(ToOwned::to_owned).unwrap();
+    /// let deserialized: Der = DerRef::parse(&mut &serialized[..]).unwrap().into();
     /// assert_eq!(der, deserialized);
     /// ```
     pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
@@ -515,14 +515,12 @@ impl Der {
     /// use bsn1::{Der, IdRef, Length};
     ///
     /// let bytes: Vec<u8> = (0..10).collect();
-    /// let mut der = Der::from(&bytes[..]);
-    /// der.push(0xff);
+    /// let mut der = Der::from(&bytes[..9]);
+    /// der.push(bytes[9]);
     ///
     /// assert_eq!(der.id(), IdRef::octet_string());
-    /// assert_eq!(der.length(), Length::Definite(bytes.len() + 1));
-    ///
-    /// assert_eq!(&der.contents().as_ref()[..bytes.len()], &bytes[..]);
-    /// assert_eq!(der.contents().as_ref().last().unwrap(), &0xff);
+    /// assert_eq!(der.length(), Length::Definite(bytes.len()));
+    /// assert_eq!(der.contents().as_ref(), &bytes[..]);
     /// ```
     pub fn push(&mut self, byte: u8) {
         self.extend_from_slice(&[byte]);
