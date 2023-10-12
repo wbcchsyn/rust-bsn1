@@ -249,7 +249,7 @@ impl Length {
     /// let length = Length::Definite(12);
     /// assert_eq!(length.is_definite(), true);
     /// ```
-    pub fn is_definite(self) -> bool {
+    pub const fn is_definite(self) -> bool {
         match self {
             Self::Indefinite => false,
             _ => true,
