@@ -29,3 +29,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#[repr(C)]
+pub struct Buffer {
+    data_: *mut u8,
+    cap_: usize,
+    len_: usize,
+}
