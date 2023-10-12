@@ -328,13 +328,13 @@ impl ContentsRef {
     /// let false_contents = <&ContentsRef>::from(false);
     /// assert_eq!(Ok(false), false_contents.to_bool_der());
     /// ```
-    pub fn to_bool_der(&self) -> Result<bool, Error> {
+    pub const fn to_bool_der(&self) -> Result<bool, Error> {
         if self.is_empty() {
             Err(Error::UnTerminatedBytes)
         } else if 1 < self.len() {
             Err(Error::InvalidContents)
         } else {
-            match self[0] {
+            match self.bytes[0] {
                 0x00 => Ok(false),
                 0xff => Ok(true),
                 _ => Err(Error::InvalidContents),
