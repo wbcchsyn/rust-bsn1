@@ -223,6 +223,24 @@ mod tests {
             assert_eq!(0, buffer.len());
             assert_eq!(MIN_CAP.max(i), buffer.capacity());
         }
+
+        for i in 0..40 {
+            let v = vec![1];
+            let mut buffer = Buffer::from(&v as &[u8]);
+
+            buffer.reserve(i);
+            assert_eq!(&v, buffer.as_slice());
+            assert_eq!(MIN_CAP.max(i + v.len()), buffer.capacity());
+        }
+
+        for i in 0..40 {
+            let v = Vec::from_iter(0..200);
+            let mut buffer = Buffer::from(&v as &[u8]);
+
+            buffer.reserve(i);
+            assert_eq!(&v, buffer.as_slice());
+            assert_eq!(MIN_CAP.max(i + v.len()), buffer.capacity());
+        }
     }
 
     #[test]
