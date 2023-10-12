@@ -41,6 +41,14 @@ pub struct Buffer {
 }
 
 impl Buffer {
+    pub fn len(&self) -> usize {
+        if self.is_stack() {
+            self.len_ >> (usize::BITS - u8::BITS)
+        } else {
+            self.len_ & LEN_MASK
+        }
+    }
+
     fn is_stack(&self) -> bool {
         self.len_ & HEAP_FLAG == 0
     }
