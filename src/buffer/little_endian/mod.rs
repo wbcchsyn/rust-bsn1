@@ -67,6 +67,12 @@ impl From<&[u8]> for Buffer {
     }
 }
 
+impl<const N: usize> From<&[u8; N]> for Buffer {
+    fn from(val: &[u8; N]) -> Self {
+        Self::from(&val[..])
+    }
+}
+
 impl Buffer {
     pub const fn new() -> Self {
         Self {
