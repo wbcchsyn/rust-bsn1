@@ -110,6 +110,10 @@ impl Buffer {
     fn is_stack(&self) -> bool {
         self.len_ & HEAP_FLAG == 0
     }
+
+    pub fn as_slice(&self) -> &[u8] {
+        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
+    }
 }
 
 #[cfg(test)]
