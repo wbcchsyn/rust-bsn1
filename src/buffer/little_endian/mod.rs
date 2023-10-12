@@ -314,4 +314,16 @@ impl Buffer {
     pub fn as_mut_slice(&mut self) -> &mut [u8] {
         unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
     }
+
+    pub fn into_vec(self) -> Vec<u8> {
+        if self.is_stack() {
+            Vec::from(self.as_slice())
+        } else {
+            unsafe {
+                let vec = Vec::from_raw_parts(self.data_, self.len(), self.cap_);
+                std::mem::forget(self);
+                vec
+            }
+        }
+    }
 }
