@@ -171,8 +171,8 @@ impl ContentsRef {
     /// let contents = <&ContentsRef>::from(bytes);
     /// assert_eq!(contents.is_empty(), false);
     /// ```    
-    pub fn is_empty(&self) -> bool {
-        self.as_ref().is_empty()
+    pub const fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     /// Parses `self` as the ASN.1 contents of integer.
