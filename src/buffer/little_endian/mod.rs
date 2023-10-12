@@ -34,7 +34,7 @@ use std::alloc::{self, Layout};
 use std::borrow::Borrow;
 use std::fmt;
 use std::hash::{Hash, Hasher};
-use std::ops::{Deref, DerefMut, Index};
+use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 const HEAP_FLAG: usize = 1 << (usize::BITS - 1);
 const LEN_MASK: usize = !HEAP_FLAG;
@@ -149,6 +149,12 @@ impl Index<usize> for Buffer {
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.as_slice()[index]
+    }
+}
+
+impl IndexMut<usize> for Buffer {
+    fn index_mut(&mut self, i: usize) -> &mut u8 {
+        &mut self.as_mut_slice()[i]
     }
 }
 
