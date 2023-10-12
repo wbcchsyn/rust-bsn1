@@ -30,9 +30,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+const HEAP_FLAG: usize = 1 << (usize::BITS - 1);
+const LEN_MASK: usize = !HEAP_FLAG;
+
 #[repr(C)]
 pub struct Buffer {
     data_: *mut u8,
     cap_: usize,
     len_: usize,
+}
+
+impl Buffer {
+    fn is_stack(&self) -> bool {
+        self.len_ & HEAP_FLAG == 0
+    }
 }
