@@ -1240,7 +1240,7 @@ impl IdRef {
     /// let id = Id::new(ClassTag::Universal, PCTag::Constructed, 0_u8.into());
     /// assert_eq!(true, id.is_constructed());
     /// ```
-    pub fn is_constructed(&self) -> bool {
+    pub const fn is_constructed(&self) -> bool {
         let first = self.bytes[0];
         first & PC_MASK == PCTag::Constructed as u8
     }
