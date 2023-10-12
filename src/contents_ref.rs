@@ -152,8 +152,8 @@ impl ContentsRef {
     ///
     /// assert_eq!(contents.len(), bytes.len());
     /// ```    
-    pub fn len(&self) -> usize {
-        self.as_ref().len()
+    pub const fn len(&self) -> usize {
+        self.bytes.len()
     }
 
     /// Returns `true` if the inner slice is empty, or `false`.
