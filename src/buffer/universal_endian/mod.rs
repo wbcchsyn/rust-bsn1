@@ -175,7 +175,7 @@ impl Clone for Buffer {
 impl From<&[u8]> for Buffer {
     fn from(vals: &[u8]) -> Self {
         let mut ret = Self::with_capacity(vals.len());
-        ret.extend_from_slice(vals);
+        unsafe { ret.extend_from_slice(vals) };
         ret
     }
 }
@@ -208,7 +208,8 @@ impl From<Vec<u8>> for Buffer {
 
 impl Write for Buffer {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        self.extend_from_slice(buf);
+        self.reserve(buf.len());
+        unsafe { self.extend_from_slice(buf) };
         Ok(buf.len())
     }
 
@@ -329,13 +330,13 @@ impl Buffer {
         self.as_mut_bytes()[old_len] = v;
     }
 
-    pub fn extend_from_slice(&mut self, vals: &[u8]) {
-        self.reserve(vals.len());
-        unsafe {
-            let ptr = self.as_mut_ptr().add(self.len());
-            ptr.copy_from_nonoverlapping(vals.as_ptr(), vals.len());
-            self.set_len(self.len() + vals.len());
-        }
+    /// # Safety
+    ///
+    /// The behaviour is undefined if the length will exceeds the capacity.
+    pub unsafe fn extend_from_slice(&mut self, vals: &[u8]) {
+        let ptr = self.as_mut_ptr().add(self.len());
+        ptr.copy_from_nonoverlapping(vals.as_ptr(), vals.len());
+        self.set_len(self.len() + vals.len());
     }
 
     pub fn len(&self) -> usize {
@@ -501,7 +502,8 @@ mod buffer_tests {
 
         for i in 0..40 {
             let vals = [i; 10];
-            buffer.extend_from_slice(&vals);
+            buffer.reserve(10);
+            unsafe { buffer.extend_from_slice(&vals) };
             vec.extend_from_slice(&vals);
 
             assert_eq!(&vec, buffer.as_bytes());

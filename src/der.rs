@@ -423,9 +423,11 @@ impl Der {
         let total_len = id.len() + length_bytes.len() + length;
 
         let mut buffer = Buffer::with_capacity(total_len);
-        buffer.extend_from_slice(id.as_ref());
-        buffer.extend_from_slice(&length_bytes);
-        contents.for_each(|c| buffer.extend_from_slice(c.as_ref()));
+        unsafe {
+            buffer.extend_from_slice(id.as_ref());
+            buffer.extend_from_slice(&length_bytes);
+            contents.for_each(|c| buffer.extend_from_slice(c.as_ref()));
+        }
 
         Self { buffer }
     }
