@@ -167,6 +167,8 @@ where
     }
 }
 
+impl Eq for Buffer {}
+
 impl std::io::Write for Buffer {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         self.reserve(buf.len());
