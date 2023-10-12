@@ -1,1 +1,0 @@
-window.ALL_CRATES = ["bsn1","num","num_bigint","num_complex","num_integer","num_iter","num_rational","num_traits"];
