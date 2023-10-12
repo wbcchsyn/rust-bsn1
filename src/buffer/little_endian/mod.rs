@@ -148,7 +148,7 @@ impl Buffer {
         self.set_len(self.len() + vals.len());
     }
 
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         if self.is_stack() {
             self.len_ >> (usize::BITS - u8::BITS)
         } else {
@@ -222,7 +222,7 @@ impl Buffer {
         ptr as *mut u8
     }
 
-    fn is_stack(&self) -> bool {
+    const fn is_stack(&self) -> bool {
         self.len_ & HEAP_FLAG == 0
     }
 

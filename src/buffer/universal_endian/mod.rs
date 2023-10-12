@@ -258,7 +258,7 @@ impl Buffer {
         self.set_len(self.len() + vals.len());
     }
 
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.len_ & LEN_MASK
     }
 
@@ -316,7 +316,7 @@ impl Buffer {
         }
     }
 
-    fn is_stack(&self) -> bool {
+    const fn is_stack(&self) -> bool {
         self.len_ & HEAP_FLAG == 0
     }
 
