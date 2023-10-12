@@ -43,6 +43,9 @@ pub struct Buffer {
     len_: usize,
 }
 
+unsafe impl Send for Buffer {}
+unsafe impl Sync for Buffer {}
+
 impl Buffer {
     pub const fn new() -> Self {
         Self {
