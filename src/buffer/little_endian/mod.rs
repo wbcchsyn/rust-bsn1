@@ -158,6 +158,15 @@ impl IndexMut<usize> for Buffer {
     }
 }
 
+impl<T> PartialEq<T> for Buffer
+where
+    T: Borrow<[u8]>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.as_slice() == other.borrow()
+    }
+}
+
 impl std::io::Write for Buffer {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         self.reserve(buf.len());
