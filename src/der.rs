@@ -435,7 +435,7 @@ impl Der {
 
 impl AsRef<[u8]> for Der {
     fn as_ref(&self) -> &[u8] {
-        self.buffer.as_bytes()
+        self.buffer.as_slice()
     }
 }
 
@@ -461,7 +461,7 @@ impl Deref for Der {
     type Target = DerRef;
 
     fn deref(&self) -> &Self::Target {
-        unsafe { DerRef::from_bytes_unchecked(self.buffer.as_bytes()) }
+        unsafe { DerRef::from_bytes_unchecked(self.buffer.as_slice()) }
     }
 }
 

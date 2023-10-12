@@ -168,7 +168,7 @@ impl Drop for Buffer {
 
 impl Clone for Buffer {
     fn clone(&self) -> Self {
-        Self::from(self.as_bytes())
+        Self::from(self.as_slice())
     }
 }
 
@@ -282,7 +282,7 @@ impl Hash for Buffer {
 impl Index<usize> for Buffer {
     type Output = u8;
     fn index(&self, i: usize) -> &u8 {
-        &self.as_bytes()[i]
+        &self.as_slice()[i]
     }
 }
 
@@ -403,7 +403,7 @@ impl Buffer {
 
     pub fn into_vec(mut self) -> Vec<u8> {
         if self.is_stack() {
-            Vec::from(self.as_bytes())
+            Vec::from(self.as_slice())
         } else {
             unsafe {
                 let ret = Vec::from_raw_parts(self.as_mut_ptr(), self.len(), self.capacity());
@@ -413,7 +413,7 @@ impl Buffer {
         }
     }
 
-    pub fn as_bytes(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &[u8] {
         self
     }
 
@@ -460,7 +460,7 @@ mod buffer_tests {
             let mut buffer = Buffer::from(&v as &[u8]);
 
             buffer.reserve(i);
-            assert_eq!(&v, buffer.as_bytes());
+            assert_eq!(&v, buffer.as_slice());
             assert_eq!(MIN_CAP.max(i + v.len()), buffer.capacity());
         }
 
@@ -469,7 +469,7 @@ mod buffer_tests {
             let mut buffer = Buffer::from(&v as &[u8]);
 
             buffer.reserve(i);
-            assert_eq!(&v, buffer.as_bytes());
+            assert_eq!(&v, buffer.as_slice());
             assert_eq!(MIN_CAP.max(i + v.len()), buffer.capacity());
         }
     }
@@ -481,7 +481,7 @@ mod buffer_tests {
             let mut buffer = Buffer::new();
 
             v.iter().for_each(|&c| unsafe { buffer.push(c) });
-            assert_eq!(&v, buffer.as_bytes());
+            assert_eq!(&v, buffer.as_slice());
             assert_eq!(MIN_CAP, buffer.capacity());
         }
 
@@ -490,7 +490,7 @@ mod buffer_tests {
             let mut buffer = Buffer::with_capacity(v.len());
 
             v.iter().for_each(|&c| unsafe { buffer.push(c) });
-            assert_eq!(&v, buffer.as_bytes());
+            assert_eq!(&v, buffer.as_slice());
             assert_eq!(MIN_CAP.max(v.len()), buffer.capacity());
         }
     }
@@ -506,7 +506,7 @@ mod buffer_tests {
             unsafe { buffer.extend_from_slice(&vals) };
             vec.extend_from_slice(&vals);
 
-            assert_eq!(&vec, buffer.as_bytes());
+            assert_eq!(&vec, buffer.as_slice());
         }
     }
 
@@ -537,7 +537,7 @@ mod buffer_tests {
             let cap = vals.capacity();
             let buffer = Buffer::from(vals);
 
-            assert_eq!(Vec::from_iter(0..i), buffer.as_bytes());
+            assert_eq!(Vec::from_iter(0..i), buffer.as_slice());
             assert_eq!(cap, buffer.capacity());
         }
     }
