@@ -143,6 +143,7 @@ impl Drop for BufferWithoutLength {
 
 const HEAP_FLAG: usize = 1 << (usize::BITS - 1);
 const LEN_MASK: usize = !HEAP_FLAG;
+const INIT_CAPACITY: usize = StackBuffer::capacity();
 
 pub struct Buffer {
     len_: usize,
@@ -345,7 +346,7 @@ impl Buffer {
 
     pub fn capacity(&self) -> usize {
         if self.is_stack() {
-            StackBuffer::capacity()
+            INIT_CAPACITY
         } else {
             unsafe { (&*self.buffer_.heap).capacity() }
         }
@@ -427,13 +428,11 @@ mod buffer_tests {
     use super::*;
     use std::iter::FromIterator;
 
-    const MIN_CAP: usize = StackBuffer::capacity();
-
     #[test]
     fn new() {
         let buffer = Buffer::new();
         assert_eq!(0, buffer.len());
-        assert_eq!(MIN_CAP, buffer.capacity());
+        assert_eq!(INIT_CAPACITY, buffer.capacity());
     }
 
     #[test]
@@ -441,7 +440,7 @@ mod buffer_tests {
         for i in 0..100 {
             let buffer = Buffer::with_capacity(i);
             assert_eq!(0, buffer.len());
-            assert_eq!(MIN_CAP.max(i), buffer.capacity());
+            assert_eq!(INIT_CAPACITY.max(i), buffer.capacity());
         }
     }
 
@@ -452,7 +451,7 @@ mod buffer_tests {
             buffer.reserve(i);
 
             assert_eq!(0, buffer.len());
-            assert_eq!(MIN_CAP.max(i), buffer.capacity());
+            assert_eq!(INIT_CAPACITY.max(i), buffer.capacity());
         }
 
         for i in 0..40 {
@@ -461,7 +460,7 @@ mod buffer_tests {
 
             buffer.reserve(i);
             assert_eq!(&v, buffer.as_slice());
-            assert_eq!(MIN_CAP.max(i + v.len()), buffer.capacity());
+            assert_eq!(INIT_CAPACITY.max(i + v.len()), buffer.capacity());
         }
 
         for i in 0..40 {
@@ -470,19 +469,19 @@ mod buffer_tests {
 
             buffer.reserve(i);
             assert_eq!(&v, buffer.as_slice());
-            assert_eq!(MIN_CAP.max(i + v.len()), buffer.capacity());
+            assert_eq!(INIT_CAPACITY.max(i + v.len()), buffer.capacity());
         }
     }
 
     #[test]
     fn push() {
-        for i in 0..MIN_CAP {
+        for i in 0..INIT_CAPACITY {
             let v = Vec::from_iter(0..i as u8);
             let mut buffer = Buffer::new();
 
             v.iter().for_each(|&c| unsafe { buffer.push(c) });
             assert_eq!(&v, buffer.as_slice());
-            assert_eq!(MIN_CAP, buffer.capacity());
+            assert_eq!(INIT_CAPACITY, buffer.capacity());
         }
 
         for i in 0..100 {
@@ -491,7 +490,7 @@ mod buffer_tests {
 
             v.iter().for_each(|&c| unsafe { buffer.push(c) });
             assert_eq!(&v, buffer.as_slice());
-            assert_eq!(MIN_CAP.max(v.len()), buffer.capacity());
+            assert_eq!(INIT_CAPACITY.max(v.len()), buffer.capacity());
         }
     }
 
@@ -515,7 +514,7 @@ mod buffer_tests {
         let vals = Vec::new();
         let buffer = Buffer::from(vals);
         assert_eq!(buffer.len(), 0);
-        assert_eq!(buffer.capacity(), MIN_CAP);
+        assert_eq!(buffer.capacity(), INIT_CAPACITY);
     }
 
     #[test]
