@@ -31,6 +31,7 @@
 // limitations under the License.
 
 use std::alloc::{self, Layout};
+use std::fmt;
 
 const HEAP_FLAG: usize = 1 << (usize::BITS - 1);
 const LEN_MASK: usize = !HEAP_FLAG;
@@ -104,6 +105,13 @@ impl Buffer {
         let mut buffer = Self::new();
         buffer.reserve(cap);
         buffer
+    }
+}
+
+impl fmt::Debug for Buffer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let contents: &[u8] = self.as_slice();
+        f.debug_tuple("Buffer").field(&contents).finish()
     }
 }
 
