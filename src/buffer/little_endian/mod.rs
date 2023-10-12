@@ -83,6 +83,40 @@ impl Buffer {
         }
     }
 
+    pub fn reserve(&mut self, additional: usize) {
+        let new_cap = self.len() + additional;
+        if new_cap <= self.capacity() {
+            return;
+        }
+
+        if self.is_stack() {
+            unsafe {
+                let layout = Layout::array::<u8>(new_cap).unwrap();
+                let ptr = alloc::alloc(layout);
+                if ptr.is_null() {
+                    alloc::handle_alloc_error(layout);
+                }
+
+                ptr.copy_from_nonoverlapping(self.as_ptr(), self.len());
+                self.data_ = ptr;
+                self.cap_ = new_cap;
+                self.len_ = self.len() | HEAP_FLAG;
+            }
+        } else {
+            unsafe {
+                let layout = Layout::array::<u8>(self.capacity()).unwrap();
+                let ptr = alloc::realloc(self.data_, layout, new_cap);
+                if ptr.is_null() {
+                    let layout = Layout::array::<u8>(new_cap).unwrap();
+                    alloc::handle_alloc_error(layout);
+                }
+
+                self.data_ = ptr;
+                self.cap_ = new_cap;
+            }
+        }
+    }
+
     pub unsafe fn set_len(&mut self, len: usize) {
         if self.is_stack() {
             const MASK: usize = (u8::MAX as usize) << (usize::BITS - u8::BITS);
@@ -131,5 +165,16 @@ mod tests {
         let buffer = Buffer::new();
         assert_eq!(0, buffer.len());
         assert_eq!(MIN_CAP, buffer.capacity());
+    }
+
+    #[test]
+    fn reserve() {
+        for i in 0..40 {
+            let mut buffer = Buffer::new();
+            buffer.reserve(i);
+
+            assert_eq!(0, buffer.len());
+            assert_eq!(MIN_CAP.max(i), buffer.capacity());
+        }
     }
 }
