@@ -34,7 +34,7 @@ use std::alloc::{self, Layout};
 use std::borrow::Borrow;
 use std::fmt;
 use std::hash::{Hash, Hasher};
-use std::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut, Index};
 
 const HEAP_FLAG: usize = 1 << (usize::BITS - 1);
 const LEN_MASK: usize = !HEAP_FLAG;
@@ -141,6 +141,14 @@ impl DerefMut for Buffer {
 impl Hash for Buffer {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_slice().hash(state);
+    }
+}
+
+impl Index<usize> for Buffer {
+    type Output = u8;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.as_slice()[index]
     }
 }
 
