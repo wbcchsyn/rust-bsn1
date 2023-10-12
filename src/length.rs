@@ -229,7 +229,7 @@ impl Length {
     /// let length = Length::Definite(12);
     /// assert_eq!(length.is_indefinite(), false);
     /// ```
-    pub fn is_indefinite(self) -> bool {
+    pub const fn is_indefinite(self) -> bool {
         match self {
             Self::Indefinite => true,
             _ => false,
