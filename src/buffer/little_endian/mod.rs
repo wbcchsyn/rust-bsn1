@@ -114,6 +114,10 @@ impl Buffer {
     pub fn as_slice(&self) -> &[u8] {
         unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
     }
+
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
+    }
 }
 
 #[cfg(test)]
