@@ -1154,7 +1154,7 @@ impl IdRef {
     /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 0_u8.into());
     /// assert_eq!(true, id.is_application());
     /// ```
-    pub fn is_application(&self) -> bool {
+    pub const fn is_application(&self) -> bool {
         let first = self.bytes[0];
         first & CLASS_MASK == ClassTag::Application as u8
     }
