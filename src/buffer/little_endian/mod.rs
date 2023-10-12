@@ -33,6 +33,7 @@
 use std::alloc::{self, Layout};
 use std::borrow::Borrow;
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
 
 const HEAP_FLAG: usize = 1 << (usize::BITS - 1);
@@ -134,6 +135,12 @@ impl Deref for Buffer {
 impl DerefMut for Buffer {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.as_mut_slice()
+    }
+}
+
+impl Hash for Buffer {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_slice().hash(state);
     }
 }
 
