@@ -73,6 +73,17 @@ impl Drop for Buffer {
 }
 
 impl Buffer {
+    /// # Safety
+    ///
+    /// The behaviour is undefined if the length will exceeds the capacity.
+    pub unsafe fn push(&mut self, v: u8) {
+        let old_len = self.len();
+
+        debug_assert!(old_len < self.capacity());
+        self.set_len(old_len + 1);
+        self.as_mut_slice()[old_len] = v;
+    }
+
     pub fn len(&self) -> usize {
         if self.is_stack() {
             self.len_ >> (usize::BITS - u8::BITS)
@@ -163,6 +174,7 @@ impl Buffer {
 #[cfg(test)]
 mod tests {
     use super::Buffer;
+    use std::iter::FromIterator;
 
     const MIN_CAP: usize = std::mem::size_of::<Buffer>() - std::mem::size_of::<u8>();
 
@@ -190,6 +202,27 @@ mod tests {
 
             assert_eq!(0, buffer.len());
             assert_eq!(MIN_CAP.max(i), buffer.capacity());
+        }
+    }
+
+    #[test]
+    fn push() {
+        for i in 0..MIN_CAP {
+            let v = Vec::from_iter(0..i as u8);
+            let mut buffer = Buffer::new();
+
+            v.iter().for_each(|&c| unsafe { buffer.push(c) });
+            assert_eq!(&v, buffer.as_slice());
+            assert_eq!(MIN_CAP, buffer.capacity());
+        }
+
+        for i in 0..100 {
+            let v = Vec::from_iter(0..i);
+            let mut buffer = Buffer::with_capacity(v.len());
+
+            v.iter().for_each(|&c| unsafe { buffer.push(c) });
+            assert_eq!(&v, buffer.as_slice());
+            assert_eq!(MIN_CAP.max(v.len()), buffer.capacity());
         }
     }
 }
