@@ -27,6 +27,14 @@ check_license() {
 }
 
 
+check_build_on_big_endian() {
+    # Make sure to install podman!
+    rustup target add mips-unknown-linux-musl
+    cargo install cross
+    cross build --target mips-unknown-linux-musl
+    cross test --target mips-unknown-linux-musl --no-run
+}
+
 (
     cd `git rev-parse --show-toplevel`
 
@@ -37,6 +45,7 @@ check_license() {
 
     cargo fmt -- --check || exit "$?"
     cargo test || exit "$?"
+    check_build_on_big_endian || exit "$?"
 
     exit 0
 )
