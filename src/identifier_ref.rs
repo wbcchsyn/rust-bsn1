@@ -1224,7 +1224,7 @@ impl IdRef {
     /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8.into());
     /// assert_eq!(true, id.is_primitive());
     /// ```
-    pub fn is_primitive(&self) -> bool {
+    pub const fn is_primitive(&self) -> bool {
         let first = self.bytes[0];
         first & PC_MASK == PCTag::Primitive as u8
     }
