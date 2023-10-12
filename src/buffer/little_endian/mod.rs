@@ -57,6 +57,15 @@ impl Buffer {
         }
     }
 
+    pub fn as_ptr(&self) -> *const u8 {
+        if self.is_stack() {
+            let ptr = self as *const Self;
+            ptr as *const u8
+        } else {
+            self.data_
+        }
+    }
+
     fn is_stack(&self) -> bool {
         self.len_ & HEAP_FLAG == 0
     }
