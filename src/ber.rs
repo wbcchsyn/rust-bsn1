@@ -414,7 +414,7 @@ impl Ber {
                 let current_len = writeable.len();
                 unsafe { writeable.set_len(current_len + length) };
 
-                let buffer = &mut writeable.as_mut_bytes()[current_len..];
+                let buffer = &mut writeable.as_mut_slice()[current_len..];
                 readable.read_exact(buffer).map_err(Error::from)?;
 
                 let read = &(writeable.as_slice()[init_len..]);
@@ -558,7 +558,7 @@ impl Deref for Ber {
 
 impl DerefMut for Ber {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { BerRef::from_mut_bytes_unchecked(self.buffer.as_mut_bytes()) }
+        unsafe { BerRef::from_mut_bytes_unchecked(self.buffer.as_mut_slice()) }
     }
 }
 

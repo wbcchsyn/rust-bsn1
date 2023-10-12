@@ -307,7 +307,7 @@ impl Der {
         writeable.reserve(contents_length);
         unsafe { writeable.set_len(total_length) };
 
-        let buffer = &mut writeable.as_mut_bytes()[id_length_len..];
+        let buffer = &mut writeable.as_mut_slice()[id_length_len..];
         match readable.read(buffer) {
             Err(e) => Err(e.into()),
             Ok(read) => {
@@ -467,7 +467,7 @@ impl Deref for Der {
 
 impl DerefMut for Der {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { DerRef::from_mut_bytes_unchecked(self.buffer.as_mut_bytes()) }
+        unsafe { DerRef::from_mut_bytes_unchecked(self.buffer.as_mut_slice()) }
     }
 }
 
