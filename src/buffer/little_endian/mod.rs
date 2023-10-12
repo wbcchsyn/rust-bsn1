@@ -46,6 +46,19 @@ pub struct Buffer {
 unsafe impl Send for Buffer {}
 unsafe impl Sync for Buffer {}
 
+impl Drop for Buffer {
+    fn drop(&mut self) {
+        if self.is_stack() {
+            return;
+        }
+
+        unsafe {
+            let layout = Layout::from_size_align_unchecked(self.cap_, ALIGN);
+            alloc::dealloc(self.data_, layout);
+        }
+    }
+}
+
 impl Buffer {
     pub const fn new() -> Self {
         Self {
@@ -59,19 +72,6 @@ impl Buffer {
         let mut buffer = Self::new();
         buffer.reserve(cap);
         buffer
-    }
-}
-
-impl Drop for Buffer {
-    fn drop(&mut self) {
-        if self.is_stack() {
-            return;
-        }
-
-        unsafe {
-            let layout = Layout::from_size_align_unchecked(self.cap_, ALIGN);
-            alloc::dealloc(self.data_, layout);
-        }
     }
 }
 
