@@ -50,14 +50,6 @@ pub struct Id {
     buffer: Buffer,
 }
 
-impl From<&'_ IdRef> for Id {
-    fn from(idref: &'_ IdRef) -> Self {
-        Self {
-            buffer: Buffer::from(idref.as_ref()),
-        }
-    }
-}
-
 impl Id {
     /// Creates a new instance from `class` , `pc` , and `number`.
     ///
@@ -187,6 +179,63 @@ impl Id {
             buffer: Buffer::from(bytes),
         }
     }
+
+    /// Update the number of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{ClassTag, Id, PCTag};
+    ///
+    /// let mut id = Id::new(ClassTag::Private, PCTag::Primitive, 13_u8.into());
+    /// assert_eq!(id.number().unwrap(), 13_u8.into());
+    ///
+    /// id.set_number(34_u8.into());
+    /// assert_eq!(id.number().unwrap(), 34_u8.into());
+    /// ```
+    pub fn set_number(&mut self, num: IdNumber) {
+        let num = num.get();
+
+        if num <= MAX_SHORT as u128 {
+            let o = self.class() as u8 + self.pc() as u8 + num as u8;
+            self.buffer[0] = o;
+            unsafe { self.buffer.set_len(1) };
+        } else {
+            let long_flag = self.class() as u8 + self.pc() as u8 + LONG_FLAG;
+
+            const BITS_PER_BYTES: usize = 8;
+            const BITS_BUT_MORE_FLAG_PER_BYTES: usize = 7;
+            let number_bits_len =
+                mem::size_of_val(&num) * BITS_PER_BYTES - num.leading_zeros() as usize;
+            let number_bytes_len =
+                (number_bits_len + BITS_BUT_MORE_FLAG_PER_BYTES - 1) / BITS_BUT_MORE_FLAG_PER_BYTES;
+
+            let len = number_bytes_len + mem::size_of_val(&long_flag);
+            if self.buffer.len() < len {
+                self.buffer.reserve(len - self.buffer.len());
+            }
+            unsafe { self.buffer.set_len(len) };
+
+            self.buffer[0] = long_flag;
+
+            let mut n = num;
+            for i in (1..len).rev() {
+                let o = n as u8 | MORE_FLAG;
+                self.buffer[i] = o;
+                n >>= 7;
+            }
+            self.buffer[len - 1] &= !(MORE_FLAG);
+            debug_assert!(n == 0);
+        }
+    }
+}
+
+impl From<&'_ IdRef> for Id {
+    fn from(idref: &'_ IdRef) -> Self {
+        Self {
+            buffer: Buffer::from(idref.as_ref()),
+        }
+    }
 }
 
 impl AsRef<[u8]> for Id {
@@ -242,57 +291,6 @@ where
 {
     fn partial_cmp(&self, other: &T) -> Option<Ordering> {
         self.deref().partial_cmp(other.borrow())
-    }
-}
-
-impl Id {
-    /// Update the number of `self`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bsn1::{ClassTag, Id, PCTag};
-    ///
-    /// let mut id = Id::new(ClassTag::Private, PCTag::Primitive, 13_u8.into());
-    /// assert_eq!(id.number().unwrap(), 13_u8.into());
-    ///
-    /// id.set_number(34_u8.into());
-    /// assert_eq!(id.number().unwrap(), 34_u8.into());
-    /// ```
-    pub fn set_number(&mut self, num: IdNumber) {
-        let num = num.get();
-
-        if num <= MAX_SHORT as u128 {
-            let o = self.class() as u8 + self.pc() as u8 + num as u8;
-            self.buffer[0] = o;
-            unsafe { self.buffer.set_len(1) };
-        } else {
-            let long_flag = self.class() as u8 + self.pc() as u8 + LONG_FLAG;
-
-            const BITS_PER_BYTES: usize = 8;
-            const BITS_BUT_MORE_FLAG_PER_BYTES: usize = 7;
-            let number_bits_len =
-                mem::size_of_val(&num) * BITS_PER_BYTES - num.leading_zeros() as usize;
-            let number_bytes_len =
-                (number_bits_len + BITS_BUT_MORE_FLAG_PER_BYTES - 1) / BITS_BUT_MORE_FLAG_PER_BYTES;
-
-            let len = number_bytes_len + mem::size_of_val(&long_flag);
-            if self.buffer.len() < len {
-                self.buffer.reserve(len - self.buffer.len());
-            }
-            unsafe { self.buffer.set_len(len) };
-
-            self.buffer[0] = long_flag;
-
-            let mut n = num;
-            for i in (1..len).rev() {
-                let o = n as u8 | MORE_FLAG;
-                self.buffer[i] = o;
-                n >>= 7;
-            }
-            self.buffer[len - 1] &= !(MORE_FLAG);
-            debug_assert!(n == 0);
-        }
     }
 }
 

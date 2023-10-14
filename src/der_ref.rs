@@ -231,32 +231,6 @@ impl DerRef {
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         std::mem::transmute(bytes)
     }
-}
-
-impl AsRef<[u8]> for DerRef {
-    fn as_ref(&self) -> &[u8] {
-        &self.bytes
-    }
-}
-
-impl ToOwned for DerRef {
-    type Owned = Der;
-
-    fn to_owned(&self) -> Self::Owned {
-        unsafe { Der::from_bytes_unchecked(self.as_ref()) }
-    }
-}
-
-impl<T> PartialEq<T> for DerRef
-where
-    T: Borrow<DerRef>,
-{
-    fn eq(&self, other: &T) -> bool {
-        self == other.borrow()
-    }
-}
-
-impl DerRef {
     /// Returns a reference to the `IdRef` of `self`.
     ///
     /// # Examples
@@ -366,6 +340,29 @@ impl DerRef {
         let ptr = ret as *const ContentsRef;
         let ptr = ptr as *mut ContentsRef;
         unsafe { &mut *ptr }
+    }
+}
+
+impl AsRef<[u8]> for DerRef {
+    fn as_ref(&self) -> &[u8] {
+        &self.bytes
+    }
+}
+
+impl ToOwned for DerRef {
+    type Owned = Der;
+
+    fn to_owned(&self) -> Self::Owned {
+        unsafe { Der::from_bytes_unchecked(self.as_ref()) }
+    }
+}
+
+impl<T> PartialEq<T> for DerRef
+where
+    T: Borrow<DerRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self == other.borrow()
     }
 }
 

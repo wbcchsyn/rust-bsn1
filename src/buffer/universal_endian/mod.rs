@@ -211,33 +211,7 @@ impl Buffer {
             }
         }
     }
-}
 
-impl fmt::Debug for Buffer {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let contents: &[u8] = self.as_slice();
-        f.debug_tuple("Buffer").field(&contents).finish()
-    }
-}
-
-impl Borrow<[u8]> for Buffer {
-    fn borrow(&self) -> &[u8] {
-        self.as_slice()
-    }
-}
-
-impl<T> PartialEq<T> for Buffer
-where
-    T: Borrow<[u8]>,
-{
-    fn eq(&self, other: &T) -> bool {
-        self.as_slice() == other.borrow()
-    }
-}
-
-impl Eq for Buffer {}
-
-impl Buffer {
     /// # Safety
     ///
     /// The behaviour is undefined if the length will exceeds the capacity.
@@ -340,3 +314,27 @@ impl Buffer {
         unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
     }
 }
+
+impl fmt::Debug for Buffer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let contents: &[u8] = self.as_slice();
+        f.debug_tuple("Buffer").field(&contents).finish()
+    }
+}
+
+impl Borrow<[u8]> for Buffer {
+    fn borrow(&self) -> &[u8] {
+        self.as_slice()
+    }
+}
+
+impl<T> PartialEq<T> for Buffer
+where
+    T: Borrow<[u8]>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.as_slice() == other.borrow()
+    }
+}
+
+impl Eq for Buffer {}

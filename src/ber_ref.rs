@@ -53,12 +53,6 @@ pub struct BerRef {
     bytes: [u8],
 }
 
-impl<'a> From<&'a DerRef> for &'a BerRef {
-    fn from(der: &'a DerRef) -> Self {
-        unsafe { BerRef::from_bytes_unchecked(der.as_ref()) }
-    }
-}
-
 impl BerRef {
     /// Returns a reference to 'End-of-Contents'.
     pub const fn eoc() -> &'static Self {
@@ -259,32 +253,6 @@ impl BerRef {
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         mem::transmute(bytes)
     }
-}
-
-impl AsRef<[u8]> for BerRef {
-    fn as_ref(&self) -> &[u8] {
-        &self.bytes
-    }
-}
-
-impl ToOwned for BerRef {
-    type Owned = Ber;
-
-    fn to_owned(&self) -> Self::Owned {
-        unsafe { Ber::from_bytes_unchecked(self.as_ref()) }
-    }
-}
-
-impl<T> PartialEq<T> for BerRef
-where
-    T: Borrow<BerRef>,
-{
-    fn eq(&self, other: &T) -> bool {
-        self == other.borrow()
-    }
-}
-
-impl BerRef {
     /// Provides a reference to the [`IdRef`] of `self`.
     ///
     /// # Examples
@@ -400,6 +368,35 @@ impl BerRef {
             let ptr = ptr as *mut ContentsRef;
             &mut *ptr
         }
+    }
+}
+
+impl<'a> From<&'a DerRef> for &'a BerRef {
+    fn from(der: &'a DerRef) -> Self {
+        unsafe { BerRef::from_bytes_unchecked(der.as_ref()) }
+    }
+}
+
+impl AsRef<[u8]> for BerRef {
+    fn as_ref(&self) -> &[u8] {
+        &self.bytes
+    }
+}
+
+impl ToOwned for BerRef {
+    type Owned = Ber;
+
+    fn to_owned(&self) -> Self::Owned {
+        unsafe { Ber::from_bytes_unchecked(self.as_ref()) }
+    }
+}
+
+impl<T> PartialEq<T> for BerRef
+where
+    T: Borrow<BerRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self == other.borrow()
     }
 }
 

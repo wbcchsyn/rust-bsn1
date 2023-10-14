@@ -48,97 +48,6 @@ pub struct ContentsRef {
     bytes: [u8],
 }
 
-impl<'a> From<&'a [u8]> for &'a ContentsRef {
-    fn from(bytes: &'a [u8]) -> Self {
-        unsafe { mem::transmute(bytes) }
-    }
-}
-
-impl<'a, const N: usize> From<&'a [u8; N]> for &'a ContentsRef {
-    fn from(bytes: &'a [u8; N]) -> Self {
-        Self::from(&bytes[..])
-    }
-}
-
-impl<'a> From<&'a mut [u8]> for &'a mut ContentsRef {
-    fn from(bytes: &'a mut [u8]) -> Self {
-        unsafe { mem::transmute(bytes) }
-    }
-}
-
-impl<'a, const N: usize> From<&'a mut [u8; N]> for &'a mut ContentsRef {
-    fn from(bytes: &'a mut [u8; N]) -> Self {
-        Self::from(&mut bytes[..])
-    }
-}
-
-impl<'a> From<&'a str> for &'a ContentsRef {
-    fn from(s: &'a str) -> Self {
-        Self::from(s.as_bytes())
-    }
-}
-
-impl From<bool> for &'static ContentsRef {
-    /// The encoding rule of boolean is different between BER and DER.
-    /// The return value is valid both as BER and DER.
-    fn from(val: bool) -> Self {
-        if val {
-            Self::from(&[0xff])
-        } else {
-            Self::from(&[0x00])
-        }
-    }
-}
-
-impl AsRef<[u8]> for ContentsRef {
-    fn as_ref(&self) -> &[u8] {
-        &self.bytes
-    }
-}
-
-impl AsMut<[u8]> for ContentsRef {
-    fn as_mut(&mut self) -> &mut [u8] {
-        &mut self.bytes
-    }
-}
-
-impl<T> Index<T> for ContentsRef
-where
-    T: SliceIndex<[u8]>,
-{
-    type Output = T::Output;
-
-    fn index(&self, index: T) -> &Self::Output {
-        &self.as_ref()[index]
-    }
-}
-
-impl<T> IndexMut<T> for ContentsRef
-where
-    T: SliceIndex<[u8]>,
-{
-    fn index_mut(&mut self, index: T) -> &mut Self::Output {
-        &mut self.bytes[index]
-    }
-}
-
-impl<T> PartialEq<T> for ContentsRef
-where
-    T: Borrow<ContentsRef>,
-{
-    fn eq(&self, other: &T) -> bool {
-        self.as_ref() == other.borrow().as_ref()
-    }
-}
-
-impl ToOwned for ContentsRef {
-    type Owned = Contents;
-
-    fn to_owned(&self) -> Self::Owned {
-        Contents::from(self)
-    }
-}
-
 impl ContentsRef {
     /// Returns the byte count of the inner slice.
     ///
@@ -340,6 +249,97 @@ impl ContentsRef {
                 _ => Err(Error::InvalidContents),
             }
         }
+    }
+}
+
+impl<'a> From<&'a [u8]> for &'a ContentsRef {
+    fn from(bytes: &'a [u8]) -> Self {
+        unsafe { mem::transmute(bytes) }
+    }
+}
+
+impl<'a, const N: usize> From<&'a [u8; N]> for &'a ContentsRef {
+    fn from(bytes: &'a [u8; N]) -> Self {
+        Self::from(&bytes[..])
+    }
+}
+
+impl<'a> From<&'a mut [u8]> for &'a mut ContentsRef {
+    fn from(bytes: &'a mut [u8]) -> Self {
+        unsafe { mem::transmute(bytes) }
+    }
+}
+
+impl<'a, const N: usize> From<&'a mut [u8; N]> for &'a mut ContentsRef {
+    fn from(bytes: &'a mut [u8; N]) -> Self {
+        Self::from(&mut bytes[..])
+    }
+}
+
+impl<'a> From<&'a str> for &'a ContentsRef {
+    fn from(s: &'a str) -> Self {
+        Self::from(s.as_bytes())
+    }
+}
+
+impl From<bool> for &'static ContentsRef {
+    /// The encoding rule of boolean is different between BER and DER.
+    /// The return value is valid both as BER and DER.
+    fn from(val: bool) -> Self {
+        if val {
+            Self::from(&[0xff])
+        } else {
+            Self::from(&[0x00])
+        }
+    }
+}
+
+impl AsRef<[u8]> for ContentsRef {
+    fn as_ref(&self) -> &[u8] {
+        &self.bytes
+    }
+}
+
+impl AsMut<[u8]> for ContentsRef {
+    fn as_mut(&mut self) -> &mut [u8] {
+        &mut self.bytes
+    }
+}
+
+impl<T> Index<T> for ContentsRef
+where
+    T: SliceIndex<[u8]>,
+{
+    type Output = T::Output;
+
+    fn index(&self, index: T) -> &Self::Output {
+        &self.as_ref()[index]
+    }
+}
+
+impl<T> IndexMut<T> for ContentsRef
+where
+    T: SliceIndex<[u8]>,
+{
+    fn index_mut(&mut self, index: T) -> &mut Self::Output {
+        &mut self.bytes[index]
+    }
+}
+
+impl<T> PartialEq<T> for ContentsRef
+where
+    T: Borrow<ContentsRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.as_ref() == other.borrow().as_ref()
+    }
+}
+
+impl ToOwned for ContentsRef {
+    type Owned = Contents;
+
+    fn to_owned(&self) -> Self::Owned {
+        Contents::from(self)
     }
 }
 

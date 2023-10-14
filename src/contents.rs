@@ -46,6 +46,98 @@ pub struct Contents {
     buffer: Buffer,
 }
 
+impl Contents {
+    /// Serializes integer and creates a new instance.
+    fn from_integer<T>(val: T) -> Self
+    where
+        T: PrimInt,
+    {
+        if val < T::zero() {
+            Self::from_negative(val)
+        } else if val == T::zero() {
+            Self::from_zero()
+        } else {
+            Self::from_positive(val)
+        }
+    }
+
+    fn from_zero() -> Self {
+        let mut buffer = Buffer::new();
+        unsafe { buffer.push(0x00) };
+        Self { buffer }
+    }
+
+    fn from_positive<T>(val: T) -> Self
+    where
+        T: PrimInt,
+    {
+        debug_assert!(T::zero() < val);
+
+        let vals = [T::zero(), val.to_be()];
+        let (src, len) = unsafe {
+            let mut src = (&vals[1] as *const T) as *const u8;
+            let mut len = mem::size_of::<T>();
+
+            // This loop must be finished because 0 < val.
+            while *src == 0 {
+                src = src.add(1);
+                len -= 1;
+            }
+            if *src & 0x80 == 0x80 {
+                src = src.sub(1);
+                len += 1;
+            }
+
+            (src, len)
+        };
+
+        let mut buffer = Buffer::with_capacity(len);
+        let dst = buffer.as_mut_ptr();
+        unsafe {
+            buffer.set_len(len);
+            dst.copy_from_nonoverlapping(src, len);
+        }
+
+        Self { buffer }
+    }
+
+    fn from_negative<T>(val: T) -> Self
+    where
+        T: PrimInt,
+    {
+        debug_assert!(val < T::zero());
+
+        let val = val.to_be();
+
+        let (src, len) = unsafe {
+            let mut src = (&val as *const T) as *const u8;
+            let mut len = mem::size_of::<T>();
+
+            while 1 < len && *src == 0xff {
+                src = src.add(1);
+                len -= 1;
+            }
+
+            if *src & 0x80 == 0 {
+                src = src.sub(1);
+                len += 1;
+            }
+
+            (src, len)
+        };
+
+        let mut buffer = Buffer::with_capacity(len);
+        let dst = buffer.as_mut_ptr();
+
+        unsafe {
+            buffer.set_len(len);
+            dst.copy_from_nonoverlapping(src, len);
+        }
+
+        Self { buffer }
+    }
+}
+
 impl From<&'_ ContentsRef> for Contents {
     fn from(value: &'_ ContentsRef) -> Self {
         Self {
@@ -195,98 +287,6 @@ impl From<bool> for Contents {
         } else {
             Buffer::from(&[0x00])
         };
-        Self { buffer }
-    }
-}
-
-impl Contents {
-    /// Serializes integer and creates a new instance.
-    fn from_integer<T>(val: T) -> Self
-    where
-        T: PrimInt,
-    {
-        if val < T::zero() {
-            Self::from_negative(val)
-        } else if val == T::zero() {
-            Self::from_zero()
-        } else {
-            Self::from_positive(val)
-        }
-    }
-
-    fn from_zero() -> Self {
-        let mut buffer = Buffer::new();
-        unsafe { buffer.push(0x00) };
-        Self { buffer }
-    }
-
-    fn from_positive<T>(val: T) -> Self
-    where
-        T: PrimInt,
-    {
-        debug_assert!(T::zero() < val);
-
-        let vals = [T::zero(), val.to_be()];
-        let (src, len) = unsafe {
-            let mut src = (&vals[1] as *const T) as *const u8;
-            let mut len = mem::size_of::<T>();
-
-            // This loop must be finished because 0 < val.
-            while *src == 0 {
-                src = src.add(1);
-                len -= 1;
-            }
-            if *src & 0x80 == 0x80 {
-                src = src.sub(1);
-                len += 1;
-            }
-
-            (src, len)
-        };
-
-        let mut buffer = Buffer::with_capacity(len);
-        let dst = buffer.as_mut_ptr();
-        unsafe {
-            buffer.set_len(len);
-            dst.copy_from_nonoverlapping(src, len);
-        }
-
-        Self { buffer }
-    }
-
-    fn from_negative<T>(val: T) -> Self
-    where
-        T: PrimInt,
-    {
-        debug_assert!(val < T::zero());
-
-        let val = val.to_be();
-
-        let (src, len) = unsafe {
-            let mut src = (&val as *const T) as *const u8;
-            let mut len = mem::size_of::<T>();
-
-            while 1 < len && *src == 0xff {
-                src = src.add(1);
-                len -= 1;
-            }
-
-            if *src & 0x80 == 0 {
-                src = src.sub(1);
-                len += 1;
-            }
-
-            (src, len)
-        };
-
-        let mut buffer = Buffer::with_capacity(len);
-        let dst = buffer.as_mut_ptr();
-
-        unsafe {
-            buffer.set_len(len);
-            dst.copy_from_nonoverlapping(src, len);
-        }
-
         Self { buffer }
     }
 }
