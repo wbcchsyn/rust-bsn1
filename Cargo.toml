@@ -16,7 +16,7 @@ categories = ["encoding"]
 
 
 [workspace]
-members = ["bsn1_serde"]
+members = ["bsn1_serde", "bsn1_serde_macros"]
 
 [dependencies]
 num = "0.4.0"
