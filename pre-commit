@@ -30,13 +30,13 @@ check_license() {
 (
     cd `git rev-parse --show-toplevel`
 
-    for f in $(find src -type f -name '*.rs'); do
+    for f in $(find -type f -name '*.rs' ! -path '*/target/*'); do
         check_line_length "$f"
         check_license "$f"
     done
 
-    cargo fmt -- --check || exit "$?"
-    cargo test --lib || exit "$?"
+    cargo fmt --all --check -- || exit "$?"
+    cargo test --workspace --lib -- || exit "$?"
 
     exit 0
 )
