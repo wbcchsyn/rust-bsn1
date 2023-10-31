@@ -138,6 +138,13 @@ impl Contents {
     }
 }
 
+#[doc(hidden)]
+impl From<Buffer> for Contents {
+    fn from(buffer: Buffer) -> Self {
+        Self { buffer }
+    }
+}
+
 impl From<&'_ ContentsRef> for Contents {
     fn from(value: &'_ ContentsRef) -> Self {
         Self {
