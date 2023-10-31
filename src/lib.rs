@@ -49,7 +49,7 @@ mod misc;
 
 pub use ber::Ber;
 pub use ber_ref::BerRef;
-use buffer::Buffer;
+pub use buffer::Buffer;
 pub use contents::Contents;
 pub use contents_ref::ContentsRef;
 pub use der::Der;

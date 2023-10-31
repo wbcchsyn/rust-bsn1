@@ -52,6 +52,7 @@ use std::hash::{Hash, Hasher};
 use std::io::Write;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 
+#[doc(hidden)]
 #[derive(Clone)]
 pub struct Buffer(Inner);
 
