@@ -580,6 +580,13 @@ impl Ber {
     }
 }
 
+#[doc(hidden)]
+impl From<Buffer> for Ber {
+    fn from(buffer: Buffer) -> Self {
+        Self { buffer }
+    }
+}
+
 impl From<&DerRef> for Ber {
     fn from(der: &DerRef) -> Self {
         <&BerRef>::from(der).to_owned()
