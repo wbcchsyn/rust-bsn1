@@ -500,6 +500,13 @@ impl Der {
     }
 }
 
+#[doc(hidden)]
+impl From<Buffer> for Der {
+    fn from(buffer: Buffer) -> Self {
+        Self { buffer }
+    }
+}
+
 impl From<&DerRef> for Der {
     fn from(der_ref: &DerRef) -> Self {
         der_ref.to_owned()
