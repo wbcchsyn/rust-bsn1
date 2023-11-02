@@ -34,3 +34,23 @@
 #![doc = include_str!("../README.md")]
 
 pub mod ser;
+
+use bsn1::{Buffer, Der, Error, Length};
+use std::io::Write as _;
+
+/// Serializes `value` into ASN.1 DER format.
+pub fn to_der<T>(value: &T) -> Result<Der, Error>
+where
+    T: ?Sized + ser::Serialize,
+{
+    let contents_len = value.der_contents_len()?;
+    let length = Length::Definite(contents_len).to_bytes();
+    let der_len = value.id_len()? + length.len() + contents_len;
+
+    let mut buffer = Buffer::with_capacity(der_len);
+    value.write_id(&mut buffer)?;
+    buffer.write_all(&length).unwrap(); // Buffer::write_all() never fails.
+    value.write_der_contents(&mut buffer)?;
+
+    Ok(buffer.into())
+}
