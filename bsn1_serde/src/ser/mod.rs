@@ -32,7 +32,7 @@
 
 //! Provides trait `Serialize`.
 
-use bsn1::{Contents, ContentsRef, Error, IdRef};
+use bsn1::{Contents, ContentsRef, Error, IdRef, Length};
 use std::io::Write;
 
 /// A **data structure** that can be serialized into ASN.1 format.
@@ -386,10 +386,59 @@ impl Serialize for String {
     }
 }
 
+impl<T> Serialize for Vec<T>
+where
+    T: Serialize,
+{
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::sequence().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        for t in self.iter() {
+            write_der(t, buffer)?;
+        }
+
+        Ok(())
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let mut ret = 0;
+        for t in self.iter() {
+            ret += der_len(t)?;
+        }
+        Ok(ret)
+    }
+}
+
+fn der_len<T: Serialize>(t: &T) -> Result<usize, Error> {
+    let id_len = t.id_len()?;
+    let contents_len = t.der_contents_len()?;
+
+    Ok(id_len + Length::Definite(contents_len).len() + contents_len)
+}
+
+fn write_der<T: Serialize, W: Write>(t: &T, buffer: &mut W) -> Result<(), Error> {
+    t.write_id(buffer)?;
+
+    let contents_len = t.der_contents_len()?;
+    let length = Length::Definite(contents_len).to_bytes();
+    buffer.write_all(&length).unwrap(); // Buffer::write_all() never fails.
+    t.write_der_contents(buffer)?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bsn1::Der;
+    use bsn1::{Der, DerRef};
 
     #[test]
     fn bool_to_der() {
@@ -638,6 +687,34 @@ mod tests {
 
             assert_eq!(der.contents(), &Contents::from(s.as_bytes()));
             assert_eq!(der.contents().len(), s.der_contents_len().unwrap());
+        }
+    }
+
+    #[test]
+    fn vec_to_der() {
+        for i in 0..100 {
+            let v: Vec<i32> = (0..i).collect();
+            let der = crate::to_der(&v).unwrap();
+
+            assert_eq!(der.id(), IdRef::sequence());
+            assert_eq!(der.id().len(), v.id_len().unwrap());
+
+            assert_eq!(
+                der.length().definite().unwrap(),
+                v.der_contents_len().unwrap()
+            );
+
+            let mut contents: &[u8] = der.contents().as_ref();
+            assert_eq!(contents.len(), v.der_contents_len().unwrap());
+
+            for &i in v.iter() {
+                let der = DerRef::parse(&mut contents).unwrap();
+
+                assert_eq!(der.id(), IdRef::integer());
+                assert_eq!(der.contents(), &Contents::from(i));
+            }
+
+            assert_eq!(contents.is_empty(), true);
         }
     }
 }
