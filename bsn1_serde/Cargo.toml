@@ -15,3 +15,4 @@ categories = ["encoding"]
 
 [dependencies]
 bsn1 = { path = ".." }
+bsn1_serde_macros = { path = "../bsn1_serde_macros" }
