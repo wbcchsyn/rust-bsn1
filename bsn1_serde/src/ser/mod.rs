@@ -32,7 +32,7 @@
 
 //! Provides trait `Serialize`.
 
-use ::bsn1::{ContentsRef, Error, IdRef};
+use bsn1::{Contents, ContentsRef, Error, IdRef};
 use std::io::Write;
 
 /// A **data structure** that can be serialized into ASN.1 format.
@@ -72,9 +72,303 @@ impl Serialize for bool {
     }
 }
 
+impl Serialize for i8 {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::integer().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        let contents = Contents::from(*self);
+        buffer.write_all(contents.as_ref()).map_err(Error::from)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+}
+
+impl Serialize for u8 {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::integer().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        let contents = Contents::from(*self);
+        buffer.write_all(contents.as_ref()).map_err(Error::from)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        if *self <= (i8::MAX as u8) {
+            Ok(1)
+        } else {
+            Ok(2)
+        }
+    }
+}
+
+impl Serialize for i16 {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::integer().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        let contents = Contents::from(*self);
+        buffer.write_all(contents.as_ref()).map_err(Error::from)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        if (i8::MIN as i16) <= *self && *self <= (i8::MAX as i16) {
+            Ok(1)
+        } else {
+            Ok(2)
+        }
+    }
+}
+
+impl Serialize for u16 {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::integer().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        let contents = Contents::from(*self);
+        buffer.write_all(contents.as_ref()).map_err(Error::from)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        if *self <= (i8::MAX as u16) {
+            Ok(1)
+        } else if *self <= (i16::MAX as u16) {
+            Ok(2)
+        } else {
+            Ok(3)
+        }
+    }
+}
+
+impl Serialize for i32 {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::integer().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        let contents = Contents::from(*self);
+        buffer.write_all(contents.as_ref()).map_err(Error::from)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let ret = if self.is_negative() {
+            (Self::BITS + u8::BITS - self.leading_ones()) / u8::BITS
+        } else {
+            (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS
+        };
+
+        Ok(ret as usize)
+    }
+}
+
+impl Serialize for u32 {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::integer().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        let contents = Contents::from(*self);
+        buffer.write_all(contents.as_ref()).map_err(Error::from)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let ret = (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS;
+        Ok(ret as usize)
+    }
+}
+
+impl Serialize for i64 {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::integer().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        let contents = Contents::from(*self);
+        buffer.write_all(contents.as_ref()).map_err(Error::from)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let ret = if self.is_negative() {
+            (Self::BITS + u8::BITS - self.leading_ones()) / u8::BITS
+        } else {
+            (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS
+        };
+
+        Ok(ret as usize)
+    }
+}
+
+impl Serialize for u64 {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::integer().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        let contents = Contents::from(*self);
+        buffer.write_all(contents.as_ref()).map_err(Error::from)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let ret = (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS;
+        Ok(ret as usize)
+    }
+}
+
+impl Serialize for i128 {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::integer().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        let contents = Contents::from(*self);
+        buffer.write_all(contents.as_ref()).map_err(Error::from)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let ret = if self.is_negative() {
+            (Self::BITS + u8::BITS - self.leading_ones()) / u8::BITS
+        } else {
+            (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS
+        };
+
+        Ok(ret as usize)
+    }
+}
+
+impl Serialize for u128 {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::integer().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        let contents = Contents::from(*self);
+        buffer.write_all(contents.as_ref()).map_err(Error::from)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let ret = (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS;
+        Ok(ret as usize)
+    }
+}
+
+impl Serialize for isize {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::integer().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        let contents = Contents::from(*self);
+        buffer.write_all(contents.as_ref()).map_err(Error::from)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let ret = if self.is_negative() {
+            (Self::BITS + u8::BITS - self.leading_ones()) / u8::BITS
+        } else {
+            (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS
+        };
+
+        Ok(ret as usize)
+    }
+}
+
+impl Serialize for usize {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::integer().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        let contents = Contents::from(*self);
+        buffer.write_all(contents.as_ref()).map_err(Error::from)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let ret = (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS;
+        Ok(ret as usize)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::ser::Serialize;
+    use super::*;
     use bsn1::Der;
 
     #[test]
@@ -85,6 +379,222 @@ mod tests {
             assert_eq!(der, Der::from(*val));
             assert_eq!(der.id().len(), val.id_len().unwrap());
             assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+        }
+    }
+
+    #[test]
+    fn i8_to_der() {
+        for i in i8::MIN..=i8::MAX {
+            let der = crate::to_der(&i).unwrap();
+
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.id().len(), i.id_len().unwrap());
+
+            assert_eq!(
+                der.length().definite().unwrap(),
+                i.der_contents_len().unwrap()
+            );
+
+            assert_eq!(der.contents(), &Contents::from(i));
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+        }
+    }
+
+    #[test]
+    fn u8_to_der() {
+        for i in u8::MIN..=u8::MAX {
+            let der = crate::to_der(&i).unwrap();
+
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.id().len(), i.id_len().unwrap());
+
+            assert_eq!(
+                der.length().definite().unwrap(),
+                i.der_contents_len().unwrap()
+            );
+
+            assert_eq!(der.contents(), &Contents::from(i));
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+        }
+    }
+
+    #[test]
+    fn i16_to_der() {
+        for i in i16::MIN..=i16::MAX {
+            let der = crate::to_der(&i).unwrap();
+
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.id().len(), i.id_len().unwrap());
+
+            assert_eq!(
+                der.length().definite().unwrap(),
+                i.der_contents_len().unwrap()
+            );
+
+            assert_eq!(der.contents(), &Contents::from(i));
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+        }
+    }
+
+    #[test]
+    fn u16_to_der() {
+        for i in u16::MIN..=u16::MAX {
+            let der = crate::to_der(&i).unwrap();
+
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.id().len(), i.id_len().unwrap());
+
+            assert_eq!(
+                der.length().definite().unwrap(),
+                i.der_contents_len().unwrap()
+            );
+
+            assert_eq!(der.contents(), &Contents::from(i));
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+        }
+    }
+
+    #[test]
+    fn i32_to_der() {
+        for i in [i32::MIN, 0, i32::MAX] {
+            let der = crate::to_der(&i).unwrap();
+
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.id().len(), i.id_len().unwrap());
+
+            assert_eq!(
+                der.length().definite().unwrap(),
+                i.der_contents_len().unwrap()
+            );
+
+            assert_eq!(der.contents(), &Contents::from(i));
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+        }
+    }
+
+    #[test]
+    fn u32_to_der() {
+        for i in [u32::MIN, u32::MAX] {
+            let der = crate::to_der(&i).unwrap();
+
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.id().len(), i.id_len().unwrap());
+
+            assert_eq!(
+                der.length().definite().unwrap(),
+                i.der_contents_len().unwrap()
+            );
+
+            assert_eq!(der.contents(), &Contents::from(i));
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+        }
+    }
+
+    #[test]
+    fn i64_to_der() {
+        for i in [i64::MIN, 0, i64::MAX] {
+            let der = crate::to_der(&i).unwrap();
+
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.id().len(), i.id_len().unwrap());
+
+            assert_eq!(
+                der.length().definite().unwrap(),
+                i.der_contents_len().unwrap()
+            );
+
+            assert_eq!(der.contents(), &Contents::from(i));
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+        }
+    }
+
+    #[test]
+    fn u64_to_der() {
+        for i in [u64::MIN, u64::MAX] {
+            let der = crate::to_der(&i).unwrap();
+
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.id().len(), i.id_len().unwrap());
+
+            assert_eq!(
+                der.length().definite().unwrap(),
+                i.der_contents_len().unwrap()
+            );
+
+            assert_eq!(der.contents(), &Contents::from(i));
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+        }
+    }
+
+    #[test]
+    fn i128_to_der() {
+        for i in [i128::MIN, 0, i128::MAX] {
+            let der = crate::to_der(&i).unwrap();
+
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.id().len(), i.id_len().unwrap());
+
+            assert_eq!(
+                der.length().definite().unwrap(),
+                i.der_contents_len().unwrap()
+            );
+
+            assert_eq!(der.contents(), &Contents::from(i));
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+        }
+    }
+
+    #[test]
+    fn u128_to_der() {
+        for i in [u128::MIN, u128::MAX] {
+            let der = crate::to_der(&i).unwrap();
+
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.id().len(), i.id_len().unwrap());
+
+            assert_eq!(
+                der.length().definite().unwrap(),
+                i.der_contents_len().unwrap()
+            );
+
+            assert_eq!(der.contents(), &Contents::from(i));
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+        }
+    }
+
+    #[test]
+    fn isize_to_der() {
+        for i in [isize::MIN, 0, isize::MAX] {
+            let der = crate::to_der(&i).unwrap();
+
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.id().len(), i.id_len().unwrap());
+
+            assert_eq!(
+                der.length().definite().unwrap(),
+                i.der_contents_len().unwrap()
+            );
+
+            assert_eq!(der.contents(), &Contents::from(i));
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+        }
+    }
+
+    #[test]
+    fn usize_to_der() {
+        for i in [usize::MIN, usize::MAX] {
+            let der = crate::to_der(&i).unwrap();
+
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.id().len(), i.id_len().unwrap());
+
+            assert_eq!(
+                der.length().definite().unwrap(),
+                i.der_contents_len().unwrap()
+            );
+
+            assert_eq!(der.contents(), &Contents::from(i));
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
         }
     }
 }
