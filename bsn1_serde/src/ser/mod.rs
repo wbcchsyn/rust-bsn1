@@ -30,7 +30,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![deny(missing_docs)]
-#![doc = include_str!("../README.md")]
-
-pub mod ser;
+//! Provides trait `Serialize`.
