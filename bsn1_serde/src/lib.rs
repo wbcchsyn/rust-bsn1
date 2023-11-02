@@ -35,7 +35,7 @@
 
 pub mod ser;
 
-use bsn1::{Buffer, Der, Error, Length};
+use bsn1::{Ber, Buffer, Der, Error, Length};
 use std::io::Write as _;
 
 /// Serializes `value` into ASN.1 DER format.
@@ -53,4 +53,13 @@ where
     value.write_der_contents(&mut buffer)?;
 
     Ok(buffer.into())
+}
+
+/// Serializes `value` into ASN.1 BER format.
+pub fn to_ber<T>(value: &T) -> Result<Ber, Error>
+where
+    T: ?Sized + ser::Serialize,
+{
+    // DER is always valid as BER.
+    to_der(value).map(Ber::from)
 }
