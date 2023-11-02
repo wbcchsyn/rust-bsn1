@@ -32,7 +32,7 @@
 
 //! Provides trait `Serialize`.
 
-use ::bsn1::Error;
+use ::bsn1::{ContentsRef, Error, IdRef};
 use std::io::Write;
 
 /// A **data structure** that can be serialized into ASN.1 format.
@@ -48,4 +48,43 @@ pub trait Serialize {
 
     /// Returns the byte count of the contents of ASN.1 DER format.
     fn der_contents_len(&self) -> Result<usize, Error>;
+}
+
+impl Serialize for bool {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::boolean().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(<&ContentsRef>::from(*self).as_ref())
+            .map_err(Error::from)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::ser::Serialize;
+    use bsn1::Der;
+
+    #[test]
+    fn bool_to_der() {
+        for val in [true, false].iter() {
+            let der = crate::to_der(val).unwrap();
+
+            assert_eq!(der, Der::from(*val));
+            assert_eq!(der.id().len(), val.id_len().unwrap());
+            assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+        }
+    }
 }
