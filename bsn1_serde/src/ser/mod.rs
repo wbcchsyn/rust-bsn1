@@ -33,6 +33,7 @@
 //! Provides trait `Serialize`.
 
 use bsn1::{Contents, ContentsRef, Error, IdRef, Length};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, LinkedList, VecDeque};
 use std::io::Write;
 
 /// A **data structure** that can be serialized into ASN.1 format.
@@ -417,10 +418,202 @@ where
     }
 }
 
+impl<T> Serialize for LinkedList<T>
+where
+    T: Serialize,
+{
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::sequence().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        for t in self.iter() {
+            write_der(t, buffer)?;
+        }
+        Ok(())
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let mut ret = 0;
+        for t in self.iter() {
+            ret += der_len(t)?;
+        }
+        Ok(ret)
+    }
+}
+
+impl<T> Serialize for VecDeque<T>
+where
+    T: Serialize,
+{
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::sequence().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        for t in self.iter() {
+            write_der(t, buffer)?;
+        }
+        Ok(())
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let mut ret = 0;
+        for t in self.iter() {
+            ret += der_len(t)?;
+        }
+        Ok(ret)
+    }
+}
+
+impl<T> Serialize for BTreeSet<T>
+where
+    T: Serialize,
+{
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::sequence().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        for t in self.iter() {
+            write_der(t, buffer)?;
+        }
+        Ok(())
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let mut ret = 0;
+        for t in self.iter() {
+            ret += der_len(t)?;
+        }
+        Ok(ret)
+    }
+}
+
+impl<K, V> Serialize for BTreeMap<K, V>
+where
+    K: Serialize,
+    V: Serialize,
+{
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::sequence().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        for (k, v) in self.iter() {
+            let length = Length::Definite(der_len(k)? + der_len(v)?);
+
+            buffer.write_all(IdRef::sequence().as_ref())?;
+            buffer.write_all(length.to_bytes().as_ref())?;
+            write_der(k, buffer)?;
+            write_der(v, buffer)?;
+        }
+        Ok(())
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let mut ret = 0;
+        for (k, v) in self.iter() {
+            let content_len = der_len(k)? + der_len(v)?;
+            let length = Length::Definite(content_len);
+            ret += IdRef::sequence().len() + length.len() + content_len;
+        }
+        Ok(ret)
+    }
+}
+
+impl<T> Serialize for HashSet<T>
+where
+    T: Serialize,
+{
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer.write_all(IdRef::set().as_ref()).map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        for t in self.iter() {
+            write_der(t, buffer)?;
+        }
+        Ok(())
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let mut ret = 0;
+        for t in self.iter() {
+            ret += der_len(t)?;
+        }
+        Ok(ret)
+    }
+}
+
+impl<K, V> Serialize for HashMap<K, V>
+where
+    K: Serialize,
+    V: Serialize,
+{
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer.write_all(IdRef::set().as_ref()).map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        for (k, v) in self.iter() {
+            let length = Length::Definite(der_len(k)? + der_len(v)?);
+
+            buffer.write_all(IdRef::sequence().as_ref())?;
+            buffer.write_all(length.to_bytes().as_ref())?;
+            write_der(k, buffer)?;
+            write_der(v, buffer)?;
+        }
+
+        Ok(())
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        let mut ret = 0;
+        for (k, v) in self.iter() {
+            let content_len = der_len(k)? + der_len(v)?;
+            let length = Length::Definite(content_len);
+            ret += IdRef::sequence().len() + length.len() + content_len;
+        }
+        Ok(ret)
+    }
+}
+
 fn der_len<T: Serialize>(t: &T) -> Result<usize, Error> {
     let id_len = t.id_len()?;
     let contents_len = t.der_contents_len()?;
-
     Ok(id_len + Length::Definite(contents_len).len() + contents_len)
 }
 
@@ -716,5 +909,149 @@ mod tests {
 
             assert_eq!(contents.is_empty(), true);
         }
+    }
+
+    #[test]
+    fn linked_list_to_der() {
+        let v: LinkedList<String> = LinkedList::new();
+        let der = crate::to_der(&v).unwrap();
+        assert_eq!(der.id(), IdRef::sequence());
+        assert_eq!(der.contents().is_empty(), true);
+
+        let v: LinkedList<i8> = (i8::MIN..=i8::MAX).collect();
+        let der = crate::to_der(&v).unwrap();
+        assert_eq!(der.id(), IdRef::sequence());
+
+        let mut contents: &[u8] = der.contents().as_ref();
+        for &i in v.iter() {
+            let der = DerRef::parse(&mut contents).unwrap();
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.contents(), &Contents::from(i));
+        }
+        assert_eq!(contents.is_empty(), true);
+    }
+
+    #[test]
+    fn vec_deque_to_der() {
+        let v: VecDeque<String> = VecDeque::new();
+        let der = crate::to_der(&v).unwrap();
+        assert_eq!(der.id(), IdRef::sequence());
+        assert_eq!(der.contents().is_empty(), true);
+
+        let v: VecDeque<i8> = (i8::MIN..=i8::MAX).collect();
+        let der = crate::to_der(&v).unwrap();
+        assert_eq!(der.id(), IdRef::sequence());
+
+        let mut contents: &[u8] = der.contents().as_ref();
+        for &i in v.iter() {
+            let der = DerRef::parse(&mut contents).unwrap();
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.contents(), &Contents::from(i));
+        }
+        assert_eq!(contents.is_empty(), true);
+    }
+
+    #[test]
+    fn btree_set_to_der() {
+        let v: BTreeSet<String> = BTreeSet::new();
+        let der = crate::to_der(&v).unwrap();
+        assert_eq!(der.id(), IdRef::sequence());
+        assert_eq!(der.contents().is_empty(), true);
+
+        let v: BTreeSet<i8> = (i8::MIN..=i8::MAX).collect();
+        let der = crate::to_der(&v).unwrap();
+        assert_eq!(der.id(), IdRef::sequence());
+
+        let mut contents: &[u8] = der.contents().as_ref();
+        for &i in v.iter() {
+            let der = DerRef::parse(&mut contents).unwrap();
+            assert_eq!(der.id(), IdRef::integer());
+            assert_eq!(der.contents(), &Contents::from(i));
+        }
+        assert_eq!(contents.is_empty(), true);
+    }
+
+    #[test]
+    fn btree_map_to_der() {
+        let v: BTreeMap<i32, String> = BTreeMap::new();
+        let der = crate::to_der(&v).unwrap();
+        assert_eq!(der.id(), IdRef::sequence());
+        assert_eq!(der.contents().is_empty(), true);
+
+        let v: BTreeMap<i8, String> = (i8::MIN..=i8::MAX).map(|i| (i, i.to_string())).collect();
+        let der = crate::to_der(&v).unwrap();
+        assert_eq!(der.id(), IdRef::sequence());
+
+        let mut contents: &[u8] = der.contents().as_ref();
+        for (k, v) in v.iter() {
+            let der1 = DerRef::parse(&mut contents).unwrap();
+            assert_eq!(der1.id(), IdRef::sequence());
+
+            let mut contents1: &[u8] = der1.contents().as_ref();
+            let der2 = DerRef::parse(&mut contents1).unwrap();
+            let der3 = DerRef::parse(&mut contents1).unwrap();
+            assert_eq!(contents1.is_empty(), true);
+
+            assert_eq!(der2.id(), IdRef::integer());
+            assert_eq!(der2.contents(), &Contents::from(*k));
+            assert_eq!(der3.id(), IdRef::utf8_string());
+            assert_eq!(der3.contents(), &Contents::from(v.as_bytes()));
+        }
+        assert_eq!(contents.is_empty(), true);
+    }
+
+    #[test]
+    fn hash_set_to_der() {
+        let v: HashSet<String> = HashSet::new();
+        let der = crate::to_der(&v).unwrap();
+        assert_eq!(der.id(), IdRef::set());
+        assert_eq!(der.contents().is_empty(), true);
+
+        let mut v: HashSet<i8> = (i8::MIN..=i8::MAX).collect();
+        let der = crate::to_der(&v).unwrap();
+        assert_eq!(der.id(), IdRef::set());
+
+        let mut contents: &[u8] = der.contents().as_ref();
+        while 0 < contents.len() {
+            let der = DerRef::parse(&mut contents).unwrap();
+            assert_eq!(der.id(), IdRef::integer());
+
+            let i: i8 = der.contents().to_integer().unwrap();
+            assert_eq!(v.remove(&i), true);
+        }
+        assert_eq!(v.is_empty(), true);
+    }
+
+    #[test]
+    fn hash_map_to_der() {
+        let v: HashMap<i32, String> = HashMap::new();
+        let der = crate::to_der(&v).unwrap();
+        assert_eq!(der.id(), IdRef::set());
+        assert_eq!(der.contents().is_empty(), true);
+
+        let mut vals: HashMap<i8, String> =
+            (i8::MIN..=i8::MAX).map(|i| (i, i.to_string())).collect();
+        let der = crate::to_der(&vals).unwrap();
+        assert_eq!(der.id(), IdRef::set());
+
+        let mut contents: &[u8] = der.contents().as_ref();
+        while 0 < contents.len() {
+            let der1 = DerRef::parse(&mut contents).unwrap();
+            assert_eq!(der1.id(), IdRef::sequence());
+
+            let mut contents1: &[u8] = der1.contents().as_ref();
+            let der2 = DerRef::parse(&mut contents1).unwrap();
+            let der3 = DerRef::parse(&mut contents1).unwrap();
+            assert_eq!(contents1.is_empty(), true);
+
+            assert_eq!(der2.id(), IdRef::integer());
+            let k: i8 = der2.contents().to_integer().unwrap();
+
+            assert_eq!(der3.id(), IdRef::utf8_string());
+            let v = String::from_utf8(der3.contents().as_ref().into()).unwrap();
+
+            assert_eq!(vals.remove(&k), Some(v));
+        }
+        assert_eq!(vals.is_empty(), true);
     }
 }
