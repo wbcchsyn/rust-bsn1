@@ -29,3 +29,37 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+use proc_macro2::TokenStream;
+use quote::quote;
+
+#[allow(non_snake_case)]
+pub fn do_serialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
+    let name = &ast.ident;
+
+    let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+
+    let Result = quote! { ::std::result::Result };
+    let Write = quote! { ::std::io::Write };
+    let Error = quote! { ::bsn1_serde::macro_alias::Error };
+
+    Ok(quote! {
+        impl #Serialize for #name {
+            fn write_id<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
+                todo!()
+            }
+
+            fn write_der_contents<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
+                todo!()
+            }
+
+            fn id_len(&self) -> #Result<usize, #Error> {
+                todo!()
+            }
+
+            fn der_contents_len(&self) -> #Result<usize, #Error> {
+                todo!()
+            }
+        }
+    })
+}

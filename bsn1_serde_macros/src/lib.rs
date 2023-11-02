@@ -44,6 +44,10 @@ use proc_macro::TokenStream;
 /// Derive macro to implement `bsn1_serde::ser::Serialize` trait.
 #[proc_macro_derive(Serialize)]
 pub fn serialize(input: TokenStream) -> TokenStream {
-    let _ast = syn::parse_macro_input!(input as syn::DeriveInput);
-    TokenStream::new()
+    let ast = syn::parse_macro_input!(input as syn::DeriveInput);
+
+    match ser::do_serialize(ast) {
+        Ok(ts) => ts.into(),
+        Err(e) => e.to_compile_error().into(),
+    }
 }
