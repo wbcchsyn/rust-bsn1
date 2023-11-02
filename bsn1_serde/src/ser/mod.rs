@@ -366,6 +366,26 @@ impl Serialize for usize {
     }
 }
 
+impl Serialize for String {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer
+            .write_all(IdRef::utf8_string().as_ref())
+            .map_err(Error::from)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer.write_all(self.as_bytes()).map_err(Error::from)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        Ok(self.len())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -595,6 +615,29 @@ mod tests {
 
             assert_eq!(der.contents(), &Contents::from(i));
             assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+        }
+    }
+
+    #[test]
+    fn string_to_der() {
+        for s in [
+            "".to_string(),
+            "a".to_string(),
+            "abc".to_string(),
+            "あいうえお".to_string(),
+        ] {
+            let der = crate::to_der(&s).unwrap();
+
+            assert_eq!(der.id(), IdRef::utf8_string());
+            assert_eq!(der.id().len(), s.id_len().unwrap());
+
+            assert_eq!(
+                der.length().definite().unwrap(),
+                s.der_contents_len().unwrap()
+            );
+
+            assert_eq!(der.contents(), &Contents::from(s.as_bytes()));
+            assert_eq!(der.contents().len(), s.der_contents_len().unwrap());
         }
     }
 }
