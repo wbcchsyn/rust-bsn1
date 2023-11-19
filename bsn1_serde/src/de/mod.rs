@@ -50,3 +50,40 @@ pub trait Deserialize: Sized {
     /// Deserializes `Self` from ASN.1 DER format.
     fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error>;
 }
+
+impl Deserialize for bool {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::boolean() {
+            Err(Error::UnmatchedId)
+        } else if length == Length::Indefinite {
+            Err(Error::IndefiniteLength)
+        } else {
+            debug_assert_eq!(length.definite(), Some(contents.len()));
+            contents.to_bool_ber()
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::boolean() {
+            Err(Error::UnmatchedId)
+        } else {
+            contents.to_bool_der()
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{to_ber, to_der};
+
+    #[test]
+    fn boolean() {
+        for b in [false, true] {
+            let ber = to_ber(&b).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(b));
+
+            let der = to_der(&b).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(b));
+        }
+    }
+}
