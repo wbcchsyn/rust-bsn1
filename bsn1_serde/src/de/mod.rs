@@ -31,3 +31,22 @@
 // limitations under the License.
 
 //! Provides trait `Deserialize`.
+
+use bsn1::{ContentsRef, Error, IdRef, Length};
+
+/// A **data structure** that can be deserialized from ASN.1 DER format.
+pub trait Deserialize: Sized {
+    /// Deserializes `Self` from ASN.1 BER format.
+    ///
+    /// # Safety
+    ///
+    /// The behavior is undefined if `length` is invalid.
+    ///
+    /// ex)
+    /// - `length` is indefinite where only definite length is allowed.
+    /// - `length` is definite but the value does not match the length of `contents`.
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error>;
+
+    /// Deserializes `Self` from ASN.1 DER format.
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error>;
+}
