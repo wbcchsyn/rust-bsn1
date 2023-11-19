@@ -287,6 +287,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - `UnmatchedId`
   - `IndefiniteLength`
   - `InvalidAsUtf8`
+  - `InvalidKeyValuePair`
 
 ### Removed
 
