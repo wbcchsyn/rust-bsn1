@@ -36,7 +36,7 @@
 pub mod de;
 pub mod ser;
 
-use bsn1::{Ber, Buffer, Der, Error, Length};
+use bsn1::{Ber, BerRef, Buffer, Der, Error, Length};
 use std::io::Write as _;
 
 /// Serializes `value` into ASN.1 DER format.
@@ -63,4 +63,12 @@ where
 {
     // DER is always valid as BER.
     to_der(value).map(Ber::from)
+}
+
+/// Deserializes `T` from ASN.1 BER format.
+pub fn from_ber<T>(ber: &BerRef) -> Result<T, Error>
+where
+    T: de::Deserialize,
+{
+    unsafe { de::Deserialize::from_ber(ber.id(), ber.length(), ber.contents()) }
 }
