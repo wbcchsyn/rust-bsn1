@@ -29,33 +29,3 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#![deny(missing_docs)]
-#![doc = include_str!("../README.md")]
-
-mod attribute;
-mod data_container;
-mod de;
-mod ser;
-
-use attribute::Attribute;
-use data_container::DataContainer;
-use proc_macro::TokenStream;
-
-/// Derive macro to implement `bsn1_serde::ser::Serialize` trait.
-#[proc_macro_derive(Serialize)]
-pub fn serialize(input: TokenStream) -> TokenStream {
-    let ast = syn::parse_macro_input!(input as syn::DeriveInput);
-
-    match ser::do_serialize(ast) {
-        Ok(ts) => ts.into(),
-        Err(e) => e.to_compile_error().into(),
-    }
-}
-
-/// Derive macro to implement `bsn1_serde::de::Deserialize` trait.
-#[proc_macro_derive(Deserialize)]
-pub fn deserialize(input: TokenStream) -> TokenStream {
-    let _ast = syn::parse_macro_input!(input as syn::DeriveInput);
-    todo!()
-}
