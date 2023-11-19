@@ -33,7 +33,8 @@
 //! Provides trait `Deserialize`.
 
 use bsn1::{BerRef, ContentsRef, DerRef, Error, IdRef, Length};
-use std::collections::{BTreeMap, BTreeSet, LinkedList, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, HashSet, LinkedList, VecDeque};
+use std::hash::Hash;
 
 /// A **data structure** that can be deserialized from ASN.1 DER format.
 pub trait Deserialize: Sized {
@@ -541,6 +542,45 @@ where
     }
 }
 
+impl<T> Deserialize for HashSet<T>
+where
+    T: Deserialize + Eq + Hash,
+{
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::set() {
+            Err(Error::UnmatchedId)
+        } else {
+            let mut contents: &[u8] = exclude_eoc(length, contents).map(AsRef::as_ref)?;
+            let mut ret = HashSet::new();
+
+            while !contents.is_empty() {
+                let ber = BerRef::parse(&mut contents)?;
+                let t: T = Deserialize::from_ber(ber.id(), ber.length(), ber.contents())?;
+                ret.insert(t);
+            }
+
+            Ok(ret)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::set() {
+            Err(Error::UnmatchedId)
+        } else {
+            let mut ret = HashSet::new();
+            let mut contents: &[u8] = contents.as_ref();
+
+            while !contents.is_empty() {
+                let der = DerRef::parse(&mut contents)?;
+                let t: T = Deserialize::from_der(der.id(), der.contents())?;
+                ret.insert(t);
+            }
+
+            Ok(ret)
+        }
+    }
+}
+
 fn exclude_eoc(length: Length, contents: &ContentsRef) -> Result<&ContentsRef, Error> {
     match length {
         Length::Definite(len) => {
@@ -788,6 +828,21 @@ mod tests {
 
             let der = to_der(&val).unwrap();
             assert_eq!(crate::from_der(&der), Ok(val.clone()));
+        }
+    }
+
+    #[test]
+    fn hash_set() {
+        let vals = -10..10;
+
+        for i in 0..vals.clone().count() {
+            let s = HashSet::from_iter(vals.clone().take(i));
+
+            let ber = to_ber(&s).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(s.clone()));
+
+            let der = to_der(&s).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(s.clone()));
         }
     }
 }
