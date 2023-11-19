@@ -72,6 +72,234 @@ impl Deserialize for bool {
     }
 }
 
+impl Deserialize for i8 {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if length == Length::Indefinite {
+            Err(Error::IndefiniteLength)
+        } else {
+            debug_assert_eq!(length.definite(), Some(contents.len()));
+            Self::from_der(id, contents)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::integer() {
+            Err(Error::UnmatchedId)
+        } else {
+            contents.to_integer()
+        }
+    }
+}
+
+impl Deserialize for u8 {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if length == Length::Indefinite {
+            Err(Error::IndefiniteLength)
+        } else {
+            debug_assert_eq!(length.definite(), Some(contents.len()));
+            Self::from_der(id, contents)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::integer() {
+            Err(Error::UnmatchedId)
+        } else {
+            contents.to_integer()
+        }
+    }
+}
+
+impl Deserialize for i16 {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if length == Length::Indefinite {
+            Err(Error::IndefiniteLength)
+        } else {
+            debug_assert_eq!(length.definite(), Some(contents.len()));
+            Self::from_der(id, contents)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::integer() {
+            Err(Error::UnmatchedId)
+        } else {
+            contents.to_integer()
+        }
+    }
+}
+
+impl Deserialize for u16 {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if length == Length::Indefinite {
+            Err(Error::IndefiniteLength)
+        } else {
+            debug_assert_eq!(length.definite(), Some(contents.len()));
+            Self::from_der(id, contents)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::integer() {
+            Err(Error::UnmatchedId)
+        } else {
+            contents.to_integer()
+        }
+    }
+}
+
+impl Deserialize for i32 {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if length == Length::Indefinite {
+            Err(Error::IndefiniteLength)
+        } else {
+            debug_assert_eq!(length.definite(), Some(contents.len()));
+            Self::from_der(id, contents)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::integer() {
+            Err(Error::UnmatchedId)
+        } else {
+            contents.to_integer()
+        }
+    }
+}
+
+impl Deserialize for u32 {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if length == Length::Indefinite {
+            Err(Error::IndefiniteLength)
+        } else {
+            debug_assert_eq!(length.definite(), Some(contents.len()));
+            Self::from_der(id, contents)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::integer() {
+            Err(Error::UnmatchedId)
+        } else {
+            contents.to_integer()
+        }
+    }
+}
+
+impl Deserialize for i64 {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if length == Length::Indefinite {
+            Err(Error::IndefiniteLength)
+        } else {
+            debug_assert_eq!(length.definite(), Some(contents.len()));
+            Self::from_der(id, contents)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::integer() {
+            Err(Error::UnmatchedId)
+        } else {
+            contents.to_integer()
+        }
+    }
+}
+
+impl Deserialize for u64 {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if length == Length::Indefinite {
+            Err(Error::IndefiniteLength)
+        } else {
+            debug_assert_eq!(length.definite(), Some(contents.len()));
+            Self::from_der(id, contents)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::integer() {
+            Err(Error::UnmatchedId)
+        } else {
+            contents.to_integer()
+        }
+    }
+}
+
+impl Deserialize for i128 {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if length == Length::Indefinite {
+            Err(Error::IndefiniteLength)
+        } else {
+            debug_assert_eq!(length.definite(), Some(contents.len()));
+            Self::from_der(id, contents)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::integer() {
+            Err(Error::UnmatchedId)
+        } else {
+            contents.to_integer()
+        }
+    }
+}
+
+impl Deserialize for u128 {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if length == Length::Indefinite {
+            Err(Error::IndefiniteLength)
+        } else {
+            debug_assert_eq!(length.definite(), Some(contents.len()));
+            Self::from_der(id, contents)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::integer() {
+            Err(Error::UnmatchedId)
+        } else {
+            contents.to_integer()
+        }
+    }
+}
+
+impl Deserialize for isize {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if length == Length::Indefinite {
+            Err(Error::IndefiniteLength)
+        } else {
+            debug_assert_eq!(length.definite(), Some(contents.len()));
+            Self::from_der(id, contents)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::integer() {
+            Err(Error::UnmatchedId)
+        } else {
+            contents.to_integer()
+        }
+    }
+}
+
+impl Deserialize for usize {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if length == Length::Indefinite {
+            Err(Error::IndefiniteLength)
+        } else {
+            debug_assert_eq!(length.definite(), Some(contents.len()));
+            Self::from_der(id, contents)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::integer() {
+            Err(Error::UnmatchedId)
+        } else {
+            contents.to_integer()
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{to_ber, to_der};
@@ -84,6 +312,138 @@ mod tests {
 
             let der = to_der(&b).unwrap();
             assert_eq!(crate::from_der(&der), Ok(b));
+        }
+    }
+
+    #[test]
+    fn i8() {
+        for i in i8::MIN..=i8::MAX {
+            let ber = to_ber(&i).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(i));
+
+            let der = to_der(&i).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(i));
+        }
+    }
+
+    #[test]
+    fn u8() {
+        for i in u8::MIN..=u8::MAX {
+            let ber = to_ber(&i).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(i));
+
+            let der = to_der(&i).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(i));
+        }
+    }
+
+    #[test]
+    fn i16() {
+        for i in i16::MIN..=i16::MAX {
+            let ber = to_ber(&i).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(i));
+
+            let der = to_der(&i).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(i));
+        }
+    }
+
+    #[test]
+    fn u16() {
+        for i in u16::MIN..=u16::MAX {
+            let ber = to_ber(&i).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(i));
+
+            let der = to_der(&i).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(i));
+        }
+    }
+
+    #[test]
+    fn i32() {
+        for i in [i32::MIN, 0, i32::MAX] {
+            let ber = to_ber(&i).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(i));
+
+            let der = to_der(&i).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(i));
+        }
+    }
+
+    #[test]
+    fn u32() {
+        for i in [u32::MIN, u32::MAX] {
+            let ber = to_ber(&i).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(i));
+
+            let der = to_der(&i).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(i));
+        }
+    }
+
+    #[test]
+    fn i64() {
+        for i in [i64::MIN, 0, i64::MAX] {
+            let ber = to_ber(&i).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(i));
+
+            let der = to_der(&i).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(i));
+        }
+    }
+
+    #[test]
+    fn u64() {
+        for i in [u64::MIN, u64::MAX] {
+            let ber = to_ber(&i).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(i));
+
+            let der = to_der(&i).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(i));
+        }
+    }
+
+    #[test]
+    fn i128() {
+        for i in [i128::MIN, 0, i128::MAX] {
+            let ber = to_ber(&i).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(i));
+
+            let der = to_der(&i).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(i));
+        }
+    }
+
+    #[test]
+    fn u128() {
+        for i in [u128::MIN, u128::MAX] {
+            let ber = to_ber(&i).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(i));
+
+            let der = to_der(&i).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(i));
+        }
+    }
+
+    #[test]
+    fn isize() {
+        for i in [isize::MIN, 0, isize::MAX] {
+            let ber = to_ber(&i).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(i));
+
+            let der = to_der(&i).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(i));
+        }
+    }
+
+    #[test]
+    fn usize() {
+        for i in [usize::MIN, usize::MAX] {
+            let ber = to_ber(&i).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(i));
+
+            let der = to_der(&i).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(i));
         }
     }
 }
