@@ -81,6 +81,8 @@ pub enum Error {
     InvalidContents,
     /// The identifier does not match to that of data type when deserialized.
     UnmatchedId,
+    /// Invarid as UTF-8.
+    InvalidUtf8,
     /// IO Error for serialization/deserialization.
     ///
     /// Note that this error cannot be compared with others.
@@ -98,6 +100,7 @@ impl fmt::Display for Error {
             Self::BadEoc => f.write_str("'Indefinite Length BER' includes a bad 'EOC.'"),
             Self::InvalidContents => f.write_str("Contents include invlid octet(s)."),
             Self::UnmatchedId => f.write_str("The identifier does not match to that of data type."),
+            Self::InvalidUtf8 => f.write_str("Invalid as UTF-8."),
             Self::Io(err) => err.fmt(f),
         }
     }
@@ -115,6 +118,7 @@ impl PartialEq for Error {
             Self::BadEoc => matches!(other, Self::BadEoc),
             Self::InvalidContents => matches!(other, Self::InvalidContents),
             Self::UnmatchedId => matches!(other, Self::UnmatchedId),
+            Self::InvalidUtf8 => matches!(other, Self::InvalidUtf8),
             Self::Io(_) => false,
         }
     }
