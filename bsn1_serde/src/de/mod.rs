@@ -33,7 +33,7 @@
 //! Provides trait `Deserialize`.
 
 use bsn1::{BerRef, ContentsRef, DerRef, Error, IdRef, Length};
-use std::collections::{BTreeMap, BTreeSet, HashSet, LinkedList, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, LinkedList, VecDeque};
 use std::hash::Hash;
 
 /// A **data structure** that can be deserialized from ASN.1 DER format.
@@ -581,6 +581,68 @@ where
     }
 }
 
+impl<K, V> Deserialize for HashMap<K, V>
+where
+    K: Deserialize + std::hash::Hash + Eq,
+    V: Deserialize,
+{
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::set() {
+            Err(Error::UnmatchedId)
+        } else {
+            let mut contents: &[u8] = exclude_eoc(length, contents).map(AsRef::as_ref)?;
+            let mut ret = HashMap::new();
+
+            while !contents.is_empty() {
+                let pair = BerRef::parse(&mut contents)?;
+
+                if pair.id() != IdRef::sequence() {
+                    return Err(Error::UnmatchedId);
+                }
+
+                let mut pair_contents: &[u8] = pair.contents().as_ref();
+                let key = BerRef::parse(&mut pair_contents)?;
+                let val = BerRef::parse(&mut pair_contents)?;
+                if pair_contents.is_empty() {
+                    let key = Deserialize::from_ber(key.id(), key.length(), key.contents())?;
+                    let val = Deserialize::from_ber(val.id(), val.length(), val.contents())?;
+                    ret.insert(key, val);
+                }
+            }
+
+            Ok(ret)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::set() {
+            Err(Error::UnmatchedId)
+        } else {
+            let mut ret = HashMap::new();
+            let mut contents: &[u8] = contents.as_ref();
+
+            while !contents.is_empty() {
+                let pair = DerRef::parse(&mut contents)?;
+
+                if pair.id() != IdRef::sequence() {
+                    return Err(Error::UnmatchedId);
+                }
+
+                let mut pair_contents: &[u8] = pair.contents().as_ref();
+                let key = DerRef::parse(&mut pair_contents)?;
+                let val = DerRef::parse(&mut pair_contents)?;
+                if pair_contents.is_empty() {
+                    let key = Deserialize::from_der(key.id(), key.contents())?;
+                    let val = Deserialize::from_der(val.id(), val.contents())?;
+                    ret.insert(key, val);
+                }
+            }
+
+            Ok(ret)
+        }
+    }
+}
+
 fn exclude_eoc(length: Length, contents: &ContentsRef) -> Result<&ContentsRef, Error> {
     match length {
         Length::Definite(len) => {
@@ -843,6 +905,25 @@ mod tests {
 
             let der = to_der(&s).unwrap();
             assert_eq!(crate::from_der(&der), Ok(s.clone()));
+        }
+    }
+
+    #[test]
+    fn hash_map() {
+        let keys = -10..10;
+        let vals = 100..;
+
+        for i in 0..keys.clone().count() {
+            let mut val = HashMap::new();
+            for (k, v) in keys.clone().zip(vals.clone()).take(i) {
+                val.insert(k, v);
+            }
+
+            let ber = to_ber(&val).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(val.clone()));
+
+            let der = to_der(&val).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(val.clone()));
         }
     }
 }
