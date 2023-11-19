@@ -285,6 +285,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Add the following variant to enum `Error`
   - `Io`
   - `UnmatchedId`
+  - `IndefiniteLength`
 
 ### Removed
 
