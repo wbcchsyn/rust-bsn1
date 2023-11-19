@@ -32,7 +32,7 @@
 
 //! Provides trait `Deserialize`.
 
-use bsn1::{ContentsRef, Error, IdRef, Length};
+use bsn1::{BerRef, ContentsRef, DerRef, Error, IdRef, Length};
 
 /// A **data structure** that can be deserialized from ASN.1 DER format.
 pub trait Deserialize: Sized {
@@ -322,6 +322,65 @@ impl Deserialize for String {
     }
 }
 
+impl<T> Deserialize for Vec<T>
+where
+    T: Deserialize,
+{
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::sequence() {
+            Err(Error::UnmatchedId)
+        } else {
+            let mut contents: &[u8] = exclude_eoc(length, contents).map(AsRef::as_ref)?;
+            let mut ret = Vec::new();
+
+            while !contents.is_empty() {
+                let ber = BerRef::parse(&mut contents)?;
+                let t: T = Deserialize::from_ber(ber.id(), ber.length(), ber.contents())?;
+                ret.push(t);
+            }
+
+            Ok(ret)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::sequence() {
+            Err(Error::UnmatchedId)
+        } else {
+            let mut ret = Vec::new();
+            let mut contents: &[u8] = contents.as_ref();
+
+            while !contents.is_empty() {
+                let der = DerRef::parse(&mut contents)?;
+                let t: T = Deserialize::from_der(der.id(), der.contents())?;
+                ret.push(t);
+            }
+
+            Ok(ret)
+        }
+    }
+}
+
+fn exclude_eoc(length: Length, contents: &ContentsRef) -> Result<&ContentsRef, Error> {
+    match length {
+        Length::Definite(len) => {
+            debug_assert_eq!(len, contents.len());
+            Ok(contents)
+        }
+        Length::Indefinite => {
+            let eoc = BerRef::eoc();
+            let contents: &[u8] = contents.as_ref();
+
+            if contents.ends_with(eoc.as_ref()) {
+                let contents = &contents[..contents.len() - eoc.as_ref().len()];
+                Ok(contents.into())
+            } else {
+                Err(Error::UnTerminatedBytes)
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{to_ber, to_der};
@@ -479,6 +538,17 @@ mod tests {
 
             let der = to_der(&s).unwrap();
             assert_eq!(crate::from_der(&der), Ok(s.to_string()));
+        }
+    }
+
+    #[test]
+    fn vec() {
+        for v in [vec![-1, 0, 1], vec![1], vec![]] {
+            let ber = to_ber(&v).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(v.clone()));
+
+            let der = to_der(&v).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(v.clone()));
         }
     }
 }
