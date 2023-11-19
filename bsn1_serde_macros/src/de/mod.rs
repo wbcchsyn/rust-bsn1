@@ -29,3 +29,69 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+use crate::Attribute;
+use proc_macro2::TokenStream;
+use quote::quote;
+
+pub fn do_deserialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
+    let name = &ast.ident;
+    let attribute = Attribute::try_from(&ast.attrs[..])?;
+
+    let methods = match ast.data {
+        syn::Data::Struct(data) => do_deserialize_struct(attribute, data)?,
+        syn::Data::Enum(data) => do_deserialize_enum(attribute, data)?,
+        _ => return Err(syn::Error::new_spanned(ast, "Only struct or enum is supported.").into()),
+    };
+
+    Ok(quote! {
+        impl ::bsn1_serde::de::Deserialize for #name {
+            #methods
+        }
+    })
+}
+
+#[allow(non_snake_case)]
+fn do_deserialize_struct(
+    _attribute: Attribute,
+    _data: syn::DataStruct,
+) -> syn::Result<TokenStream> {
+    let IdRef = quote! { ::bsn1_serde::macro_alias::IdRef };
+    let Length = quote! { ::bsn1_serde::macro_alias::Length };
+    let ContentsRef = quote! { ::bsn1_serde::macro_alias::ContentsRef };
+    let Error = quote! { ::bsn1_serde::macro_alias::Error };
+
+    let Result = quote! { ::std::result::Result };
+
+    Ok(quote! {
+        unsafe fn from_ber(id: &#IdRef, length: #Length, contents: &#ContentsRef)
+            -> #Result<Self, #Error> {
+            todo!()
+        }
+
+        fn from_der(id: &#IdRef, contents: &#ContentsRef) -> #Result<Self, #Error> {
+            todo!()
+        }
+    })
+}
+
+#[allow(non_snake_case)]
+fn do_deserialize_enum(_attribute: Attribute, _data: syn::DataEnum) -> syn::Result<TokenStream> {
+    let IdRef = quote! { ::bsn1_serde::macro_alias::IdRef };
+    let Length = quote! { ::bsn1_serde::macro_alias::Length };
+    let ContentsRef = quote! { ::bsn1_serde::macro_alias::ContentsRef };
+    let Error = quote! { ::bsn1_serde::macro_alias::Error };
+
+    let Result = quote! { ::std::result::Result };
+
+    Ok(quote! {
+        unsafe fn from_ber(id: &#IdRef, length: #Length, contents: &#ContentsRef)
+            -> #Result<Self, #Error> {
+            todo!()
+        }
+
+        fn from_der(id: &#IdRef, contents: &#ContentsRef) -> #Result<Self, #Error> {
+            todo!()
+        }
+    })
+}
