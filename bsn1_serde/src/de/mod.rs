@@ -300,6 +300,28 @@ impl Deserialize for usize {
     }
 }
 
+impl Deserialize for String {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if length == Length::Indefinite {
+            Err(Error::IndefiniteLength)
+        } else {
+            debug_assert_eq!(length.definite(), Some(contents.len()));
+            Self::from_der(id, contents)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::utf8_string() && id != IdRef::utf8_string_constructed() {
+            Err(Error::UnmatchedId)
+        } else {
+            match std::str::from_utf8(contents.as_ref()) {
+                Ok(s) => Ok(s.into()),
+                Err(_) => Err(Error::InvalidUtf8),
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{to_ber, to_der};
@@ -444,6 +466,19 @@ mod tests {
 
             let der = to_der(&i).unwrap();
             assert_eq!(crate::from_der(&der), Ok(i));
+        }
+    }
+
+    #[test]
+    fn string() {
+        for s in ["", "a", "abc", "あいうえお"] {
+            let s = s.to_string();
+
+            let ber = to_ber(&s).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(s.to_string()));
+
+            let der = to_der(&s).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(s.to_string()));
         }
     }
 }
