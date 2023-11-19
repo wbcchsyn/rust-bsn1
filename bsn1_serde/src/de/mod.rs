@@ -33,6 +33,7 @@
 //! Provides trait `Deserialize`.
 
 use bsn1::{BerRef, ContentsRef, DerRef, Error, IdRef, Length};
+use std::collections::LinkedList;
 
 /// A **data structure** that can be deserialized from ASN.1 DER format.
 pub trait Deserialize: Sized {
@@ -361,6 +362,45 @@ where
     }
 }
 
+impl<T> Deserialize for LinkedList<T>
+where
+    T: Deserialize,
+{
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::sequence() {
+            Err(Error::UnmatchedId)
+        } else {
+            let mut contents: &[u8] = exclude_eoc(length, contents).map(AsRef::as_ref)?;
+            let mut ret = LinkedList::new();
+
+            while !contents.is_empty() {
+                let ber = BerRef::parse(&mut contents)?;
+                let t: T = Deserialize::from_ber(ber.id(), ber.length(), ber.contents())?;
+                ret.push_back(t);
+            }
+
+            Ok(ret)
+        }
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::sequence() {
+            Err(Error::UnmatchedId)
+        } else {
+            let mut ret = LinkedList::new();
+            let mut contents: &[u8] = contents.as_ref();
+
+            while !contents.is_empty() {
+                let der = DerRef::parse(&mut contents)?;
+                let t: T = Deserialize::from_der(der.id(), der.contents())?;
+                ret.push_back(t);
+            }
+
+            Ok(ret)
+        }
+    }
+}
+
 fn exclude_eoc(length: Length, contents: &ContentsRef) -> Result<&ContentsRef, Error> {
     match length {
         Length::Definite(len) => {
@@ -383,6 +423,7 @@ fn exclude_eoc(length: Length, contents: &ContentsRef) -> Result<&ContentsRef, E
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::{to_ber, to_der};
 
     #[test]
@@ -549,6 +590,18 @@ mod tests {
 
             let der = to_der(&v).unwrap();
             assert_eq!(crate::from_der(&der), Ok(v.clone()));
+        }
+    }
+
+    #[test]
+    fn linked_list() {
+        for v in [vec![-1, 0, 1], vec![1], vec![]] {
+            let l = LinkedList::from_iter(v.into_iter());
+            let ber = to_ber(&l).unwrap();
+            assert_eq!(crate::from_ber(&ber), Ok(l.clone()));
+
+            let der = to_der(&l).unwrap();
+            assert_eq!(crate::from_der(&der), Ok(l.clone()));
         }
     }
 }
