@@ -34,3 +34,5 @@
 #![doc = include_str!("../README.md")]
 
 mod attribute;
+
+use attribute::Attribute;
