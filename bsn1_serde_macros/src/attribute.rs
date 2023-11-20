@@ -41,6 +41,25 @@ pub struct Attribute {
     tag_num: Option<u128>,
 }
 
+impl TryFrom<&[syn::Attribute]> for Attribute {
+    type Error = syn::Error;
+
+    fn try_from(attrs: &[syn::Attribute]) -> syn::Result<Self> {
+        let mut ret = None;
+
+        for attr in attrs {
+            if let Some(a) = Self::parse(attr)? {
+                match ret {
+                    None => ret = Some(a),
+                    Some(_) => error(attr, "Duplicated `bsn1_serde` attribute.")?,
+                }
+            }
+        }
+
+        Ok(ret.unwrap_or_default())
+    }
+}
+
 impl Attribute {
     fn parse(attr: &syn::Attribute) -> syn::Result<Option<Self>> {
         let mut it = match &attr.meta {
