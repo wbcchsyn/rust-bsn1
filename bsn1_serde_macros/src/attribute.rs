@@ -30,5 +30,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use proc_macro2::TokenTree;
+use quote::ToTokens;
+
 #[derive(Default)]
 pub struct Attribute {}
+
+impl Attribute {
+    fn parse(attr: &syn::Attribute) -> syn::Result<Option<Self>> {
+        let mut it = match &attr.meta {
+            syn::Meta::List(meta) if meta.path.is_ident("bsn1_serde") => {
+                meta.tokens.clone().into_iter()
+            }
+            _ => return Ok(None),
+        };
+
+        let ret = Self::default();
+
+        while let Some(tt) = it.next() {
+            match tt {
+                TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
+                _ => error(tt, "Unexpected token.")?,
+            }
+        }
+
+        Ok(Some(ret))
+    }
+}
+
+fn error<T: ToTokens, U: std::fmt::Display>(tt: T, message: U) -> syn::Result<()> {
+    Err(syn::Error::new_spanned(tt, message))
+}
