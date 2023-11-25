@@ -428,7 +428,8 @@ mod tests {
                 .flatten()
                 .copied()
                 .collect();
-            let mut ber = Ber::new_indefinite(IdRef::sequence(), contents.as_slice().into());
+            let mut ber =
+                unsafe { Ber::new_indefinite(IdRef::sequence(), contents.as_slice().into()) };
             ber.extend_from_slice(BerRef::eoc());
 
             let mut bytes: &[u8] = ber.as_ref();
@@ -464,7 +465,8 @@ mod tests {
                 .flatten()
                 .copied()
                 .collect();
-            let mut inner = Ber::new_indefinite(IdRef::octet_string(), contents.as_slice().into());
+            let mut inner =
+                unsafe { Ber::new_indefinite(IdRef::octet_string(), contents.as_slice().into()) };
             inner.extend_from_slice(BerRef::eoc());
 
             let ber = Ber::new(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
@@ -482,7 +484,8 @@ mod tests {
         for i in 0..bytes.len() {
             let inner = Ber::from(&bytes[..i]);
 
-            let mut ber = Ber::new_indefinite(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
+            let mut ber =
+                unsafe { Ber::new_indefinite(IdRef::sequence(), (inner.as_ref() as &[u8]).into()) };
             ber.extend_from_slice(BerRef::eoc());
 
             let mut bytes: &[u8] = ber.as_ref();
@@ -503,10 +506,12 @@ mod tests {
                 .flatten()
                 .copied()
                 .collect();
-            let mut inner = Ber::new_indefinite(IdRef::octet_string(), contents.as_slice().into());
+            let mut inner =
+                unsafe { Ber::new_indefinite(IdRef::octet_string(), contents.as_slice().into()) };
             inner.extend_from_slice(BerRef::eoc());
 
-            let mut ber = Ber::new_indefinite(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
+            let mut ber =
+                unsafe { Ber::new_indefinite(IdRef::sequence(), (inner.as_ref() as &[u8]).into()) };
             ber.extend_from_slice(BerRef::eoc());
 
             let mut bytes: &[u8] = ber.as_ref();

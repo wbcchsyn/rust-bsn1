@@ -247,6 +247,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - From\<&mut [u8; N]\> for &mut ContentsRef
   - From\<&str\> for &ContentsRef
 - Create the following functions and methods
+  - Ber::from\_id\_iterator\_indefinite
   - Ber::from\_vec\_unchecked()
   - BerRef::eoc()
   - Ber::extend\_from\_slice()
@@ -277,6 +278,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Make the following functions and methods generic
   - Ber::extend\_from\_slice()
   - Der::extend\_from\_slice()
+- Make the following functions and methods unsafe
+  - Ber::new\_indefinite()
+  - Ber::with\_id\_length\_indefinite()
 - Add variant `Io` to enum `Error`
 
 ### Removed

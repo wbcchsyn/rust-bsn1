@@ -106,6 +106,14 @@ impl Ber {
     /// For example, the number 15 (0x0f) is reserved for now, but this function creates such
     /// an instance with the number 15 identifier.
     ///
+    /// # Safety
+    ///
+    /// ASN.1 defined that the contents of indefinite length BER must be a sequence of BERs,
+    /// and must be terminated by 'EOC BER'.
+    ///
+    /// The methods of `Ber` works fine even if the user violates the rule, however, such instance
+    /// may not be parsed again once after serialized.
+    ///
     /// # Panics
     ///
     /// Panics if the total length exceeds `isize::MAX`.
@@ -128,7 +136,7 @@ impl Ber {
     /// contents.extend_from_slice(contents1.as_ref() as &[u8]);
     /// contents.extend_from_slice(contents2.as_ref() as &[u8]);
     ///
-    /// let ber = Ber::new_indefinite(id, contents.as_slice().into());
+    /// let ber = unsafe { Ber::new_indefinite(id, contents.as_slice().into()) };
     ///
     /// assert_eq!(ber.id(), id);
     /// assert!(ber.length().is_indefinite());
@@ -146,7 +154,7 @@ impl Ber {
     ///
     /// assert_eq!(contents_.is_empty(), true);
     /// ```
-    pub fn new_indefinite(id: &IdRef, contents: &ContentsRef) -> Self {
+    pub unsafe fn new_indefinite(id: &IdRef, contents: &ContentsRef) -> Self {
         let mut ret = Self::with_id_length_indefinite(id, contents.len());
         ret.mut_contents()
             .as_mut()
@@ -203,6 +211,14 @@ impl Ber {
     /// function accepts such identifiers. For example, the number 15 (0x0f) is reserved for now,
     /// but this function creates such an instance with the number 15 identifier.
     ///
+    /// # Safety
+    ///
+    /// ASN.1 defined that the contents of indefinite length BER must be a sequence of BERs,
+    /// and must be terminated by 'EOC BER'.
+    ///
+    /// The methods of `Ber` works fine even if the user violates the rule, however, such instance
+    /// may not be parsed again once after serialized.
+    ///
     /// # Panics
     ///
     /// Panics if the total bytes exceeds `isize::MAX`.
@@ -214,7 +230,8 @@ impl Ber {
     /// ```
     /// use bsn1::{Ber, IdRef, Length};
     ///
-    /// let mut ber = Ber::with_id_length_indefinite(IdRef::utf8_string(), "Hello".len());
+    /// let mut ber
+    ///     = unsafe { Ber::with_id_length_indefinite(IdRef::utf8_string(), "Hello".len()) };
     ///
     /// assert_eq!(ber.id(), IdRef::utf8_string());
     /// assert!(ber.length().is_indefinite());
@@ -223,21 +240,19 @@ impl Ber {
     /// ber.mut_contents().as_mut().copy_from_slice("Hello".as_bytes());
     /// assert_eq!(ber.contents().as_ref(), "Hello".as_bytes());
     /// ```
-    pub fn with_id_length_indefinite(id: &IdRef, length: usize) -> Self {
+    pub unsafe fn with_id_length_indefinite(id: &IdRef, length: usize) -> Self {
         let length_ = Length::Indefinite.to_bytes();
         let total_len = id.len() + length_.len() + length;
 
         let mut buffer = Buffer::with_capacity(total_len);
 
-        unsafe {
-            let dst = buffer.as_mut_ptr();
-            dst.copy_from_nonoverlapping(id.as_ref().as_ptr(), id.len());
+        let dst = buffer.as_mut_ptr();
+        dst.copy_from_nonoverlapping(id.as_ref().as_ptr(), id.len());
 
-            let dst = dst.add(id.len());
-            dst.copy_from_nonoverlapping(length_.as_ptr(), length_.len());
+        let dst = dst.add(id.len());
+        dst.copy_from_nonoverlapping(length_.as_ptr(), length_.len());
 
-            buffer.set_len(total_len);
-        }
+        buffer.set_len(total_len);
 
         Self { buffer }
     }
@@ -426,6 +441,14 @@ impl Ber {
 
     /// Creates a new instance containing concatnated `contents` with indefinite length.
     ///
+    /// # Safety
+    ///
+    /// ASN.1 defined that the contents of indefinite length BER must be a sequence of BERs,
+    /// and must be terminated by 'EOC BER'.
+    ///
+    /// The methods of `Ber` works fine even if the user violates the rule, however, such instance
+    /// may not be parsed again once after serialized.
+    ///
     /// # Panics
     ///
     /// Panics if the total length exceeds `isize::MAX`.
@@ -437,16 +460,17 @@ impl Ber {
     ///
     /// // Build an sequence DER containing 2 other DERs.
     /// let contents0 = vec![Ber::from("foo"), Ber::from(29_i32), BerRef::eoc().into()];
-    /// let ber0 = Ber::from_id_iterator_indefinite(IdRef::sequence(), contents0.iter());
+    /// let ber0
+    ///     = unsafe { Ber::from_id_iterator_indefinite(IdRef::sequence(), contents0.iter()) };
     ///
     /// let mut contents1: Vec<u8> = Ber::from("foo").into_vec();
     /// contents1.extend_from_slice(&Ber::from(29_i32).as_ref());
     /// contents1.extend_from_slice(BerRef::eoc().as_ref());
-    /// let ber1 = Ber::new_indefinite(IdRef::sequence(), <&ContentsRef>::from(&contents1[..]));
+    /// let ber1 = unsafe { Ber::new_indefinite(IdRef::sequence(), contents1.as_slice().into()) };
     ///
     /// assert_eq!(ber0, ber1);
     /// ```
-    pub fn from_id_iterator_indefinite<I>(id: &IdRef, contents: I) -> Self
+    pub unsafe fn from_id_iterator_indefinite<I>(id: &IdRef, contents: I) -> Self
     where
         I: Iterator + Clone,
         I::Item: AsRef<[u8]>,
@@ -515,7 +539,7 @@ impl Ber {
     /// assert_eq!(ber.contents().as_ref(), &bytes[..]);
     ///
     /// // Push to BER with indefinite length.
-    /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), (&bytes[..9]).into());
+    /// let mut ber = unsafe { Ber::new_indefinite(IdRef::octet_string(), (&bytes[..9]).into()) };
     /// ber.push(bytes[9]);
     ///
     /// assert_eq!(ber.id(), IdRef::octet_string());
@@ -556,7 +580,7 @@ impl Ber {
     /// assert_eq!(ber.contents().as_ref(), &bytes[..]);
     ///
     /// // Extends BER with indefinite length.
-    /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), (&bytes[..5]).into());
+    /// let mut ber = unsafe { Ber::new_indefinite(IdRef::octet_string(), (&bytes[..5]).into()) };
     /// ber.extend_from_slice(&bytes[5..]);
     ///
     /// assert_eq!(ber.id(), IdRef::octet_string());
@@ -623,7 +647,7 @@ impl Ber {
     /// assert_eq!(ber.contents().as_ref(), &bytes[..100]);
     ///
     /// // Truncate BER with indefinite length.
-    /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), (&bytes[..]).into());
+    /// let mut ber = unsafe { Ber::new_indefinite(IdRef::octet_string(), (&bytes[..]).into()) };
     /// ber.truncate(100);
     ///
     /// assert_eq!(ber.id(), IdRef::octet_string());
@@ -856,7 +880,8 @@ mod tests {
                 .flatten()
                 .copied()
                 .collect();
-            let mut ber = Ber::new_indefinite(IdRef::sequence(), contents.as_slice().into());
+            let mut ber =
+                unsafe { Ber::new_indefinite(IdRef::sequence(), contents.as_slice().into()) };
             ber.extend_from_slice(BerRef::eoc());
 
             let mut bytes: &[u8] = ber.as_ref();
@@ -892,7 +917,8 @@ mod tests {
                 .flatten()
                 .copied()
                 .collect();
-            let mut inner = Ber::new_indefinite(IdRef::octet_string(), contents.as_slice().into());
+            let mut inner =
+                unsafe { Ber::new_indefinite(IdRef::octet_string(), contents.as_slice().into()) };
             inner.extend_from_slice(BerRef::eoc());
 
             let ber = Ber::new(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
@@ -910,7 +936,8 @@ mod tests {
         for i in 0..bytes.len() {
             let inner = Ber::from(&bytes[..i]);
 
-            let mut ber = Ber::new_indefinite(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
+            let mut ber =
+                unsafe { Ber::new_indefinite(IdRef::sequence(), (inner.as_ref() as &[u8]).into()) };
             ber.extend_from_slice(BerRef::eoc());
 
             let mut bytes: &[u8] = ber.as_ref();
@@ -931,10 +958,12 @@ mod tests {
                 .flatten()
                 .copied()
                 .collect();
-            let mut inner = Ber::new_indefinite(IdRef::octet_string(), contents.as_slice().into());
+            let mut inner =
+                unsafe { Ber::new_indefinite(IdRef::octet_string(), contents.as_slice().into()) };
             inner.extend_from_slice(BerRef::eoc());
 
-            let mut ber = Ber::new_indefinite(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
+            let mut ber =
+                unsafe { Ber::new_indefinite(IdRef::sequence(), (inner.as_ref() as &[u8]).into()) };
             ber.extend_from_slice(BerRef::eoc());
 
             let mut bytes: &[u8] = ber.as_ref();
@@ -972,7 +1001,8 @@ mod tests {
     fn truncate_indefinite() {
         let contents: Vec<u8> = (0..=u8::MAX).collect();
         for i in 0..contents.len() {
-            let mut ber = Ber::new_indefinite(IdRef::octet_string(), (&contents[..]).into());
+            let mut ber =
+                unsafe { Ber::new_indefinite(IdRef::octet_string(), (&contents[..]).into()) };
 
             ber.truncate(i as usize);
             assert_eq!(ber.id(), IdRef::octet_string());
@@ -981,7 +1011,8 @@ mod tests {
         }
 
         for &i in &[contents.len(), contents.len() + 1] {
-            let mut ber = Ber::new_indefinite(IdRef::octet_string(), (&contents[..]).into());
+            let mut ber =
+                unsafe { Ber::new_indefinite(IdRef::octet_string(), (&contents[..]).into()) };
             ber.truncate(i);
 
             ber.truncate((ber.as_ref() as &[u8]).len() + 1);
@@ -1014,7 +1045,8 @@ mod tests {
 
         for i in 0..bytes.len() {
             for j in 0..bytes.len() {
-                let mut ber = Ber::new_indefinite(IdRef::octet_string(), (&bytes[..i]).into());
+                let mut ber =
+                    unsafe { Ber::new_indefinite(IdRef::octet_string(), (&bytes[..i]).into()) };
                 ber.extend_from_slice(&bytes[..j]);
 
                 assert_eq!(ber.id(), IdRef::octet_string());
