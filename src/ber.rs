@@ -424,6 +424,49 @@ impl Ber {
         Self::from(der)
     }
 
+    /// Creates a new instance containing concatnated `contents` with indefinite length.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the total length exceeds `isize::MAX`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, BerRef, ContentsRef, IdRef};
+    ///
+    /// // Build an sequence DER containing 2 other DERs.
+    /// let contents0 = vec![Ber::from("foo"), Ber::from(29_i32), BerRef::eoc().into()];
+    /// let ber0 = Ber::from_id_iterator_indefinite(IdRef::sequence(), contents0.iter());
+    ///
+    /// let mut contents1: Vec<u8> = Ber::from("foo").into_vec();
+    /// contents1.extend_from_slice(&Ber::from(29_i32).as_ref());
+    /// contents1.extend_from_slice(BerRef::eoc().as_ref());
+    /// let ber1 = Ber::new_indefinite(IdRef::sequence(), <&ContentsRef>::from(&contents1[..]));
+    ///
+    /// assert_eq!(ber0, ber1);
+    /// ```
+    pub fn from_id_iterator_indefinite<I>(id: &IdRef, contents: I) -> Self
+    where
+        I: Iterator + Clone,
+        I::Item: AsRef<[u8]>,
+    {
+        let length = contents
+            .clone()
+            .fold(0, |acc, item| acc + item.as_ref().len());
+        let length_bytes = Length::Indefinite.to_bytes();
+        let total_len = id.len() + length_bytes.len() + length;
+
+        let mut buffer = Buffer::with_capacity(total_len);
+        unsafe {
+            buffer.extend_from_slice(id.as_ref());
+            buffer.extend_from_slice(&length_bytes);
+            contents.for_each(|c| buffer.extend_from_slice(c.as_ref()));
+        }
+
+        Self { buffer }
+    }
+
     /// Consumes `self`, returning `Vec`.
     ///
     /// # Examples
