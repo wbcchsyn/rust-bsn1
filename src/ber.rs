@@ -115,15 +115,36 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, ContentsRef, IdRef, Length};
+    /// use bsn1::{Ber, BerRef, Contents, ContentsRef, IdRef, Length};
     ///
-    /// let id = IdRef::octet_string();
-    /// let contents: &ContentsRef = "Foo".into();
-    /// let ber = Ber::new_indefinite(id, contents);
+    /// let id = IdRef::sequence();
+    ///
+    /// let contents0 = Ber::new(IdRef::utf8_string(), "Foo".as_bytes().into());
+    /// let contents1 = Ber::new(IdRef::integer(), &Contents::from(29_i32));
+    /// let contents2 = BerRef::eoc();
+    ///
+    /// let mut contents: Vec<u8> = Vec::new();
+    /// contents.extend_from_slice(contents0.as_ref() as &[u8]);
+    /// contents.extend_from_slice(contents1.as_ref() as &[u8]);
+    /// contents.extend_from_slice(contents2.as_ref() as &[u8]);
+    ///
+    /// let ber = Ber::new_indefinite(id, contents.as_slice().into());
     ///
     /// assert_eq!(ber.id(), id);
     /// assert!(ber.length().is_indefinite());
-    /// assert_eq!(ber.contents().as_ref(), "Foo".as_bytes());
+    ///
+    /// let mut contents_: &[u8] = ber.contents().as_ref();
+    ///
+    /// let contents0_ = BerRef::parse(&mut contents_).unwrap();
+    /// assert_eq!(contents0, contents0_);
+    ///
+    /// let contents1_ = BerRef::parse(&mut contents_).unwrap();
+    /// assert_eq!(contents1, contents1_);
+    ///
+    /// let contents2_ = BerRef::parse(&mut contents_).unwrap();
+    /// assert_eq!(contents2, contents2_);
+    ///
+    /// assert_eq!(contents_.is_empty(), true);
     /// ```
     pub fn new_indefinite(id: &IdRef, contents: &ContentsRef) -> Self {
         let mut ret = Self::with_id_length_indefinite(id, contents.len());
