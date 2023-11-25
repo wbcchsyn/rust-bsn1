@@ -228,17 +228,24 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, IdRef, Length};
+    /// use bsn1::{Ber, BerRef, Contents, IdRef, Length};
+    ///
+    /// let contents0 = Ber::new(IdRef::utf8_string(), "Foo".as_bytes().into());
+    /// let contents1 = Ber::new(IdRef::integer(), &Contents::from(29_i32));
+    /// let contents2 = BerRef::eoc();
+    ///
+    /// let mut contents: Vec<u8> = Vec::new();
+    /// contents.extend_from_slice(contents0.as_ref() as &[u8]);
+    /// contents.extend_from_slice(contents1.as_ref() as &[u8]);
+    /// contents.extend_from_slice(contents2.as_ref() as &[u8]);
     ///
     /// let mut ber
-    ///     = unsafe { Ber::with_id_length_indefinite(IdRef::utf8_string(), "Hello".len()) };
+    ///     = unsafe { Ber::with_id_length_indefinite(IdRef::sequence(), contents.len()) };
+    /// ber.mut_contents().as_mut().copy_from_slice(contents.as_slice());
     ///
-    /// assert_eq!(ber.id(), IdRef::utf8_string());
+    /// assert_eq!(ber.id(), IdRef::sequence());
     /// assert!(ber.length().is_indefinite());
-    /// assert_eq!(ber.contents().len(), "Hello".len());
-    ///
-    /// ber.mut_contents().as_mut().copy_from_slice("Hello".as_bytes());
-    /// assert_eq!(ber.contents().as_ref(), "Hello".as_bytes());
+    /// assert_eq!(ber.contents().as_ref(), contents.as_slice());
     /// ```
     pub unsafe fn with_id_length_indefinite(id: &IdRef, length: usize) -> Self {
         let length_ = Length::Indefinite.to_bytes();
@@ -526,7 +533,7 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, IdRef, Length};
+    /// use bsn1::{Ber, BerRef, IdRef, Length};
     ///
     /// let bytes: Vec<u8> = (0..10).collect();
     ///
@@ -539,13 +546,27 @@ impl Ber {
     /// assert_eq!(ber.contents().as_ref(), &bytes[..]);
     ///
     /// // Push to BER with indefinite length.
-    /// let mut ber = unsafe { Ber::new_indefinite(IdRef::octet_string(), (&bytes[..9]).into()) };
-    /// ber.push(bytes[9]);
+    /// let contents = [Ber::from("Foo"), Ber::from(-5_i32)];
+    /// let mut ber
+    ///         = unsafe { Ber::from_id_iterator_indefinite(IdRef::sequence(), contents.iter()) };
     ///
-    /// assert_eq!(ber.id(), IdRef::octet_string());
+    /// // Add 'EOC BER' to the end of 'contents octets'.
+    /// for byte in BerRef::eoc().as_ref() {
+    ///    ber.push(*byte);
+    /// }
+    ///
+    /// assert_eq!(ber.id(), IdRef::sequence());
     /// assert!(ber.length().is_indefinite());
     ///
-    /// assert_eq!(ber.contents().as_ref(), &bytes[..]);
+    /// let mut contents_: &[u8] = ber.contents().as_ref();
+    /// let contents0_ = BerRef::parse(&mut contents_).unwrap();
+    /// let contents1_ = BerRef::parse(&mut contents_).unwrap();
+    /// let contents2_ = BerRef::parse(&mut contents_).unwrap();
+    /// assert_eq!(contents_.is_empty(), true);
+    ///
+    /// assert_eq!(contents0_, &contents[0]);
+    /// assert_eq!(contents1_, &contents[1]);
+    /// assert_eq!(contents2_, BerRef::eoc());
     /// ```
     pub fn push(&mut self, byte: u8) {
         self.extend_from_slice(&[byte]);
