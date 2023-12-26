@@ -69,22 +69,11 @@ impl DerRef {
     /// assert_eq!(der0, der1);
     /// ```
     pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
-        let id = IdRef::parse(bytes)?;
-        let parsing = &bytes[id.len()..];
+        let mut readable = bytes;
+        Self::do_parse(&mut readable)?;
 
-        let (len, parsing) = match length::parse_(parsing) {
-            Err(Error::OverFlow) => return Err(Error::UnTerminatedBytes),
-            Err(e) => return Err(e),
-            Ok((Length::Indefinite, _)) => return Err(Error::IndefiniteLength),
-            Ok((Length::Definite(len), parsing)) => (len, parsing),
-        };
-
-        let total_len = bytes.len() - parsing.len() + len;
-        if bytes.len() < total_len {
-            Err(Error::UnTerminatedBytes)
-        } else {
-            unsafe { Ok(DerRef::from_bytes_unchecked(&bytes[..total_len])) }
-        }
+        let bytes = &bytes[..(bytes.len() - readable.len())];
+        unsafe { Ok(Self::from_bytes_unchecked(bytes)) }
     }
 
     /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a mutable reference to
