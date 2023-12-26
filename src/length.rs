@@ -34,6 +34,7 @@
 
 use crate::{Error, LengthBuffer};
 use std::cmp::Ordering;
+use std::io::{Read, Write};
 use std::mem::{size_of, size_of_val};
 use std::ops::Deref;
 
@@ -74,7 +75,7 @@ impl Length {
 }
 
 impl Length {
-    /// Parses `bytes` starting with length octets and tries to creates a new instance.
+    /// Parses `readable` starting with length octets and tries to creates a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
@@ -83,17 +84,22 @@ impl Length {
     /// ```
     /// use bsn1::Length;
     ///
-    /// let mut bytes = vec![0x05]; // represents Definite(5).
-    /// let len = Length::parse(&bytes).unwrap();
+    /// // Serializes Definite(5).
+    /// let mut bytes = Vec::from(&* Length::Definite(5).to_bytes());
+    ///
+    /// // Parses the serialized bytes. The result is Definite(5).
+    /// let len = Length::parse(&mut &bytes[..]).unwrap();
     /// assert_eq!(Length::Definite(5), len);
     ///
-    /// // Ignores the last extra octet 0x03.
+    /// // The extra octets at the end does not affect the result.
     /// bytes.push(0x03);
-    /// let len = Length::parse(&bytes).unwrap();
+    /// bytes.push(0x04);
+    /// let len = Length::parse(&mut &bytes[..]).unwrap();
     /// assert_eq!(Length::Definite(5), len);
     /// ```
-    pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
-        parse_(bytes).map(|(length, _rest)| length)
+    pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
+        let mut writeable = std::io::sink();
+        unsafe { parse_length(readable, &mut writeable) }
     }
 
     /// Serializes `length`.
@@ -103,11 +109,11 @@ impl Length {
     /// ```
     /// use bsn1::Length;
     ///
-    /// let length = Length::Definite(3);
-    /// let bytes = length.to_bytes();
-    ///
-    /// let deserialized = Length::parse(&bytes as &[u8]).unwrap();
-    /// assert_eq!(length, deserialized);
+    /// // Serializes Definite(3), and deserializes it.
+    /// // The result is Definite(3).
+    /// let bytes = Length::Definite(3).to_bytes();
+    /// let deserialized = Length::parse(&mut &*bytes).unwrap();
+    /// assert_eq!(Length::Definite(3), deserialized);
     /// ```
     pub fn to_bytes(self) -> impl Deref<Target = [u8]> {
         let mut buffer = LengthBuffer::new();
@@ -242,6 +248,57 @@ impl Length {
             Self::Indefinite => false,
             _ => true,
         }
+    }
+}
+
+/// Parses `readable` starting with 'length', writes the parsed octets to `writeable`,
+/// and returns `Length`.
+///
+/// # Safety
+///
+/// The behavior is undefined if `writeable` is closed or broken before this function returns.
+/// `writeable` should be `std::io::Sink` or `Buffer`.
+pub unsafe fn parse_length<R: Read, W: Write>(
+    readable: &mut R,
+    writeable: &mut W,
+) -> Result<Length, Error> {
+    use crate::misc::{read_u8, write_u8};
+
+    let first = read_u8(readable)?;
+    write_u8(writeable, first)?;
+
+    if first == Length::INDEFINITE {
+        // Indefinite
+        Ok(Length::Indefinite)
+    } else if first & Length::LONG_FLAG != Length::LONG_FLAG {
+        // Short form
+        Ok(Length::Definite(first as usize))
+    } else {
+        // Long form
+        let second = read_u8(readable)?;
+        if second == 0x00 {
+            // The second octet is not necessary.
+            return Err(Error::RedundantBytes);
+        }
+        write_u8(writeable, second)?;
+
+        let followings_count = (first ^ Length::LONG_FLAG) as usize;
+        if followings_count == 1 && second <= Length::MAX_SHORT {
+            // Short form will do.
+            return Err(Error::RedundantBytes);
+        }
+        if size_of::<usize>() < followings_count {
+            return Err(Error::OverFlow);
+        }
+
+        let mut len = second as usize;
+        for _ in 1..followings_count {
+            let byte = read_u8(readable)?;
+            write_u8(writeable, byte)?;
+            len = (len << 8) + byte as usize;
+        }
+
+        Ok(Length::Definite(len))
     }
 }
 
