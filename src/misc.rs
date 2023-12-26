@@ -30,7 +30,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::Error;
+use crate::{Error, Length};
 use std::io::{Read, Write};
 
 /// Tries to read one byte from `readable`.
@@ -57,4 +57,19 @@ pub unsafe fn write_u8<T: Write>(writeable: &mut T, byte: u8) -> Result<(), Erro
         Ok(1) => Ok(()),
         _ => unimplemented!(),
     }
+}
+
+/// Parses the identifier and the length from `readable`, writes them to `writeable`,
+/// and returns the `Length`.
+///
+/// # Safety
+///
+/// The behavior is undefined if `writeable` is closed or broken before this function returns.
+/// `writeable` should be `std::io::Sink` or `Buffer`.
+pub unsafe fn parse_id_length<R: Read, W: Write>(
+    readable: &mut R,
+    writeable: &mut W,
+) -> Result<Length, Error> {
+    let _ = crate::identifier_ref::parse_id(readable, writeable)?;
+    crate::length::parse_length(readable, writeable)
 }
