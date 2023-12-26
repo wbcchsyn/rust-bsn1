@@ -123,6 +123,22 @@ impl DerRef {
         unsafe { Ok(&mut *ptr) }
     }
 
+    fn do_parse(readable: &mut &[u8]) -> Result<(), Error> {
+        let mut writeable = std::io::sink();
+
+        let length = match unsafe { crate::misc::parse_id_length(readable, &mut writeable)? } {
+            Length::Indefinite => return Err(Error::IndefiniteLength),
+            Length::Definite(length) => length,
+        };
+
+        if readable.len() < length {
+            Err(Error::UnTerminatedBytes)
+        } else {
+            *readable = &readable[length..];
+            Ok(())
+        }
+    }
+
     /// Provides a reference from `bytes` without any check.
     ///
     /// `bytes` must not include any extra octet.
