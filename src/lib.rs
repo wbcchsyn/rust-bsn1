@@ -300,3 +300,9 @@ impl PartialEq for Error {
         }
     }
 }
+
+impl From<std::io::Error> for Error {
+    fn from(err: std::io::Error) -> Self {
+        Self::Io(err)
+    }
+}
