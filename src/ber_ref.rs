@@ -49,6 +49,12 @@ impl<'a> From<&'a DerRef> for &'a BerRef {
 }
 
 impl BerRef {
+    /// Returns a reference to 'End-of-Contents'.
+    pub fn eoc() -> &'static Self {
+        const BYTES: [u8; 2] = [0x00, 0x00];
+        unsafe { Self::from_bytes_unchecked(&BYTES) }
+    }
+
     /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a reference to `BerRef`.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
