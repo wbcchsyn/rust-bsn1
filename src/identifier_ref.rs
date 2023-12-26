@@ -97,34 +97,9 @@ impl IdRef {
     /// assert_eq!(IdRef::eoc(), idref);
     /// ```
     pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
-        let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
-
-        if first & LONG_FLAG != LONG_FLAG {
-            // Short From
-            return Ok(unsafe { IdRef::from_bytes_unchecked(&bytes[0..1]) });
-        }
-
-        let second = *bytes.get(1).ok_or(Error::UnTerminatedBytes)?;
-
-        if second <= MAX_SHORT {
-            // Short form will do.
-            return Err(Error::RedundantBytes);
-        }
-
-        if second == MORE_FLAG {
-            // The second octet is not necessary.
-            return Err(Error::RedundantBytes);
-        }
-
-        // Find the last octet
-        for i in 1..bytes.len() {
-            if bytes[i] & MORE_FLAG != MORE_FLAG {
-                return Ok(unsafe { IdRef::from_bytes_unchecked(&bytes[0..=i]) });
-            }
-        }
-
-        // The last octet is not found.
-        Err(Error::UnTerminatedBytes)
+        let len = Self::do_parse(bytes)?;
+        let bytes = &bytes[..len];
+        unsafe { Ok(Self::from_bytes_unchecked(bytes)) }
     }
 
     /// Parses `bytes` starting with identifier, and tries to provide a mutable reference to
@@ -160,9 +135,41 @@ impl IdRef {
     /// assert_eq!(IdRef::eoc(), idref);
     /// ```
     pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
-        let ret = Self::parse(bytes)?;
-        let ptr = (ret as *const Self) as *mut Self;
-        unsafe { Ok(&mut *ptr) }
+        let len = Self::do_parse(bytes)?;
+        let bytes = &mut bytes[..len];
+        unsafe { Ok(Self::from_mut_bytes_unchecked(bytes)) }
+    }
+
+    /// Parses `bytes` starting with identifier, and tries to return the byte length.
+    fn do_parse(bytes: &[u8]) -> Result<usize, Error> {
+        let first = *bytes.get(0).ok_or(Error::UnTerminatedBytes)?;
+
+        if first & LONG_FLAG != LONG_FLAG {
+            // Short From
+            return Ok(1);
+        }
+
+        let second = *bytes.get(1).ok_or(Error::UnTerminatedBytes)?;
+
+        if second <= MAX_SHORT {
+            // Short form will do.
+            return Err(Error::RedundantBytes);
+        }
+
+        if second == MORE_FLAG {
+            // The second octet is not necessary.
+            return Err(Error::RedundantBytes);
+        }
+
+        // Find the last octet
+        for i in 1..bytes.len() {
+            if bytes[i] & MORE_FLAG != MORE_FLAG {
+                return Ok(i + 1);
+            }
+        }
+
+        // The last octet is not found.
+        Err(Error::UnTerminatedBytes)
     }
 
     /// Provides a reference from `bytes` without any check.
