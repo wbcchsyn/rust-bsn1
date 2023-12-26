@@ -106,10 +106,11 @@ impl DerRef {
     /// assert_eq!(der.contents().as_ref(), &[0x09]);
     /// ```
     pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
-        let ret = Self::parse(bytes)?;
-        let ptr = ret as *const Self;
-        let ptr = ptr as *mut Self;
-        unsafe { Ok(&mut *ptr) }
+        let mut readable = bytes as &[u8];
+        Self::do_parse(&mut readable)?;
+
+        let len = bytes.len() - readable.len();
+        unsafe { Ok(Self::from_mut_bytes_unchecked(&mut bytes[..len])) }
     }
 
     fn do_parse(readable: &mut &[u8]) -> Result<(), Error> {
