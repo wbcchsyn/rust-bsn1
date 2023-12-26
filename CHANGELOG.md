@@ -227,6 +227,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - AsMut\<DerRef\> for Der
   - AsRef\<BerRef\> for Ber
   - AsRef\<DerRef\> for Der
+  - From\<std::io::Error\> for Error
   - From\<IdRef\> for Id
   - From\<bool\> for Ber
   - From\<T: PrimInt\> for Ber (`PrimInt` is `i8` or `u8` or ... `u128` or `isize` or `usize`.)
@@ -257,6 +258,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - Rename IdRef::try\_from\_bytes() IdRef::parse()
   - Rename IdRef::try\_from\_mut\_bytes() IdRef::parse\_mut()
   - Rename Length::try\_from\_bytes() Length::parse()
+- Add variant `Io` to enum `Error`
 
 ### Removed
 
@@ -296,6 +298,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - Borrow<[u8]> for Der
   - Borrow<[u8]> for DerRef
   - BorrowMut\<ContentsRef\> for Contents
+  - Clone for Error
+  - Copy for Error
+  - Eq for Error
+  - Hash for Error
 - Delete the following macros
   - constructed\_ber!()
   - constructed\_der!()

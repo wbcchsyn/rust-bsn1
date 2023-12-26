@@ -247,7 +247,8 @@ use length_buffer::LengthBuffer;
 use std::fmt;
 
 /// Errors for this crate.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug)]
+#[non_exhaustive]
 pub enum Error {
     /// The bytes finish before the last octet.
     UnTerminatedBytes,
@@ -263,6 +264,11 @@ pub enum Error {
     BadEoc,
     /// The contents include invalid octet(s).
     InvalidContents,
+    /// IO Error for serialization/deserialization.
+    ///
+    /// Note that this error cannot be compared with others.
+    /// `PartialEq::eq` always returns `false` for this error.
+    Io(std::io::Error),
 }
 
 impl fmt::Display for Error {
@@ -274,8 +280,29 @@ impl fmt::Display for Error {
             Self::IndefiniteLength => f.write_str("'Indefinite Length' in DER or CER"),
             Self::BadEoc => f.write_str("'Indefinite Length BER' includes a bad 'EOC.'"),
             Self::InvalidContents => f.write_str("Contents include invlid octet(s)."),
+            Self::Io(err) => err.fmt(f),
         }
     }
 }
 
 impl std::error::Error for Error {}
+
+impl PartialEq for Error {
+    fn eq(&self, other: &Self) -> bool {
+        match self {
+            Self::UnTerminatedBytes => matches!(other, Self::UnTerminatedBytes),
+            Self::RedundantBytes => matches!(other, Self::RedundantBytes),
+            Self::OverFlow => matches!(other, Self::OverFlow),
+            Self::IndefiniteLength => matches!(other, Self::IndefiniteLength),
+            Self::BadEoc => matches!(other, Self::BadEoc),
+            Self::InvalidContents => matches!(other, Self::InvalidContents),
+            Self::Io(_) => false,
+        }
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(err: std::io::Error) -> Self {
+        Self::Io(err)
+    }
+}
