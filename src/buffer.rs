@@ -35,6 +35,7 @@ use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
+use std::io::Write;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 struct HeapBuffer {
@@ -198,6 +199,17 @@ impl From<Vec<u8>> for Buffer {
                 },
             }
         }
+    }
+}
+
+impl Write for Buffer {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.extend_from_slice(buf);
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
     }
 }
 

@@ -231,6 +231,7 @@ mod identifier;
 mod identifier_ref;
 mod length;
 mod length_buffer;
+mod misc;
 
 pub use ber::Ber;
 pub use ber_ref::BerRef;
