@@ -146,8 +146,13 @@ impl BerRef {
     }
 
     fn do_parse(readable: &mut &[u8]) -> Result<i8, Error> {
+        // Check eoc
+        if readable.starts_with(Self::eoc().as_ref()) {
+            *readable = &readable[Self::eoc().as_ref().len()..];
+            return Ok(-1);
+        }
+
         let mut writeable = std::io::sink();
-        let init_bytes = *readable;
 
         match unsafe { crate::misc::parse_id_length(readable, &mut writeable)? } {
             Length::Definite(contents_len) => {
@@ -155,13 +160,7 @@ impl BerRef {
                     Err(Error::UnTerminatedBytes)
                 } else {
                     *readable = &readable[contents_len..];
-
-                    let read = &init_bytes[..(init_bytes.len() - readable.len())];
-                    if read == Self::eoc().as_ref() {
-                        Ok(-1)
-                    } else {
-                        Ok(0)
-                    }
+                    Ok(0)
                 }
             }
             Length::Indefinite => Ok(1),
