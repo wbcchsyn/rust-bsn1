@@ -61,7 +61,7 @@ impl<'a> From<&'a DerRef> for &'a BerRef {
 
 impl BerRef {
     /// Returns a reference to 'End-of-Contents'.
-    pub fn eoc() -> &'static Self {
+    pub const fn eoc() -> &'static Self {
         const BYTES: [u8; 2] = [0x00, 0x00];
         unsafe { Self::from_bytes_unchecked(&BYTES) }
     }
