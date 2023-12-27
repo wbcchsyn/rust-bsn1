@@ -183,3 +183,14 @@ impl IndexMut<usize> for TmpBuffer {
         &mut self.as_mut_slice()[index]
     }
 }
+
+impl<T> PartialEq<T> for TmpBuffer
+where
+    T: Borrow<[u8]>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.as_slice() == other.borrow()
+    }
+}
+
+impl Eq for TmpBuffer {}
