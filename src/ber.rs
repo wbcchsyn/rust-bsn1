@@ -344,11 +344,44 @@ impl Ber {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
+    /// # Performance
+    ///
+    /// This function is not so efficient compared with [`Ber::parse`].
+    /// If you have a slice of serialized BER, use [`BerRef::parse`]
+    /// and then call [`ToOwned::to_owned`] instead.
+    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifiers and they should not be used, however, this
     /// function accepts such identifiers. For example, the number 15 (0x0f) is reserved for now,
     /// but this function returns `Ok`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, BerRef};
+    ///
+    /// // Serialize DER of '10' as Integer.
+    /// let ber = Ber::from(10_i32);
+    /// let mut serialized = Vec::from(ber.as_ref() as &[u8]);
+    ///
+    /// // Deserialize it.
+    /// let deserialized = Ber::parse(&mut &serialized[..]).unwrap();
+    /// assert_eq!(ber, deserialized);
+    ///
+    /// // Extra octets at the end does not affect the result.
+    /// serialized.push(0x00);
+    /// serialized.push(0x01);
+    /// let deserialized = Ber::parse(&mut &serialized[..]).unwrap();
+    ///
+    /// assert_eq!(ber, deserialized);
+    ///
+    /// // We can access to the inner slice of `serialized`.
+    /// // We can use `BerRef::parse` instead of this function.
+    /// // (`BerRef::parse` is more efficient than this function.)
+    /// let deserialized = BerRef::parse(&serialized[..]).map(ToOwned::to_owned).unwrap();
+    /// assert_eq!(ber, deserialized);
+    /// ```
     pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
         let mut buffer = Buffer::new();
         let mut stack_depth: isize = 0;

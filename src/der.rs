@@ -260,6 +260,15 @@ impl Der {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
+    /// # Performance
+    ///
+    /// This function is not so efficient compared with [`DerRef::parse`].
+    /// If you have a slice of serialized DER, use [`DerRef::parse`]
+    /// and then call [`ToOwned::to_owned`] instead.
+    ///
+    /// [`DerRef::parse`]: DerRef::parse
+    /// [`ToOwned::to_owned`]: std::borrow::ToOwned::to_owned
+    ///
     /// # Warnings
     ///
     /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
@@ -270,20 +279,28 @@ impl Der {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::Der;
+    /// use bsn1::{Der, DerRef};
     ///
-    /// let der0 = Der::from(10_i32);
+    /// // Serialize DER of '10' as Integer.
+    /// let der = Der::from(10_i32);
+    /// let mut serialized = Vec::from(der.as_ref() as &[u8]);
     ///
-    /// // Serialize der0 and deserialize it again.
-    /// let mut bytes: Vec<u8> = Vec::from(der0.as_ref() as &[u8]);
-    /// let der1 = Der::parse(&mut &bytes[..]).unwrap();
-    /// assert_eq!(der0, der1);
+    /// // Deserialize it.
+    /// let deserialized = Der::parse(&mut &serialized[..]).unwrap();
+    /// assert_eq!(der, deserialized);
     ///
     /// // Extra octets at the end does not affect the result.
-    /// bytes.extend_from_slice(&[0xff, 0x00, 0x11]);
-    /// let der2 = Der::parse(&mut &bytes[..]).unwrap();
+    /// serialized.push(0x00);
+    /// serialized.push(0x01);
+    /// let deserialized = Der::parse(&mut &serialized[..]).unwrap();
     ///
-    /// assert_eq!(der0, der2);
+    /// assert_eq!(der, deserialized);
+    ///
+    /// // We can access to the inner slice of `serialized`.
+    /// // We can use `DerRef::parse` instead of this function.
+    /// // (`DerRef::parse` is more efficient than this function.)
+    /// let deserialized = DerRef::parse(&serialized[..]).map(ToOwned::to_owned).unwrap();
+    /// assert_eq!(der, deserialized);
     /// ```
     pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
         let mut writeable = Buffer::new();

@@ -125,6 +125,15 @@ impl Id {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
+    /// # Performance
+    ///
+    /// This function is not so efficient compared with [`IdRef::parse`].
+    /// If you have a slice of serialized bytes, use [`IdRef::parse`]
+    /// and then call [`ToOwned::to_owned`] instead.
+    ///
+    /// [`IdRef::parse`]: IdRef::parse
+    /// [`ToOwned::to_owned`]: std::borrow::ToOwned::to_owned
+    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
@@ -136,22 +145,24 @@ impl Id {
     /// ```
     /// use bsn1::{Id, IdRef};
     ///
-    /// // Serialize id representing NULL and store it to `bytes`.
-    /// let mut bytes = Vec::from(IdRef::null().as_ref());
+    /// // Serialize an 'identifier' representing 'utf8-string'
+    /// let id = IdRef::utf8_string();
+    /// let mut serialized = Vec::from(id.as_ref());
     ///
-    /// // Deserialize `bytes`. The result is also NULL.
-    /// let mut bytes0: &[u8] = &bytes[..];
-    /// let id0 = Id::parse(&mut bytes0).unwrap();
-    /// assert_eq!(id0, IdRef::null());
+    /// // Deserialize it.
+    /// let deserialized = Id::parse(&mut &serialized[..]).unwrap();
+    /// assert_eq!(id, &deserialized);
     ///
-    /// // Store extra octets to the end of `bytes`.
-    /// // The result does not changes.
-    /// bytes.push(0x01);
-    /// bytes.push(0x02);
-    /// let mut bytes1: &[u8] = &bytes[..];
-    /// let id1 = Id::parse(&mut bytes1).unwrap();
+    /// // Extra octets at the end does not affect the result.
+    /// serialized.push(0);
+    /// serialized.push(1);
+    /// let deserialized = Id::parse(&mut &serialized[..]).unwrap();
+    /// assert_eq!(id, &deserialized);
     ///
-    /// assert_eq!(id0, id1);
+    /// // We can access to the inner slice of `serialized`.
+    /// // We can use `IdRef::parse` instead. It is more efficient.
+    /// let deserialized: Id = IdRef::parse(&mut &serialized[..]).map(ToOwned::to_owned).unwrap();
+    /// assert_eq!(id, &deserialized);
     /// ```
     pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
         let mut buffer = Buffer::new();

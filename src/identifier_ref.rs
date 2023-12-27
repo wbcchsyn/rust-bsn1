@@ -87,15 +87,19 @@ impl IdRef {
     /// ```
     /// use bsn1::IdRef;
     ///
-    /// // &[0] represents 'EOC'.
-    /// let bytes: &[u8] = &[0];
-    /// let idref = IdRef::parse(bytes).unwrap();
-    /// assert_eq!(IdRef::eoc(), idref);
+    /// // Serialize an 'identifier' representing 'utf8-string'
+    /// let id = IdRef::utf8_string();
+    /// let mut serialized = Vec::from(id.as_ref());
     ///
-    /// // The result is not changed if (an) extra octet(s) is added at the end.
-    /// let bytes: &[u8] = &[0, 1, 2];
-    /// let idref = IdRef::parse(bytes).unwrap();
-    /// assert_eq!(IdRef::eoc(), idref);
+    /// // Deserialize.
+    /// let deserialized = IdRef::parse(&serialized[..]).unwrap();
+    /// assert_eq!(id, deserialized);
+    ///
+    /// // Extra octets at the end does not affect the result.
+    /// serialized.push(0);
+    /// serialized.push(1);
+    /// let deserialized = IdRef::parse(&serialized[..]).unwrap();
+    /// assert_eq!(id, deserialized);
     /// ```
     pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
         let mut readable = bytes;
@@ -113,6 +117,10 @@ impl IdRef {
     ///
     /// This function ignores the extra octet(s) at the end if any.
     ///
+    /// This function is same to [`parse`] except that it returns a mutable reference.
+    ///
+    /// [`parse`]: Self::parse
+    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
@@ -124,21 +132,21 @@ impl IdRef {
     /// ```
     /// use bsn1::{ClassTag, IdRef};
     ///
-    /// let bytes: &mut [u8] = &mut [0];
+    /// // Serialize an 'identifier' representing 'utf8-string'
+    /// let id = IdRef::utf8_string();
+    /// let mut serialized = Vec::from(id.as_ref());
     ///
-    /// {
-    ///     let idref = IdRef::parse_mut(bytes).unwrap();
-    ///     // Update idref
-    ///     idref.set_class(ClassTag::Private);
-    /// }
+    /// // Deserialize.
+    /// let deserialized = IdRef::parse_mut(&mut serialized[..]).unwrap();
+    /// assert_eq!(id, deserialized);
     ///
-    /// // 'bytes' is updcated as well.
-    /// assert_eq!(bytes[0], ClassTag::Private as u8);
+    /// // You can update the identifier, because 'deserialized' is a mutable reference.
+    /// deserialized.set_class(ClassTag::Private);
     ///
-    /// // The result is not changed if (an) extra octet(s) is added at the end.
-    /// let bytes: &mut [u8] = &mut [0, 1, 2, 3];
-    /// let idref = IdRef::parse_mut(bytes).unwrap();
-    /// assert_eq!(IdRef::eoc(), idref);
+    /// // Deserialize again.
+    /// // The result is not same, because `serialized` is updated via `deserialized`.
+    /// let deserialized = IdRef::parse_mut(&mut serialized[..]).unwrap();
+    /// assert!(id != deserialized);
     /// ```
     pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
         let len = Self::do_parse(bytes)?;
