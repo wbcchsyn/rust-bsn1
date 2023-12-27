@@ -244,7 +244,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Create the following functions and methods
   - Ber::from\_vec\_unchecked()
   - BerRef::eoc()
+  - Ber::extend\_from\_slice()
+  - Ber::push()
+  - Ber::truncate()
   - Der::from\_vec\_unchecked()
+  - Der::extend\_from\_slice()
+  - Der::push()
+  - Der::truncate()
 - Create struct `IdNumber`, and change the following functions and methods type.
   - The return type of `IdRef::number`
   - The argument type of `Id::new`
@@ -310,6 +316,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Delete the following macros
   - constructed\_ber!()
   - constructed\_der!()
+- Delete the following functions and methods.
+  - Ber::set\_length() (Use `Ber::truncate` or `Ber::push` or `Ber::extend\_from\_slice` instead)
+  - Der::set\_length() (Use `Der::truncate` or `Der::push` or `Der::extend\_from\_slice` instead)
 
 ### Fixed
 

@@ -492,76 +492,167 @@ impl Der {
         self.buffer.into_vec()
     }
 
-    /// Forces to set the length of the `contents` to `new_length`.
+    /// Appends `byte` to the end of the 'contents octets'.
     ///
-    /// If `new_length` is less than the length of current `contents`, this method truncates the
-    /// contents; otherwise, the `contents` is enlarged. The bytes of the extended
-    /// contents are not initialized. Use [`mut_contents`] via [`DerefMut`] implementation
-    /// to initialize them.
-    ///
-    /// # Warnings
-    ///
-    /// `new_length` implies the length of `contents`.
-    /// The total length will be greater than `new_length`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the total length exceed `isize::MAX`.
-    ///
-    /// [`mut_contents`]: DerRef::mut_contents
+    /// Note that this method may shift the 'contents octets',
+    /// and the performance is `O(n)` where `n` is the length of 'contents octets'
+    /// in the worst-case;
+    /// because the length of 'length octets' may change.
+    /// (DER is composed of 'identifier octets', 'length octets' and 'contents octets'
+    /// in this order.)
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Der, Length};
+    /// use bsn1::{Der, IdRef, Length};
     ///
-    /// let mut der = Der::from(&[] as &[u8]);
+    /// let bytes: Vec<u8> = (0..10).collect();
+    /// let mut der = Der::from(&bytes[..]);
+    /// der.push(0xff);
     ///
-    /// assert_eq!(der.length(), Length::Definite(0));
-    /// assert_eq!(der.contents().as_ref(), &[]);
+    /// assert_eq!(der.id(), IdRef::octet_string());
+    /// assert_eq!(der.length(), Length::Definite(bytes.len() + 1));
     ///
-    /// let new_contents: &[u8] = &[1, 2, 3, 4];
-    /// der.set_length(new_contents.len());
-    /// der.mut_contents().as_mut().copy_from_slice(new_contents);
-    ///
-    /// assert_eq!(der.length(), Length::Definite(new_contents.len()));
-    /// assert_eq!(der.contents().as_ref(), new_contents);
+    /// assert_eq!(&der.contents().as_ref()[..bytes.len()], &bytes[..]);
+    /// assert_eq!(der.contents().as_ref().last().unwrap(), &0xff);
     /// ```
-    pub fn set_length(&mut self, new_length: usize) {
-        let old_length = self.contents().len();
-        if old_length == new_length {
-            return;
-        }
+    pub fn push(&mut self, byte: u8) {
+        self.extend_from_slice(&[byte]);
+    }
 
-        let contents_offset = (new_length as isize) - (old_length as isize);
+    /// Appends `bytes` to the end of the 'contents octets'.
+    ///
+    /// Note that this method may shift the 'contents octets',
+    /// and the performance is `O(n)` where `n` is the length of 'contents octets'
+    /// in the worst-case;
+    /// because the length of 'length octets' may change.
+    /// (DER is composed of 'identifier octets', 'length octets' and 'contents octets'
+    /// in this order.)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef, Length};
+    ///
+    /// let bytes: Vec<u8> = (0..10).collect();
+    /// let mut der = Der::from(&bytes[..5]);
+    /// der.extend_from_slice(&bytes[5..]);
+    ///
+    /// assert_eq!(der.id(), IdRef::octet_string());
+    /// assert_eq!(der.length(), Length::Definite(bytes.len()));
+    /// assert_eq!(der.contents().as_ref(), &bytes[..]);
+    /// ```
+    pub fn extend_from_slice(&mut self, bytes: &[u8]) {
+        let id_len = self.id().len();
+        let old_length = self.length();
+        let new_length = Length::Definite(old_length.definite().unwrap() + bytes.len());
 
-        let old_length_ = Length::Definite(old_length).to_bytes();
-        let new_length_ = Length::Definite(new_length).to_bytes();
-        let length_offset = (new_length_.len() as isize) - (old_length_.len() as isize);
-
-        // Reserve the capacity if necessary
-        if 0 < contents_offset {
-            let total_offset = length_offset + contents_offset;
-            self.buffer.reserve(total_offset as usize);
+        // Update the length of `buffer`
+        {
+            let offset = bytes.len() + new_length.len() - old_length.len();
+            self.buffer.reserve(offset);
+            unsafe { self.buffer.set_len(self.buffer.len() + offset) };
         }
 
         unsafe {
-            // Copy the contents if necessary.
-            if length_offset != 0 {
-                let src = self.mut_contents().as_mut().as_mut_ptr();
-                let dst = src.offset(length_offset);
-                let count = new_length.min(old_length);
-                dst.copy_from(src, count);
+            // Copy the contents
+            {
+                let mut dest = self.buffer.as_mut_ptr().add(id_len).add(new_length.len());
+
+                // Copy the old  contents octets if necessary.
+                {
+                    let src = self.buffer.as_ptr().add(id_len + old_length.len());
+                    let count = old_length.definite().unwrap();
+                    if src != dest {
+                        src.copy_to(dest, count);
+                    }
+                    dest = dest.add(count);
+                }
+
+                // Copy `bytes`
+                {
+                    let src = bytes.as_ptr();
+                    let count = bytes.len();
+                    src.copy_to_nonoverlapping(dest, count);
+                    dest = dest.add(count);
+                }
+
+                debug_assert_eq!(
+                    dest.offset_from(self.buffer.as_ptr()),
+                    self.buffer.len() as isize
+                );
             }
 
-            // Copy the length
-            let src = new_length_.as_ptr();
-            let dst = self.buffer.as_mut_ptr().add(self.id().len());
-            dst.copy_from_nonoverlapping(src, new_length_.len());
+            // Copy the length octets
+            {
+                let new_length_bytes = new_length.to_bytes();
+                let src = new_length_bytes.as_ptr();
+                let dest = self.buffer.as_mut_ptr().add(id_len);
+                src.copy_to(dest, new_length_bytes.len());
+            }
+        }
+    }
 
-            // Update the buffer length
-            let total_len = (self.buffer.len() as isize) + length_offset + contents_offset;
-            self.buffer.set_len(total_len as usize);
+    /// Enshorten the `contents`, keeping the first `new_length` and discarding the rest
+    /// if `new_length` is less than the length of the current 'contents octets';
+    /// otherwise, does nothing.
+    ///
+    /// Note that this method may shift the 'contents octets',
+    /// and the performance is `O(n)` where `n` is the length of 'contents octets'
+    /// in the worst-case;
+    /// because the length of 'length octets' may change.
+    /// (DER is composed of 'identifier octets', 'length octets' and 'contents octets'
+    /// in this order.)
+    ///
+    /// # Warnings
+    ///
+    /// `new_length` specifies the length of the 'contents octets' after this method returns.
+    /// The total length of `self` will be greater than `new_length`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, IdRef, Length};
+    ///
+    /// // Create a DER of '0..=255' as Octet String.
+    /// let bytes: Vec<u8> = (0..=255).collect();
+    /// let mut der = Der::from(&bytes[..]);
+    ///
+    /// // Truncate the length
+    /// der.truncate(100);
+    ///
+    /// assert_eq!(der.id(), IdRef::octet_string());        // The identifier is not changed.
+    /// assert_eq!(der.length(), Length::Definite(100));    // The length is changed.
+    /// assert_eq!(der.contents().as_ref(), &bytes[..100]); // The contents is changed.
+    /// ```
+    pub fn truncate(&mut self, new_length: usize) {
+        let id_len = self.id().len();
+        let old_length = self.length().definite().unwrap();
+
+        if old_length <= new_length {
+            return;
+        }
+
+        let old_length_ = Length::Definite(old_length).to_bytes();
+        let new_length_ = Length::Definite(new_length).to_bytes();
+
+        unsafe {
+            let mut dest = self.buffer.as_mut_ptr();
+
+            // Copy the new_length octets
+            let src = new_length_.as_ptr();
+            dest = dest.add(id_len);
+            src.copy_to(dest, new_length_.len());
+
+            // Copy the contents octets if necessary.
+            if new_length_.len() < old_length_.len() {
+                let src = dest.add(old_length_.len()) as *const u8;
+                dest = dest.add(new_length_.len());
+                src.copy_to(dest, new_length);
+            }
+
+            let new_total_len = id_len + new_length_.len() + new_length;
+            self.buffer.set_len(new_total_len);
         }
     }
 }
@@ -824,122 +915,42 @@ mod tests {
     }
 
     #[test]
-    fn extend_der() {
-        let mut der = Der::from(&[] as &[u8]);
+    fn extend_from_slice() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
 
-        for i in 0..=256 {
-            der.set_length(i + 1);
-            der.mut_contents()[i] = i as u8;
+        for i in 0..bytes.len() {
+            for j in 0..bytes.len() {
+                let mut der = Der::from(&bytes[..i]);
+                der.extend_from_slice(&bytes[..j]);
 
-            assert_eq!(der.length(), Length::Definite(i + 1));
-
-            let contents = der.contents();
-            for j in 0..=i {
-                assert_eq!(contents[j], j as u8);
-            }
-        }
-
-        {
-            der.set_length(65535);
-            assert_eq!(der.length(), Length::Definite(65535));
-
-            let contents = der.contents();
-            for i in 0..=256 {
-                assert_eq!(contents[i], i as u8);
-            }
-        }
-
-        {
-            der.set_length(65536);
-            assert_eq!(der.length(), Length::Definite(65536));
-
-            let contents = der.contents();
-            for i in 0..=256 {
-                assert_eq!(contents[i], i as u8);
-            }
-        }
-
-        {
-            der.set_length(256_usize.pow(3) - 1);
-            assert_eq!(der.length(), Length::Definite(256_usize.pow(3) - 1));
-
-            let contents = der.contents();
-            for i in 0..=256 {
-                assert_eq!(contents[i], i as u8);
-            }
-        }
-
-        {
-            der.set_length(256_usize.pow(3));
-            assert_eq!(der.length(), Length::Definite(256_usize.pow(3)));
-
-            let contents = der.contents();
-            for i in 0..=256 {
-                assert_eq!(contents[i], i as u8);
+                assert_eq!(der.id(), IdRef::octet_string());
+                assert_eq!(der.length(), Length::Definite(i + j));
+                assert_eq!(&der.contents().as_ref()[..i], &bytes[..i]);
+                assert_eq!(&der.contents().as_ref()[i..], &bytes[..j]);
             }
         }
     }
 
     #[test]
-    fn shrinik_der() {
-        let contents: Vec<u8> = (0..=std::u8::MAX)
-            .cycle()
-            .take(256_usize.pow(3) + 1)
-            .collect();
-        let mut der = Der::from(&contents[..]);
+    fn truncate() {
+        let contents: Vec<u8> = (0..=u8::MAX).collect();
+        for i in 0..contents.len() {
+            let mut der = Der::from(&contents[..]);
 
-        {
-            let len = 256_usize.pow(3);
-            der.set_length(len);
-            assert_eq!(der.length(), Length::Definite(len));
-
-            let contents = der.contents();
-            for i in 0..len {
-                assert_eq!(contents[i], i as u8);
-            }
+            der.truncate(i as usize);
+            assert_eq!(der.id(), IdRef::octet_string());
+            assert_eq!(der.length(), Length::Definite(i as usize));
+            assert_eq!(der.contents().as_ref(), &contents[..i as usize]);
         }
 
-        {
-            let len = 256_usize.pow(3) - 1;
-            der.set_length(len);
-            assert_eq!(der.length(), Length::Definite(len));
+        for &i in &[contents.len(), contents.len() + 1] {
+            let mut der = Der::from(&contents[..]);
+            der.truncate(i);
 
-            let contents = der.contents();
-            for i in 0..len {
-                assert_eq!(contents[i], i as u8);
-            }
-        }
-
-        {
-            let len = 65536;
-            der.set_length(len);
-            assert_eq!(der.length(), Length::Definite(len));
-
-            let contents = der.contents();
-            for i in 0..len {
-                assert_eq!(contents[i], i as u8);
-            }
-        }
-
-        {
-            let len = 65535;
-            der.set_length(len);
-            assert_eq!(der.length(), Length::Definite(len));
-
-            let contents = der.contents();
-            for i in 0..len {
-                assert_eq!(contents[i], i as u8);
-            }
-        }
-
-        for len in (0..=256).rev() {
-            der.set_length(len);
-            assert_eq!(der.length(), Length::Definite(len));
-
-            let contents = der.contents();
-            for i in 0..len {
-                assert_eq!(contents[i], i as u8);
-            }
+            der.truncate((der.as_ref() as &[u8]).len() + 1);
+            assert_eq!(der.id(), IdRef::octet_string());
+            assert_eq!(der.length(), Length::Definite(contents.len()));
+            assert_eq!(der.contents().as_ref(), &contents[..]);
         }
     }
 }
