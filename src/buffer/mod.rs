@@ -47,6 +47,14 @@ type Inner = Buffer;
 #[derive(Clone)]
 pub struct TmpBuffer(Inner);
 
+impl From<&[u8]> for TmpBuffer {
+    fn from(slice: &[u8]) -> Self {
+        let mut buf = Self::with_capacity(slice.len());
+        unsafe { buf.extend_from_slice(slice) };
+        buf
+    }
+}
+
 impl TmpBuffer {
     pub const fn new() -> Self {
         Self(Inner::new())
