@@ -41,3 +41,5 @@ pub use little_endian::Buffer;
 
 #[cfg(target_endian = "big")]
 pub use universal_endian::Buffer;
+
+type Inner = Buffer;
