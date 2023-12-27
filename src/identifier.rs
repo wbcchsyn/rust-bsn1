@@ -238,6 +238,13 @@ impl From<&'_ IdRef> for Id {
     }
 }
 
+#[doc(hidden)]
+impl From<Buffer> for Id {
+    fn from(buffer: Buffer) -> Self {
+        Self { buffer }
+    }
+}
+
 impl AsRef<[u8]> for Id {
     fn as_ref(&self) -> &[u8] {
         self.buffer.as_slice()
