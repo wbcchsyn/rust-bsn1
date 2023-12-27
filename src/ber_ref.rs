@@ -122,10 +122,16 @@ impl BerRef {
     /// assert_eq!(ber.contents().as_ref(), &[0x05]);
     /// ```
     pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
-        let ret = Self::parse(bytes)?;
-        let ptr = ret as *const Self;
-        let ptr = ptr as *mut Self;
-        unsafe { Ok(&mut *ptr) }
+        let mut readable = bytes as &[u8];
+        let mut stack_depth: isize = 0;
+
+        while {
+            stack_depth += Self::do_parse(&mut readable)? as isize;
+            stack_depth > 0
+        } {}
+
+        let total_len = bytes.len() - readable.len();
+        unsafe { Ok(Self::from_mut_bytes_unchecked(&mut bytes[..total_len])) }
     }
 
     fn do_parse(readable: &mut &[u8]) -> Result<i8, Error> {
