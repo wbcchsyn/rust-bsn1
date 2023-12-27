@@ -69,22 +69,11 @@ impl DerRef {
     /// assert_eq!(der0, der1);
     /// ```
     pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
-        let id = IdRef::parse(bytes)?;
-        let parsing = &bytes[id.len()..];
+        let mut readable = bytes;
+        Self::do_parse(&mut readable)?;
 
-        let (len, parsing) = match length::parse_(parsing) {
-            Err(Error::OverFlow) => return Err(Error::UnTerminatedBytes),
-            Err(e) => return Err(e),
-            Ok((Length::Indefinite, _)) => return Err(Error::IndefiniteLength),
-            Ok((Length::Definite(len), parsing)) => (len, parsing),
-        };
-
-        let total_len = bytes.len() - parsing.len() + len;
-        if bytes.len() < total_len {
-            Err(Error::UnTerminatedBytes)
-        } else {
-            unsafe { Ok(DerRef::from_bytes_unchecked(&bytes[..total_len])) }
-        }
+        let bytes = &bytes[..(bytes.len() - readable.len())];
+        unsafe { Ok(Self::from_bytes_unchecked(bytes)) }
     }
 
     /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a mutable reference to
@@ -117,10 +106,27 @@ impl DerRef {
     /// assert_eq!(der.contents().as_ref(), &[0x09]);
     /// ```
     pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
-        let ret = Self::parse(bytes)?;
-        let ptr = ret as *const Self;
-        let ptr = ptr as *mut Self;
-        unsafe { Ok(&mut *ptr) }
+        let mut readable = bytes as &[u8];
+        Self::do_parse(&mut readable)?;
+
+        let len = bytes.len() - readable.len();
+        unsafe { Ok(Self::from_mut_bytes_unchecked(&mut bytes[..len])) }
+    }
+
+    fn do_parse(readable: &mut &[u8]) -> Result<(), Error> {
+        let mut writeable = std::io::sink();
+
+        let length = match unsafe { crate::misc::parse_id_length(readable, &mut writeable)? } {
+            Length::Indefinite => return Err(Error::IndefiniteLength),
+            Length::Definite(length) => length,
+        };
+
+        if readable.len() < length {
+            Err(Error::UnTerminatedBytes)
+        } else {
+            *readable = &readable[length..];
+            Ok(())
+        }
     }
 
     /// Provides a reference from `bytes` without any check.

@@ -32,6 +32,7 @@
 
 use crate::{Buffer, Contents, ContentsRef, DerRef, Error, IdRef, Length};
 use std::borrow::Borrow;
+use std::io::Read;
 use std::ops::{Deref, DerefMut};
 
 /// `Der` owns [`DerRef`] and represents ASN.1 DER.
@@ -255,7 +256,7 @@ impl Der {
         Self { buffer }
     }
 
-    /// Parses `bytes` starting with DER octets and builds a new instance.
+    /// Parses `readable` starting with DER octets and builds a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
@@ -271,18 +272,45 @@ impl Der {
     /// ```
     /// use bsn1::Der;
     ///
-    /// let bytes: &[u8] = &[0x02, 0x01, 0x0a];  // Represents '10' as Integer.
-    /// let der0 = Der::parse(bytes).unwrap();
+    /// let der0 = Der::from(10_i32);
+    ///
+    /// // Serialize der0 and deserialize it again.
+    /// let mut bytes: Vec<u8> = Vec::from(der0.as_ref() as &[u8]);
+    /// let der1 = Der::parse(&mut &bytes[..]).unwrap();
+    /// assert_eq!(der0, der1);
     ///
     /// // Extra octets at the end does not affect the result.
-    /// let bytes: &[u8] = &[0x02, 0x01, 0x0a, 0x01, 0x02];
-    /// let der1 = Der::parse(bytes).unwrap();
+    /// bytes.extend_from_slice(&[0xff, 0x00, 0x11]);
+    /// let der2 = Der::parse(&mut &bytes[..]).unwrap();
     ///
-    /// assert_eq!(der0, der1);
+    /// assert_eq!(der0, der2);
     /// ```
-    pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
-        let ret = DerRef::parse(bytes)?;
-        Ok(ret.into())
+    pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
+        let mut writeable = Buffer::new();
+
+        let contents_length =
+            match unsafe { crate::misc::parse_id_length(readable, &mut writeable)? } {
+                Length::Indefinite => return Err(Error::IndefiniteLength),
+                Length::Definite(length) => length,
+            };
+
+        let id_length_len = writeable.len();
+        let total_length = id_length_len + contents_length;
+
+        writeable.reserve(contents_length);
+        unsafe { writeable.set_len(total_length) };
+
+        let buffer = &mut writeable.as_mut_bytes()[id_length_len..];
+        match readable.read(buffer) {
+            Err(e) => Err(e.into()),
+            Ok(read) => {
+                if read < contents_length {
+                    Err(Error::UnTerminatedBytes)
+                } else {
+                    Ok(Self { buffer: writeable })
+                }
+            }
+        }
     }
 
     /// Builds a new instance holding `bytes` without any check.
