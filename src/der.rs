@@ -45,119 +45,6 @@ pub struct Der {
     buffer: Buffer,
 }
 
-impl From<&DerRef> for Der {
-    fn from(der_ref: &DerRef) -> Self {
-        der_ref.to_owned()
-    }
-}
-
-impl From<bool> for Der {
-    /// Creates a new instance representing boolean containing `contents`.
-    fn from(contents: bool) -> Self {
-        Self::new(IdRef::boolean(), <&ContentsRef>::from(contents))
-    }
-}
-
-impl From<i8> for Der {
-    /// Creates a new instance representing integer containing `contents`.
-    fn from(contents: i8) -> Self {
-        Self::new(IdRef::integer(), &Contents::from(contents))
-    }
-}
-
-impl From<u8> for Der {
-    /// Creates a new instance representing integer containing `contents`.
-    fn from(contents: u8) -> Self {
-        Self::new(IdRef::integer(), &Contents::from(contents))
-    }
-}
-
-impl From<i16> for Der {
-    /// Creates a new instance representing integer containing `contents`.
-    fn from(contents: i16) -> Self {
-        Self::new(IdRef::integer(), &Contents::from(contents))
-    }
-}
-
-impl From<u16> for Der {
-    /// Creates a new instance representing integer containing `contents`.
-    fn from(contents: u16) -> Self {
-        Self::new(IdRef::integer(), &Contents::from(contents))
-    }
-}
-
-impl From<i32> for Der {
-    /// Creates a new instance representing integer containing `contents`.
-    fn from(contents: i32) -> Self {
-        Self::new(IdRef::integer(), &Contents::from(contents))
-    }
-}
-
-impl From<u32> for Der {
-    /// Creates a new instance representing integer containing `contents`.
-    fn from(contents: u32) -> Self {
-        Self::new(IdRef::integer(), &Contents::from(contents))
-    }
-}
-
-impl From<i64> for Der {
-    /// Creates a new instance representing integer containing `contents`.
-    fn from(contents: i64) -> Self {
-        Self::new(IdRef::integer(), &Contents::from(contents))
-    }
-}
-
-impl From<u64> for Der {
-    /// Creates a new instance representing integer containing `contents`.
-    fn from(contents: u64) -> Self {
-        Self::new(IdRef::integer(), &Contents::from(contents))
-    }
-}
-
-impl From<i128> for Der {
-    /// Creates a new instance representing integer containing `contents`.
-    fn from(contents: i128) -> Self {
-        Self::new(IdRef::integer(), &Contents::from(contents))
-    }
-}
-
-impl From<u128> for Der {
-    /// Creates a new instance representing integer containing `contents`.
-    fn from(contents: u128) -> Self {
-        Self::new(IdRef::integer(), &Contents::from(contents))
-    }
-}
-
-impl From<isize> for Der {
-    /// Creates a new instance representing integer containing `contents`.
-    fn from(contents: isize) -> Self {
-        Self::new(IdRef::integer(), &Contents::from(contents))
-    }
-}
-
-impl From<usize> for Der {
-    /// Creates a new instance representing integer containing `contents`.
-    fn from(contents: usize) -> Self {
-        Self::new(IdRef::integer(), &Contents::from(contents))
-    }
-}
-
-impl From<&str> for Der {
-    /// Creates a new instance representing utf8-string containing `contents`.
-    fn from(contents: &str) -> Self {
-        Self::new(
-            IdRef::utf8_string(),
-            <&ContentsRef>::from(contents.as_bytes()),
-        )
-    }
-}
-
-impl From<&[u8]> for Der {
-    fn from(contents: &[u8]) -> Self {
-        Self::new(IdRef::octet_string(), <&ContentsRef>::from(contents))
-    }
-}
-
 impl Der {
     /// Creates a new instance from `id` and `contents`.
     ///
@@ -195,9 +82,10 @@ impl Der {
         ret
     }
 
-    /// Creates a new instance from `id` and `contents` of `length` bytes.
+    /// Creates a new instance with `id` and 'definite `length`'.
     ///
-    /// The `contents` of the return value is not initialized.
+    /// The 'contents octets' of the return value holds `length` bytes,
+    /// but they are not initialized.
     /// Use [`mut_contents`] via `DerefMut` implementation to initialize them.
     ///
     /// # Warnings
@@ -250,14 +138,16 @@ impl Der {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
+    /// On error, the state of `readable` is unspecified;
+    /// otherwise, `readable` is advanced to the end of the DER octets.
+    ///
     /// # Performance
     ///
     /// This function is not so efficient compared with [`DerRef::parse`].
     /// If you have a slice of serialized DER, use [`DerRef::parse`]
-    /// and then call [`ToOwned::to_owned`] instead.
+    /// and then call `Der::from` instead.
     ///
     /// [`DerRef::parse`]: DerRef::parse
-    /// [`ToOwned::to_owned`]: std::borrow::ToOwned::to_owned
     ///
     /// # Warnings
     ///
@@ -289,7 +179,7 @@ impl Der {
     /// // We can access to the inner slice of `serialized`.
     /// // We can use `DerRef::parse` instead of this function.
     /// // (`DerRef::parse` is more efficient than this function.)
-    /// let deserialized = DerRef::parse(&mut &serialized[..]).map(ToOwned::to_owned).unwrap();
+    /// let deserialized: Der = DerRef::parse(&mut &serialized[..]).unwrap().into();
     /// assert_eq!(der, deserialized);
     /// ```
     pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
@@ -431,56 +321,6 @@ impl Der {
 
         Self { buffer }
     }
-}
-
-impl AsRef<[u8]> for Der {
-    fn as_ref(&self) -> &[u8] {
-        self.buffer.as_slice()
-    }
-}
-
-impl AsRef<DerRef> for Der {
-    fn as_ref(&self) -> &DerRef {
-        self.deref()
-    }
-}
-
-impl AsMut<DerRef> for Der {
-    fn as_mut(&mut self) -> &mut DerRef {
-        self.deref_mut()
-    }
-}
-
-impl Borrow<DerRef> for Der {
-    fn borrow(&self) -> &DerRef {
-        self.deref()
-    }
-}
-
-impl Deref for Der {
-    type Target = DerRef;
-
-    fn deref(&self) -> &Self::Target {
-        unsafe { DerRef::from_bytes_unchecked(self.buffer.as_slice()) }
-    }
-}
-
-impl DerefMut for Der {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { DerRef::from_mut_bytes_unchecked(self.buffer.as_mut_slice()) }
-    }
-}
-
-impl<T> PartialEq<T> for Der
-where
-    T: Borrow<DerRef>,
-{
-    fn eq(&self, other: &T) -> bool {
-        self.deref() == other.borrow()
-    }
-}
-
-impl Der {
     /// Consumes `self`, returning `Vec`.
     ///
     /// # Examples
@@ -512,14 +352,12 @@ impl Der {
     /// use bsn1::{Der, IdRef, Length};
     ///
     /// let bytes: Vec<u8> = (0..10).collect();
-    /// let mut der = Der::from(&bytes[..]);
-    /// der.push(0xff);
+    /// let mut der = Der::from(&bytes[..9]);
+    /// der.push(bytes[9]);
     ///
     /// assert_eq!(der.id(), IdRef::octet_string());
-    /// assert_eq!(der.length(), Length::Definite(bytes.len() + 1));
-    ///
-    /// assert_eq!(&der.contents().as_ref()[..bytes.len()], &bytes[..]);
-    /// assert_eq!(der.contents().as_ref().last().unwrap(), &0xff);
+    /// assert_eq!(der.length(), Length::Definite(bytes.len()));
+    /// assert_eq!(der.contents().as_ref(), &bytes[..]);
     /// ```
     pub fn push(&mut self, byte: u8) {
         self.extend_from_slice(&[byte]);
@@ -659,6 +497,166 @@ impl Der {
             let new_total_len = id_len + new_length_.len() + new_length;
             self.buffer.set_len(new_total_len);
         }
+    }
+}
+
+impl From<&DerRef> for Der {
+    fn from(der_ref: &DerRef) -> Self {
+        der_ref.to_owned()
+    }
+}
+
+impl From<bool> for Der {
+    /// Creates a new instance representing boolean containing `contents`.
+    fn from(contents: bool) -> Self {
+        Self::new(IdRef::boolean(), <&ContentsRef>::from(contents))
+    }
+}
+
+impl From<i8> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: i8) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<u8> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: u8) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<i16> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: i16) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<u16> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: u16) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<i32> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: i32) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<u32> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: u32) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<i64> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: i64) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<u64> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: u64) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<i128> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: i128) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<u128> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: u128) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<isize> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: isize) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<usize> for Der {
+    /// Creates a new instance representing integer containing `contents`.
+    fn from(contents: usize) -> Self {
+        Self::new(IdRef::integer(), &Contents::from(contents))
+    }
+}
+
+impl From<&str> for Der {
+    /// Creates a new instance representing utf8-string containing `contents`.
+    fn from(contents: &str) -> Self {
+        Self::new(
+            IdRef::utf8_string(),
+            <&ContentsRef>::from(contents.as_bytes()),
+        )
+    }
+}
+
+impl From<&[u8]> for Der {
+    fn from(contents: &[u8]) -> Self {
+        Self::new(IdRef::octet_string(), <&ContentsRef>::from(contents))
+    }
+}
+
+impl AsRef<[u8]> for Der {
+    fn as_ref(&self) -> &[u8] {
+        self.buffer.as_slice()
+    }
+}
+
+impl AsRef<DerRef> for Der {
+    fn as_ref(&self) -> &DerRef {
+        self.deref()
+    }
+}
+
+impl AsMut<DerRef> for Der {
+    fn as_mut(&mut self) -> &mut DerRef {
+        self.deref_mut()
+    }
+}
+
+impl Borrow<DerRef> for Der {
+    fn borrow(&self) -> &DerRef {
+        self.deref()
+    }
+}
+
+impl Deref for Der {
+    type Target = DerRef;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { DerRef::from_bytes_unchecked(self.buffer.as_slice()) }
+    }
+}
+
+impl DerefMut for Der {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { DerRef::from_mut_bytes_unchecked(self.buffer.as_mut_slice()) }
+    }
+}
+
+impl<T> PartialEq<T> for Der
+where
+    T: Borrow<DerRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.deref() == other.borrow()
     }
 }
 

@@ -1054,41 +1054,7 @@ impl IdRef {
         const BYTES: [u8; 1] = [0x3e];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
-}
 
-impl AsRef<[u8]> for IdRef {
-    fn as_ref(&self) -> &[u8] {
-        &self.bytes
-    }
-}
-
-impl ToOwned for IdRef {
-    type Owned = Id;
-
-    fn to_owned(&self) -> Self::Owned {
-        unsafe { Self::Owned::from_bytes_unchecked(self.as_ref()) }
-    }
-}
-
-impl<T> PartialEq<T> for IdRef
-where
-    T: Borrow<IdRef>,
-{
-    fn eq(&self, other: &T) -> bool {
-        self == other.borrow()
-    }
-}
-
-impl<T> PartialOrd<T> for IdRef
-where
-    T: Borrow<IdRef>,
-{
-    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
-        self.partial_cmp(other.borrow())
-    }
-}
-
-impl IdRef {
     /// Returns the byte count of the inner bytes.
     ///
     /// # Examples
@@ -1326,6 +1292,38 @@ impl IdRef {
         const MASK: u8 = !PC_MASK;
         bytes[0] &= MASK;
         bytes[0] |= pc as u8;
+    }
+}
+
+impl AsRef<[u8]> for IdRef {
+    fn as_ref(&self) -> &[u8] {
+        &self.bytes
+    }
+}
+
+impl ToOwned for IdRef {
+    type Owned = Id;
+
+    fn to_owned(&self) -> Self::Owned {
+        unsafe { Self::Owned::from_bytes_unchecked(self.as_ref()) }
+    }
+}
+
+impl<T> PartialEq<T> for IdRef
+where
+    T: Borrow<IdRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self == other.borrow()
+    }
+}
+
+impl<T> PartialOrd<T> for IdRef
+where
+    T: Borrow<IdRef>,
+{
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        self.partial_cmp(other.borrow())
     }
 }
 

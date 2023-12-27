@@ -58,28 +58,11 @@ pub enum Length {
     Definite(usize),
 }
 
-impl PartialEq for Length {
-    fn eq(&self, other: &Self) -> bool {
-        self.is_definite() && self.definite() == other.definite()
-    }
-}
-
-impl PartialOrd for Length {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        let this = self.definite()?;
-        let other = other.definite()?;
-
-        Some(this.cmp(&other))
-    }
-}
-
 impl Length {
     const LONG_FLAG: u8 = 0x80;
     const MAX_SHORT: u8 = Self::LONG_FLAG - 1;
     const INDEFINITE: u8 = 0x80;
-}
 
-impl Length {
     /// Parses `readable` starting with length octets and tries to creates a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `readable` if any.
@@ -254,6 +237,21 @@ impl Length {
             Self::Indefinite => false,
             _ => true,
         }
+    }
+}
+
+impl PartialEq for Length {
+    fn eq(&self, other: &Self) -> bool {
+        self.is_definite() && self.definite() == other.definite()
+    }
+}
+
+impl PartialOrd for Length {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        let this = self.definite()?;
+        let other = other.definite()?;
+
+        Some(this.cmp(&other))
     }
 }
 

@@ -45,18 +45,12 @@ use std::mem;
 /// and must be terminated by 'EOC BER'.
 /// (Single 'EOC BER' is allowed.)
 ///
-/// A reference to `BerRef` works well even if the user violates the rule,
-/// however, the inner slice is invalid as a BER then.
+/// A reference to `BerRef` works fine even if the user violates the rule,
+/// however, the inner slice will be invalid as a BER then.
 /// Such a slice can not be parsed as a BER again.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct BerRef {
     bytes: [u8],
-}
-
-impl<'a> From<&'a DerRef> for &'a BerRef {
-    fn from(der: &'a DerRef) -> Self {
-        unsafe { BerRef::from_bytes_unchecked(der.as_ref()) }
-    }
 }
 
 impl BerRef {
@@ -89,16 +83,23 @@ impl BerRef {
     /// let ber = Ber::from(8_u8);
     /// let mut serialized = Vec::from(ber.as_ref() as &[u8]);
     ///
-    /// // Deserializes `ber`.
-    /// let deserialized = BerRef::parse(&mut &serialized[..]).unwrap();
-    /// assert_eq!(ber, deserialized);
+    /// // Deserializes
+    /// {
+    ///     let mut serialized: &[u8] = &serialized[..];
+    ///     let deserialized = BerRef::parse(&mut serialized).unwrap();
+    ///     assert_eq!(ber, deserialized);
+    ///     assert_eq!(serialized.len(), 0);
+    /// }
     ///
     /// // Extra octets at the end does not affect the result.
     /// serialized.push(0x00);
     /// serialized.push(0xff);
-    ///
-    /// let deserialized = BerRef::parse(&mut &serialized[..]).unwrap();
-    /// assert_eq!(ber, deserialized);
+    /// {
+    ///     let mut serialized: &[u8] = &serialized[..];
+    ///     let deserialized = BerRef::parse(&mut serialized).unwrap();
+    ///     assert_eq!(ber, deserialized);
+    ///     assert_eq!(serialized, &[0x00, 0xff]);
+    /// }
     /// ```
     pub fn parse<'a>(bytes: &mut &'a [u8]) -> Result<&'a Self, Error> {
         let init_bytes = *bytes;
@@ -246,38 +247,12 @@ impl BerRef {
     ///
     /// assert_eq!(ber, deserialized);
     ///
-    /// *deserialized.mut_contents().as_mut().last_mut().unwrap() += 1;
+    /// deserialized.mut_contents()[0] += 1;
     /// assert_ne!(ber, deserialized);
     /// ```
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         mem::transmute(bytes)
     }
-}
-
-impl AsRef<[u8]> for BerRef {
-    fn as_ref(&self) -> &[u8] {
-        &self.bytes
-    }
-}
-
-impl ToOwned for BerRef {
-    type Owned = Ber;
-
-    fn to_owned(&self) -> Self::Owned {
-        unsafe { Ber::from_bytes_unchecked(self.as_ref()) }
-    }
-}
-
-impl<T> PartialEq<T> for BerRef
-where
-    T: Borrow<BerRef>,
-{
-    fn eq(&self, other: &T) -> bool {
-        self == other.borrow()
-    }
-}
-
-impl BerRef {
     /// Provides a reference to the [`IdRef`] of `self`.
     ///
     /// # Examples
@@ -393,6 +368,35 @@ impl BerRef {
             let ptr = ptr as *mut ContentsRef;
             &mut *ptr
         }
+    }
+}
+
+impl<'a> From<&'a DerRef> for &'a BerRef {
+    fn from(der: &'a DerRef) -> Self {
+        unsafe { BerRef::from_bytes_unchecked(der.as_ref()) }
+    }
+}
+
+impl AsRef<[u8]> for BerRef {
+    fn as_ref(&self) -> &[u8] {
+        &self.bytes
+    }
+}
+
+impl ToOwned for BerRef {
+    type Owned = Ber;
+
+    fn to_owned(&self) -> Self::Owned {
+        unsafe { Ber::from_bytes_unchecked(self.as_ref()) }
+    }
+}
+
+impl<T> PartialEq<T> for BerRef
+where
+    T: Borrow<BerRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self == other.borrow()
     }
 }
 

@@ -42,46 +42,14 @@ pub struct LengthBuffer {
 
 impl LengthBuffer {
     const CAPACITY: usize = Length::Definite(std::usize::MAX).len();
-}
 
-impl LengthBuffer {
     pub const fn new() -> Self {
         Self {
             buffer: [0; Self::CAPACITY],
             len_: 0,
         }
     }
-}
 
-impl Deref for LengthBuffer {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
-    }
-}
-
-impl DerefMut for LengthBuffer {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
-    }
-}
-
-impl Index<usize> for LengthBuffer {
-    type Output = u8;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        self.deref().index(index)
-    }
-}
-
-impl IndexMut<usize> for LengthBuffer {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        self.deref_mut().index_mut(index)
-    }
-}
-
-impl LengthBuffer {
     /// # Safety
     ///
     /// The behaviour is undefined if the length will exceeds the capacity.
@@ -117,6 +85,34 @@ impl LengthBuffer {
     #[cfg(test)]
     pub fn as_bytes(&self) -> &[u8] {
         self
+    }
+}
+
+impl Deref for LengthBuffer {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
+    }
+}
+
+impl DerefMut for LengthBuffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
+    }
+}
+
+impl Index<usize> for LengthBuffer {
+    type Output = u8;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        self.deref().index(index)
+    }
+}
+
+impl IndexMut<usize> for LengthBuffer {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        self.deref_mut().index_mut(index)
     }
 }
 

@@ -48,141 +48,16 @@ use std::ops::{Deref, DerefMut};
 /// and must be terminated by 'EOC BER'.
 /// (Single 'EOC BER' is allowed.)
 ///
-/// `Ber` instance works well even if the user violates the rule,
-/// however, the holding octets are invalid as a BER then.
+/// `Ber` instance works fine even if the user violates the rule,
+/// however, the holding octets will be invalid as a BER then.
 /// Such octets can not be parsed as a BER again.
 #[derive(Debug, Clone, Eq, Hash)]
 pub struct Ber {
     buffer: Buffer,
 }
 
-impl From<&DerRef> for Ber {
-    fn from(der: &DerRef) -> Self {
-        <&BerRef>::from(der).to_owned()
-    }
-}
-
-impl From<Der> for Ber {
-    fn from(der: Der) -> Self {
-        Self {
-            buffer: crate::der::disassemble_der(der),
-        }
-    }
-}
-
-impl From<&BerRef> for Ber {
-    fn from(ber_ref: &BerRef) -> Self {
-        ber_ref.to_owned()
-    }
-}
-
-impl From<bool> for Ber {
-    /// Creates a new instance representing a boolean containing `contents`.
-    fn from(contents: bool) -> Self {
-        Der::from(contents).into()
-    }
-}
-
-impl From<i8> for Ber {
-    /// Creates a new instance representing a integer containing `contents`.
-    fn from(contents: i8) -> Self {
-        Der::from(contents).into()
-    }
-}
-
-impl From<u8> for Ber {
-    /// Creates a new instance representing a integer containing `contents`.
-    fn from(contents: u8) -> Self {
-        Der::from(contents).into()
-    }
-}
-
-impl From<i16> for Ber {
-    /// Creates a new instance representing a integer containing `contents`.
-    fn from(contents: i16) -> Self {
-        Der::from(contents).into()
-    }
-}
-
-impl From<u16> for Ber {
-    /// Creates a new instance representing a integer containing `contents`.
-    fn from(contents: u16) -> Self {
-        Der::from(contents).into()
-    }
-}
-
-impl From<i32> for Ber {
-    /// Creates a new instance representing a integer containing `contents`.
-    fn from(contents: i32) -> Self {
-        Der::from(contents).into()
-    }
-}
-
-impl From<u32> for Ber {
-    /// Creates a new instance representing a integer containing `contents`.
-    fn from(contents: u32) -> Self {
-        Der::from(contents).into()
-    }
-}
-
-impl From<i64> for Ber {
-    /// Creates a new instance representing a integer containing `contents`.
-    fn from(contents: i64) -> Self {
-        Der::from(contents).into()
-    }
-}
-
-impl From<u64> for Ber {
-    /// Creates a new instance representing a integer containing `contents`.
-    fn from(contents: u64) -> Self {
-        Der::from(contents).into()
-    }
-}
-
-impl From<i128> for Ber {
-    /// Creates a new instance representing a integer containing `contents`.
-    fn from(contents: i128) -> Self {
-        Der::from(contents).into()
-    }
-}
-
-impl From<u128> for Ber {
-    /// Creates a new instance representing a integer containing `contents`.
-    fn from(contents: u128) -> Self {
-        Der::from(contents).into()
-    }
-}
-
-impl From<isize> for Ber {
-    /// Creates a new instance representing a integer containing `contents`.
-    fn from(contents: isize) -> Self {
-        Der::from(contents).into()
-    }
-}
-
-impl From<usize> for Ber {
-    /// Creates a new instance representing a integer containing `contents`.
-    fn from(contents: usize) -> Self {
-        Der::from(contents).into()
-    }
-}
-
-impl From<&str> for Ber {
-    /// Creates a new instance representing a utf8-string containing `contents`.
-    fn from(contents: &str) -> Self {
-        Der::from(contents).into()
-    }
-}
-
-impl From<&[u8]> for Ber {
-    /// Creates a new instance representing an octet-string containing `contents`.
-    fn from(contents: &[u8]) -> Self {
-        Der::from(contents).into()
-    }
-}
-
 impl Ber {
-    /// Creates a new instance from `id` and `contents` with definite length.
+    /// Creates a new instance with definite length from `id` and `contents`.
     ///
     /// Note that BER allows both definite length and indefinite length,
     /// however, this function always returns a definite length value.
@@ -259,10 +134,11 @@ impl Ber {
         ret
     }
 
-    /// Creates a new instance with definite length from `id` and `contents` of `length` bytes.
+    /// Creates a new instance with `id` and 'definite `length`'.
     ///
-    /// The `contents` of the return value are not initialized.
-    /// Use [`mut_contents`] via `DerefMut` implementation to initialize it.
+    /// The 'contents octets' of the return value holds `length` bytes,
+    /// but they are not initialized.
+    /// Use [`mut_contents`] via `DerefMut` implementation to initialize them.
     ///
     /// # Warnings
     ///
@@ -294,10 +170,11 @@ impl Ber {
         Der::with_id_length(id, length).into()
     }
 
-    /// Creates a new instance with indefinite length from `id` and `contents` of `length` bytes.
+    /// Creates a new instance with `id` and 'indefinite length'.
     ///
-    /// The `contents` of the return value are not initialized.
-    /// Use [`mut_contents`] via [`DerefMut`] implementation to initialize it.
+    /// The 'contents octets' of the return value holds `length` bytes,
+    /// but they are not initialized.
+    /// Use [`mut_contents`] via `DerefMut` implementation to initialize them.
     ///
     /// # Warnings
     ///
@@ -348,11 +225,14 @@ impl Ber {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
+    /// On error, the state of `readable` is unspecified;
+    /// otherwise, `readable` is advanced to the end of BER octets.
+    ///
     /// # Performance
     ///
     /// This function is not so efficient compared with [`Ber::parse`].
     /// If you have a slice of serialized BER, use [`BerRef::parse`]
-    /// and then call `ToOwned::to_owned` instead.
+    /// and then call `Ber::from` instead.
     ///
     /// # Warnings
     ///
@@ -390,7 +270,7 @@ impl Ber {
     /// // We can access to the inner slice of `serialized`.
     /// // We can use `BerRef::parse` instead of this function.
     /// // (`BerRef::parse` is more efficient than this function.)
-    /// let deserialized = BerRef::parse(&mut &serialized[..]).map(ToOwned::to_owned).unwrap();
+    /// let deserialized: Ber = BerRef::parse(&mut &serialized[..]).unwrap().into();
     /// assert_eq!(ber, deserialized);
     /// ```
     pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
@@ -522,56 +402,7 @@ impl Ber {
         let der = Der::from_id_iterator(id, contents);
         Self::from(der)
     }
-}
 
-impl AsRef<[u8]> for Ber {
-    fn as_ref(&self) -> &[u8] {
-        self.buffer.as_slice()
-    }
-}
-
-impl AsRef<BerRef> for Ber {
-    fn as_ref(&self) -> &BerRef {
-        self.deref()
-    }
-}
-
-impl AsMut<BerRef> for Ber {
-    fn as_mut(&mut self) -> &mut BerRef {
-        self.deref_mut()
-    }
-}
-
-impl Borrow<BerRef> for Ber {
-    fn borrow(&self) -> &BerRef {
-        self.deref()
-    }
-}
-
-impl Deref for Ber {
-    type Target = BerRef;
-
-    fn deref(&self) -> &Self::Target {
-        unsafe { BerRef::from_bytes_unchecked(self.buffer.as_slice()) }
-    }
-}
-
-impl DerefMut for Ber {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { BerRef::from_mut_bytes_unchecked(self.buffer.as_mut_slice()) }
-    }
-}
-
-impl<T> PartialEq<T> for Ber
-where
-    T: Borrow<BerRef>,
-{
-    fn eq(&self, other: &T) -> bool {
-        self.deref() == other.borrow()
-    }
-}
-
-impl Ber {
     /// Consumes `self`, returning `Vec`.
     ///
     /// # Examples
@@ -612,24 +443,21 @@ impl Ber {
     /// let bytes: Vec<u8> = (0..10).collect();
     ///
     /// // Push to BER with definite length.
-    /// let mut ber = Ber::from(&bytes[..]);
-    /// ber.push(0xff);
+    /// let mut ber = Ber::from(&bytes[..9]);
+    /// ber.push(bytes[9]);
     ///
     /// assert_eq!(ber.id(), IdRef::octet_string());
-    /// assert_eq!(ber.length(), Length::Definite(bytes.len() + 1));
-    ///
-    /// assert_eq!(&ber.contents().as_ref()[..bytes.len()], &bytes[..]);
-    /// assert_eq!(ber.contents().as_ref().last().unwrap(), &0xff);
+    /// assert_eq!(ber.length(), Length::Definite(bytes.len()));
+    /// assert_eq!(ber.contents().as_ref(), &bytes[..]);
     ///
     /// // Push to BER with indefinite length.
-    /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), (&bytes[..]).into());
-    /// ber.push(0xff);
+    /// let mut ber = Ber::new_indefinite(IdRef::octet_string(), (&bytes[..9]).into());
+    /// ber.push(bytes[9]);
     ///
     /// assert_eq!(ber.id(), IdRef::octet_string());
     /// assert!(ber.length().is_indefinite());
     ///
-    /// assert_eq!(&ber.contents().as_ref()[..bytes.len()], &bytes[..]);
-    /// assert_eq!(ber.contents().as_ref().last().unwrap(), &0xff);
+    /// assert_eq!(ber.contents().as_ref(), &bytes[..]);
     /// ```
     pub fn push(&mut self, byte: u8) {
         self.extend_from_slice(&[byte]);
@@ -715,11 +543,10 @@ impl Ber {
     /// ```
     /// use bsn1::{Ber, IdRef, Length};
     ///
-    /// // Create a DER of '0..=255' as Octet String.
     /// let bytes: Vec<u8> = (0..=255).collect();
-    /// let mut ber = Ber::from(&bytes[..]);
     ///
     /// // Truncate BER with definite length.
+    /// let mut ber = Ber::from(&bytes[..]);
     /// ber.truncate(100);
     ///
     /// assert_eq!(ber.id(), IdRef::octet_string());
@@ -750,6 +577,178 @@ impl Ber {
                 }
             }
         }
+    }
+}
+
+impl From<&DerRef> for Ber {
+    fn from(der: &DerRef) -> Self {
+        <&BerRef>::from(der).to_owned()
+    }
+}
+
+impl From<Der> for Ber {
+    fn from(der: Der) -> Self {
+        Self {
+            buffer: crate::der::disassemble_der(der),
+        }
+    }
+}
+
+impl From<&BerRef> for Ber {
+    fn from(ber_ref: &BerRef) -> Self {
+        ber_ref.to_owned()
+    }
+}
+
+impl From<bool> for Ber {
+    /// Creates a new instance representing a boolean containing `contents`.
+    fn from(contents: bool) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<i8> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i8) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u8> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u8) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<i16> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i16) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u16> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u16) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<i32> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i32) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u32> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u32) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<i64> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i64) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u64> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u64) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<i128> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: i128) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<u128> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: u128) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<isize> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: isize) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<usize> for Ber {
+    /// Creates a new instance representing a integer containing `contents`.
+    fn from(contents: usize) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<&str> for Ber {
+    /// Creates a new instance representing a utf8-string containing `contents`.
+    fn from(contents: &str) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl From<&[u8]> for Ber {
+    /// Creates a new instance representing an octet-string containing `contents`.
+    fn from(contents: &[u8]) -> Self {
+        Der::from(contents).into()
+    }
+}
+
+impl AsRef<[u8]> for Ber {
+    fn as_ref(&self) -> &[u8] {
+        self.buffer.as_slice()
+    }
+}
+
+impl AsRef<BerRef> for Ber {
+    fn as_ref(&self) -> &BerRef {
+        self.deref()
+    }
+}
+
+impl AsMut<BerRef> for Ber {
+    fn as_mut(&mut self) -> &mut BerRef {
+        self.deref_mut()
+    }
+}
+
+impl Borrow<BerRef> for Ber {
+    fn borrow(&self) -> &BerRef {
+        self.deref()
+    }
+}
+
+impl Deref for Ber {
+    type Target = BerRef;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { BerRef::from_bytes_unchecked(self.buffer.as_slice()) }
+    }
+}
+
+impl DerefMut for Ber {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { BerRef::from_mut_bytes_unchecked(self.buffer.as_mut_slice()) }
+    }
+}
+
+impl<T> PartialEq<T> for Ber
+where
+    T: Borrow<BerRef>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.deref() == other.borrow()
     }
 }
 
