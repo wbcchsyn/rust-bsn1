@@ -150,6 +150,29 @@ impl BerRef {
         unsafe { Ok(&mut *ptr) }
     }
 
+    fn do_parse(readable: &mut &[u8]) -> Result<i8, Error> {
+        let mut writeable = std::io::sink();
+        let init_bytes = *readable;
+
+        match unsafe { crate::misc::parse_id_length(readable, &mut writeable)? } {
+            Length::Definite(contents_len) => {
+                if readable.len() < contents_len {
+                    Err(Error::UnTerminatedBytes)
+                } else {
+                    *readable = &readable[contents_len..];
+
+                    let read = &init_bytes[..(init_bytes.len() - readable.len())];
+                    if read == Self::eoc().as_ref() {
+                        Ok(-1)
+                    } else {
+                        Ok(0)
+                    }
+                }
+            }
+            Length::Indefinite => Ok(1),
+        }
+    }
+
     /// Provides a reference from `bytes` without any check.
     ///
     /// `bytes` must be BER octets and must not include any extra octet.
