@@ -47,7 +47,7 @@ type Inner = Buffer;
 use std::borrow::Borrow;
 use std::fmt;
 use std::hash::{Hash, Hasher};
-use std::ops::{Deref, DerefMut, Index};
+use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 #[derive(Clone)]
 pub struct TmpBuffer(Inner);
@@ -175,5 +175,11 @@ impl Index<usize> for TmpBuffer {
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.as_slice()[index]
+    }
+}
+
+impl IndexMut<usize> for TmpBuffer {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.as_mut_slice()[index]
     }
 }
