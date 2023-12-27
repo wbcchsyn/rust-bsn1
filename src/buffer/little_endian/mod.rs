@@ -121,6 +121,22 @@ impl Buffer {
         buffer.reserve(cap);
         buffer
     }
+
+    pub fn from_vec(mut vals: Vec<u8>) -> Self {
+        if vals.capacity() == 0 {
+            Self::new()
+        } else {
+            let ret = Self {
+                data_: vals.as_mut_ptr(),
+                cap_: vals.capacity(),
+                len_: vals.len() | HEAP_FLAG,
+            };
+
+            std::mem::forget(vals);
+
+            ret
+        }
+    }
 }
 
 impl fmt::Debug for Buffer {
