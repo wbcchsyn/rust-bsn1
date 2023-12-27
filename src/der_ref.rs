@@ -86,10 +86,6 @@ impl DerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
-    /// This function is same as [`parse`] except that it returns a mutable reference.
-    ///
-    /// [`parse`]: Self::parse
-    ///
     /// # Warnings
     ///
     /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
@@ -112,7 +108,8 @@ impl DerRef {
     ///
     /// // You can update it because 'deserialized' is a mutable reference.
     /// deserialized.mut_contents()[0] = 'B' as u8;
-    /// // Now deserialize represents "Boo", not "Foo".
+    ///
+    /// // Now `deserialized` represents "Boo", not "Foo".
     ///
     /// // Deserialize again.
     /// let deserialized = DerRef::parse_mut(&mut serialized[..]).unwrap();
@@ -157,15 +154,16 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::DerRef;
+    /// use bsn1::{Der, DerRef};
     ///
-    /// let bytes: &[u8] = &[0x02, 0x01, 0x08];  // Represents '8' as Integer.
-    /// let _der: &DerRef = unsafe { DerRef::from_bytes_unchecked(bytes) };
+    /// let der = Der::from(8_i32);
+    /// let serialized: Vec<u8> = Vec::from(der.as_ref() as &[u8]);
+    /// let deserialized = DerRef::parse(&serialized[..]).unwrap();
+    ///
+    /// assert_eq!(der, deserialized);
     /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
-        let ptr = bytes as *const [u8];
-        let ptr = ptr as *const Self;
-        &*ptr
+        std::mem::transmute(bytes)
     }
 
     /// Provides a mutable reference from `bytes` without any check.
@@ -183,19 +181,17 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::DerRef;
+    /// use bsn1::{Der, DerRef};
     ///
-    /// // Represents '8' as Integer.
-    /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x08];
-    /// let der = unsafe { DerRef::from_mut_bytes_unchecked(bytes) };
+    /// let der = Der::from(8_i32);
+    /// let mut serialized: Vec<u8> = Vec::from(der.as_ref() as &[u8]);
+    /// let deserialized = DerRef::parse_mut(&mut serialized[..]).unwrap();
     ///
-    /// // The value is 0x08 at first.
-    /// assert_eq!(der.contents().as_ref(), &[0x08]);
+    /// assert_eq!(der, deserialized);
     ///
-    /// der.mut_contents()[0] = 0x09;
+    /// deserialized.mut_contents()[0] += 1;
     ///
-    /// // The value is updated.
-    /// assert_eq!(der.contents().as_ref(), &[0x09]);
+    /// assert_ne!(der, deserialized);
     /// ```
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         std::mem::transmute(bytes)
@@ -231,11 +227,10 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{DerRef, IdRef};
+    /// use bsn1::{Der, DerRef, IdRef};
     ///
-    /// let bytes: &[u8] = &[0x02, 0x01, 0x04];  // Represents '4' as Integer.
-    /// let der = DerRef::parse(bytes).unwrap();
-    ///
+    /// let der = Der::from(4_i32);
+    /// let der: &DerRef = der.as_ref();
     /// assert_eq!(IdRef::integer(), der.id());
     /// ```
     pub fn id(&self) -> &IdRef {
@@ -250,11 +245,10 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ClassTag, DerRef, IdRef, PCTag};
+    /// use bsn1::{ClassTag, Der, DerRef, IdRef, PCTag};
     ///
-    /// // Represents '4' as Integer.
-    /// let bytes: &mut [u8] = &mut [0x02, 0x01, 0x04];
-    /// let der = DerRef::parse_mut(bytes).unwrap();
+    /// let mut der = Der::from(4_i32);
+    /// let der: &mut DerRef = der.as_mut();
     ///
     /// assert_eq!(der.id().class(), ClassTag::Universal);
     /// der.mut_id().set_class(ClassTag::Private);
@@ -278,18 +272,18 @@ impl DerRef {
     ///
     /// # Warnings
     ///
-    /// `Length` stands for the length octets in DER: i.e. the length of the contents.
+    /// `Length` stands for the length octets in DER: i.e. the length of the 'contents octets'.
     /// The total byte count of the DER is greater than the value.
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{DerRef, Length};
+    /// use bsn1::{Der, DerRef, Length};
     ///
-    /// let bytes: &[u8] = &[0x04, 0x02, 0x00, 0xff];  // Represents '[0x00, 0xff]' as Octet String
-    /// let der = DerRef::parse(bytes).unwrap();
+    /// let der = Der::from("Foo");
+    /// let der: &DerRef = der.as_ref();
     ///
-    /// assert_eq!(Length::Definite(2), der.length());
+    /// assert_eq!(Length::Definite("Foo".len()), der.length());
     /// ```
     pub fn length(&self) -> Length {
         let id_len = self.id().len();
@@ -302,13 +296,12 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ContentsRef, DerRef};
+    /// use bsn1::{ContentsRef, Der, DerRef};
     ///
-    /// let bytes: &[u8] = &[0x04, 0x02, 0x00, 0xff];  // Represents '[0x00, 0xff]' as Octet String
-    /// let der = DerRef::parse(bytes).unwrap();
-    /// let contents = <&ContentsRef>::from(&bytes[2..]);
+    /// let der = Der::from("Foo");
+    /// let der: &DerRef = der.as_ref();
     ///
-    /// assert_eq!(contents, der.contents());
+    /// assert_eq!(der.contents().as_ref(), "Foo".as_bytes());
     /// ```
     pub fn contents(&self) -> &ContentsRef {
         let id_len = self.id().len();
@@ -317,20 +310,20 @@ impl DerRef {
         <&ContentsRef>::from(bytes)
     }
 
-    /// Returns a mutable reference to the contents octets of `self`.
+    /// Returns a mutable reference to the 'contents octets' of `self`.
     ///
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ContentsRef, DerRef};
+    /// use bsn1::{ContentsRef, Der, DerRef};
     ///
-    /// // Represents '[0x00, 0xff]' as Octet String
-    /// let bytes: &mut [u8] = &mut [0x04, 0x02, 0x00, 0xff];
-    /// let der = DerRef::parse_mut(bytes).unwrap();
+    /// let mut der = Der::from("Foo");
+    /// let der: &mut DerRef = der.as_mut();
     ///
-    /// assert_eq!(der.contents().as_ref(), &[0x00, 0xff]);
-    /// der.mut_contents().as_mut().copy_from_slice(&[0x01, 0x02]);
-    /// assert_eq!(der.contents().as_ref(), &[0x01, 0x02]);
+    /// assert_eq!(der.contents().as_ref(), "Foo".as_bytes());
+    ///
+    /// der.mut_contents()[0] = 'B' as u8;
+    /// assert_eq!(der.contents().as_ref(), "Boo".as_bytes());
     /// ```
     pub fn mut_contents(&mut self) -> &mut ContentsRef {
         let ret = self.contents();

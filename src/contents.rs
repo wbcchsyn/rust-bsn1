@@ -40,8 +40,7 @@ use std::ops::{Deref, DerefMut};
 ///
 /// The structure of `Contents` is similar to that of `Vec<u8>`.
 ///
-/// The user can access the [`ContentsRef`] via the [`Deref`] and [`DerefMut`] implementations, and
-/// the inner slice via the [`ContentsRef`].
+/// The user can access the inner [`ContentsRef`] via the `Deref` and `DerefMut` implementations.
 #[derive(Debug, Clone, Eq, Hash)]
 pub struct Contents {
     buffer: Buffer,
@@ -188,6 +187,8 @@ impl From<isize> for Contents {
 }
 
 impl From<bool> for Contents {
+    /// The encoding rule of boolean is different between BER and DER.
+    /// The return value is valid both as BER and DER.
     fn from(val: bool) -> Self {
         let buffer = if val {
             Buffer::from(&[0xff])

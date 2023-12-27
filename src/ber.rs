@@ -39,8 +39,7 @@ use std::ops::{Deref, DerefMut};
 ///
 /// The structure of `Ber` is similar to that of `Vec<u8>`.
 ///
-/// Users can access the [`BerRef`] via the [`Deref`] and [`DerefMut`] implementation
-/// and the inner slice via the [`BerRef`].
+/// Users can access the inner [`BerRef`] via the `Deref` and `DerefMut` implementation.
 #[derive(Debug, Clone, Eq, Hash)]
 pub struct Ber {
     buffer: Buffer,
@@ -181,7 +180,7 @@ impl Ber {
     /// Warnings
     ///
     /// ASN.1 reserves some universal identifiers and they should not be used,
-    /// however, this function accepts such identifiers.
+    /// however, this function ignores the rule.
     /// For example, the number 15 (0x0f) is reserved for now, but this function creates such
     /// an instance with the number 15 identifier.
     ///
@@ -197,11 +196,12 @@ impl Ber {
     /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = <&ContentsRef>::from(&[]);
+    /// let contents: &ContentsRef = "Foo".into();
     /// let ber = Ber::new(id, contents);
     ///
     /// assert_eq!(ber.id(), id);
-    /// assert!(ber.contents().is_empty());
+    /// assert!(ber.length().is_definite());
+    /// assert_eq!(ber.contents().as_ref(), "Foo".as_bytes());
     /// ```
     pub fn new(id: &IdRef, contents: &ContentsRef) -> Self {
         Der::new(id, contents).into()
@@ -216,7 +216,7 @@ impl Ber {
     /// Warnings
     ///
     /// ASN.1 reserves some universal identifiers and they should not be used,
-    /// however, this function accepts such identifiers.
+    /// however, this function ignores the rule.
     /// For example, the number 15 (0x0f) is reserved for now, but this function creates such
     /// an instance with the number 15 identifier.
     ///
@@ -232,12 +232,12 @@ impl Ber {
     /// use bsn1::{Ber, ContentsRef, IdRef, Length};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = <&ContentsRef>::from(&[]);
+    /// let contents: &ContentsRef = "Foo".into();
     /// let ber = Ber::new_indefinite(id, contents);
     ///
     /// assert_eq!(ber.id(), id);
-    /// assert_eq!(ber.length().is_indefinite(), true);
-    /// assert!(ber.contents().is_empty());
+    /// assert!(ber.length().is_indefinite());
+    /// assert_eq!(ber.contents().as_ref(), "Foo".as_bytes());
     /// ```
     pub fn new_indefinite(id: &IdRef, contents: &ContentsRef) -> Self {
         let mut ret = Self::with_id_length_indefinite(id, contents.len());
@@ -251,12 +251,12 @@ impl Ber {
     /// Creates a new instance with definite length from `id` and `contents` of `length` bytes.
     ///
     /// The `contents` of the return value are not initialized.
-    /// Use [`mut_contents`] via [`DerefMut`] implementation to initialize it.
+    /// Use [`mut_contents`] via `DerefMut` implementation to initialize it.
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifiers and they should not be used, however, this
-    /// function accepts such identifiers. For example, the number 15 (0x0f) is reserved for now,
+    /// function ignores the rule. For example, the number 15 (0x0f) is reserved for now,
     /// but this function creates such an instance with the number 15 identifier.
     ///
     /// # Panics
@@ -270,11 +270,14 @@ impl Ber {
     /// ```
     /// use bsn1::{Ber, IdRef, Length};
     ///
-    /// let ber = Ber::with_id_length(IdRef::utf8_string(), 36);
+    /// let mut ber = Ber::with_id_length(IdRef::utf8_string(), "Hello".len());
     ///
     /// assert_eq!(ber.id(), IdRef::utf8_string());
-    /// assert_eq!(ber.length(), Length::Definite(36));
-    /// assert_eq!(ber.contents().len(), 36);
+    /// assert_eq!(ber.length(), Length::Definite("Hello".len()));
+    /// assert_eq!(ber.contents().len(), "Hello".len());
+    ///
+    /// ber.mut_contents().as_mut().copy_from_slice("Hello".as_bytes());
+    /// assert_eq!(ber.contents().as_ref(), "Hello".as_bytes());
     /// ```
     pub fn with_id_length(id: &IdRef, length: usize) -> Self {
         Der::with_id_length(id, length).into()
@@ -302,10 +305,14 @@ impl Ber {
     /// ```
     /// use bsn1::{Ber, IdRef, Length};
     ///
-    /// let ber = Ber::with_id_length_indefinite(IdRef::utf8_string(), 36);
+    /// let mut ber = Ber::with_id_length_indefinite(IdRef::utf8_string(), "Hello".len());
     ///
     /// assert_eq!(ber.id(), IdRef::utf8_string());
-    /// assert_eq!(ber.length().is_indefinite(), true);
+    /// assert!(ber.length().is_indefinite());
+    /// assert_eq!(ber.contents().len(), "Hello".len());
+    ///
+    /// ber.mut_contents().as_mut().copy_from_slice("Hello".as_bytes());
+    /// assert_eq!(ber.contents().as_ref(), "Hello".as_bytes());
     /// ```
     pub fn with_id_length_indefinite(id: &IdRef, length: usize) -> Self {
         let length_ = Length::Indefinite.to_bytes();
@@ -334,12 +341,12 @@ impl Ber {
     ///
     /// This function is not so efficient compared with [`Ber::parse`].
     /// If you have a slice of serialized BER, use [`BerRef::parse`]
-    /// and then call [`ToOwned::to_owned`] instead.
+    /// and then call `ToOwned::to_owned` instead.
     ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifiers and they should not be used, however, this
-    /// function accepts such identifiers. For example, the number 15 (0x0f) is reserved for now,
+    /// function ignores the rule. For example, the number 15 (0x0f) is reserved for now,
     /// but this function returns `Ok`.
     ///
     /// # Examples
@@ -420,10 +427,10 @@ impl Ber {
     /// ```
     /// use bsn1::{Ber, ContentsRef, IdRef};
     ///
-    /// let contents = <&ContentsRef>::from(&[]);
-    /// let ber0 = Ber::new(IdRef::octet_string(), contents);
-    /// let ber1 = unsafe { Ber::from_bytes_unchecked(ber0.as_ref()) };
-    /// assert_eq!(ber0, ber1);
+    /// let ber = Ber::from(5_i32);
+    /// let serialized: &[u8] = ber.as_ref();
+    /// let deserialized = unsafe { Ber::from_bytes_unchecked(serialized) };
+    /// assert_eq!(ber, deserialized);
     /// ```
     pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> Self {
         Self {
@@ -448,11 +455,11 @@ impl Ber {
     /// ```
     /// use bsn1::Ber;
     ///
-    /// let ber0 = Ber::from(5_i32);
-    /// let bytes = ber0.clone().into_vec();
-    /// let ber1 = unsafe { Ber::from_vec_unchecked(bytes) };
+    /// let ber = Ber::from(5_i32);
+    /// let serialized = ber.clone().into_vec();
+    /// let from_vec = unsafe { Ber::from_vec_unchecked(serialized) };
     ///
-    /// assert_eq!(ber0, ber1);
+    /// assert_eq!(ber, from_vec);
     /// ```
     pub unsafe fn from_vec_unchecked(bytes: Vec<u8>) -> Self {
         Self {
@@ -552,12 +559,12 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, ContentsRef, IdRef};
+    /// use bsn1::{Ber, Contents, IdRef};
     ///
     /// let id = IdRef::octet_string();
-    /// let contents = <&ContentsRef>::from(&[0, 1, 2, 3, 4]);
+    /// let contents = Contents::from(&[0, 1, 2, 3, 4]);
     ///
-    /// let ber = Ber::new(id, contents);
+    /// let ber = Ber::new(id, &contents);
     /// let v = ber.clone().into_vec();
     ///
     /// assert_eq!(ber.as_ref() as &[u8], &v);
@@ -570,12 +577,12 @@ impl Ber {
     ///
     /// If `self` had indefinite length, the length octets will not be changed;
     /// otherwise, the length octets will be `Length::Definite(new_length)`
-    /// where `new_length` is the current length of the 'contents octets' plus 1.
+    /// where `new_length` is the current byte count of the 'contents octets' plus 1.
     ///
     /// Note that this method may shift the 'contents octets',
-    /// and the performance is `O(n)` where `n` is the length of 'contents octets'
-    /// in the worst-case;
-    /// because the length of 'length octets' may change.
+    /// and the performance is `O(n)` where `n` is the byte count of 'contents octets'
+    /// in the worst-case,
+    /// because the byte count of 'length octets' may change.
     /// (BER is composed of 'identifier octets', 'length octets' and 'contents octets'
     /// in this order.)
     ///
@@ -614,12 +621,12 @@ impl Ber {
     ///
     /// If `self` had indefinite length, the length octets will not be changed;
     /// otherwise, the length octets will be `Length::Definite(new_length)`
-    /// where `new_length` is the current length of the 'contents octets' plus `bytes.len()`.
+    /// where `new_length` is the current byte count of the 'contents octets' plus `bytes.len()`.
     ///
     /// Note that this method may shift the 'contents octets',
-    /// and the performance is `O(n)` where `n` is the length of 'contents octets'
-    /// in the worst-case;
-    /// because the length of 'length octets' may change.
+    /// and the performance is `O(n)` where `n` is the byte count of 'contents octets'
+    /// in the worst-case,
+    /// because the byte count of 'length octets' may change.
     /// (BER is composed of 'identifier octets', 'length octets' and 'contents octets'
     /// in this order.)
     ///
@@ -671,12 +678,12 @@ impl Ber {
     ///
     /// If `self` had indefinite length, the length octets will not be changed;
     /// otherwise, the length octets will be `Length::Definite(new_length)`
-    /// if `new_length` is less than the current length of the 'contents octets'.
+    /// if `new_length` is less than the current byte count of the 'contents octets'.
     ///
     /// Note that this method may shift the 'contents octets',
-    /// and the performance is `O(n)` where `n` is the length of 'contents octets'
-    /// in the worst-case;
-    /// because the length of 'length octets' may change.
+    /// and the performance is `O(n)` where `n` is the byte count of 'contents octets'
+    /// in the worst-case,
+    /// because the byte count of 'length octets' may change.
     /// (BER is composed of 'identifier octets', 'length octets' and 'contents octets'
     /// in this order.)
     ///
@@ -692,9 +699,9 @@ impl Ber {
     ///
     /// // Create a DER of '0..=255' as Octet String.
     /// let bytes: Vec<u8> = (0..=255).collect();
+    /// let mut ber = Ber::from(&bytes[..]);
     ///
     /// // Truncate BER with definite length.
-    /// let mut ber = Ber::from(&bytes[..]);
     /// ber.truncate(100);
     ///
     /// assert_eq!(ber.id(), IdRef::octet_string());
