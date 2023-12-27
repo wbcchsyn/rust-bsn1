@@ -46,6 +46,7 @@ type Inner = Buffer;
 
 use std::borrow::Borrow;
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
 
 #[derive(Clone)]
@@ -160,5 +161,11 @@ impl Deref for TmpBuffer {
 impl DerefMut for TmpBuffer {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.as_mut_slice()
+    }
+}
+
+impl Hash for TmpBuffer {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_slice().hash(state);
     }
 }
