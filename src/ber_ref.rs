@@ -59,6 +59,9 @@ impl BerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
+    /// On success, `bytes` will be updated to point the next octet of `BerRef`;
+    /// otehrwise, `bytes` will not be updated.
+    ///
     /// # Warnings
     ///
     /// ASN.1 reserves some universal identifier numbers and they should not be used, however,
@@ -76,33 +79,36 @@ impl BerRef {
     /// let mut serialized = Vec::from(ber.as_ref() as &[u8]);
     ///
     /// // Deserializes `ber`.
-    /// let deserialized = BerRef::parse(&serialized[..]).unwrap();
+    /// let deserialized = BerRef::parse(&mut &serialized[..]).unwrap();
     /// assert_eq!(ber, deserialized);
     ///
     /// // Extra octets at the end does not affect the result.
     /// serialized.push(0x00);
     /// serialized.push(0xff);
     ///
-    /// let deserialized = BerRef::parse(&serialized[..]).unwrap();
+    /// let deserialized = BerRef::parse(&mut &serialized[..]).unwrap();
     /// assert_eq!(ber, deserialized);
     /// ```
-    pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
-        let mut readable = bytes;
+    pub fn parse<'a>(bytes: &mut &'a [u8]) -> Result<&'a Self, Error> {
+        let init_bytes = *bytes;
         let mut stack_depth: isize = 0;
 
         while {
-            stack_depth += Self::do_parse(&mut readable)? as isize;
+            stack_depth += Self::do_parse(bytes)? as isize;
             stack_depth > 0
         } {}
 
-        let total_len = bytes.len() - readable.len();
-        unsafe { Ok(Self::from_bytes_unchecked(&bytes[..total_len])) }
+        let total_len = init_bytes.len() - bytes.len();
+        unsafe { Ok(Self::from_bytes_unchecked(&init_bytes[..total_len])) }
     }
 
     /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a mutable reference to
     /// `BerRef`.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// On success, `bytes` will be updated to point the next octet of `BerRef`;
+    /// otehrwise, `bytes` will not be updated.
     ///
     /// # Warnings
     ///
@@ -121,33 +127,50 @@ impl BerRef {
     /// let mut serialized = Vec::from(ber.as_ref() as &[u8]);
     ///
     /// // Deserialize.
-    /// let deserialized = BerRef::parse_mut(&mut serialized[..]).unwrap();
+    /// let deserialized = BerRef::parse_mut(&mut &mut serialized[..]).unwrap();
     /// assert_eq!(ber, deserialized);
     ///
     /// // You can update it because 'deserialized' is a mutable reference.
     /// deserialized.mut_contents()[0] = 'B' as u8;
+    /// assert_eq!(Ber::from("Boo").as_ref() as &BerRef, deserialized);
+    ///
     /// // Now deserialize represents "Boo", not "Foo".
     ///
     /// // Deserialize again.
-    /// let deserialized = BerRef::parse_mut(&mut serialized[..]).unwrap();
-    /// assert!(ber != deserialized);
+    /// let deserialized = BerRef::parse_mut(&mut &mut serialized[..]).unwrap();
+    /// assert_eq!(Ber::from("Boo").as_ref() as &BerRef, deserialized);
     /// ```
-    pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
-        let mut readable = bytes as &[u8];
-        let mut stack_depth: isize = 0;
+    pub fn parse_mut<'a>(bytes: &mut &'a mut [u8]) -> Result<&'a mut Self, Error> {
+        let read_bytes = {
+            let mut readable: &[u8] = *bytes;
+            let mut stack_depth: isize = 0;
 
-        while {
-            stack_depth += Self::do_parse(&mut readable)? as isize;
-            stack_depth > 0
-        } {}
+            while {
+                stack_depth += Self::do_parse(&mut readable)? as isize;
+                stack_depth > 0
+            } {}
 
-        let total_len = bytes.len() - readable.len();
-        unsafe { Ok(Self::from_mut_bytes_unchecked(&mut bytes[..total_len])) }
+            bytes.len() - readable.len()
+        };
+
+        unsafe {
+            let init_ptr = bytes.as_mut_ptr();
+            let left_bytes = bytes.len() - read_bytes;
+            *bytes = std::slice::from_raw_parts_mut(init_ptr.add(read_bytes), left_bytes);
+
+            let read = std::slice::from_raw_parts_mut(init_ptr, read_bytes);
+            Ok(Self::from_mut_bytes_unchecked(read))
+        }
     }
 
     fn do_parse(readable: &mut &[u8]) -> Result<i8, Error> {
+        // Check eoc
+        if readable.starts_with(Self::eoc().as_ref()) {
+            *readable = &readable[Self::eoc().as_ref().len()..];
+            return Ok(-1);
+        }
+
         let mut writeable = std::io::sink();
-        let init_bytes = *readable;
 
         match unsafe { crate::misc::parse_id_length(readable, &mut writeable)? } {
             Length::Definite(contents_len) => {
@@ -155,13 +178,7 @@ impl BerRef {
                     Err(Error::UnTerminatedBytes)
                 } else {
                     *readable = &readable[contents_len..];
-
-                    let read = &init_bytes[..(init_bytes.len() - readable.len())];
-                    if read == Self::eoc().as_ref() {
-                        Ok(-1)
-                    } else {
-                        Ok(0)
-                    }
+                    Ok(0)
                 }
             }
             Length::Indefinite => Ok(1),
@@ -363,6 +380,124 @@ impl BerRef {
             let ptr = ret as *const ContentsRef;
             let ptr = ptr as *mut ContentsRef;
             &mut *ptr
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_deinite() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
+        for i in 0..bytes.len() {
+            let ber = Ber::from(&bytes[..i]);
+            let mut bytes: &[u8] = ber.as_ref();
+            let parsed = BerRef::parse(&mut bytes).unwrap();
+
+            assert_eq!(ber, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
+    }
+
+    #[test]
+    fn parse_indefinite() {
+        let bers: Vec<Ber> = (0..10).map(Ber::from).collect();
+
+        for i in 0..10 {
+            let contents: Vec<u8> = bers[..i]
+                .iter()
+                .map(|ber| ber.as_ref() as &[u8])
+                .flatten()
+                .copied()
+                .collect();
+            let mut ber = Ber::new_indefinite(IdRef::sequence(), contents.as_slice().into());
+            ber.extend_from_slice(BerRef::eoc().as_ref());
+
+            let mut bytes: &[u8] = ber.as_ref();
+            let parsed = BerRef::parse(&mut bytes).unwrap();
+
+            assert_eq!(ber, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
+    }
+
+    #[test]
+    fn parse_deinite_in_definite() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
+        for i in 0..bytes.len() {
+            let inner = Ber::from(&bytes[..i]);
+
+            let ber = Ber::new(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
+            let mut bytes: &[u8] = ber.as_ref();
+
+            let parsed = BerRef::parse(&mut bytes).unwrap();
+            assert_eq!(ber, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
+    }
+
+    #[test]
+    fn parse_indeinite_in_definite() {
+        let bers: Vec<Ber> = (0..10).map(Ber::from).collect();
+        for i in 0..bers.len() {
+            let contents: Vec<u8> = bers[..i]
+                .iter()
+                .map(|ber| ber.as_ref() as &[u8])
+                .flatten()
+                .copied()
+                .collect();
+            let mut inner = Ber::new_indefinite(IdRef::octet_string(), contents.as_slice().into());
+            inner.extend_from_slice(BerRef::eoc().as_ref());
+
+            let ber = Ber::new(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
+            let mut bytes: &[u8] = ber.as_ref();
+
+            let parsed = BerRef::parse(&mut bytes).unwrap();
+            assert_eq!(ber, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
+    }
+
+    #[test]
+    fn parse_deinite_in_indefinite() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
+        for i in 0..bytes.len() {
+            let inner = Ber::from(&bytes[..i]);
+
+            let mut ber = Ber::new_indefinite(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
+            ber.extend_from_slice(BerRef::eoc().as_ref());
+
+            let mut bytes: &[u8] = ber.as_ref();
+            let parsed = BerRef::parse(&mut bytes).unwrap();
+
+            assert_eq!(ber, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
+    }
+
+    #[test]
+    fn parse_indeinite_in_indefinite() {
+        let bers: Vec<Ber> = (0..10).map(Ber::from).collect();
+        for i in 0..bers.len() {
+            let contents: Vec<u8> = bers[..i]
+                .iter()
+                .map(|ber| ber.as_ref() as &[u8])
+                .flatten()
+                .copied()
+                .collect();
+            let mut inner = Ber::new_indefinite(IdRef::octet_string(), contents.as_slice().into());
+            inner.extend_from_slice(BerRef::eoc().as_ref());
+
+            let mut ber = Ber::new_indefinite(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
+            ber.extend_from_slice(BerRef::eoc().as_ref());
+
+            let mut bytes: &[u8] = ber.as_ref();
+            let parsed = BerRef::parse(&mut bytes).unwrap();
+
+            assert_eq!(ber, parsed);
+            assert_eq!(bytes.len(), 0);
         }
     }
 }
