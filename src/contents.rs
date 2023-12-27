@@ -69,6 +69,28 @@ impl<const N: usize> From<&[u8; N]> for Contents {
     }
 }
 
+impl<'a> From<&'a str> for Contents {
+    fn from(value: &'a str) -> Self {
+        Self::from(value.as_bytes())
+    }
+}
+
+impl From<Vec<u8>> for Contents {
+    fn from(value: Vec<u8>) -> Self {
+        Self {
+            buffer: Buffer::from(value),
+        }
+    }
+}
+
+impl From<String> for Contents {
+    fn from(value: String) -> Self {
+        Self {
+            buffer: Buffer::from(value.into_bytes()),
+        }
+    }
+}
+
 impl From<u8> for Contents {
     fn from(val: u8) -> Self {
         if val == 0 {

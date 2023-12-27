@@ -72,6 +72,12 @@ impl<'a, const N: usize> From<&'a mut [u8; N]> for &'a mut ContentsRef {
     }
 }
 
+impl<'a> From<&'a str> for &'a ContentsRef {
+    fn from(s: &'a str) -> Self {
+        Self::from(s.as_bytes())
+    }
+}
+
 impl From<bool> for &'static ContentsRef {
     fn from(val: bool) -> Self {
         if val {
