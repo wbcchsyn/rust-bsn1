@@ -270,8 +270,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - Rename DerRef::try\_from\_bytes() DerRef::parse() (The type of the argument is changed as well.)
   - Rename DerRef::try\_from\_mut\_bytes() DerRef::parse\_mut()  (The type of the argument is changed as well.)
   - Rename Id::try\_from\_bytes() Id::parse() (The type of the argument is changed as well.)
-  - Rename IdRef::try\_from\_bytes() IdRef::parse()
-  - Rename IdRef::try\_from\_mut\_bytes() IdRef::parse\_mut()
+  - Rename IdRef::try\_from\_bytes() IdRef::parse()  (The type of the argument is changed as well.)
+  - Rename IdRef::try\_from\_mut\_bytes() IdRef::parse\_mut()  (The type of the argument is changed as well.)
   - Rename Length::try\_from\_bytes() Length::parse() (The type of the argument is changed as well.)
 - Add variant `Io` to enum `Error`
 

@@ -356,7 +356,7 @@ mod tests {
                     assert_eq!(pc, id.pc());
                     assert_eq!(Ok(i.into()), id.number());
 
-                    let idref = IdRef::parse(id.as_ref()).unwrap();
+                    let idref = IdRef::parse(&mut id.as_ref()).unwrap();
                     assert_eq!(id, idref);
                 }
             }
