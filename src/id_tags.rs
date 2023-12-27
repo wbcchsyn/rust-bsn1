@@ -53,3 +53,50 @@ pub enum PCTag {
     /// Constructed data type.
     Constructed = 0x20,
 }
+
+/// `IdNumber` represents the number of identifier.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct IdNumber(u128);
+
+impl From<u8> for IdNumber {
+    fn from(n: u8) -> Self {
+        Self(n as u128)
+    }
+}
+
+impl From<u16> for IdNumber {
+    fn from(n: u16) -> Self {
+        Self(n as u128)
+    }
+}
+
+impl From<u32> for IdNumber {
+    fn from(n: u32) -> Self {
+        Self(n as u128)
+    }
+}
+
+impl From<u64> for IdNumber {
+    fn from(n: u64) -> Self {
+        Self(n as u128)
+    }
+}
+
+impl From<u128> for IdNumber {
+    fn from(n: u128) -> Self {
+        Self(n)
+    }
+}
+
+impl From<usize> for IdNumber {
+    fn from(n: usize) -> Self {
+        Self(n as u128)
+    }
+}
+
+impl IdNumber {
+    /// Returns the inner number.
+    pub fn get(&self) -> u128 {
+        self.0
+    }
+}

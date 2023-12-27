@@ -87,7 +87,7 @@
 //!     // The RFC does not refer to the Primitive/Constructed flag,
 //!     // but SEQUENCE is usually Constructed.
 //!     const ID_NUMBER: u32 = 0;
-//!     let id = Id::new(ClassTag::Application, PCTag::Constructed, ID_NUMBER);
+//!     let id = Id::new(ClassTag::Application, PCTag::Constructed, ID_NUMBER.into());
 //!
 //!     let contents = [new_bind_version(), new_bind_name(name),
 //!                     new_bind_authentication(password)];
@@ -127,7 +127,7 @@
 //!    // RFC does not refer to the class and Primitive/Constructed flag.
 //!    // This function returns ContextSpecific and Primitive BER.
 //!    const ID_NUMBER: u32 = 0;
-//!    let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, ID_NUMBER);
+//!    let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, ID_NUMBER.into());
 //!
 //!    let contents = <&ContentsRef>::from(password);
 //!
@@ -140,7 +140,7 @@
 //!                 .map_err(|e| format!("Failed to parse the request as a BER: {}", e))?;
 //!
 //!     let id = req.id();
-//!     if id.class() != ClassTag::Application || id.number() != Ok(0) {
+//!     if id.class() != ClassTag::Application || id.number() != Ok(0_u8.into()) {
 //!         return Err("The id of the request is bad.".to_string());
 //!     }
 //!
@@ -195,9 +195,9 @@
 //! /// Tries to parse the password of bind request.
 //! fn parse_bind_authentication(authentication: &BerRef) -> Result<&[u8], String> {
 //!     let id = authentication.id();
-//!     if id.number() == Ok(3) {
+//!     if id.number() == Ok(3_u8.into()) {
 //!         Err("This function supports only simple authentication".to_string())
-//!     } else if id.number() != Ok(0) {
+//!     } else if id.number() != Ok(0_u8.into()) {
 //!         Err("The id of the authentication is bad".to_string())
 //!     } else {
 //!         Ok(authentication.contents().as_ref())
@@ -240,7 +240,7 @@ pub use contents::Contents;
 pub use contents_ref::ContentsRef;
 pub use der::Der;
 pub use der_ref::DerRef;
-pub use id_tags::{ClassTag, PCTag};
+pub use id_tags::{ClassTag, IdNumber, PCTag};
 pub use identifier::Id;
 pub use identifier_ref::IdRef;
 pub use length::Length;
