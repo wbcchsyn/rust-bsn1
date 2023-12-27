@@ -44,6 +44,8 @@ pub use universal_endian::Buffer;
 
 type Inner = Buffer;
 
+use std::borrow::Borrow;
+
 #[derive(Clone)]
 pub struct TmpBuffer(Inner);
 
@@ -129,5 +131,11 @@ impl TmpBuffer {
 
     pub fn into_vec(self) -> Vec<u8> {
         self.0.into_vec()
+    }
+}
+
+impl Borrow<[u8]> for TmpBuffer {
+    fn borrow(&self) -> &[u8] {
+        self.as_slice()
     }
 }
