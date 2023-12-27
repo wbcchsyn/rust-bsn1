@@ -48,6 +48,7 @@ use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
+use std::io::Write;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 #[derive(Clone)]
@@ -208,5 +209,17 @@ where
 impl Ord for TmpBuffer {
     fn cmp(&self, other: &Self) -> Ordering {
         self.as_slice().cmp(other.as_slice())
+    }
+}
+
+impl Write for TmpBuffer {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.reserve(buf.len());
+        unsafe { self.extend_from_slice(buf) };
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
     }
 }
