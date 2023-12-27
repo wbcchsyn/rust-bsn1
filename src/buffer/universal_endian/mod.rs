@@ -244,6 +244,24 @@ impl Buffer {
             }
         }
     }
+
+    pub fn from_vec(mut vals: Vec<u8>) -> Self {
+        if vals.capacity() == 0 {
+            return Self::new();
+        } else {
+            let buffer = HeapBuffer::from_raw_parts(vals.as_mut_ptr(), vals.capacity());
+            let len_ = vals.len() | HEAP_FLAG;
+
+            std::mem::forget(vals);
+
+            Self {
+                len_,
+                buffer_: BufferWithoutLength {
+                    heap: ManuallyDrop::new(buffer),
+                },
+            }
+        }
+    }
 }
 
 impl fmt::Debug for Buffer {
