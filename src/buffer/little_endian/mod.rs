@@ -32,10 +32,7 @@
 
 use std::alloc::{self, Layout};
 use std::borrow::Borrow;
-use std::cmp::Ordering;
 use std::fmt;
-use std::hash::{Hash, Hasher};
-use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 const HEAP_FLAG: usize = 1 << (usize::BITS - 1);
 const LEN_MASK: usize = !HEAP_FLAG;
@@ -68,39 +65,9 @@ impl Drop for Buffer {
 
 impl Clone for Buffer {
     fn clone(&self) -> Self {
-        Self::from(self.as_slice())
-    }
-}
-
-impl From<&[u8]> for Buffer {
-    fn from(vals: &[u8]) -> Self {
-        let mut ret = Self::with_capacity(vals.len());
-        unsafe { ret.extend_from_slice(vals) };
+        let mut ret = Self::with_capacity(self.len());
+        unsafe { ret.extend_from_slice(self.as_slice()) };
         ret
-    }
-}
-
-impl<const N: usize> From<&[u8; N]> for Buffer {
-    fn from(val: &[u8; N]) -> Self {
-        Self::from(&val[..])
-    }
-}
-
-impl From<Vec<u8>> for Buffer {
-    fn from(mut vals: Vec<u8>) -> Self {
-        if vals.capacity() == 0 {
-            Self::new()
-        } else {
-            let ret = Self {
-                data_: vals.as_mut_ptr(),
-                cap_: vals.capacity(),
-                len_: vals.len() | HEAP_FLAG,
-            };
-
-            std::mem::forget(vals);
-
-            ret
-        }
     }
 }
 
@@ -149,40 +116,6 @@ impl Borrow<[u8]> for Buffer {
     }
 }
 
-impl Deref for Buffer {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        self.as_slice()
-    }
-}
-
-impl DerefMut for Buffer {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.as_mut_slice()
-    }
-}
-
-impl Hash for Buffer {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.as_slice().hash(state);
-    }
-}
-
-impl Index<usize> for Buffer {
-    type Output = u8;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.as_slice()[index]
-    }
-}
-
-impl IndexMut<usize> for Buffer {
-    fn index_mut(&mut self, i: usize) -> &mut u8 {
-        &mut self.as_mut_slice()[i]
-    }
-}
-
 impl<T> PartialEq<T> for Buffer
 where
     T: Borrow<[u8]>,
@@ -193,33 +126,6 @@ where
 }
 
 impl Eq for Buffer {}
-
-impl<T> PartialOrd<T> for Buffer
-where
-    T: Borrow<[u8]>,
-{
-    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
-        self.as_slice().partial_cmp(other.borrow())
-    }
-}
-
-impl Ord for Buffer {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.as_slice().cmp(other.as_slice())
-    }
-}
-
-impl std::io::Write for Buffer {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        self.reserve(buf.len());
-        unsafe { self.extend_from_slice(buf) };
-        Ok(buf.len())
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        Ok(())
-    }
-}
 
 impl Buffer {
     /// # Safety
