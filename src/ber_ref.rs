@@ -81,38 +81,16 @@ impl BerRef {
     /// assert_eq!(ber0, ber1);
     /// ```
     pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
-        let id = IdRef::parse(bytes)?;
-        let parsing = &bytes[id.len()..];
+        let mut readable = bytes;
+        let mut stack_depth: isize = 0;
 
-        match length::parse_(parsing) {
-            Err(e) => Err(e),
-            Ok((Length::Definite(len), parsing)) => {
-                let total_len = bytes.len() - parsing.len() + len;
+        while {
+            stack_depth += Self::do_parse(&mut readable)? as isize;
+            stack_depth > 0
+        } {}
 
-                if bytes.len() < total_len {
-                    Err(Error::UnTerminatedBytes)
-                } else {
-                    unsafe { Ok(BerRef::from_bytes_unchecked(&bytes[..total_len])) }
-                }
-            }
-            Ok((Length::Indefinite, mut parsing)) => {
-                while {
-                    let element = Self::parse(parsing)?;
-                    let len = element.as_ref().len();
-                    parsing = &parsing[len..];
-
-                    if element.id() != IdRef::eoc() {
-                        true
-                    } else if element.length() == Length::Definite(0) {
-                        false
-                    } else {
-                        return Err(Error::BadEoc);
-                    }
-                } {}
-                let total_len = bytes.len() - parsing.len();
-                unsafe { Ok(BerRef::from_bytes_unchecked(&bytes[..total_len])) }
-            }
-        }
+        let total_len = bytes.len() - readable.len();
+        unsafe { Ok(Self::from_bytes_unchecked(&bytes[..total_len])) }
     }
 
     /// Parses `bytes` starting with octets of 'ASN.1 BER' and returns a mutable reference to
