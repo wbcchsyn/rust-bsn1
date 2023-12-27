@@ -340,7 +340,7 @@ impl Ber {
         Self { buffer }
     }
 
-    /// Parses `bytes` starting with BER octets and returns a new instance.
+    /// Parses `readable` starting with BER octets and returns a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
@@ -349,9 +349,16 @@ impl Ber {
     /// ASN.1 reserves some universal identifiers and they should not be used, however, this
     /// function accepts such identifiers. For example, the number 15 (0x0f) is reserved for now,
     /// but this function returns `Ok`.
-    pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
-        let ret = BerRef::parse(bytes)?;
-        Ok(ret.into())
+    pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
+        let mut buffer = Buffer::new();
+        let mut stack_depth: isize = 0;
+
+        while {
+            stack_depth += Self::do_parse(readable, &mut buffer)? as isize;
+            stack_depth > 0
+        } {}
+
+        Ok(Self { buffer })
     }
 
     fn do_parse<R: Read>(readable: &mut R, writeable: &mut Buffer) -> Result<i8, Error> {
