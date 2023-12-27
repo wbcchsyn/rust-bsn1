@@ -30,9 +30,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(test)]
-mod tests;
-
 use std::alloc::{self, Layout};
 use std::borrow::Borrow;
 use std::cmp::Ordering;
@@ -146,7 +143,7 @@ impl Drop for BufferWithoutLength {
 
 const HEAP_FLAG: usize = 1 << (usize::BITS - 1);
 const LEN_MASK: usize = !HEAP_FLAG;
-const INIT_CAPACITY: usize = StackBuffer::capacity();
+pub const INIT_CAPACITY: usize = StackBuffer::capacity();
 
 pub struct Buffer {
     len_: usize,

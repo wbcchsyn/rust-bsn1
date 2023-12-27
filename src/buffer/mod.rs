@@ -33,12 +33,17 @@
 #[cfg(target_endian = "little")]
 mod little_endian;
 #[cfg(target_endian = "little")]
-type Inner = little_endian::Buffer;
+use little_endian as endian;
 
 #[cfg(any(target_endian = "big"))]
 mod universal_endian;
 #[cfg(any(target_endian = "big"))]
-type Inner = universal_endian::Buffer;
+use universal_endian as endian;
+
+type Inner = endian::Buffer;
+
+#[cfg(test)]
+mod tests;
 
 use std::borrow::Borrow;
 use std::cmp::Ordering;

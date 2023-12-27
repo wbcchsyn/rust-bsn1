@@ -30,9 +30,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(test)]
-mod tests;
-
 use std::alloc::{self, Layout};
 use std::borrow::Borrow;
 use std::cmp::Ordering;
@@ -44,7 +41,7 @@ const HEAP_FLAG: usize = 1 << (usize::BITS - 1);
 const LEN_MASK: usize = !HEAP_FLAG;
 const ALIGN: usize = std::mem::align_of::<u8>();
 
-const INIT_CAPACITY: usize = std::mem::size_of::<usize>() - std::mem::size_of::<u8>();
+pub const INIT_CAPACITY: usize = std::mem::size_of::<usize>() - std::mem::size_of::<u8>();
 
 #[repr(C)]
 pub struct Buffer {
