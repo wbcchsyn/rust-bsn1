@@ -32,17 +32,13 @@
 
 #[cfg(target_endian = "little")]
 mod little_endian;
-
-#[cfg(any(test, target_endian = "big"))]
-mod universal_endian;
-
 #[cfg(target_endian = "little")]
-pub use little_endian::Buffer;
+type Inner = little_endian::Buffer;
 
-#[cfg(target_endian = "big")]
-pub use universal_endian::Buffer;
-
-type Inner = Buffer;
+#[cfg(any(target_endian = "big"))]
+mod universal_endian;
+#[cfg(any(target_endian = "big"))]
+type Inner = universal_endian::Buffer;
 
 use std::borrow::Borrow;
 use std::cmp::Ordering;
@@ -52,9 +48,9 @@ use std::io::Write;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 #[derive(Clone)]
-pub struct TmpBuffer(Inner);
+pub struct Buffer(Inner);
 
-impl From<&[u8]> for TmpBuffer {
+impl From<&[u8]> for Buffer {
     fn from(slice: &[u8]) -> Self {
         let mut buf = Self::with_capacity(slice.len());
         unsafe { buf.extend_from_slice(slice) };
@@ -62,19 +58,19 @@ impl From<&[u8]> for TmpBuffer {
     }
 }
 
-impl<const N: usize> From<&[u8; N]> for TmpBuffer {
+impl<const N: usize> From<&[u8; N]> for Buffer {
     fn from(slice: &[u8; N]) -> Self {
         Self::from(&slice[..])
     }
 }
 
-impl From<Vec<u8>> for TmpBuffer {
+impl From<Vec<u8>> for Buffer {
     fn from(vec: Vec<u8>) -> Self {
         Self::from_vec(vec)
     }
 }
 
-impl TmpBuffer {
+impl Buffer {
     pub const fn new() -> Self {
         Self(Inner::new())
     }
@@ -139,20 +135,20 @@ impl TmpBuffer {
     }
 }
 
-impl Borrow<[u8]> for TmpBuffer {
+impl Borrow<[u8]> for Buffer {
     fn borrow(&self) -> &[u8] {
         self.as_slice()
     }
 }
 
-impl fmt::Debug for TmpBuffer {
+impl fmt::Debug for Buffer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let contents = self.as_slice();
         f.debug_tuple("Buffer").field(&contents).finish()
     }
 }
 
-impl Deref for TmpBuffer {
+impl Deref for Buffer {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {
@@ -160,19 +156,19 @@ impl Deref for TmpBuffer {
     }
 }
 
-impl DerefMut for TmpBuffer {
+impl DerefMut for Buffer {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.as_mut_slice()
     }
 }
 
-impl Hash for TmpBuffer {
+impl Hash for Buffer {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_slice().hash(state);
     }
 }
 
-impl Index<usize> for TmpBuffer {
+impl Index<usize> for Buffer {
     type Output = u8;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -180,13 +176,13 @@ impl Index<usize> for TmpBuffer {
     }
 }
 
-impl IndexMut<usize> for TmpBuffer {
+impl IndexMut<usize> for Buffer {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.as_mut_slice()[index]
     }
 }
 
-impl<T> PartialEq<T> for TmpBuffer
+impl<T> PartialEq<T> for Buffer
 where
     T: Borrow<[u8]>,
 {
@@ -195,9 +191,9 @@ where
     }
 }
 
-impl Eq for TmpBuffer {}
+impl Eq for Buffer {}
 
-impl<T> PartialOrd<T> for TmpBuffer
+impl<T> PartialOrd<T> for Buffer
 where
     T: Borrow<[u8]>,
 {
@@ -206,13 +202,13 @@ where
     }
 }
 
-impl Ord for TmpBuffer {
+impl Ord for Buffer {
     fn cmp(&self, other: &Self) -> Ordering {
         self.as_slice().cmp(other.as_slice())
     }
 }
 
-impl Write for TmpBuffer {
+impl Write for Buffer {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         self.reserve(buf.len());
         unsafe { self.extend_from_slice(buf) };
