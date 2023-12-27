@@ -92,7 +92,7 @@ impl LengthBuffer {
         self.len_ += 1;
     }
 
-    pub fn as_ptr(&self) -> *const u8 {
+    pub const fn as_ptr(&self) -> *const u8 {
         self.buffer.as_ptr()
     }
 

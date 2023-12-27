@@ -182,7 +182,7 @@ impl IdRef {
     /// let deserialized = unsafe { IdRef::from_bytes_unchecked(serialized) };
     /// assert_eq!(id, deserialized);
     /// ```
-    pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
+    pub const unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         mem::transmute(bytes)
     }
 
@@ -238,7 +238,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x00, id.number().unwrap().get());
     /// ```
-    pub fn eoc() -> &'static Self {
+    pub const fn eoc() -> &'static Self {
         const BYTES: [u8; 1] = [0x00];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -256,7 +256,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x01, id.number().unwrap().get());
     /// ```
-    pub fn boolean() -> &'static Self {
+    pub const fn boolean() -> &'static Self {
         const BYTES: [u8; 1] = [0x01];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -274,7 +274,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x02, id.number().unwrap().get());
     /// ```
-    pub fn integer() -> &'static Self {
+    pub const fn integer() -> &'static Self {
         const BYTES: [u8; 1] = [0x02];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -292,7 +292,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x03, id.number().unwrap().get());
     /// ```
-    pub fn bit_string() -> &'static Self {
+    pub const fn bit_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x03];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -310,7 +310,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x03, id.number().unwrap().get());
     /// ```
-    pub fn bit_string_constructed() -> &'static Self {
+    pub const fn bit_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x23];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -328,7 +328,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x04, id.number().unwrap().get());
     /// ```
-    pub fn octet_string() -> &'static Self {
+    pub const fn octet_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x04];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -346,7 +346,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x04, id.number().unwrap().get());
     /// ```
-    pub fn octet_string_constructed() -> &'static Self {
+    pub const fn octet_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x24];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -364,7 +364,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x05, id.number().unwrap().get());
     /// ```
-    pub fn null() -> &'static Self {
+    pub const fn null() -> &'static Self {
         const BYTES: [u8; 1] = [0x05];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -382,7 +382,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x06, id.number().unwrap().get());
     /// ```
-    pub fn object_identifier() -> &'static Self {
+    pub const fn object_identifier() -> &'static Self {
         const BYTES: [u8; 1] = [0x06];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -401,7 +401,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x07, id.number().unwrap().get());
     /// ```
-    pub fn object_descriptor() -> &'static Self {
+    pub const fn object_descriptor() -> &'static Self {
         const BYTES: [u8; 1] = [0x07];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -419,7 +419,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x08, id.number().unwrap().get());
     /// ```
-    pub fn external() -> &'static Self {
+    pub const fn external() -> &'static Self {
         const BYTES: [u8; 1] = [0x28];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -437,7 +437,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x09, id.number().unwrap().get());
     /// ```
-    pub fn real() -> &'static Self {
+    pub const fn real() -> &'static Self {
         const BYTES: [u8; 1] = [0x09];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -455,7 +455,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x0a, id.number().unwrap().get());
     /// ```
-    pub fn enumerated() -> &'static Self {
+    pub const fn enumerated() -> &'static Self {
         const BYTES: [u8; 1] = [0x0a];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -473,7 +473,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x0b, id.number().unwrap().get());
     /// ```
-    pub fn embedded_pdv() -> &'static Self {
+    pub const fn embedded_pdv() -> &'static Self {
         const BYTES: [u8; 1] = [0x2b];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -491,7 +491,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x0c, id.number().unwrap().get());
     /// ```
-    pub fn utf8_string() -> &'static Self {
+    pub const fn utf8_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x0c];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -509,7 +509,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x0c, id.number().unwrap().get());
     /// ```
-    pub fn utf8_string_constructed() -> &'static Self {
+    pub const fn utf8_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x2c];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -527,7 +527,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x0d, id.number().unwrap().get());
     /// ```
-    pub fn relative_oid() -> &'static Self {
+    pub const fn relative_oid() -> &'static Self {
         const BYTES: [u8; 1] = [0x0d];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -546,7 +546,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x10, id.number().unwrap().get());
     /// ```
-    pub fn sequence() -> &'static Self {
+    pub const fn sequence() -> &'static Self {
         const BYTES: [u8; 1] = [0x30];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -564,7 +564,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x11, id.number().unwrap().get());
     /// ```
-    pub fn set() -> &'static Self {
+    pub const fn set() -> &'static Self {
         const BYTES: [u8; 1] = [0x31];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -583,7 +583,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x12, id.number().unwrap().get());
     /// ```
-    pub fn numeric_string() -> &'static Self {
+    pub const fn numeric_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x12];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -602,7 +602,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x12, id.number().unwrap().get());
     /// ```
-    pub fn numeric_string_constructed() -> &'static Self {
+    pub const fn numeric_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x32];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -621,7 +621,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x13, id.number().unwrap().get());
     /// ```
-    pub fn printable_string() -> &'static Self {
+    pub const fn printable_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x13];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -640,7 +640,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x13, id.number().unwrap().get());
     /// ```
-    pub fn printable_string_constructed() -> &'static Self {
+    pub const fn printable_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x33];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -658,7 +658,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x14, id.number().unwrap().get());
     /// ```
-    pub fn t61_string() -> &'static Self {
+    pub const fn t61_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x14];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -676,7 +676,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x14, id.number().unwrap().get());
     /// ```
-    pub fn t61_string_constructed() -> &'static Self {
+    pub const fn t61_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x34];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -695,7 +695,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x15, id.number().unwrap().get());
     /// ```
-    pub fn videotex_string() -> &'static Self {
+    pub const fn videotex_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x15];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -714,7 +714,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x15, id.number().unwrap().get());
     /// ```
-    pub fn videotex_string_constructed() -> &'static Self {
+    pub const fn videotex_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x35];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -732,7 +732,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x16, id.number().unwrap().get());
     /// ```
-    pub fn ia5_string() -> &'static Self {
+    pub const fn ia5_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x16];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -750,7 +750,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x16, id.number().unwrap().get());
     /// ```
-    pub fn ia5_string_constructed() -> &'static Self {
+    pub const fn ia5_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x36];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -768,7 +768,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x17, id.number().unwrap().get());
     /// ```
-    pub fn utc_time() -> &'static Self {
+    pub const fn utc_time() -> &'static Self {
         const BYTES: [u8; 1] = [0x17];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -786,7 +786,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x17, id.number().unwrap().get());
     /// ```
-    pub fn utc_time_constructed() -> &'static Self {
+    pub const fn utc_time_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x37];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -805,7 +805,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x18, id.number().unwrap().get());
     /// ```
-    pub fn generalized_time() -> &'static Self {
+    pub const fn generalized_time() -> &'static Self {
         const BYTES: [u8; 1] = [0x18];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -824,7 +824,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x18, id.number().unwrap().get());
     /// ```
-    pub fn generalized_time_constructed() -> &'static Self {
+    pub const fn generalized_time_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x38];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -843,7 +843,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x19, id.number().unwrap().get());
     /// ```
-    pub fn graphic_string() -> &'static Self {
+    pub const fn graphic_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x19];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -862,7 +862,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x19, id.number().unwrap().get());
     /// ```
-    pub fn graphic_string_constructed() -> &'static Self {
+    pub const fn graphic_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x39];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -881,7 +881,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x1a, id.number().unwrap().get());
     /// ```
-    pub fn visible_string() -> &'static Self {
+    pub const fn visible_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1a];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -900,7 +900,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x1a, id.number().unwrap().get());
     /// ```
-    pub fn visible_string_constructed() -> &'static Self {
+    pub const fn visible_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3a];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -919,7 +919,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x1b, id.number().unwrap().get());
     /// ```
-    pub fn general_string() -> &'static Self {
+    pub const fn general_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1b];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -938,7 +938,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x1b, id.number().unwrap().get());
     /// ```
-    pub fn general_string_constructed() -> &'static Self {
+    pub const fn general_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3b];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -957,7 +957,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x1c, id.number().unwrap().get());
     /// ```
-    pub fn universal_string() -> &'static Self {
+    pub const fn universal_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1c];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -976,7 +976,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x1c, id.number().unwrap().get());
     /// ```
-    pub fn universal_string_constructed() -> &'static Self {
+    pub const fn universal_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3c];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -995,7 +995,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x1d, id.number().unwrap().get());
     /// ```
-    pub fn character_string() -> &'static Self {
+    pub const fn character_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1d];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -1014,7 +1014,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x1d, id.number().unwrap().get());
     /// ```
-    pub fn character_string_constructed() -> &'static Self {
+    pub const fn character_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3d];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -1032,7 +1032,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Primitive, id.pc());
     /// assert_eq!(0x1e, id.number().unwrap().get());
     /// ```
-    pub fn bmp_string() -> &'static Self {
+    pub const fn bmp_string() -> &'static Self {
         const BYTES: [u8; 1] = [0x1e];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -1050,7 +1050,7 @@ impl IdRef {
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// assert_eq!(0x1e, id.number().unwrap().get());
     /// ```
-    pub fn bmp_string_constructed() -> &'static Self {
+    pub const fn bmp_string_constructed() -> &'static Self {
         const BYTES: [u8; 1] = [0x3e];
         unsafe { Self::from_bytes_unchecked(&BYTES as &[u8]) }
     }
@@ -1100,8 +1100,8 @@ impl IdRef {
     /// let id = IdRef::integer();
     /// assert_eq!(id.len(), 1);
     /// ```
-    pub fn len(&self) -> usize {
-        return self.as_ref().len();
+    pub const fn len(&self) -> usize {
+        self.bytes.len()
     }
 
     /// Returns the `ClassTag` of `self`.
@@ -1115,7 +1115,7 @@ impl IdRef {
     /// let eoc = IdRef::eoc();
     /// assert_eq!(ClassTag::Universal, eoc.class());
     /// ```
-    pub fn class(&self) -> ClassTag {
+    pub const fn class(&self) -> ClassTag {
         if self.is_universal() {
             ClassTag::Universal
         } else if self.is_application() {
@@ -1138,7 +1138,7 @@ impl IdRef {
     /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8.into());
     /// assert_eq!(true, id.is_universal());
     /// ```
-    pub fn is_universal(&self) -> bool {
+    pub const fn is_universal(&self) -> bool {
         let first = self.bytes[0];
         first & CLASS_MASK == ClassTag::Universal as u8
     }
@@ -1154,7 +1154,7 @@ impl IdRef {
     /// let id = Id::new(ClassTag::Application, PCTag::Primitive, 0_u8.into());
     /// assert_eq!(true, id.is_application());
     /// ```
-    pub fn is_application(&self) -> bool {
+    pub const fn is_application(&self) -> bool {
         let first = self.bytes[0];
         first & CLASS_MASK == ClassTag::Application as u8
     }
@@ -1170,7 +1170,7 @@ impl IdRef {
     /// let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, 0_u8.into());
     /// assert_eq!(true, id.is_context_specific());
     /// ```
-    pub fn is_context_specific(&self) -> bool {
+    pub const fn is_context_specific(&self) -> bool {
         let first = self.bytes[0];
         first & CLASS_MASK == ClassTag::ContextSpecific as u8
     }
@@ -1186,7 +1186,7 @@ impl IdRef {
     /// let id = Id::new(ClassTag::Private, PCTag::Primitive, 0_u8.into());
     /// assert_eq!(true, id.is_private());
     /// ```
-    pub fn is_private(&self) -> bool {
+    pub const fn is_private(&self) -> bool {
         let first = self.bytes[0];
         first & CLASS_MASK == ClassTag::Private as u8
     }
@@ -1205,7 +1205,7 @@ impl IdRef {
     /// let id = Id::new(ClassTag::Application, PCTag::Constructed, 1_u8.into());
     /// assert_eq!(PCTag::Constructed, id.pc());
     /// ```
-    pub fn pc(&self) -> PCTag {
+    pub const fn pc(&self) -> PCTag {
         if self.is_primitive() {
             PCTag::Primitive
         } else {
@@ -1224,7 +1224,7 @@ impl IdRef {
     /// let id = Id::new(ClassTag::Universal, PCTag::Primitive, 0_u8.into());
     /// assert_eq!(true, id.is_primitive());
     /// ```
-    pub fn is_primitive(&self) -> bool {
+    pub const fn is_primitive(&self) -> bool {
         let first = self.bytes[0];
         first & PC_MASK == PCTag::Primitive as u8
     }
@@ -1240,7 +1240,7 @@ impl IdRef {
     /// let id = Id::new(ClassTag::Universal, PCTag::Constructed, 0_u8.into());
     /// assert_eq!(true, id.is_constructed());
     /// ```
-    pub fn is_constructed(&self) -> bool {
+    pub const fn is_constructed(&self) -> bool {
         let first = self.bytes[0];
         first & PC_MASK == PCTag::Constructed as u8
     }

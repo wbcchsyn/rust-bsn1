@@ -209,7 +209,7 @@ impl Length {
     /// let length = Length::Definite(45);
     /// assert_eq!(length.definite(), Some(45));
     /// ```
-    pub fn definite(self) -> Option<usize> {
+    pub const fn definite(self) -> Option<usize> {
         match self {
             Self::Indefinite => None,
             Self::Definite(n) => Some(n),
@@ -229,7 +229,7 @@ impl Length {
     /// let length = Length::Definite(12);
     /// assert_eq!(length.is_indefinite(), false);
     /// ```
-    pub fn is_indefinite(self) -> bool {
+    pub const fn is_indefinite(self) -> bool {
         match self {
             Self::Indefinite => true,
             _ => false,
@@ -249,7 +249,7 @@ impl Length {
     /// let length = Length::Definite(12);
     /// assert_eq!(length.is_definite(), true);
     /// ```
-    pub fn is_definite(self) -> bool {
+    pub const fn is_definite(self) -> bool {
         match self {
             Self::Indefinite => false,
             _ => true,

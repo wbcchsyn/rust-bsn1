@@ -102,7 +102,7 @@ impl Buffer {
         self.0.extend_from_slice(vals);
     }
 
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.0.len()
     }
 

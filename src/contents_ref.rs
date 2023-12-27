@@ -152,8 +152,8 @@ impl ContentsRef {
     ///
     /// assert_eq!(contents.len(), bytes.len());
     /// ```    
-    pub fn len(&self) -> usize {
-        self.as_ref().len()
+    pub const fn len(&self) -> usize {
+        self.bytes.len()
     }
 
     /// Returns `true` if the inner slice is empty, or `false`.
@@ -171,8 +171,8 @@ impl ContentsRef {
     /// let contents = <&ContentsRef>::from(bytes);
     /// assert_eq!(contents.is_empty(), false);
     /// ```    
-    pub fn is_empty(&self) -> bool {
-        self.as_ref().is_empty()
+    pub const fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     /// Parses `self` as the ASN.1 contents of integer.
@@ -294,12 +294,12 @@ impl ContentsRef {
     /// let false_contents = <&ContentsRef>::from(false);
     /// assert_eq!(Ok(false), false_contents.to_bool_ber());
     /// ```
-    pub fn to_bool_ber(&self) -> Result<bool, Error> {
+    pub const fn to_bool_ber(&self) -> Result<bool, Error> {
         if self.is_empty() {
             Err(Error::UnTerminatedBytes)
         } else if 1 < self.len() {
             Err(Error::InvalidContents)
-        } else if self[0] == 0x00 {
+        } else if self.bytes[0] == 0x00 {
             Ok(false)
         } else {
             Ok(true)
@@ -328,13 +328,13 @@ impl ContentsRef {
     /// let false_contents = <&ContentsRef>::from(false);
     /// assert_eq!(Ok(false), false_contents.to_bool_der());
     /// ```
-    pub fn to_bool_der(&self) -> Result<bool, Error> {
+    pub const fn to_bool_der(&self) -> Result<bool, Error> {
         if self.is_empty() {
             Err(Error::UnTerminatedBytes)
         } else if 1 < self.len() {
             Err(Error::InvalidContents)
         } else {
-            match self[0] {
+            match self.bytes[0] {
                 0x00 => Ok(false),
                 0xff => Ok(true),
                 _ => Err(Error::InvalidContents),

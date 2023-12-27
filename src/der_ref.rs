@@ -197,7 +197,7 @@ impl DerRef {
     ///
     /// assert_eq!(der, deserialized);
     /// ```
-    pub unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
+    pub const unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self {
         std::mem::transmute(bytes)
     }
 
