@@ -204,3 +204,9 @@ where
         self.as_slice().partial_cmp(other.borrow())
     }
 }
+
+impl Ord for TmpBuffer {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.as_slice().cmp(other.as_slice())
+    }
+}
