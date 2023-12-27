@@ -45,6 +45,7 @@ pub use universal_endian::Buffer;
 type Inner = Buffer;
 
 use std::borrow::Borrow;
+use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut, Index, IndexMut};
@@ -194,3 +195,12 @@ where
 }
 
 impl Eq for TmpBuffer {}
+
+impl<T> PartialOrd<T> for TmpBuffer
+where
+    T: Borrow<[u8]>,
+{
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        self.as_slice().partial_cmp(other.borrow())
+    }
+}
