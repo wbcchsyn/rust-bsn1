@@ -30,7 +30,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{length, ContentsRef, Der, Error, IdRef, Length};
+use crate::{identifier_ref, length, ContentsRef, Der, Error, IdRef, Length};
 use std::borrow::Borrow;
 
 /// `DerRef` is a wrapper of `[u8]` and represents DER.
@@ -269,10 +269,7 @@ impl DerRef {
     /// assert_eq!(IdRef::integer(), der.id());
     /// ```
     pub fn id(&self) -> &IdRef {
-        unsafe {
-            let bytes = crate::identifier_ref::shrink_to_fit_unchecked(&self.bytes);
-            IdRef::from_bytes_unchecked(bytes)
-        }
+        unsafe { identifier_ref::parse_id_unchecked(&mut &self.bytes) }
     }
 
     /// Returns a mutable reference to the `IdRef` of `self`.
@@ -321,9 +318,11 @@ impl DerRef {
     /// assert_eq!(Length::Definite("Foo".len()), der.length());
     /// ```
     pub fn length(&self) -> Length {
-        let id_len = self.id().len();
-        let bytes = &self.bytes[id_len..];
-        unsafe { length::from_bytes_starts_with_unchecked(bytes).0 }
+        let mut bytes = &self.bytes;
+        unsafe {
+            identifier_ref::parse_id_unchecked(&mut bytes);
+            length::parse_length_unchecked(&mut bytes)
+        }
     }
 
     /// Returns a reference to the contents octets of `self`.
@@ -339,10 +338,12 @@ impl DerRef {
     /// assert_eq!(der.contents().as_ref(), "Foo".as_bytes());
     /// ```
     pub fn contents(&self) -> &ContentsRef {
-        let id_len = self.id().len();
-        let bytes = &self.bytes[id_len..];
-        let bytes = unsafe { length::from_bytes_starts_with_unchecked(bytes).1 };
-        <&ContentsRef>::from(bytes)
+        let mut bytes = &self.bytes;
+        unsafe {
+            identifier_ref::parse_id_unchecked(&mut bytes);
+            length::parse_length_unchecked(&mut bytes);
+        }
+        bytes.into()
     }
 
     /// Returns a mutable reference to the 'contents octets' of `self`.

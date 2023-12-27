@@ -141,8 +141,11 @@ impl Drop for BufferWithoutLength {
     fn drop(&mut self) {}
 }
 
+const HEAP_FLAG: usize = 1 << (usize::BITS - 1);
+const LEN_MASK: usize = !HEAP_FLAG;
+
 pub struct Buffer {
-    len_: isize,
+    len_: usize,
     buffer_: BufferWithoutLength,
 }
 
@@ -189,11 +192,12 @@ impl From<Vec<u8>> for Buffer {
             return Self::new();
         } else {
             let buffer = HeapBuffer::from_raw_parts(vals.as_mut_ptr(), vals.capacity());
-            let len_ = isize::MIN + vals.len() as isize;
+            let len_ = vals.len() | HEAP_FLAG;
+
             std::mem::forget(vals);
 
             Self {
-                len_: len_,
+                len_,
                 buffer_: BufferWithoutLength {
                     heap: ManuallyDrop::new(buffer),
                 },
@@ -228,7 +232,7 @@ impl Buffer {
             Self::new()
         } else {
             Self {
-                len_: std::isize::MIN,
+                len_: 0 | HEAP_FLAG,
                 buffer_: BufferWithoutLength {
                     heap: ManuallyDrop::new(HeapBuffer::new(capacity)),
                 },
@@ -335,11 +339,7 @@ impl Buffer {
     }
 
     pub fn len(&self) -> usize {
-        if 0 <= self.len_ {
-            self.len_ as usize
-        } else {
-            (self.len_ - std::isize::MIN) as usize
-        }
+        self.len_ & LEN_MASK
     }
 
     pub fn capacity(&self) -> usize {
@@ -374,7 +374,7 @@ impl Buffer {
                     .copy_from_nonoverlapping(self.as_ptr(), self.len());
             }
             self.buffer_.heap = ManuallyDrop::new(heap);
-            self.len_ += std::isize::MIN;
+            self.len_ |= HEAP_FLAG;
         } else {
             unsafe { (&mut *self.buffer_.heap).realloc(new_cap) };
         }
@@ -382,11 +382,8 @@ impl Buffer {
 
     pub unsafe fn set_len(&mut self, new_len: usize) {
         debug_assert!(new_len <= self.capacity());
-        if self.is_stack() {
-            self.len_ = new_len as isize;
-        } else {
-            self.len_ = std::isize::MIN + new_len as isize
-        }
+        self.len_ &= HEAP_FLAG;
+        self.len_ |= new_len;
     }
 
     pub fn as_mut_ptr(&mut self) -> *mut u8 {
@@ -400,7 +397,7 @@ impl Buffer {
     }
 
     fn is_stack(&self) -> bool {
-        0 <= self.len_
+        self.len_ & HEAP_FLAG == 0
     }
 
     pub fn into_vec(mut self) -> Vec<u8> {

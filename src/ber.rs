@@ -40,6 +40,17 @@ use std::ops::{Deref, DerefMut};
 /// The structure of `Ber` is similar to that of `Vec<u8>`.
 ///
 /// Users can access the inner [`BerRef`] via the `Deref` and `DerefMut` implementation.
+///
+/// # Warnings
+///
+/// ASN.1 allows BER both 'definite' and 'indefinite' length octets.
+/// In case of 'indefinite', the contents must be a sequence of BERs,
+/// and must be terminated by 'EOC BER'.
+/// (Single 'EOC BER' is allowed.)
+///
+/// `Ber` instance works well even if the user violates the rule,
+/// however, the holding octets are invalid as a BER then.
+/// Such octets can not be parsed as a BER again.
 #[derive(Debug, Clone, Eq, Hash)]
 pub struct Ber {
     buffer: Buffer,

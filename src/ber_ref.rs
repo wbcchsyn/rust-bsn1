@@ -37,6 +37,17 @@ use std::mem;
 /// `BerRef` is a wrapper of `[u8]` and represents a BER.
 ///
 /// This struct is 'Unsized' and the user will usually use a reference to the instance.
+///
+/// # Warnings
+///
+/// ASN.1 allows BER both 'definite' and 'indefinite' length octets.
+/// In case of 'indefinite', the contents must be a sequence of BERs,
+/// and must be terminated by 'EOC BER'.
+/// (Single 'EOC BER' is allowed.)
+///
+/// A reference to `BerRef` works well even if the user violates the rule,
+/// however, the inner slice is invalid as a BER then.
+/// Such a slice can not be parsed as a BER again.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct BerRef {
     bytes: [u8],
@@ -280,10 +291,7 @@ impl BerRef {
     /// assert_eq!(ber.id(), IdRef::integer());
     /// ```
     pub fn id(&self) -> &IdRef {
-        unsafe {
-            let bytes = identifier_ref::shrink_to_fit_unchecked(&self.bytes);
-            IdRef::from_bytes_unchecked(bytes)
-        }
+        unsafe { identifier_ref::parse_id_unchecked(&mut &self.bytes) }
     }
 
     /// Provides a mutable reference to the [`IdRef`] of `self`.
@@ -334,9 +342,11 @@ impl BerRef {
     /// assert_eq!(ber.length(), Length::Definite(ber.contents().len()));
     /// ```
     pub fn length(&self) -> Length {
-        let id_len = self.id().len();
-        let bytes = &self.bytes[id_len..];
-        unsafe { length::from_bytes_starts_with_unchecked(bytes).0 }
+        let mut bytes = &self.bytes;
+        unsafe {
+            identifier_ref::parse_id_unchecked(&mut bytes);
+            length::parse_length_unchecked(&mut bytes)
+        }
     }
 
     /// Provides a reference to the [`ContentsRef`] of `self`.
@@ -352,10 +362,12 @@ impl BerRef {
     /// assert_eq!(ber.contents().to_bool_ber(), Ok(false));
     /// ```
     pub fn contents(&self) -> &ContentsRef {
-        let id_len = self.id().len();
-        let bytes = &self.bytes[id_len..];
-        let contents = unsafe { length::from_bytes_starts_with_unchecked(bytes).1 };
-        <&ContentsRef>::from(contents)
+        let mut bytes = &self.bytes;
+        unsafe {
+            identifier_ref::parse_id_unchecked(&mut bytes);
+            length::parse_length_unchecked(&mut bytes);
+        }
+        bytes.into()
     }
 
     /// Provides a mutable reference to the [`ContentsRef`] of `self`.
