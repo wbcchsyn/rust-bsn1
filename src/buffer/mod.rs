@@ -45,6 +45,7 @@ pub use universal_endian::Buffer;
 type Inner = Buffer;
 
 use std::borrow::Borrow;
+use std::fmt;
 use std::ops::{Deref, DerefMut};
 
 #[derive(Clone)]
@@ -138,6 +139,13 @@ impl TmpBuffer {
 impl Borrow<[u8]> for TmpBuffer {
     fn borrow(&self) -> &[u8] {
         self.as_slice()
+    }
+}
+
+impl fmt::Debug for TmpBuffer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let contents = self.as_slice();
+        f.debug_tuple("Buffer").field(&contents).finish()
     }
 }
 
