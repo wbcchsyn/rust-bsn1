@@ -44,6 +44,7 @@ pub use universal_endian::Buffer;
 
 type Inner = Buffer;
 
+#[derive(Clone)]
 pub struct TmpBuffer(Inner);
 
 impl TmpBuffer {
