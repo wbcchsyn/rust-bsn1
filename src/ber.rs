@@ -32,6 +32,7 @@
 
 use crate::{BerRef, Buffer, ContentsRef, Der, DerRef, Error, IdRef, Length};
 use std::borrow::Borrow;
+use std::io::Read;
 use std::ops::{Deref, DerefMut};
 
 /// `Ber` owns [`BerRef`] and represents a BER.
@@ -339,7 +340,7 @@ impl Ber {
         Self { buffer }
     }
 
-    /// Parses `bytes` starting with BER octets and returns a new instance.
+    /// Parses `readable` starting with BER octets and returns a new instance.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
@@ -348,9 +349,39 @@ impl Ber {
     /// ASN.1 reserves some universal identifiers and they should not be used, however, this
     /// function accepts such identifiers. For example, the number 15 (0x0f) is reserved for now,
     /// but this function returns `Ok`.
-    pub fn parse(bytes: &[u8]) -> Result<Self, Error> {
-        let ret = BerRef::parse(bytes)?;
-        Ok(ret.into())
+    pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
+        let mut buffer = Buffer::new();
+        let mut stack_depth: isize = 0;
+
+        while {
+            stack_depth += Self::do_parse(readable, &mut buffer)? as isize;
+            stack_depth > 0
+        } {}
+
+        Ok(Self { buffer })
+    }
+
+    fn do_parse<R: Read>(readable: &mut R, writeable: &mut Buffer) -> Result<i8, Error> {
+        let init_len = writeable.len();
+
+        match unsafe { crate::misc::parse_id_length(readable, writeable)? } {
+            Length::Definite(length) => {
+                writeable.reserve(length);
+                let current_len = writeable.len();
+                unsafe { writeable.set_len(current_len + length) };
+
+                let buffer = &mut writeable.as_mut_bytes()[current_len..];
+                readable.read_exact(buffer).map_err(Error::from)?;
+
+                let read = &(writeable.as_bytes()[init_len..]);
+                if read == BerRef::eoc().as_ref() {
+                    Ok(-1)
+                } else {
+                    Ok(0)
+                }
+            }
+            Length::Indefinite => Ok(1),
+        }
     }
 
     /// Returns a new instance holding `bytes` without any check.
