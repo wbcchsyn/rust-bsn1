@@ -46,6 +46,9 @@ impl DerRef {
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
     ///
+    /// On success, `bytes` is updated to point the next octet of `DerRef`;
+    /// otherwise, `bytes` is not updated.
+    ///
     /// # Warnings
     ///
     /// ASN.1 does not allow some universal identifiers for DER, however, this function accepts
@@ -62,29 +65,41 @@ impl DerRef {
     /// let der = Der::from(8_i32);
     /// let mut serialized = Vec::from(der.as_ref() as &[u8]);
     ///
-    /// // Deserialize `der`.
-    /// let deserialized = DerRef::parse(&serialized[..]).unwrap();
-    /// assert_eq!(der, deserialized);
+    /// // Deserialize
+    /// {
+    ///     let mut serialized: &[u8] = &serialized[..];
+    ///     let deserialized = DerRef::parse(&mut serialized).unwrap();
+    ///     assert_eq!(der, deserialized);
+    ///     assert_eq!(serialized.len(), 0);
+    /// }
     ///
     /// // The result is not changed even if extra octets are added to the end.
     /// serialized.push(0xff);
     /// serialized.push(0x00);
     ///
-    /// let deserialized = DerRef::parse(&serialized[..]).unwrap();
-    /// assert_eq!(der, deserialized);
+    /// {
+    ///     let mut serialized: &[u8] = &serialized[..];
+    ///     let deserialized = DerRef::parse(&mut serialized).unwrap();
+    ///     assert_eq!(der, deserialized);
+    ///     assert_eq!(serialized, &[0xff, 0x00]);
+    /// }
     /// ```
-    pub fn parse(bytes: &[u8]) -> Result<&Self, Error> {
-        let mut readable = bytes;
-        Self::do_parse(&mut readable)?;
+    pub fn parse<'a>(bytes: &mut &'a [u8]) -> Result<&'a Self, Error> {
+        let init_bytes = *bytes;
+        Self::do_parse(bytes)?;
 
-        let bytes = &bytes[..(bytes.len() - readable.len())];
-        unsafe { Ok(Self::from_bytes_unchecked(bytes)) }
+        let total_len = init_bytes.len() - bytes.len();
+        let read = &init_bytes[..total_len];
+        unsafe { Ok(Self::from_bytes_unchecked(read)) }
     }
 
     /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a mutable reference to
     /// `DerRef`.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
+    ///
+    /// On success, `bytes` is updated to point the next octet of `DerRef`;
+    /// otherwise, `bytes` is not updated.
     ///
     /// # Warnings
     ///
@@ -103,24 +118,44 @@ impl DerRef {
     /// let mut serialized = Vec::from(der.as_ref() as &[u8]);
     ///
     /// // Deserialize.
-    /// let deserialized = DerRef::parse_mut(&mut serialized[..]).unwrap();
-    /// assert_eq!(der, deserialized);
+    /// {
+    ///     let mut serialized: &mut [u8] = serialized.as_mut();
+    ///     let deserialized = DerRef::parse_mut(&mut serialized).unwrap();
+    ///     assert_eq!(der, deserialized);
+    ///     assert_eq!(serialized.len(), 0);
     ///
-    /// // You can update it because 'deserialized' is a mutable reference.
-    /// deserialized.mut_contents()[0] = 'B' as u8;
+    ///     deserialized.mut_contents()[0] = 'B' as u8;
+    ///     assert_eq!(deserialized.contents().as_ref(), "Boo".as_bytes());
+    /// }
     ///
-    /// // Now `deserialized` represents "Boo", not "Foo".
+    /// // Now `serialized` represents "Boo", not "Foo", because we changed via `deserialized`.
     ///
     /// // Deserialize again.
-    /// let deserialized = DerRef::parse_mut(&mut serialized[..]).unwrap();
-    /// assert!(der != deserialized);
+    /// {
+    ///     let mut serialized: &mut [u8] = serialized.as_mut();
+    ///     let deserialized = DerRef::parse_mut(&mut serialized).unwrap();
+    ///
+    ///     assert_eq!(serialized.len(), 0);
+    ///     assert_ne!(der, deserialized);
+    ///     assert_eq!(deserialized.contents().as_ref(), "Boo".as_bytes());
+    /// }
     /// ```
-    pub fn parse_mut(bytes: &mut [u8]) -> Result<&mut Self, Error> {
-        let mut readable = bytes as &[u8];
-        Self::do_parse(&mut readable)?;
+    pub fn parse_mut<'a>(bytes: &mut &'a mut [u8]) -> Result<&'a mut Self, Error> {
+        let read_bytes = {
+            let mut readable: &[u8] = *bytes;
+            Self::do_parse(&mut readable)?;
 
-        let len = bytes.len() - readable.len();
-        unsafe { Ok(Self::from_mut_bytes_unchecked(&mut bytes[..len])) }
+            bytes.len() - readable.len()
+        };
+
+        unsafe {
+            let init_ptr = bytes.as_mut_ptr();
+            let left_bytes = bytes.len() - read_bytes;
+            *bytes = std::slice::from_raw_parts_mut(init_ptr.add(read_bytes), left_bytes);
+
+            let read = std::slice::from_raw_parts_mut(init_ptr, read_bytes);
+            Ok(Self::from_mut_bytes_unchecked(read))
+        }
     }
 
     fn do_parse(readable: &mut &[u8]) -> Result<(), Error> {
@@ -330,5 +365,38 @@ impl DerRef {
         let ptr = ret as *const ContentsRef;
         let ptr = ptr as *mut ContentsRef;
         unsafe { &mut *ptr }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_single() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
+        for i in 0..bytes.len() {
+            let der = Der::from(&bytes[..i]);
+            let mut bytes: &[u8] = der.as_ref();
+            let parsed = DerRef::parse(&mut bytes).unwrap();
+
+            assert_eq!(der, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
+    }
+
+    #[test]
+    fn parse_recursive() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
+        for i in 0..bytes.len() {
+            let inner = Der::from(&bytes[..i]);
+            let der = Der::new(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
+
+            let mut bytes: &[u8] = der.as_ref();
+            let parsed = DerRef::parse(&mut bytes).unwrap();
+
+            assert_eq!(der, parsed);
+            assert_eq!(bytes.len(), 0);
+        }
     }
 }

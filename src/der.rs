@@ -289,7 +289,7 @@ impl Der {
     /// // We can access to the inner slice of `serialized`.
     /// // We can use `DerRef::parse` instead of this function.
     /// // (`DerRef::parse` is more efficient than this function.)
-    /// let deserialized = DerRef::parse(&serialized[..]).map(ToOwned::to_owned).unwrap();
+    /// let deserialized = DerRef::parse(&mut &serialized[..]).map(ToOwned::to_owned).unwrap();
     /// assert_eq!(der, deserialized);
     /// ```
     pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
@@ -912,7 +912,7 @@ mod tests {
         for &bytes in byteses {
             let contents = <&ContentsRef>::from(bytes);
             let der = Der::new(id, contents);
-            let der_ref = DerRef::parse(der.as_ref()).unwrap();
+            let der_ref = DerRef::parse(&mut der.as_ref()).unwrap();
             assert_eq!(der_ref, &der as &DerRef);
         }
     }
