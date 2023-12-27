@@ -187,25 +187,13 @@ impl Der {
     /// assert_eq!(contents, der.contents());
     /// ```
     pub fn new(id: &IdRef, contents: &ContentsRef) -> Self {
-        let len = Length::Definite(contents.len());
-        let len = len.to_bytes();
+        let mut ret = Self::with_id_length(id, contents.len());
 
-        let total_len = id.len() + len.len() + contents.len();
-        let mut buffer = Buffer::with_capacity(total_len);
-        unsafe { buffer.set_len(total_len) };
+        ret.mut_contents()
+            .as_mut()
+            .copy_from_slice(contents.as_ref());
 
-        unsafe {
-            let ptr = buffer.as_mut_ptr();
-            ptr.copy_from_nonoverlapping(id.as_ref().as_ptr(), id.len());
-
-            let ptr = ptr.add(id.len());
-            ptr.copy_from_nonoverlapping(len.as_ptr(), len.len());
-
-            let ptr = ptr.add(len.len());
-            ptr.copy_from_nonoverlapping(contents.as_ref().as_ptr(), contents.len());
-        }
-
-        Self { buffer }
+        ret
     }
 
     /// Creates a new instance from `id` and `contents` of `length` bytes.
