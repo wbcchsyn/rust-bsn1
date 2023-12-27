@@ -45,7 +45,7 @@ pub use universal_endian::Buffer;
 type Inner = Buffer;
 
 use std::borrow::Borrow;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 #[derive(Clone)]
 pub struct TmpBuffer(Inner);
@@ -146,5 +146,11 @@ impl Deref for TmpBuffer {
 
     fn deref(&self) -> &Self::Target {
         self.as_slice()
+    }
+}
+
+impl DerefMut for TmpBuffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.as_mut_slice()
     }
 }
