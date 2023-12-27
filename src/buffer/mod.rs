@@ -43,3 +43,5 @@ pub use little_endian::Buffer;
 pub use universal_endian::Buffer;
 
 type Inner = Buffer;
+
+pub struct TmpBuffer(Inner);
