@@ -55,6 +55,12 @@ impl From<&[u8]> for TmpBuffer {
     }
 }
 
+impl<const N: usize> From<&[u8; N]> for TmpBuffer {
+    fn from(slice: &[u8; N]) -> Self {
+        Self::from(&slice[..])
+    }
+}
+
 impl TmpBuffer {
     pub const fn new() -> Self {
         Self(Inner::new())
