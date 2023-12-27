@@ -191,7 +191,7 @@ impl Id {
 
 impl AsRef<[u8]> for Id {
     fn as_ref(&self) -> &[u8] {
-        self.buffer.as_bytes()
+        self.buffer.as_slice()
     }
 }
 
@@ -217,13 +217,13 @@ impl Deref for Id {
     type Target = IdRef;
 
     fn deref(&self) -> &Self::Target {
-        unsafe { IdRef::from_bytes_unchecked(self.buffer.as_bytes()) }
+        unsafe { IdRef::from_bytes_unchecked(self.buffer.as_slice()) }
     }
 }
 
 impl DerefMut for Id {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { mem::transmute(self.buffer.as_mut_bytes()) }
+        unsafe { mem::transmute(self.buffer.as_mut_slice()) }
     }
 }
 

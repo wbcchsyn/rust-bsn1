@@ -307,7 +307,7 @@ impl Der {
         writeable.reserve(contents_length);
         unsafe { writeable.set_len(total_length) };
 
-        let buffer = &mut writeable.as_mut_bytes()[id_length_len..];
+        let buffer = &mut writeable.as_mut_slice()[id_length_len..];
         match readable.read(buffer) {
             Err(e) => Err(e.into()),
             Ok(read) => {
@@ -423,9 +423,11 @@ impl Der {
         let total_len = id.len() + length_bytes.len() + length;
 
         let mut buffer = Buffer::with_capacity(total_len);
-        buffer.extend_from_slice(id.as_ref());
-        buffer.extend_from_slice(&length_bytes);
-        contents.for_each(|c| buffer.extend_from_slice(c.as_ref()));
+        unsafe {
+            buffer.extend_from_slice(id.as_ref());
+            buffer.extend_from_slice(&length_bytes);
+            contents.for_each(|c| buffer.extend_from_slice(c.as_ref()));
+        }
 
         Self { buffer }
     }
@@ -433,7 +435,7 @@ impl Der {
 
 impl AsRef<[u8]> for Der {
     fn as_ref(&self) -> &[u8] {
-        self.buffer.as_bytes()
+        self.buffer.as_slice()
     }
 }
 
@@ -459,13 +461,13 @@ impl Deref for Der {
     type Target = DerRef;
 
     fn deref(&self) -> &Self::Target {
-        unsafe { DerRef::from_bytes_unchecked(self.buffer.as_bytes()) }
+        unsafe { DerRef::from_bytes_unchecked(self.buffer.as_slice()) }
     }
 }
 
 impl DerefMut for Der {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { DerRef::from_mut_bytes_unchecked(self.buffer.as_mut_bytes()) }
+        unsafe { DerRef::from_mut_bytes_unchecked(self.buffer.as_mut_slice()) }
     }
 }
 
