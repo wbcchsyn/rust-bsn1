@@ -30,6 +30,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#[cfg(target_endian = "little")]
+mod little_endian;
+
+#[cfg(any(test, target_endian = "big"))]
 mod universal_endian;
 
+#[cfg(target_endian = "little")]
+pub use little_endian::Buffer;
+
+#[cfg(target_endian = "big")]
 pub use universal_endian::Buffer;
