@@ -45,3 +45,68 @@ pub use universal_endian::Buffer;
 type Inner = Buffer;
 
 pub struct TmpBuffer(Inner);
+
+impl TmpBuffer {
+    pub const fn new() -> Self {
+        Self(Inner::new())
+    }
+
+    pub fn with_capacity(cap: usize) -> Self {
+        Self(Inner::with_capacity(cap))
+    }
+
+    fn from_vec(vals: Vec<u8>) -> Self {
+        Self(Inner::from_vec(vals))
+    }
+
+    /// # Safety
+    ///
+    /// The behaviour is undefined if the length will exceeds the capacity.
+    pub unsafe fn push(&mut self, v: u8) {
+        self.0.push(v);
+    }
+
+    /// # Safety
+    ///
+    /// The behaviour is undefined if the length will exceeds the capacity.
+    pub unsafe fn extend_from_slice(&mut self, vals: &[u8]) {
+        self.0.extend_from_slice(vals);
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn capacity(&self) -> usize {
+        self.0.capacity()
+    }
+
+    pub fn reserve(&mut self, additional: usize) {
+        self.0.reserve(additional);
+    }
+
+    pub unsafe fn set_len(&mut self, len: usize) {
+        debug_assert!(len <= self.capacity());
+        self.0.set_len(len);
+    }
+
+    pub fn as_ptr(&self) -> *const u8 {
+        self.0.as_ptr()
+    }
+
+    pub fn as_mut_ptr(&mut self) -> *mut u8 {
+        self.0.as_mut_ptr()
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        self.0.as_slice()
+    }
+
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        self.0.as_mut_slice()
+    }
+
+    pub fn into_vec(self) -> Vec<u8> {
+        self.0.into_vec()
+    }
+}
