@@ -61,6 +61,12 @@ impl<const N: usize> From<&[u8; N]> for TmpBuffer {
     }
 }
 
+impl From<Vec<u8>> for TmpBuffer {
+    fn from(vec: Vec<u8>) -> Self {
+        Self::from_vec(vec)
+    }
+}
+
 impl TmpBuffer {
     pub const fn new() -> Self {
         Self(Inner::new())
