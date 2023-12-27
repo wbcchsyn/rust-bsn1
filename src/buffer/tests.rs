@@ -36,6 +36,7 @@
 
 use super::*;
 use std::iter::FromIterator;
+const INIT_CAPACITY: usize = endian::INIT_CAPACITY;
 
 #[test]
 fn new() {
