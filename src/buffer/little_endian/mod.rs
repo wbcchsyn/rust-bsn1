@@ -38,7 +38,7 @@ const HEAP_FLAG: usize = 1 << (usize::BITS - 1);
 const LEN_MASK: usize = !HEAP_FLAG;
 const ALIGN: usize = std::mem::align_of::<u8>();
 
-pub const INIT_CAPACITY: usize = std::mem::size_of::<usize>() - std::mem::size_of::<u8>();
+pub const INIT_CAPACITY: usize = std::mem::size_of::<Buffer>() - std::mem::size_of::<u8>();
 
 #[repr(C)]
 pub struct Buffer {
