@@ -38,6 +38,7 @@ pub struct Attribute {
     id_: Option<u8>,
     tag_class: Option<u8>,
     tag_pc: Option<u8>,
+    tag_num: Option<u128>,
 }
 
 impl Attribute {
