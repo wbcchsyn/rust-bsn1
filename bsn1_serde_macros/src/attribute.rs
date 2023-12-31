@@ -34,7 +34,9 @@ use proc_macro2::TokenTree;
 use quote::ToTokens;
 
 #[derive(Default)]
-pub struct Attribute {}
+pub struct Attribute {
+    id_: Option<u8>,
+}
 
 impl Attribute {
     fn parse(attr: &syn::Attribute) -> syn::Result<Option<Self>> {
