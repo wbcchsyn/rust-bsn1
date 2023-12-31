@@ -111,6 +111,35 @@ impl DataContainer {
         }
     }
 
+    #[allow(non_snake_case)]
+    pub fn der_contents_len(&self) -> syn::Result<TokenStream> {
+        let Length = quote! { ::bsn1_serde::macro_alias::Length };
+        let Result = quote! { ::std::result::Result };
+        let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+
+        let ret = quote! { bsn1_macro_1704043457_ret };
+        let contents_len = quote! { bsn1_macro_1704043457_contents_len };
+        let length_len = quote! { bsn1_macro_1704043457_length_len};
+
+        let field_acc = self
+            .field_vars()
+            .into_iter()
+            .zip(self.field_attributes())
+            .map(|(field, _attribute)| {
+                quote! {{
+                    let #contents_len = #Serialize::der_contents_len(#field)?;
+                    let #length_len = #Length::Definite(#contents_len).len();
+                    #ret += #Serialize::id_len(#field)? + #length_len + #contents_len;
+                }}
+            });
+
+        Ok(quote! {
+            let mut #ret = 0;
+            #(#field_acc)*
+            #Result::Ok(#ret)
+        })
+    }
+
     fn attribute(&self) -> &Attribute {
         match self {
             Self::DataStruct { attribute, .. } => attribute,
