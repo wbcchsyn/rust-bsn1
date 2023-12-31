@@ -30,8 +30,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use proc_macro2::TokenTree;
-use quote::ToTokens;
+use proc_macro2::{TokenStream, TokenTree};
+use quote::{quote, ToTokens};
 
 #[derive(Default)]
 pub struct Attribute {
@@ -88,6 +88,57 @@ impl Attribute {
         }
 
         Ok(Some(ret))
+    }
+
+    pub fn id(&self, default_id: u8) -> Option<TokenStream> {
+        if self.id_.is_none()
+            && self.tag_class.is_none()
+            && self.tag_pc.is_none()
+            && self.tag_num.is_none()
+        {
+            return None;
+        }
+
+        let mut octets: Vec<u8> = Vec::new();
+
+        match self.id_ {
+            Some(id) => octets.push(id),
+            None => octets.push(default_id),
+        };
+
+        if let Some(tag_class) = self.tag_class {
+            const MASK: u8 = 0x3f;
+            octets[0] = (octets[0] & MASK) | tag_class;
+        }
+
+        if let Some(tag_pc) = self.tag_pc {
+            const MASK: u8 = 0xdf;
+            octets[0] = (octets[0] & MASK) | tag_pc;
+        }
+
+        if let Some(mut tag_num) = self.tag_num {
+            const LONG_FORM: u8 = 0x1f;
+
+            if tag_num < LONG_FORM as u128 {
+                const MASK: u8 = 0xe0;
+                octets[0] = (octets[0] & MASK) | tag_num as u8;
+            } else {
+                octets[0] |= LONG_FORM;
+
+                while 0 < tag_num {
+                    octets.push((tag_num % 0x80) as u8);
+                    tag_num /= 0x80;
+                }
+
+                for i in 2..octets.len() {
+                    octets[i] |= 0x80;
+                }
+
+                octets[1..].reverse();
+            }
+        }
+
+        Some(quote! { [#(#octets),*] })
     }
 }
 
