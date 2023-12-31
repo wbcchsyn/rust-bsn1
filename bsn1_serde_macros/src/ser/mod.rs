@@ -88,14 +88,30 @@ fn do_serialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Resu
 }
 
 #[allow(non_snake_case)]
-fn do_serialize_enum(_attribute: Attribute, _data: syn::DataEnum) -> syn::Result<TokenStream> {
+fn do_serialize_enum(_attribute: Attribute, data: syn::DataEnum) -> syn::Result<TokenStream> {
     let Result = quote! { ::std::result::Result };
     let Write = quote! { ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };
 
+    let mut variants: Vec<DataContainer> = Vec::new();
+    for variant in data.variants {
+        variants.push(DataContainer::try_from(variant)?);
+    }
+
+    let buffer = quote! { buffer };
+    let mut arms: Vec<TokenStream> = Vec::new();
+    let mut write_ids: Vec<TokenStream> = Vec::new();
+
+    for variant in variants.iter() {
+        unsafe { arms.push(variant.to_match_arm()?) };
+        write_ids.push(variant.write_id(&buffer)?);
+    }
+
     Ok(quote! {
             fn write_id<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
-                todo!()
+                match self {
+                    #(#arms =>  { #write_ids } )*
+                }
             }
 
             fn write_der_contents<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
