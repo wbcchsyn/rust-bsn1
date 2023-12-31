@@ -36,6 +36,7 @@ use quote::ToTokens;
 #[derive(Default)]
 pub struct Attribute {
     id_: Option<u8>,
+    tag_class: Option<u8>,
 }
 
 impl Attribute {
