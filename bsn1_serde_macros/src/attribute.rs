@@ -67,6 +67,13 @@ impl Attribute {
                     let value = take_value(&ident, it.next(), it.next())?;
                     ret.tag_class = Some(parse_tag_class_value(&value)?);
                 }
+                TokenTree::Ident(ident) if ident == "tag_pc" => {
+                    if ret.tag_pc.is_some() {
+                        error(&ident, "Duplicated `tag_pc` attribute.")?;
+                    }
+                    let value = take_value(&ident, it.next(), it.next())?;
+                    ret.tag_pc = Some(parse_tag_pc_value(&value)?);
+                }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
             }
@@ -137,6 +144,27 @@ fn parse_tag_class_value(value: &TokenTree) -> syn::Result<u8> {
         ("CONTEXT_SPECIFIC", 0x80),
         ("PRIVATE", 0xc0),
     ];
+
+    let values: Vec<&'static str> = VALUES.iter().map(|(s, _)| *s).collect();
+    let values = values.join(", ");
+    let error_message = format!("Expected one of [{}].", values);
+
+    let ident = match value {
+        TokenTree::Ident(ident) => ident,
+        _ => return Err(syn::Error::new_spanned(value, error_message)),
+    };
+
+    for &(s, v) in VALUES {
+        if ident == s {
+            return Ok(v);
+        }
+    }
+
+    Err(syn::Error::new_spanned(value, error_message))
+}
+
+fn parse_tag_pc_value(value: &TokenTree) -> syn::Result<u8> {
+    const VALUES: &[(&str, u8)] = &[("PRIMITIVE", 0x00), ("CONSTRUCTED", 0x20)];
 
     let values: Vec<&'static str> = VALUES.iter().map(|(s, _)| *s).collect();
     let values = values.join(", ");
