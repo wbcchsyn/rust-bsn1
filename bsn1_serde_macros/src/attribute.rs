@@ -75,6 +75,13 @@ impl Attribute {
                     let value = take_value(&ident, it.next(), it.next())?;
                     ret.tag_pc = Some(parse_tag_pc_value(&value)?);
                 }
+                TokenTree::Ident(ident) if ident == "tag_num" => {
+                    if ret.tag_num.is_some() {
+                        error(&ident, "Duplicated `tag_num` attribute.")?;
+                    }
+                    let value = take_value(&ident, it.next(), it.next())?;
+                    ret.tag_num = Some(parse_tag_num_value(&value)?);
+                }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
             }
@@ -183,4 +190,41 @@ fn parse_tag_pc_value(value: &TokenTree) -> syn::Result<u8> {
     }
 
     Err(syn::Error::new_spanned(value, error_message))
+}
+
+fn parse_tag_num_value(value: &TokenTree) -> syn::Result<u128> {
+    match value {
+        TokenTree::Literal(literal) => {
+            let val = literal.to_string();
+            let val = if val.starts_with("+") {
+                &val["+".len()..]
+            } else {
+                &val
+            };
+
+            const PREFIXES: &[(&str, u32)] = &[
+                ("0b", 2),
+                ("0B", 2),
+                ("0o", 8),
+                ("0O", 8),
+                ("0x", 16),
+                ("0X", 16),
+                ("", 10),
+            ];
+            for &(prefix, radix) in PREFIXES {
+                if val.starts_with(prefix) {
+                    let val = &val[prefix.len()..];
+                    return u128::from_str_radix(val, radix).map_err(|_| {
+                        syn::Error::new_spanned(value, "Expected literal valid as u128.")
+                    });
+                }
+            }
+
+            unreachable!();
+        }
+        _ => Err(syn::Error::new_spanned(
+            value,
+            "Expected literal valid as u128.",
+        )),
+    }
 }
