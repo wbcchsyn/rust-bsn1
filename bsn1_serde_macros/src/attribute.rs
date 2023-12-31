@@ -47,10 +47,17 @@ impl Attribute {
             _ => return Ok(None),
         };
 
-        let ret = Self::default();
+        let mut ret = Self::default();
 
         while let Some(tt) = it.next() {
             match tt {
+                TokenTree::Ident(ident) if ident == "id" => {
+                    if ret.id_.is_some() {
+                        error(&ident, "Duplicated `id` attribute.")?;
+                    }
+                    let value = take_value(&ident, it.next(), it.next())?;
+                    ret.id_ = Some(parse_id_value(&value)?);
+                }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
             }
@@ -62,4 +69,54 @@ impl Attribute {
 
 fn error<T: ToTokens, U: std::fmt::Display>(tt: T, message: U) -> syn::Result<()> {
     Err(syn::Error::new_spanned(tt, message))
+}
+
+fn take_value(
+    ident: &syn::Ident,
+    eq: Option<TokenTree>,
+    val: Option<TokenTree>,
+) -> syn::Result<TokenTree> {
+    match eq {
+        Some(TokenTree::Punct(punct)) if punct.as_char() == '=' => (),
+        _ => error(ident, format!("Expected `=` after `{}`.", ident))?,
+    }
+
+    val.ok_or(syn::Error::new_spanned(
+        ident,
+        format!("Expected value after `{} =`.", ident),
+    ))
+}
+
+fn parse_id_value(value: &TokenTree) -> syn::Result<u8> {
+    // Limit the values for now.
+    // (It is easy to extend the values later.)
+    const VALUES: &[(&str, u8)] = &[
+        ("EOC", 0x00),
+        ("Boolean", 0x01),
+        ("Integer", 0x02),
+        ("BitString", 0x03),
+        ("OctetString", 0x04),
+        ("Null", 0x05),
+        ("Real", 0x09),
+        ("UTF8String", 0x0c),
+        ("Sequence", 0x30),
+        ("Set", 0x31),
+    ];
+
+    let values: Vec<&'static str> = VALUES.iter().map(|(s, _)| *s).collect();
+    let values = values.join(", ");
+    let error_message = format!("Expected one of [{}].", values);
+
+    let ident = match value {
+        TokenTree::Ident(ident) => ident,
+        _ => return Err(syn::Error::new_spanned(value, error_message)),
+    };
+
+    for &(s, v) in VALUES {
+        if ident == s {
+            return Ok(v);
+        }
+    }
+
+    Err(syn::Error::new_spanned(value, error_message))
 }
