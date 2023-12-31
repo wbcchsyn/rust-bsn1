@@ -30,10 +30,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![deny(missing_docs)]
-#![doc = include_str!("../README.md")]
-
-mod attribute;
-mod data_container;
-
-use attribute::Attribute;
+//! Provides enum `DataContainer`
