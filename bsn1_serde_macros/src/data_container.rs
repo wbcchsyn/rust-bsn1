@@ -33,6 +33,8 @@
 //! Provides enum `DataContainer`
 
 use crate::Attribute;
+use proc_macro2::TokenStream;
+use quote::quote;
 
 pub enum DataContainer {
     DataStruct {
@@ -83,6 +85,15 @@ impl TryFrom<syn::Variant> for DataContainer {
 }
 
 impl DataContainer {
+    pub fn id_slice(&self) -> syn::Result<TokenStream> {
+        const SEQUENCE: u8 = 0x30;
+
+        match self.attribute().id(SEQUENCE) {
+            Some(id) => Ok(id),
+            None => Ok(quote! { [#SEQUENCE] }),
+        }
+    }
+
     fn attribute(&self) -> &Attribute {
         match self {
             Self::DataStruct { attribute, .. } => attribute,
