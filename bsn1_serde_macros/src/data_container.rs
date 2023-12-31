@@ -117,4 +117,11 @@ impl DataContainer {
             Self::Variant { attribute, .. } => attribute,
         }
     }
+
+    fn fields(&self) -> &syn::Fields {
+        match self {
+            Self::Variant { variant, .. } => &variant.fields,
+            Self::DataStruct { data_structure, .. } => &data_structure.fields,
+        }
+    }
 }
