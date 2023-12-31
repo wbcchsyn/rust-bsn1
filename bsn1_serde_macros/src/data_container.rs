@@ -112,6 +112,37 @@ impl DataContainer {
     }
 
     #[allow(non_snake_case)]
+    pub fn write_der_contents(&self, buffer: &TokenStream) -> syn::Result<TokenStream> {
+        let Length = quote! { ::bsn1_serde::macro_alias::Length };
+        let Error = quote! { ::bsn1_serde::macro_alias::Error };
+        let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+        let Result = quote! { ::std::result::Result };
+        let Write = quote! { ::std::io::Write };
+
+        let contents_len = quote! { bsn1_macro_1704044765_contents_len };
+        let length = quote! { bsn1_macro_1704044765_length };
+
+        let field_write = self
+            .field_vars()
+            .into_iter()
+            .zip(self.field_attributes())
+            .map(|(field, _attribute)| {
+                quote! {{
+                    #Serialize::write_id(#field, buffer)?;
+                    let #contents_len = #Serialize::der_contents_len(#field)?;
+                    let #length = #Length::Definite(#contents_len).to_bytes();
+                    #Write::write_all(#buffer, &#length).map_err(#Error::from)?;
+                    #Serialize::write_der_contents(#field, buffer)?;
+                }}
+            });
+
+        Ok(quote! {{
+                #(#field_write)*
+                #Result::Ok(())
+        }})
+    }
+
+    #[allow(non_snake_case)]
     pub fn der_contents_len(&self) -> syn::Result<TokenStream> {
         let Length = quote! { ::bsn1_serde::macro_alias::Length };
         let Result = quote! { ::std::result::Result };
