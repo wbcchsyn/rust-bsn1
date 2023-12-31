@@ -46,3 +46,20 @@ pub enum DataContainer {
         variant: syn::Variant,
     },
 }
+
+impl TryFrom<(Attribute, syn::DataStruct)> for DataContainer {
+    type Error = syn::Error;
+
+    fn try_from((attribute, data): (Attribute, syn::DataStruct)) -> Result<Self, Self::Error> {
+        let mut field_attributes = Vec::new();
+        for field in data.fields.iter() {
+            field_attributes.push(Attribute::try_from(&field.attrs[..])?);
+        }
+
+        Ok(Self::DataStruct {
+            attribute,
+            field_attributes,
+            data_structure: data,
+        })
+    }
+}
