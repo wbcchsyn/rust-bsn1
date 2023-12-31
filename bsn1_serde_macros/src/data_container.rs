@@ -89,13 +89,9 @@ impl DataContainer {
     pub fn write_id(&self, buffer: &TokenStream) -> syn::Result<TokenStream> {
         let Error = quote! { ::bsn1_serde::macro_alias::Error };
         let Write = quote! { ::std::io::Write };
-        let Result = quote! { ::std::result::Result };
 
         let id = self.id_slice()?;
-        Ok(quote! {{
-            #Write.write_all(#buffer, &#id).map_err(#Error::from);
-            #Result::Ok(())
-        }})
+        Ok(quote! { #Write::write_all(#buffer, &#id).map_err(#Error::from) })
     }
 
     fn id_slice(&self) -> syn::Result<TokenStream> {

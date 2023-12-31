@@ -30,7 +30,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::Attribute;
+use crate::{Attribute, DataContainer};
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -56,14 +56,18 @@ pub fn do_serialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
 }
 
 #[allow(non_snake_case)]
-fn do_serialize_struct(_attribute: Attribute, _data: syn::DataStruct) -> syn::Result<TokenStream> {
+fn do_serialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Result<TokenStream> {
     let Result = quote! { ::std::result::Result };
     let Write = quote! { ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };
 
+    let data = DataContainer::try_from((attribute, data))?;
+    let buffer = quote! { buffer };
+    let write_id = data.write_id(&buffer)?;
+
     Ok(quote! {
             fn write_id<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
-                todo!()
+                #write_id
             }
 
             fn write_der_contents<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
