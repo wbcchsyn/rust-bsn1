@@ -31,3 +31,18 @@
 // limitations under the License.
 
 //! Provides enum `DataContainer`
+
+use crate::Attribute;
+
+pub enum DataContainer {
+    DataStruct {
+        attribute: Attribute,
+        field_attributes: Vec<Attribute>,
+        data_structure: syn::DataStruct,
+    },
+    Variant {
+        attribute: Attribute,
+        field_attributes: Vec<Attribute>,
+        variant: syn::Variant,
+    },
+}
