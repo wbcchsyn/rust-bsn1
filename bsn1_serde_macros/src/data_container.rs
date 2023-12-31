@@ -94,6 +94,14 @@ impl DataContainer {
         Ok(quote! { #Write::write_all(#buffer, &#id).map_err(#Error::from) })
     }
 
+    #[allow(non_snake_case)]
+    pub fn id_len(&self) -> syn::Result<TokenStream> {
+        let Result = quote! { ::std::result::Result };
+
+        let id = self.id_slice()?;
+        Ok(quote! { #Result::Ok(#id.len()) })
+    }
+
     fn id_slice(&self) -> syn::Result<TokenStream> {
         const SEQUENCE: u8 = 0x30;
 
