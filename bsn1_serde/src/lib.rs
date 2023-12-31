@@ -34,6 +34,8 @@
 #![doc = include_str!("../README.md")]
 
 pub mod de;
+#[doc(hidden)]
+pub mod macro_alias;
 pub mod ser;
 
 use bsn1::{Ber, BerRef, Buffer, Der, DerRef, Error, Length};
