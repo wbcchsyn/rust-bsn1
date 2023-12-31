@@ -102,11 +102,13 @@ fn do_serialize_enum(_attribute: Attribute, data: syn::DataEnum) -> syn::Result<
     let mut arms: Vec<TokenStream> = Vec::new();
     let mut write_ids: Vec<TokenStream> = Vec::new();
     let mut id_lens: Vec<TokenStream> = Vec::new();
+    let mut der_contents_lens: Vec<TokenStream> = Vec::new();
 
     for variant in variants.iter() {
         unsafe { arms.push(variant.to_match_arm()?) };
         write_ids.push(variant.write_id(&buffer)?);
         id_lens.push(variant.id_len()?);
+        der_contents_lens.push(variant.der_contents_len()?);
     }
 
     Ok(quote! {
@@ -127,7 +129,9 @@ fn do_serialize_enum(_attribute: Attribute, data: syn::DataEnum) -> syn::Result<
             }
 
             fn der_contents_len(&self) -> #Result<usize, #Error> {
-                todo!()
+                match self {
+                    #(#arms =>  { #der_contents_lens } )*
+                }
             }
     })
 }
