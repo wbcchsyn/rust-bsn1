@@ -64,6 +64,7 @@ fn do_serialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Resu
     let data = DataContainer::try_from((attribute, data))?;
     let buffer = quote! { buffer };
     let write_id = data.write_id(&buffer)?;
+    let id_len = data.id_len()?;
 
     Ok(quote! {
             fn write_id<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
@@ -75,7 +76,7 @@ fn do_serialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Resu
             }
 
             fn id_len(&self) -> #Result<usize, #Error> {
-                todo!()
+                #id_len
             }
 
             fn der_contents_len(&self) -> #Result<usize, #Error> {
