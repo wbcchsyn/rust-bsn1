@@ -157,4 +157,15 @@ impl DataContainer {
                 .collect(),
         }
     }
+
+    fn field_attributes(&self) -> &[Attribute] {
+        match self {
+            Self::Variant {
+                field_attributes, ..
+            } => field_attributes,
+            Self::DataStruct {
+                field_attributes, ..
+            } => field_attributes,
+        }
+    }
 }
