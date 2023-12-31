@@ -34,7 +34,7 @@
 
 use crate::Attribute;
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, ToTokens};
 
 pub enum DataContainer {
     DataStruct {
@@ -122,6 +122,20 @@ impl DataContainer {
         match self {
             Self::Variant { variant, .. } => &variant.fields,
             Self::DataStruct { data_structure, .. } => &data_structure.fields,
+        }
+    }
+
+    fn field_idents(&self) -> Vec<TokenStream> {
+        match self.fields() {
+            syn::Fields::Named(fields) => fields
+                .named
+                .iter()
+                .map(|field| field.ident.as_ref().unwrap().to_token_stream())
+                .collect(),
+            syn::Fields::Unnamed(fields) => (0..fields.unnamed.len())
+                .map(|i| syn::Index::from(i).to_token_stream())
+                .collect(),
+            syn::Fields::Unit => Vec::new(),
         }
     }
 }
