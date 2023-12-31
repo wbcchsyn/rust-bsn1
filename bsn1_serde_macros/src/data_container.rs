@@ -63,3 +63,21 @@ impl TryFrom<(Attribute, syn::DataStruct)> for DataContainer {
         })
     }
 }
+
+impl TryFrom<syn::Variant> for DataContainer {
+    type Error = syn::Error;
+
+    fn try_from(value: syn::Variant) -> Result<Self, Self::Error> {
+        let attribute = Attribute::try_from(&value.attrs[..])?;
+        let mut field_attributes = Vec::new();
+        for field in value.fields.iter() {
+            field_attributes.push(Attribute::try_from(&field.attrs[..])?);
+        }
+
+        Ok(Self::Variant {
+            attribute,
+            field_attributes,
+            variant: value,
+        })
+    }
+}
