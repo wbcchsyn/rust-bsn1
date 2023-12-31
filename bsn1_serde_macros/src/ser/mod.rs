@@ -30,21 +30,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::Attribute;
 use proc_macro2::TokenStream;
 use quote::quote;
 
 #[allow(non_snake_case)]
 pub fn do_serialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
     let name = &ast.ident;
-
     let Serialize = quote! { ::bsn1_serde::ser::Serialize };
 
+    let attribute = Attribute::try_from(&ast.attrs[..])?;
+    let methods = match ast.data {
+        syn::Data::Struct(data) => do_serialize_struct(attribute, data)?,
+        syn::Data::Enum(data) => do_serialize_enum(attribute, data)?,
+        syn::Data::Union(_) => {
+            return Err(syn::Error::new_spanned(name, "Union is not supported."))
+        }
+    };
+
+    Ok(quote! {
+        impl #Serialize for #name {
+            #methods
+        }
+    })
+}
+
+#[allow(non_snake_case)]
+fn do_serialize_struct(_attribute: Attribute, _data: syn::DataStruct) -> syn::Result<TokenStream> {
     let Result = quote! { ::std::result::Result };
     let Write = quote! { ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };
 
     Ok(quote! {
-        impl #Serialize for #name {
             fn write_id<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
                 todo!()
             }
@@ -60,6 +77,30 @@ pub fn do_serialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
             fn der_contents_len(&self) -> #Result<usize, #Error> {
                 todo!()
             }
-        }
+    })
+}
+
+#[allow(non_snake_case)]
+fn do_serialize_enum(_attribute: Attribute, _data: syn::DataEnum) -> syn::Result<TokenStream> {
+    let Result = quote! { ::std::result::Result };
+    let Write = quote! { ::std::io::Write };
+    let Error = quote! { ::bsn1_serde::macro_alias::Error };
+
+    Ok(quote! {
+            fn write_id<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
+                todo!()
+            }
+
+            fn write_der_contents<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
+                todo!()
+            }
+
+            fn id_len(&self) -> #Result<usize, #Error> {
+                todo!()
+            }
+
+            fn der_contents_len(&self) -> #Result<usize, #Error> {
+                todo!()
+            }
     })
 }
