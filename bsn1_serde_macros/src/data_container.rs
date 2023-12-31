@@ -178,6 +178,13 @@ impl DataContainer {
         }
     }
 
+    fn ident(&self) -> TokenStream {
+        match self {
+            Self::DataStruct { .. } => quote! { Self },
+            Self::Variant { variant, .. } => variant.ident.to_token_stream(),
+        }
+    }
+
     fn fields(&self) -> &syn::Fields {
         match self {
             Self::Variant { variant, .. } => &variant.fields,
