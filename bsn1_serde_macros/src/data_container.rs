@@ -194,6 +194,74 @@ impl DataContainer {
     }
 
     #[allow(non_snake_case)]
+    pub fn from_ber(
+        &self,
+        id: &TokenStream,
+        length: &TokenStream,
+        contents: &TokenStream,
+    ) -> syn::Result<TokenStream> {
+        let BerRef = quote! { ::bsn1_serde::macro_alias::BerRef };
+        let DerRef = quote! { ::bsn1_serde::macro_alias::DerRef };
+        let Length = quote! { ::bsn1_serde::macro_alias::Length };
+        let Error = quote! { ::bsn1_serde::macro_alias::Error };
+        let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
+
+        let Result = quote! { ::std::result::Result };
+
+        let id_slice = self.id_slice()?;
+        let contents_bytes = quote! { bsn1_macro_1704080283_contents_bytes };
+        let contents_length = quote! { bsn1_macro_1704080283_length };
+        let eoc = quote! { bsn1_macro_1704080283_eoc };
+        let tmp_der = quote! { bsn1_macro_1704080283_tmp_der };
+        let ret = quote! { bsn1_macro_1704080283_ret };
+        let ty = self.ty();
+
+        let field_constructors = std::iter::repeat(quote! {{
+            let #tmp_der = #DerRef::parse(#contents_bytes)?;
+            #Deserialize::from_der(#tmp_der.id(), #tmp_der.contents())?
+        }})
+        .take(self.fields().len());
+
+        let constructor = match self.fields() {
+            syn::Fields::Named(_) => {
+                let fields = self.field_idents();
+                quote! { #ty { #(#fields: #field_constructors,)* } }
+            }
+            syn::Fields::Unnamed(_) => quote! { #ty ( #(#field_constructors,)* ) },
+            syn::Fields::Unit => quote! { #ty },
+        };
+
+        Ok(quote! {{
+            if #id.as_ref() as &[u8] != #id_slice {
+                return #Result::Err(#Error::UnmatchedId);
+            }
+
+            let mut #contents_bytes: &[u8] = match #length {
+                #Length::Definite(#contents_length) => {
+                    debug_assert_eq!(#contents_length, #contents.len());
+                    #contents.as_ref()
+                }
+                #Length::Indefinite => {
+                    let #contents_bytes: &[u8] = #contents.as_ref();
+                    let #eoc: &[u8] = #BerRef::eoc().as_ref();
+                    if #contents_bytes.ends_with(#eoc) {
+                        &#contents_bytes[..(#contents_bytes.len() - #eoc.len())]
+                    } else {
+                        return #Result::Err(#Error::UnTerminatedBytes);
+                    }
+                }
+            };
+            let #contents_bytes = &mut #contents_bytes;
+            let #ret = #constructor;
+
+            if #contents_bytes.len() == 0 {
+                #Result::Ok(#ret)
+            } else {
+                return #Result::Err(#Error::InvalidContents);
+            }
+        }})
+    }
+
     pub fn from_der(&self, id: &TokenStream, contents: &TokenStream) -> syn::Result<TokenStream> {
         let DerRef = quote! { ::bsn1_serde::macro_alias::DerRef };
         let Error = quote! { ::bsn1_serde::macro_alias::Error };
