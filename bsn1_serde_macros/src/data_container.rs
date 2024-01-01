@@ -193,6 +193,52 @@ impl DataContainer {
         })
     }
 
+    #[allow(non_snake_case)]
+    pub fn from_der(&self, id: &TokenStream, contents: &TokenStream) -> syn::Result<TokenStream> {
+        let DerRef = quote! { ::bsn1_serde::macro_alias::DerRef };
+        let Error = quote! { ::bsn1_serde::macro_alias::Error };
+        let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
+
+        let Result = quote! { ::std::result::Result };
+
+        let id_slice = self.id_slice()?;
+        let contents_bytes = quote! { bsn1_macro_1704080283_contents_bytes };
+        let tmp_der = quote! { bsn1_macro_1704080283_tmp_der };
+        let ret = quote! { bsn1_macro_1704080283_ret };
+        let ty = self.ty();
+
+        let field_constructors = std::iter::repeat(quote! {{
+            let #tmp_der = #DerRef::parse(#contents_bytes)?;
+            #Deserialize::from_der(#tmp_der.id(), #tmp_der.contents())?
+        }})
+        .take(self.fields().len());
+
+        let constructor = match self.fields() {
+            syn::Fields::Named(_) => {
+                let fields = self.field_idents();
+                quote! { #ty { #(#fields: #field_constructors,)* } }
+            }
+            syn::Fields::Unnamed(_) => quote! { #ty ( #(#field_constructors,)* ) },
+            syn::Fields::Unit => quote! { #ty },
+        };
+
+        Ok(quote! {{
+            if #id.as_ref() as &[u8] != #id_slice {
+                return #Result::Err(#Error::UnmatchedId);
+            }
+
+            let mut #contents_bytes: &[u8] = #contents.as_ref();
+            let #contents_bytes = &mut #contents_bytes;
+            let #ret = #constructor;
+
+            if #contents_bytes.len() == 0 {
+                #Result::Ok(#ret)
+            } else {
+                return #Result::Err(#Error::InvalidContents);
+            }
+        }})
+    }
+
     fn attribute(&self) -> &Attribute {
         match self {
             Self::DataStruct { attribute, .. } => attribute,
