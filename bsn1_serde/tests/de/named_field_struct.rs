@@ -30,13 +30,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize)]
+use bsn1_serde::{from_der, to_der};
+
+#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Debug, PartialEq)]
 struct A {}
 
-#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize)]
+#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Debug, PartialEq)]
 struct B {
     x: i32,
     y: String,
 }
 
-fn main() {}
+fn main() {
+    test_a();
+    test_b();
+}
+
+fn test_a() {
+    let val = A {};
+
+    let der = to_der(&val).unwrap();
+    assert_eq!(val, from_der(&der).unwrap());
+}
+
+fn test_b() {
+    let val = B {
+        x: 123,
+        y: "abc".to_string(),
+    };
+
+    let der = to_der(&val).unwrap();
+    assert_eq!(val, from_der(&der).unwrap());
+}
