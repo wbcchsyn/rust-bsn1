@@ -30,4 +30,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub use bsn1::{ContentsRef, DerRef, Error, IdRef, Length};
+pub use bsn1::{BerRef, ContentsRef, DerRef, Error, IdRef, Length};
