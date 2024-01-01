@@ -30,13 +30,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use bsn1_serde::{from_ber, from_der, to_ber, to_der};
+use bsn1::{Ber, BerRef, IdRef};
+use bsn1_serde::from_ber;
 
 #[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Debug, PartialEq)]
-struct A();
+struct A {}
 
 #[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Debug, PartialEq)]
-struct B(i32, String);
+struct B {
+    x: i32,
+    y: bool,
+}
 
 fn main() {
     test_a();
@@ -44,21 +48,19 @@ fn main() {
 }
 
 fn test_a() {
-    let val = A();
+    let val = A {};
 
-    let der = to_der(&val).unwrap();
-    assert_eq!(val, from_der(&der).unwrap());
-
-    let ber = to_ber(&val).unwrap();
+    let eoc: &[u8] = BerRef::eoc().as_ref();
+    let ber = Ber::new_indefinite(IdRef::sequence(), eoc.into());
     assert_eq!(val, from_ber(&ber).unwrap());
 }
 
 fn test_b() {
-    let val = B(123, "abc".to_string());
+    let val = B { x: 123, y: true };
 
-    let der = to_der(&val).unwrap();
-    assert_eq!(val, from_der(&der).unwrap());
-
-    let ber = to_ber(&val).unwrap();
+    let mut ber = Ber::with_id_length_indefinite(IdRef::sequence(), 0);
+    ber.extend_from_slice(Ber::from(val.x).as_ref());
+    ber.extend_from_slice(Ber::from(val.y).as_ref());
+    ber.extend_from_slice(BerRef::eoc().as_ref());
     assert_eq!(val, from_ber(&ber).unwrap());
 }

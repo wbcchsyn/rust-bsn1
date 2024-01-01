@@ -262,6 +262,7 @@ impl DataContainer {
         }})
     }
 
+    #[allow(non_snake_case)]
     pub fn from_der(&self, id: &TokenStream, contents: &TokenStream) -> syn::Result<TokenStream> {
         let DerRef = quote! { ::bsn1_serde::macro_alias::DerRef };
         let Error = quote! { ::bsn1_serde::macro_alias::Error };

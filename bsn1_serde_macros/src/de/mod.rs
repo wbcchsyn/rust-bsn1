@@ -62,13 +62,15 @@ fn do_deserialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Re
 
     let data = DataContainer::try_from((attribute, data))?;
     let id = quote! { id };
+    let length = quote! { length };
     let contents = quote! { contents };
+    let from_ber = data.from_ber(&id, &length, &contents)?;
     let from_der = data.from_der(&id, &contents)?;
 
     Ok(quote! {
         unsafe fn from_ber(id: &#IdRef, length: #Length, contents: &#ContentsRef)
             -> #Result<Self, #Error> {
-            todo!()
+            #from_ber
         }
 
         fn from_der(id: &#IdRef, contents: &#ContentsRef) -> #Result<Self, #Error> {
