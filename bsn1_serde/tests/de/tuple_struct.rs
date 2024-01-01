@@ -30,28 +30,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[test]
-fn serialize() {
-    let t = trybuild::TestCases::new();
+#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize)]
+struct A();
 
-    t.pass("tests/ser/unit_struct.rs");
-    t.pass("tests/ser/tuple_struct.rs");
-    t.pass("tests/ser/named_field_struct.rs");
+#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize)]
+struct B(i32, String);
 
-    t.pass("tests/ser/unit_enum.rs");
-    t.pass("tests/ser/tuple_enum.rs");
-    t.pass("tests/ser/named_field_enum.rs");
-}
-
-#[test]
-fn deserialize() {
-    let t = trybuild::TestCases::new();
-
-    t.pass("tests/de/unit_struct.rs");
-    t.pass("tests/de/tuple_struct.rs");
-    t.pass("tests/de/named_field_struct.rs");
-
-    t.pass("tests/de/unit_enum.rs");
-    t.pass("tests/de/tuple_enum.rs");
-    t.pass("tests/de/named_field_enum.rs");
-}
+fn main() {}
