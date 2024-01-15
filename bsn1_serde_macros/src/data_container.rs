@@ -33,7 +33,7 @@
 //! Provides enum `DataContainer`
 
 use crate::Attribute;
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 
 pub enum DataContainer {
@@ -43,6 +43,7 @@ pub enum DataContainer {
         data_structure: syn::DataStruct,
     },
     Variant {
+        enum_name: Ident,
         attribute: Attribute,
         field_attributes: Vec<Attribute>,
         variant: syn::Variant,
@@ -66,10 +67,10 @@ impl TryFrom<(Attribute, syn::DataStruct)> for DataContainer {
     }
 }
 
-impl TryFrom<syn::Variant> for DataContainer {
+impl TryFrom<(Ident, syn::Variant)> for DataContainer {
     type Error = syn::Error;
 
-    fn try_from(value: syn::Variant) -> Result<Self, Self::Error> {
+    fn try_from((enum_name, value): (Ident, syn::Variant)) -> Result<Self, Self::Error> {
         let attribute = Attribute::try_from(&value.attrs[..])?;
         let mut field_attributes = Vec::new();
         for field in value.fields.iter() {
@@ -77,6 +78,7 @@ impl TryFrom<syn::Variant> for DataContainer {
         }
 
         Ok(Self::Variant {
+            enum_name,
             attribute,
             field_attributes,
             variant: value,

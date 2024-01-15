@@ -31,7 +31,7 @@
 // limitations under the License.
 
 use crate::{Attribute, DataContainer};
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 
 #[allow(non_snake_case)]
@@ -42,7 +42,7 @@ pub fn do_serialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
     let attribute = Attribute::try_from(&ast.attrs[..])?;
     let methods = match ast.data {
         syn::Data::Struct(data) => do_serialize_struct(attribute, data)?,
-        syn::Data::Enum(data) => do_serialize_enum(attribute, data)?,
+        syn::Data::Enum(data) => do_serialize_enum(attribute, &ast.ident, data)?,
         syn::Data::Union(_) => {
             return Err(syn::Error::new_spanned(name, "Union is not supported."))
         }
@@ -88,14 +88,18 @@ fn do_serialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Resu
 }
 
 #[allow(non_snake_case)]
-fn do_serialize_enum(_attribute: Attribute, data: syn::DataEnum) -> syn::Result<TokenStream> {
+fn do_serialize_enum(
+    _attribute: Attribute,
+    enum_name: &Ident,
+    data: syn::DataEnum,
+) -> syn::Result<TokenStream> {
     let Result = quote! { ::std::result::Result };
     let Write = quote! { ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };
 
     let mut variants: Vec<DataContainer> = Vec::new();
     for variant in data.variants {
-        variants.push(DataContainer::try_from(variant)?);
+        variants.push(DataContainer::try_from((enum_name.clone(), variant))?);
     }
 
     let buffer = quote! { buffer };

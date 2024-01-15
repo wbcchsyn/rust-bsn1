@@ -31,7 +31,7 @@
 // limitations under the License.
 
 use crate::{Attribute, DataContainer};
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 
 pub fn do_deserialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
@@ -40,7 +40,7 @@ pub fn do_deserialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
 
     let methods = match ast.data {
         syn::Data::Struct(data) => do_deserialize_struct(attribute, data)?,
-        syn::Data::Enum(data) => do_deserialize_enum(attribute, data)?,
+        syn::Data::Enum(data) => do_deserialize_enum(attribute, &ast.ident, data)?,
         _ => return Err(syn::Error::new_spanned(ast, "Only struct or enum is supported.").into()),
     };
 
@@ -86,7 +86,11 @@ fn do_deserialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Re
 }
 
 #[allow(non_snake_case)]
-fn do_deserialize_enum(_attribute: Attribute, _data: syn::DataEnum) -> syn::Result<TokenStream> {
+fn do_deserialize_enum(
+    _attribute: Attribute,
+    _enum_name: &Ident,
+    _data: syn::DataEnum,
+) -> syn::Result<TokenStream> {
     let IdRef = quote! { ::bsn1_serde::macro_alias::IdRef };
     let Length = quote! { ::bsn1_serde::macro_alias::Length };
     let ContentsRef = quote! { ::bsn1_serde::macro_alias::ContentsRef };
