@@ -30,4 +30,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub use bsn1::{ContentsRef, Error, IdRef, Length};
+#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize)]
+enum X {
+    A {},
+    B { x: i32, y: String },
+}
+
+fn main() {}

@@ -35,6 +35,7 @@
 
 mod attribute;
 mod data_container;
+mod de;
 mod ser;
 
 use attribute::Attribute;
@@ -47,6 +48,17 @@ pub fn serialize(input: TokenStream) -> TokenStream {
     let ast = syn::parse_macro_input!(input as syn::DeriveInput);
 
     match ser::do_serialize(ast) {
+        Ok(ts) => ts.into(),
+        Err(e) => e.to_compile_error().into(),
+    }
+}
+
+/// Derive macro to implement `bsn1_serde::de::Deserialize` trait.
+#[proc_macro_derive(Deserialize)]
+pub fn deserialize(input: TokenStream) -> TokenStream {
+    let ast = syn::parse_macro_input!(input as syn::DeriveInput);
+
+    match de::do_deserialize(ast) {
         Ok(ts) => ts.into(),
         Err(e) => e.to_compile_error().into(),
     }

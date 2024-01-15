@@ -42,3 +42,16 @@ fn serialize() {
     t.pass("tests/ser/tuple_enum.rs");
     t.pass("tests/ser/named_field_enum.rs");
 }
+
+#[test]
+fn deserialize() {
+    let t = trybuild::TestCases::new();
+
+    t.pass("tests/de/unit_struct.rs");
+    t.pass("tests/de/tuple_struct.rs");
+    t.pass("tests/de/named_field_struct.rs");
+
+    t.pass("tests/de/unit_enum.rs");
+    t.pass("tests/de/tuple_enum.rs");
+    t.pass("tests/de/named_field_enum.rs");
+}
