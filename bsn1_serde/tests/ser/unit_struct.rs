@@ -30,7 +30,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use bsn1::IdRef;
+use bsn1_serde::ser::Serialize as _;
+use bsn1_serde::to_der;
+
 #[derive(bsn1_serde::Serialize)]
 struct A;
 
-fn main() {}
+fn main() {
+    test_a();
+}
+
+fn test_a() {
+    let val = A;
+    let der = to_der(&val).unwrap();
+
+    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id(), IdRef::sequence());
+
+    assert_eq!(der.length().definite().unwrap(), der.contents().len());
+
+    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(der.contents().len(), 0);
+}

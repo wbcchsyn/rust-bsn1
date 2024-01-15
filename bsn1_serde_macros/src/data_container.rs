@@ -33,6 +33,8 @@
 //! Provides enum `DataContainer`
 
 use crate::Attribute;
+use proc_macro2::TokenStream;
+use quote::{format_ident, quote, ToTokens};
 
 pub enum DataContainer {
     DataStruct {
@@ -79,5 +81,151 @@ impl TryFrom<syn::Variant> for DataContainer {
             field_attributes,
             variant: value,
         })
+    }
+}
+
+impl DataContainer {
+    #[allow(non_snake_case)]
+    pub fn write_id(&self, buffer: &TokenStream) -> syn::Result<TokenStream> {
+        let Error = quote! { ::bsn1_serde::macro_alias::Error };
+        let Write = quote! { ::std::io::Write };
+
+        let id = self.id_slice()?;
+        Ok(quote! { #Write::write_all(#buffer, &#id).map_err(#Error::from) })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn id_len(&self) -> syn::Result<TokenStream> {
+        let Result = quote! { ::std::result::Result };
+
+        let id = self.id_slice()?;
+        Ok(quote! { #Result::Ok(#id.len()) })
+    }
+
+    fn id_slice(&self) -> syn::Result<TokenStream> {
+        const SEQUENCE: u8 = 0x30;
+
+        match self.attribute().id(SEQUENCE) {
+            Some(id) => Ok(id),
+            None => Ok(quote! { [#SEQUENCE] }),
+        }
+    }
+
+    #[allow(non_snake_case)]
+    pub fn write_der_contents(&self, buffer: &TokenStream) -> syn::Result<TokenStream> {
+        let Length = quote! { ::bsn1_serde::macro_alias::Length };
+        let Error = quote! { ::bsn1_serde::macro_alias::Error };
+        let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+        let Result = quote! { ::std::result::Result };
+        let Write = quote! { ::std::io::Write };
+
+        let contents_len = quote! { bsn1_macro_1704044765_contents_len };
+        let length = quote! { bsn1_macro_1704044765_length };
+
+        let field_write = self
+            .field_vars()
+            .into_iter()
+            .zip(self.field_attributes())
+            .map(|(field, _attribute)| {
+                quote! {{
+                    #Serialize::write_id(#field, buffer)?;
+                    let #contents_len = #Serialize::der_contents_len(#field)?;
+                    let #length = #Length::Definite(#contents_len).to_bytes();
+                    #Write::write_all(#buffer, &#length).map_err(#Error::from)?;
+                    #Serialize::write_der_contents(#field, buffer)?;
+                }}
+            });
+
+        Ok(quote! {{
+                #(#field_write)*
+                #Result::Ok(())
+        }})
+    }
+
+    #[allow(non_snake_case)]
+    pub fn der_contents_len(&self) -> syn::Result<TokenStream> {
+        let Length = quote! { ::bsn1_serde::macro_alias::Length };
+        let Result = quote! { ::std::result::Result };
+        let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+
+        let ret = quote! { bsn1_macro_1704043457_ret };
+        let contents_len = quote! { bsn1_macro_1704043457_contents_len };
+        let length_len = quote! { bsn1_macro_1704043457_length_len};
+
+        let field_acc = self
+            .field_vars()
+            .into_iter()
+            .zip(self.field_attributes())
+            .map(|(field, _attribute)| {
+                quote! {{
+                    let #contents_len = #Serialize::der_contents_len(#field)?;
+                    let #length_len = #Length::Definite(#contents_len).len();
+                    #ret += #Serialize::id_len(#field)? + #length_len + #contents_len;
+                }}
+            });
+
+        Ok(quote! {
+            let mut #ret = 0;
+            #(#field_acc)*
+            #Result::Ok(#ret)
+        })
+    }
+
+    fn attribute(&self) -> &Attribute {
+        match self {
+            Self::DataStruct { attribute, .. } => attribute,
+            Self::Variant { attribute, .. } => attribute,
+        }
+    }
+
+    fn fields(&self) -> &syn::Fields {
+        match self {
+            Self::Variant { variant, .. } => &variant.fields,
+            Self::DataStruct { data_structure, .. } => &data_structure.fields,
+        }
+    }
+
+    fn field_idents(&self) -> Vec<TokenStream> {
+        match self.fields() {
+            syn::Fields::Named(fields) => fields
+                .named
+                .iter()
+                .map(|field| field.ident.as_ref().unwrap().to_token_stream())
+                .collect(),
+            syn::Fields::Unnamed(fields) => (0..fields.unnamed.len())
+                .map(|i| syn::Index::from(i).to_token_stream())
+                .collect(),
+            syn::Fields::Unit => Vec::new(),
+        }
+    }
+
+    fn field_vars(&self) -> Vec<TokenStream> {
+        match self {
+            Self::Variant { .. } => {
+                static PREFIX: &str = "bsn1_macro_field_1701146321";
+                self.field_idents()
+                    .into_iter()
+                    .map(|ident| {
+                        format_ident!("{}_{}", PREFIX, ident.to_string()).to_token_stream()
+                    })
+                    .collect()
+            }
+            Self::DataStruct { .. } => self
+                .field_idents()
+                .into_iter()
+                .map(|ident| quote! { &self.#ident })
+                .collect(),
+        }
+    }
+
+    fn field_attributes(&self) -> &[Attribute] {
+        match self {
+            Self::Variant {
+                field_attributes, ..
+            } => field_attributes,
+            Self::DataStruct {
+                field_attributes, ..
+            } => field_attributes,
+        }
     }
 }
