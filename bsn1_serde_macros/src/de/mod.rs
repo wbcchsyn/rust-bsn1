@@ -88,8 +88,8 @@ fn do_deserialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Re
 #[allow(non_snake_case)]
 fn do_deserialize_enum(
     _attribute: Attribute,
-    _enum_name: &Ident,
-    _data: syn::DataEnum,
+    enum_name: &Ident,
+    data: syn::DataEnum,
 ) -> syn::Result<TokenStream> {
     let IdRef = quote! { ::bsn1_serde::macro_alias::IdRef };
     let Length = quote! { ::bsn1_serde::macro_alias::Length };
@@ -98,6 +98,21 @@ fn do_deserialize_enum(
 
     let Result = quote! { ::std::result::Result };
 
+    let contents = quote! { contents };
+    let mut variants = Vec::new();
+    let mut from_ders = Vec::new();
+    let mut arm_id_slices = Vec::new();
+
+    for variant in data.variants.into_iter() {
+        let variant = DataContainer::try_from((enum_name.clone(), variant))?;
+        let id_slice = variant.id_slice()?;
+        let from_der = variant.from_der(&contents)?;
+
+        variants.push(variant);
+        from_ders.push(from_der);
+        arm_id_slices.push(id_slice);
+    }
+
     Ok(quote! {
         unsafe fn from_ber(id: &#IdRef, length: #Length, contents: &#ContentsRef)
             -> #Result<Self, #Error> {
@@ -105,7 +120,11 @@ fn do_deserialize_enum(
         }
 
         fn from_der(id: &#IdRef, contents: &#ContentsRef) -> #Result<Self, #Error> {
-            todo!()
+            #(if id.as_ref() as &[u8] == #arm_id_slices {
+                #from_ders
+            } else)* {
+                #Result::Err(#Error::UnmatchedId)
+            }
         }
     })
 }
