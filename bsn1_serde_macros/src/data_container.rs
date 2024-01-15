@@ -310,7 +310,12 @@ impl DataContainer {
     fn ty(&self) -> TokenStream {
         match self {
             Self::DataStruct { .. } => quote! { Self },
-            Self::Variant { .. } => todo!(),
+            Self::Variant {
+                enum_name, variant, ..
+            } => {
+                let variant_name = &variant.ident;
+                quote! { #enum_name::#variant_name }
+            }
         }
     }
 
