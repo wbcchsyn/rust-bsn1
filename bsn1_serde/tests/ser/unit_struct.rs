@@ -2,7 +2,7 @@
 //
 // "LGPL-3.0-or-later OR Apache-2.0"
 //
-// This is part of bsn1_serde_macros
+// This is part of bsn1_serde
 //
 //  bsn1_serde is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU Lesser General Public License as published by
@@ -30,24 +30,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![deny(missing_docs)]
-#![doc = include_str!("../README.md")]
+#[derive(bsn1_serde::Serialize)]
+struct A;
 
-mod attribute;
-mod data_container;
-mod ser;
-
-use attribute::Attribute;
-use data_container::DataContainer;
-use proc_macro::TokenStream;
-
-/// Derive macro to implement `bsn1_serde::ser::Serialize` trait.
-#[proc_macro_derive(Serialize)]
-pub fn serialize(input: TokenStream) -> TokenStream {
-    let ast = syn::parse_macro_input!(input as syn::DeriveInput);
-
-    match ser::do_serialize(ast) {
-        Ok(ts) => ts.into(),
-        Err(e) => e.to_compile_error().into(),
-    }
-}
+fn main() {}

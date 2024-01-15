@@ -13,5 +13,13 @@ repository = "https://github.com/wbcchsyn/rust-bsn1.git"
 keywords = ["ASN1", "DER", "BER", "serialize", "X690"]
 categories = ["encoding"]
 
+[[test]]
+name = "integration_tests"
+path = "tests/integration_tests.rs"
+
 [dependencies]
 bsn1 = { path = ".." }
+bsn1_serde_macros = { path = "../bsn1_serde_macros" }
+
+[dev-dependencies]
+trybuild = "1.0.85"

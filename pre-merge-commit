@@ -43,11 +43,11 @@ check_build_on_big_endian() {
     cd `git rev-parse --show-toplevel`
 
     for f in $(find . -type f -name '*.rs' ! -path '*/target/*'); do
+        rustfmt --check -- "$f" || exit "$?"
         check_line_length "$f"
         check_license "$f"
     done
 
-    cargo fmt --all --check -- || exit "$?"
     cargo test --workspace -- || exit "$?"
     check_build_on_big_endian || exit "$?"
 
