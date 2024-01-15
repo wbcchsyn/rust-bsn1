@@ -98,17 +98,21 @@ fn do_deserialize_enum(
 
     let Result = quote! { ::std::result::Result };
 
+    let length = quote! { length };
     let contents = quote! { contents };
     let mut variants = Vec::new();
+    let mut from_bers = Vec::new();
     let mut from_ders = Vec::new();
     let mut arm_id_slices = Vec::new();
 
     for variant in data.variants.into_iter() {
         let variant = DataContainer::try_from((enum_name.clone(), variant))?;
         let id_slice = variant.id_slice()?;
+        let from_ber = variant.from_ber(&length, &contents)?;
         let from_der = variant.from_der(&contents)?;
 
         variants.push(variant);
+        from_bers.push(from_ber);
         from_ders.push(from_der);
         arm_id_slices.push(id_slice);
     }
@@ -116,7 +120,11 @@ fn do_deserialize_enum(
     Ok(quote! {
         unsafe fn from_ber(id: &#IdRef, length: #Length, contents: &#ContentsRef)
             -> #Result<Self, #Error> {
-            todo!()
+            #(if id.as_ref() as &[u8] == #arm_id_slices {
+                #from_bers
+            } else)* {
+                #Result::Err(#Error::UnmatchedId)
+            }
         }
 
         fn from_der(id: &#IdRef, contents: &#ContentsRef) -> #Result<Self, #Error> {

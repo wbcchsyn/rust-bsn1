@@ -30,7 +30,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use bsn1_serde::{from_der, to_der};
+use bsn1_serde::{from_ber, from_der, to_ber, to_der};
 
 #[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Debug, PartialEq)]
 enum X {
@@ -103,6 +103,9 @@ fn test_xa() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
 }
 
 fn test_xc() {
@@ -110,6 +113,9 @@ fn test_xc() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
 }
 
 fn test_xd() {
@@ -117,6 +123,9 @@ fn test_xd() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
 }
 
 fn test_xe() {
@@ -124,6 +133,9 @@ fn test_xe() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
 }
 
 fn test_xf() {
@@ -131,6 +143,9 @@ fn test_xf() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
 }
 
 fn test_xj() {
@@ -138,6 +153,9 @@ fn test_xj() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
 }
 
 fn test_xk() {
@@ -145,6 +163,9 @@ fn test_xk() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
 }
 
 fn test_xl() {
@@ -152,6 +173,9 @@ fn test_xl() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
 }
 
 fn test_xm() {
@@ -159,6 +183,9 @@ fn test_xm() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
 }
 
 fn test_xn() {
@@ -166,6 +193,9 @@ fn test_xn() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
 }
 
 fn test_xo() {
@@ -173,6 +203,9 @@ fn test_xo() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
 }
 
 fn test_xp() {
@@ -180,6 +213,9 @@ fn test_xp() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
 }
 
 fn test_xq() {
@@ -187,4 +223,7 @@ fn test_xq() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
 }
