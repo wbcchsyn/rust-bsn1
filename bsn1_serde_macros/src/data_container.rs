@@ -200,6 +200,13 @@ impl DataContainer {
         }
     }
 
+    fn ty(&self) -> TokenStream {
+        match self {
+            Self::DataStruct { .. } => quote! { Self },
+            Self::Variant { .. } => todo!(),
+        }
+    }
+
     fn ident(&self) -> TokenStream {
         match self {
             Self::DataStruct { .. } => quote! { Self },
