@@ -429,7 +429,7 @@ mod tests {
                 .copied()
                 .collect();
             let mut ber = Ber::new_indefinite(IdRef::sequence(), contents.as_slice().into());
-            ber.extend_from_slice(BerRef::eoc().as_ref());
+            ber.extend_from_slice(BerRef::eoc());
 
             let mut bytes: &[u8] = ber.as_ref();
             let parsed = BerRef::parse(&mut bytes).unwrap();
@@ -465,7 +465,7 @@ mod tests {
                 .copied()
                 .collect();
             let mut inner = Ber::new_indefinite(IdRef::octet_string(), contents.as_slice().into());
-            inner.extend_from_slice(BerRef::eoc().as_ref());
+            inner.extend_from_slice(BerRef::eoc());
 
             let ber = Ber::new(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
             let mut bytes: &[u8] = ber.as_ref();
@@ -483,7 +483,7 @@ mod tests {
             let inner = Ber::from(&bytes[..i]);
 
             let mut ber = Ber::new_indefinite(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
-            ber.extend_from_slice(BerRef::eoc().as_ref());
+            ber.extend_from_slice(BerRef::eoc());
 
             let mut bytes: &[u8] = ber.as_ref();
             let parsed = BerRef::parse(&mut bytes).unwrap();
@@ -504,10 +504,10 @@ mod tests {
                 .copied()
                 .collect();
             let mut inner = Ber::new_indefinite(IdRef::octet_string(), contents.as_slice().into());
-            inner.extend_from_slice(BerRef::eoc().as_ref());
+            inner.extend_from_slice(BerRef::eoc());
 
             let mut ber = Ber::new_indefinite(IdRef::sequence(), (inner.as_ref() as &[u8]).into());
-            ber.extend_from_slice(BerRef::eoc().as_ref());
+            ber.extend_from_slice(BerRef::eoc());
 
             let mut bytes: &[u8] = ber.as_ref();
             let parsed = BerRef::parse(&mut bytes).unwrap();

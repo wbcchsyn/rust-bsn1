@@ -385,7 +385,12 @@ impl Der {
     /// assert_eq!(der.length(), Length::Definite(bytes.len()));
     /// assert_eq!(der.contents().as_ref(), &bytes[..]);
     /// ```
-    pub fn extend_from_slice(&mut self, bytes: &[u8]) {
+    pub fn extend_from_slice<T>(&mut self, bytes: &T)
+    where
+        T: ?Sized + AsRef<[u8]>,
+    {
+        let bytes = bytes.as_ref();
+
         let id_len = self.id().len();
         let old_length = self.length();
         let new_length = Length::Definite(old_length.definite().unwrap() + bytes.len());
