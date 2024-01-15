@@ -43,7 +43,7 @@ use data_container::DataContainer;
 use proc_macro::TokenStream;
 
 /// Derive macro to implement `bsn1_serde::ser::Serialize` trait.
-#[proc_macro_derive(Serialize)]
+#[proc_macro_derive(Serialize, attributes(bsn1_serde))]
 pub fn serialize(input: TokenStream) -> TokenStream {
     let ast = syn::parse_macro_input!(input as syn::DeriveInput);
 
