@@ -201,7 +201,6 @@ impl DataContainer {
         contents: &TokenStream,
     ) -> syn::Result<TokenStream> {
         let BerRef = quote! { ::bsn1_serde::macro_alias::BerRef };
-        let DerRef = quote! { ::bsn1_serde::macro_alias::DerRef };
         let Length = quote! { ::bsn1_serde::macro_alias::Length };
         let Error = quote! { ::bsn1_serde::macro_alias::Error };
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
@@ -212,13 +211,13 @@ impl DataContainer {
         let contents_bytes = quote! { bsn1_macro_1704080283_contents_bytes };
         let contents_length = quote! { bsn1_macro_1704080283_length };
         let eoc = quote! { bsn1_macro_1704080283_eoc };
-        let tmp_der = quote! { bsn1_macro_1704080283_tmp_der };
+        let tmp_ber = quote! { bsn1_macro_1704080283_tmp_ber };
         let ret = quote! { bsn1_macro_1704080283_ret };
         let ty = self.ty();
 
         let field_constructors = std::iter::repeat(quote! {{
-            let #tmp_der = #DerRef::parse(#contents_bytes)?;
-            #Deserialize::from_der(#tmp_der.id(), #tmp_der.contents())?
+            let #tmp_ber = #BerRef::parse(#contents_bytes)?;
+            unsafe { #Deserialize::from_ber(#tmp_ber.id(), #tmp_ber.length(), #tmp_ber.contents()) }?
         }})
         .take(self.fields().len());
 
