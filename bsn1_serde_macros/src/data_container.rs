@@ -264,14 +264,13 @@ impl DataContainer {
     }
 
     #[allow(non_snake_case)]
-    pub fn from_der(&self, id: &TokenStream, contents: &TokenStream) -> syn::Result<TokenStream> {
+    pub fn from_der(&self, contents: &TokenStream) -> syn::Result<TokenStream> {
         let DerRef = quote! { ::bsn1_serde::macro_alias::DerRef };
         let Error = quote! { ::bsn1_serde::macro_alias::Error };
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
 
         let Result = quote! { ::std::result::Result };
 
-        let id_slice = self.id_slice()?;
         let contents_bytes = quote! { bsn1_macro_1704080283_contents_bytes };
         let tmp_der = quote! { bsn1_macro_1704080283_tmp_der };
         let ret = quote! { bsn1_macro_1704080283_ret };
@@ -293,10 +292,6 @@ impl DataContainer {
         };
 
         Ok(quote! {{
-            if #id.as_ref() as &[u8] != #id_slice {
-                return #Result::Err(#Error::UnmatchedId);
-            }
-
             let mut #contents_bytes: &[u8] = #contents.as_ref();
             let #contents_bytes = &mut #contents_bytes;
             let #ret = #constructor;

@@ -65,7 +65,8 @@ fn do_deserialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Re
     let length = quote! { length };
     let contents = quote! { contents };
     let from_ber = data.from_ber(&id, &length, &contents)?;
-    let from_der = data.from_der(&id, &contents)?;
+    let from_der = data.from_der(&contents)?;
+    let id_slice = data.id_slice()?;
 
     Ok(quote! {
         unsafe fn from_ber(id: &#IdRef, length: #Length, contents: &#ContentsRef)
@@ -74,6 +75,9 @@ fn do_deserialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Re
         }
 
         fn from_der(id: &#IdRef, contents: &#ContentsRef) -> #Result<Self, #Error> {
+            if id.as_ref() as &[u8] != #id_slice {
+                return #Result::Err(#Error::UnmatchedId);
+            }
             #from_der
         }
     })
