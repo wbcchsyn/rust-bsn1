@@ -72,13 +72,19 @@ pub enum Error {
     RedundantBytes,
     /// Over flow is occurred to parse bytes as a number.
     OverFlow,
-    /// 'Indefinite length' used in DER or CER.
-    /// (It is only for BER, but not for DER, nor for CER.)
+    /// 'Indefinite length' is used where not allowed.
+    /// (It is only for BER of some type, but not for DER, nor for CER.)
     IndefiniteLength,
     /// The contents of 'EOC' of the 'Indefinite Length BER' must be empty.
     BadEoc,
     /// The contents include invalid octet(s).
     InvalidContents,
+    /// The identifier does not match to that of data type when deserialized.
+    UnmatchedId,
+    /// Invarid as UTF-8.
+    InvalidUtf8,
+    /// The key-value pair is invalid.
+    InvalidKeyValuePair,
     /// IO Error for serialization/deserialization.
     ///
     /// Note that this error cannot be compared with others.
@@ -92,9 +98,12 @@ impl fmt::Display for Error {
             Self::UnTerminatedBytes => f.write_str("The bytes finish before the last octet."),
             Self::RedundantBytes => f.write_str("The bytes include some redundant octet(s)."),
             Self::OverFlow => f.write_str("Over flow is occurred to parse bytes as a number."),
-            Self::IndefiniteLength => f.write_str("'Indefinite Length' in DER or CER"),
+            Self::IndefiniteLength => f.write_str("'Indefinite Length' is used where not allowed."),
             Self::BadEoc => f.write_str("'Indefinite Length BER' includes a bad 'EOC.'"),
             Self::InvalidContents => f.write_str("Contents include invlid octet(s)."),
+            Self::UnmatchedId => f.write_str("The identifier does not match to that of data type."),
+            Self::InvalidUtf8 => f.write_str("Invalid as UTF-8."),
+            Self::InvalidKeyValuePair => f.write_str("The key-value pair is invalid."),
             Self::Io(err) => err.fmt(f),
         }
     }
@@ -111,6 +120,9 @@ impl PartialEq for Error {
             Self::IndefiniteLength => matches!(other, Self::IndefiniteLength),
             Self::BadEoc => matches!(other, Self::BadEoc),
             Self::InvalidContents => matches!(other, Self::InvalidContents),
+            Self::UnmatchedId => matches!(other, Self::UnmatchedId),
+            Self::InvalidUtf8 => matches!(other, Self::InvalidUtf8),
+            Self::InvalidKeyValuePair => matches!(other, Self::InvalidKeyValuePair),
             Self::Io(_) => false,
         }
     }

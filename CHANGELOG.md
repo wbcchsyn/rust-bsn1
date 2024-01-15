@@ -282,7 +282,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Make the following functions and methods unsafe
   - Ber::new\_indefinite()
   - Ber::with\_id\_length\_indefinite()
-- Add variant `Io` to enum `Error`
+- Add the following variant to enum `Error`
+  - `Io`
+  - `UnmatchedId`
+  - `IndefiniteLength`
+  - `InvalidAsUtf8`
+  - `InvalidKeyValuePair`
 
 ### Removed
 
