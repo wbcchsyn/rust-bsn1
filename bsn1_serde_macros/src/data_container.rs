@@ -196,7 +196,6 @@ impl DataContainer {
     #[allow(non_snake_case)]
     pub fn from_ber(
         &self,
-        id: &TokenStream,
         length: &TokenStream,
         contents: &TokenStream,
     ) -> syn::Result<TokenStream> {
@@ -207,7 +206,6 @@ impl DataContainer {
 
         let Result = quote! { ::std::result::Result };
 
-        let id_slice = self.id_slice()?;
         let contents_bytes = quote! { bsn1_macro_1704080283_contents_bytes };
         let contents_length = quote! { bsn1_macro_1704080283_length };
         let eoc = quote! { bsn1_macro_1704080283_eoc };
@@ -233,10 +231,6 @@ impl DataContainer {
         };
 
         Ok(quote! {{
-            if #id.as_ref() as &[u8] != #id_slice {
-                return #Result::Err(#Error::UnmatchedId);
-            }
-
             let mut #contents_bytes: &[u8] = match #length {
                 #Length::Definite(#contents_length) => {
                     debug_assert_eq!(#contents_length, #contents.len());
