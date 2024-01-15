@@ -30,7 +30,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{ClassTag, Error, Id, IdNumber, PCTag};
+use crate::{ClassTag, Error, Id, PCTag, TagNumber};
 use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::io::{Read, Write};
@@ -1223,7 +1223,7 @@ impl IdRef {
     /// let idref: &IdRef = id.deref();
     /// assert_eq!(49, idref.number().unwrap().get());
     /// ```
-    pub fn number(&self) -> Result<IdNumber, Error> {
+    pub fn number(&self) -> Result<TagNumber, Error> {
         debug_assert!(0 < self.len());
 
         if self.bytes.len() == 1 {

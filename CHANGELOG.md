@@ -257,7 +257,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - Der::extend\_from\_slice()
   - Der::push()
   - Der::truncate()
-- Create struct `IdNumber`, and change the following functions and methods type.
+- Create struct `TagNumber`, and change the following functions and methods type.
   - The return type of `IdRef::number`
   - The argument type of `Id::new`
   - The argument type of `Id::set_number`

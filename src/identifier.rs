@@ -31,7 +31,7 @@
 // limitations under the License.
 
 use crate::identifier_ref::{LONG_FLAG, MAX_SHORT, MORE_FLAG};
-use crate::{Buffer, ClassTag, Error, IdNumber, IdRef, PCTag};
+use crate::{Buffer, ClassTag, Error, IdRef, PCTag, TagNumber};
 use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::io::Read;
@@ -69,7 +69,7 @@ impl Id {
     /// let id = Id::new(idref.class(), idref.pc(), idref.number().unwrap());
     /// assert_eq!(idref, &id);
     /// ```
-    pub fn new(class: ClassTag, pc: PCTag, number: IdNumber) -> Self {
+    pub fn new(class: ClassTag, pc: PCTag, number: TagNumber) -> Self {
         let mut buffer = Buffer::new();
         let number = number.get();
 
@@ -193,7 +193,7 @@ impl Id {
     /// id.set_number(34_u8.into());
     /// assert_eq!(id.number().unwrap(), 34_u8.into());
     /// ```
-    pub fn set_number(&mut self, num: IdNumber) {
+    pub fn set_number(&mut self, num: TagNumber) {
         let num = num.get();
 
         if num <= MAX_SHORT as u128 {
