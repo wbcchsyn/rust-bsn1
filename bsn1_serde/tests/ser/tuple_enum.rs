@@ -30,10 +30,56 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use bsn1::{Contents, DerRef, IdRef};
+use bsn1_serde::ser::Serialize as _;
+use bsn1_serde::to_der;
+
 #[derive(bsn1_serde::Serialize)]
 enum X {
     A(),
     B(i32, String),
 }
 
-fn main() {}
+fn main() {
+    test_xa();
+    test_xb();
+}
+
+fn test_xa() {
+    let val = X::A();
+    let der = to_der(&val).unwrap();
+
+    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id(), IdRef::sequence());
+
+    assert_eq!(der.length().definite().unwrap(), der.contents().len());
+
+    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(der.contents().len(), 0);
+}
+
+fn test_xb() {
+    let val = X::B(315, "foo".to_string());
+    let der = to_der(&val).unwrap();
+
+    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id(), IdRef::sequence());
+
+    assert_eq!(der.length().definite().unwrap(), der.contents().len());
+
+    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    {
+        let contents = der.contents();
+        let mut contents: &[u8] = contents.as_ref();
+
+        let der0 = DerRef::parse(&mut contents).unwrap();
+        assert_eq!(der0.id(), IdRef::integer());
+        assert_eq!(der0.contents(), &Contents::from(315_i32));
+
+        let der1 = DerRef::parse(&mut contents).unwrap();
+        assert_eq!(der1.id(), IdRef::utf8_string());
+        assert_eq!(der1.contents(), &Contents::from("foo"));
+
+        assert_eq!(contents.is_empty(), true);
+    }
+}

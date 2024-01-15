@@ -85,6 +85,28 @@ impl TryFrom<syn::Variant> for DataContainer {
 }
 
 impl DataContainer {
+    /// # Safety
+    ///
+    /// This method supports only `DataContainer::Variant`.
+    pub unsafe fn to_match_arm(&self) -> syn::Result<TokenStream> {
+        match self {
+            Self::Variant { .. } => {
+                let ident = self.ident();
+                let fields = self.field_idents();
+                let vars = self.field_vars();
+
+                match self.fields() {
+                    syn::Fields::Named(_) => Ok(quote! { Self::#ident { #(#fields: #vars,)* } }),
+                    syn::Fields::Unnamed(_) => Ok(quote! { Self::#ident ( #(#vars,)* ) }),
+                    syn::Fields::Unit => Ok(quote! { Self::#ident }),
+                }
+            }
+            Self::DataStruct { .. } => {
+                panic!("This method supports only `DataContainer::Variant`.")
+            }
+        }
+    }
+
     #[allow(non_snake_case)]
     pub fn write_id(&self, buffer: &TokenStream) -> syn::Result<TokenStream> {
         let Error = quote! { ::bsn1_serde::macro_alias::Error };
@@ -175,6 +197,13 @@ impl DataContainer {
         match self {
             Self::DataStruct { attribute, .. } => attribute,
             Self::Variant { attribute, .. } => attribute,
+        }
+    }
+
+    fn ident(&self) -> TokenStream {
+        match self {
+            Self::DataStruct { .. } => quote! { Self },
+            Self::Variant { variant, .. } => variant.ident.to_token_stream(),
         }
     }
 
