@@ -54,4 +54,6 @@ fn deserialize() {
     t.pass("tests/de/unit_enum.rs");
     t.pass("tests/de/tuple_enum.rs");
     t.pass("tests/de/named_field_enum.rs");
+
+    t.pass("tests/de/indefinite_length.rs");
 }
