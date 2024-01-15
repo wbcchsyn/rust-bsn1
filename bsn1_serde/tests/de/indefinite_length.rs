@@ -51,16 +51,16 @@ fn test_a() {
     let val = A {};
 
     let eoc: &[u8] = BerRef::eoc().as_ref();
-    let ber = Ber::new_indefinite(IdRef::sequence(), eoc.into());
+    let ber = unsafe { Ber::new_indefinite(IdRef::sequence(), eoc.into()) };
     assert_eq!(val, from_ber(&ber).unwrap());
 }
 
 fn test_b() {
     let val = B { x: 123, y: true };
 
-    let mut ber = Ber::with_id_length_indefinite(IdRef::sequence(), 0);
-    ber.extend_from_slice(Ber::from(val.x).as_ref());
-    ber.extend_from_slice(Ber::from(val.y).as_ref());
-    ber.extend_from_slice(BerRef::eoc().as_ref());
+    let mut ber = unsafe { Ber::with_id_length_indefinite(IdRef::sequence(), 0) };
+    ber.extend_from_slice(&Ber::from(val.x));
+    ber.extend_from_slice(&Ber::from(val.y));
+    ber.extend_from_slice(BerRef::eoc());
     assert_eq!(val, from_ber(&ber).unwrap());
 }
