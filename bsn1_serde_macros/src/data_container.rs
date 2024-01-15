@@ -124,7 +124,7 @@ impl DataContainer {
         Ok(quote! { #Result::Ok(#id.len()) })
     }
 
-    fn id_slice(&self) -> syn::Result<TokenStream> {
+    pub fn id_slice(&self) -> syn::Result<TokenStream> {
         const SEQUENCE: u8 = 0x30;
 
         match self.attribute().id(SEQUENCE) {
@@ -217,7 +217,9 @@ impl DataContainer {
 
         let field_constructors = std::iter::repeat(quote! {{
             let #tmp_ber = #BerRef::parse(#contents_bytes)?;
-            unsafe { #Deserialize::from_ber(#tmp_ber.id(), #tmp_ber.length(), #tmp_ber.contents()) }?
+            unsafe {
+                #Deserialize::from_ber(#tmp_ber.id(), #tmp_ber.length(), #tmp_ber.contents())?
+            }
         }})
         .take(self.fields().len());
 
