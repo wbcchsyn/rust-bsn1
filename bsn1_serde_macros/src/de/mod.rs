@@ -31,7 +31,7 @@
 // limitations under the License.
 
 use crate::{Attribute, DataContainer};
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 
 pub fn do_deserialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
@@ -40,7 +40,7 @@ pub fn do_deserialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
 
     let methods = match ast.data {
         syn::Data::Struct(data) => do_deserialize_struct(attribute, data)?,
-        syn::Data::Enum(data) => do_deserialize_enum(attribute, data)?,
+        syn::Data::Enum(data) => do_deserialize_enum(attribute, &ast.ident, data)?,
         _ => return Err(syn::Error::new_spanned(ast, "Only struct or enum is supported.").into()),
     };
 
@@ -86,7 +86,11 @@ fn do_deserialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Re
 }
 
 #[allow(non_snake_case)]
-fn do_deserialize_enum(_attribute: Attribute, _data: syn::DataEnum) -> syn::Result<TokenStream> {
+fn do_deserialize_enum(
+    _attribute: Attribute,
+    enum_name: &Ident,
+    data: syn::DataEnum,
+) -> syn::Result<TokenStream> {
     let IdRef = quote! { ::bsn1_serde::macro_alias::IdRef };
     let Length = quote! { ::bsn1_serde::macro_alias::Length };
     let ContentsRef = quote! { ::bsn1_serde::macro_alias::ContentsRef };
@@ -94,14 +98,41 @@ fn do_deserialize_enum(_attribute: Attribute, _data: syn::DataEnum) -> syn::Resu
 
     let Result = quote! { ::std::result::Result };
 
+    let length = quote! { length };
+    let contents = quote! { contents };
+    let mut variants = Vec::new();
+    let mut from_bers = Vec::new();
+    let mut from_ders = Vec::new();
+    let mut arm_id_slices = Vec::new();
+
+    for variant in data.variants.into_iter() {
+        let variant = DataContainer::try_from((enum_name.clone(), variant))?;
+        let id_slice = variant.id_slice()?;
+        let from_ber = variant.from_ber(&length, &contents)?;
+        let from_der = variant.from_der(&contents)?;
+
+        variants.push(variant);
+        from_bers.push(from_ber);
+        from_ders.push(from_der);
+        arm_id_slices.push(id_slice);
+    }
+
     Ok(quote! {
         unsafe fn from_ber(id: &#IdRef, length: #Length, contents: &#ContentsRef)
             -> #Result<Self, #Error> {
-            todo!()
+            #(if id.as_ref() as &[u8] == #arm_id_slices {
+                #from_bers
+            } else)* {
+                #Result::Err(#Error::UnmatchedId)
+            }
         }
 
         fn from_der(id: &#IdRef, contents: &#ContentsRef) -> #Result<Self, #Error> {
-            todo!()
+            #(if id.as_ref() as &[u8] == #arm_id_slices {
+                #from_ders
+            } else)* {
+                #Result::Err(#Error::UnmatchedId)
+            }
         }
     })
 }
