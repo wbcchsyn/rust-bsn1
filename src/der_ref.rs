@@ -42,6 +42,28 @@ pub struct DerRef {
 }
 
 impl DerRef {
+    /// Returns a reference to 'boolean DER' of `val`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{DerRef, IdRef, Contents};
+    ///
+    /// let true_ = DerRef::boolean(true);
+    /// assert_eq!(true_.id(), IdRef::boolean());
+    /// assert_eq!(true_.contents().to_bool_der(), Ok(true));
+    ///
+    /// let false_ = DerRef::boolean(false);
+    /// assert_eq!(false_.id(), IdRef::boolean());
+    /// assert_eq!(false_.contents().to_bool_der(), Ok(false));
+    /// ```
+    pub const fn boolean(val: bool) -> &'static Self {
+        match val {
+            true => unsafe { Self::from_bytes_unchecked(&[0x01, 0x01, 0xff]) },
+            false => unsafe { Self::from_bytes_unchecked(&[0x01, 0x01, 0x00]) },
+        }
+    }
+
     /// Parses `bytes` starting with octets of 'ASN.1 DER' and returns a reference to `DerRef`.
     ///
     /// This function ignores extra octet(s) at the end of `bytes` if any.
