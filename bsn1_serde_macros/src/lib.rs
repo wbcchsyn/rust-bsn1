@@ -54,7 +54,7 @@ pub fn serialize(input: TokenStream) -> TokenStream {
 }
 
 /// Derive macro to implement `bsn1_serde::de::Deserialize` trait.
-#[proc_macro_derive(Deserialize)]
+#[proc_macro_derive(Deserialize, attributes(bsn1_serde))]
 pub fn deserialize(input: TokenStream) -> TokenStream {
     let ast = syn::parse_macro_input!(input as syn::DeriveInput);
 
