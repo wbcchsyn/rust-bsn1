@@ -177,6 +177,10 @@ impl Attribute {
     pub fn is_skip_serializing(&self) -> bool {
         self.skip_serialzing
     }
+
+    pub fn is_skip_deserializing(&self) -> bool {
+        self.skip_deserialzing
+    }
 }
 
 fn error<T: ToTokens, U: std::fmt::Display>(tt: T, message: U) -> syn::Result<()> {
