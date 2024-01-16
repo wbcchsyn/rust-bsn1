@@ -223,13 +223,16 @@ impl DataContainer {
         let ret = quote! { bsn1_macro_1704080283_ret };
         let ty = self.ty();
 
-        let field_constructors = std::iter::repeat(quote! {{
-            let #tmp_ber = #BerRef::parse(#contents_bytes)?;
-            unsafe {
-                #Deserialize::from_ber(#tmp_ber.id(), #tmp_ber.length(), #tmp_ber.contents())?
+        let field_constructors = self.field_attributes().iter().map(|attribute| {
+            if attribute.is_skip_deserializing() {
+                quote! { Default::default() }
+            } else {
+                quote! {{
+                    let #tmp_ber = #BerRef::parse(#contents_bytes)?;
+                    #Deserialize::from_ber(#tmp_ber.id(), #tmp_ber.length(), #tmp_ber.contents())?
+                }}
             }
-        }})
-        .take(self.fields().len());
+        });
 
         let constructor = match self.fields() {
             syn::Fields::Named(_) => {
@@ -280,11 +283,16 @@ impl DataContainer {
         let ret = quote! { bsn1_macro_1704080283_ret };
         let ty = self.ty();
 
-        let field_constructors = std::iter::repeat(quote! {{
-            let #tmp_der = #DerRef::parse(#contents_bytes)?;
-            #Deserialize::from_der(#tmp_der.id(), #tmp_der.contents())?
-        }})
-        .take(self.fields().len());
+        let field_constructors = self.field_attributes().iter().map(|attribute| {
+            if attribute.is_skip_deserializing() {
+                quote! { Default::default() }
+            } else {
+                quote! {{
+                    let #tmp_der = #DerRef::parse(#contents_bytes)?;
+                    #Deserialize::from_der(#tmp_der.id(), #tmp_der.contents())?
+                }}
+            }
+        });
 
         let constructor = match self.fields() {
             syn::Fields::Named(_) => {
