@@ -150,14 +150,18 @@ impl DataContainer {
             .field_vars()
             .into_iter()
             .zip(self.field_attributes())
-            .map(|(field, _attribute)| {
-                quote! {{
-                    #Serialize::write_id(#field, buffer)?;
-                    let #contents_len = #Serialize::der_contents_len(#field)?;
-                    let #length = #Length::Definite(#contents_len).to_bytes();
-                    #Write::write_all(#buffer, &#length).map_err(#Error::from)?;
-                    #Serialize::write_der_contents(#field, buffer)?;
-                }}
+            .map(|(field, attribute)| {
+                if attribute.is_skip_serializing() {
+                    quote! {}
+                } else {
+                    quote! {{
+                        #Serialize::write_id(#field, buffer)?;
+                        let #contents_len = #Serialize::der_contents_len(#field)?;
+                        let #length = #Length::Definite(#contents_len).to_bytes();
+                        #Write::write_all(#buffer, &#length).map_err(#Error::from)?;
+                        #Serialize::write_der_contents(#field, buffer)?;
+                    }}
+                }
             });
 
         Ok(quote! {{
@@ -180,12 +184,16 @@ impl DataContainer {
             .field_vars()
             .into_iter()
             .zip(self.field_attributes())
-            .map(|(field, _attribute)| {
-                quote! {{
-                    let #contents_len = #Serialize::der_contents_len(#field)?;
-                    let #length_len = #Length::Definite(#contents_len).len();
-                    #ret += #Serialize::id_len(#field)? + #length_len + #contents_len;
-                }}
+            .map(|(field, attribute)| {
+                if attribute.is_skip_serializing() {
+                    quote! {}
+                } else {
+                    quote! {{
+                        let #contents_len = #Serialize::der_contents_len(#field)?;
+                        let #length_len = #Length::Definite(#contents_len).len();
+                        #ret += #Serialize::id_len(#field)? + #length_len + #contents_len;
+                    }}
+                }
             });
 
         Ok(quote! {
