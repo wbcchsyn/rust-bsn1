@@ -166,6 +166,10 @@ impl Attribute {
 
         Some(quote! { [#(#octets),*] })
     }
+
+    pub fn is_skip_serializing(&self) -> bool {
+        self.skip_serialzing
+    }
 }
 
 fn error<T: ToTokens, U: std::fmt::Display>(tt: T, message: U) -> syn::Result<()> {
