@@ -109,6 +109,12 @@ impl Attribute {
                     }
                     ret.skip_serialzing = true;
                 }
+                TokenTree::Ident(ident) if ident == "skip_deserializing" => {
+                    if ret.skip_deserialzing {
+                        error(&ident, "Duplicated `skip_deserializing` attribute.")?;
+                    }
+                    ret.skip_deserialzing = true;
+                }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
             }
