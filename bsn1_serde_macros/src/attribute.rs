@@ -102,6 +102,12 @@ impl Attribute {
                     let value = take_value(&ident, it.next(), it.next())?;
                     ret.tag_num = Some(parse_tag_num_value(&value)?);
                 }
+                TokenTree::Ident(ident) if ident == "skip_serializing" => {
+                    if ret.skip_serialzing {
+                        error(&ident, "Duplicated `skip_serializing` attribute.")?;
+                    }
+                    ret.skip_serialzing = true;
+                }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
             }
