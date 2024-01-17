@@ -42,6 +42,7 @@ pub struct Attribute {
     skip_serialzing: bool,
     skip_deserialzing: bool,
     default: Option<syn::Path>,
+    skip: bool,
 }
 
 impl TryFrom<&[syn::Attribute]> for Attribute {
@@ -123,6 +124,12 @@ impl Attribute {
                     let value = take_value(&ident, it.next(), it.next())?;
                     ret.default = Some(parse_default_path(&value)?);
                 }
+                TokenTree::Ident(ident) if ident == "skip" => {
+                    if ret.skip {
+                        error(&ident, "Duplicated `skip` attribute.")?;
+                    }
+                    ret.skip = true;
+                }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
             }
@@ -183,11 +190,11 @@ impl Attribute {
     }
 
     pub fn is_skip_serializing(&self) -> bool {
-        self.skip_serialzing
+        self.skip || self.skip_serialzing
     }
 
     pub fn is_skip_deserializing(&self) -> bool {
-        self.skip_deserialzing
+        self.skip || self.skip_deserialzing
     }
 
     pub fn default_path(&self) -> syn::Path {
