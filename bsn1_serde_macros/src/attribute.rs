@@ -41,6 +41,7 @@ pub struct Attribute {
     tag_num: Option<u128>,
     skip_serialzing: bool,
     skip_deserialzing: bool,
+    default: Option<syn::Path>,
 }
 
 impl TryFrom<&[syn::Attribute]> for Attribute {
