@@ -40,6 +40,7 @@ pub struct Attribute {
     tag_pc: Option<u8>,
     tag_num: Option<u128>,
     skip_serialzing: bool,
+    skip_deserialzing: bool,
 }
 
 impl TryFrom<&[syn::Attribute]> for Attribute {
@@ -108,6 +109,12 @@ impl Attribute {
                     }
                     ret.skip_serialzing = true;
                 }
+                TokenTree::Ident(ident) if ident == "skip_deserializing" => {
+                    if ret.skip_deserialzing {
+                        error(&ident, "Duplicated `skip_deserializing` attribute.")?;
+                    }
+                    ret.skip_deserialzing = true;
+                }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
             }
@@ -169,6 +176,10 @@ impl Attribute {
 
     pub fn is_skip_serializing(&self) -> bool {
         self.skip_serialzing
+    }
+
+    pub fn is_skip_deserializing(&self) -> bool {
+        self.skip_deserialzing
     }
 }
 
