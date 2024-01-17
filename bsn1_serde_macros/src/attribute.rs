@@ -189,6 +189,13 @@ impl Attribute {
     pub fn is_skip_deserializing(&self) -> bool {
         self.skip_deserialzing
     }
+
+    pub fn default_path(&self) -> syn::Path {
+        match self.default.as_ref() {
+            Some(path) => path.clone(),
+            None => syn::parse_str::<syn::Path>("Default::default").unwrap(),
+        }
+    }
 }
 
 fn error<T: ToTokens, U: std::fmt::Display>(tt: T, message: U) -> syn::Result<()> {
