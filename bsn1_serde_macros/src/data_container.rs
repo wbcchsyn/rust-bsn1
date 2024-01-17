@@ -225,7 +225,8 @@ impl DataContainer {
 
         let field_constructors = self.field_attributes().iter().map(|attribute| {
             if attribute.is_skip_deserializing() {
-                quote! { Default::default() }
+                let path = attribute.default_path();
+                quote! { #path() }
             } else {
                 quote! {{
                     let #tmp_ber = #BerRef::parse(#contents_bytes)?;
@@ -285,7 +286,8 @@ impl DataContainer {
 
         let field_constructors = self.field_attributes().iter().map(|attribute| {
             if attribute.is_skip_deserializing() {
-                quote! { Default::default() }
+                let path = attribute.default_path();
+                quote! { #path() }
             } else {
                 quote! {{
                     let #tmp_der = #DerRef::parse(#contents_bytes)?;
