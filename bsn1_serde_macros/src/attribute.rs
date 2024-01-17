@@ -124,6 +124,12 @@ impl Attribute {
                     let value = take_value(&ident, it.next(), it.next())?;
                     ret.default = Some(parse_default_path(&value)?);
                 }
+                TokenTree::Ident(ident) if ident == "skip" => {
+                    if ret.skip {
+                        error(&ident, "Duplicated `skip` attribute.")?;
+                    }
+                    ret.skip = true;
+                }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
             }
