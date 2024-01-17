@@ -116,6 +116,13 @@ impl Attribute {
                     }
                     ret.skip_deserialzing = true;
                 }
+                TokenTree::Ident(ident) if ident == "default" => {
+                    if ret.default.is_some() {
+                        error(&ident, "Duplicated `default` attribute.")?;
+                    }
+                    let value = take_value(&ident, it.next(), it.next())?;
+                    ret.default = Some(parse_default_path(&value)?);
+                }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
             }
@@ -318,6 +325,20 @@ fn parse_tag_num_value(value: &TokenTree) -> syn::Result<u128> {
         _ => Err(syn::Error::new_spanned(
             value,
             "Expected literal valid as u128.",
+        )),
+    }
+}
+
+fn parse_default_path(path: &TokenTree) -> syn::Result<syn::Path> {
+    match path {
+        TokenTree::Literal(path) => {
+            let path = path.to_string();
+            let path = path.trim_matches('"');
+            syn::parse_str::<syn::Path>(path)
+        }
+        _ => Err(syn::Error::new_spanned(
+            path,
+            "Expected literal string valid as path.",
         )),
     }
 }
