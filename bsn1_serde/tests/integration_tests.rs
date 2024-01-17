@@ -59,6 +59,7 @@ fn deserialize() {
     t.pass("tests/de/named_field_enum.rs");
 
     t.pass("tests/de/indefinite_length.rs");
+    t.pass("tests/de/skip.rs");
     t.pass("tests/de/skip_deserializing.rs");
     t.pass("tests/de/default.rs");
 }

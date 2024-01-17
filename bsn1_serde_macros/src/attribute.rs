@@ -194,7 +194,7 @@ impl Attribute {
     }
 
     pub fn is_skip_deserializing(&self) -> bool {
-        self.skip_deserialzing
+        self.skip || self.skip_deserialzing
     }
 
     pub fn default_path(&self) -> syn::Path {
