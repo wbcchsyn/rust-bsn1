@@ -190,7 +190,7 @@ impl Attribute {
     }
 
     pub fn is_skip_serializing(&self) -> bool {
-        self.skip_serialzing
+        self.skip || self.skip_serialzing
     }
 
     pub fn is_skip_deserializing(&self) -> bool {

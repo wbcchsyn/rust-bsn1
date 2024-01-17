@@ -42,6 +42,7 @@ fn serialize() {
     t.pass("tests/ser/tuple_enum.rs");
     t.pass("tests/ser/named_field_enum.rs");
 
+    t.pass("tests/ser/skip.rs");
     t.pass("tests/ser/skip_serializing.rs");
 }
 
