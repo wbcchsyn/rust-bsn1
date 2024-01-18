@@ -30,10 +30,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::ser::Serialize;
+use bsn1::Error;
 use std::borrow::Cow;
+use std::io::Write;
 
 /// `OctetString` is a wrapper of `std::borrow::Cow<[u8]>` and implements trait
-/// [`crate::ser::Serialize`] and [`crate::de::Deserialize`].
+/// [`Serialize`] and [`crate::de::Deserialize`].
 ///
 /// The identifier of `OctetString` is either `UNIVERSAL PRIMITIVE OctetString`
 /// or `UNIVERSAL CONSTRUCTED OctetString` while that of `Vec<u8>` is `SEQUENCE OF INTEGER`.
@@ -47,4 +50,44 @@ use std::borrow::Cow;
 /// `UNIVERSAL PRIMITIVE OctetString` or `UNIVERSAL CONSTRUCTED OctetString`.
 pub struct OctetString<'a> {
     octets: Cow<'a, [u8]>,
+}
+
+impl Serialize for OctetString<'_> {
+    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        const ID: [u8; 1] = [0x04];
+        buffer.write_all(&ID).map_err(Into::into)
+    }
+
+    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+        buffer.write_all(&self.octets.as_ref()).map_err(Into::into)
+    }
+
+    fn id_len(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
+
+    fn der_contents_len(&self) -> Result<usize, Error> {
+        Ok(self.octets.len())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::to_der;
+    use bsn1::IdRef;
+
+    #[test]
+    fn serialize_octet_string() {
+        const OCTETS: [u8; 3] = [0x01, 0x02, 0x03];
+        let val = OctetString {
+            octets: Cow::Borrowed(&OCTETS),
+        };
+
+        let der = to_der(&val).unwrap();
+        assert_eq!(der.id(), IdRef::octet_string());
+        assert_eq!(der.id().len(), val.id_len().unwrap());
+        assert_eq!(der.contents().as_ref(), &OCTETS);
+        assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    }
 }
