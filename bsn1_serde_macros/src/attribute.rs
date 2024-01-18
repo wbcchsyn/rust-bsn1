@@ -43,6 +43,7 @@ pub struct Attribute {
     skip_deserialzing: bool,
     default: Option<syn::Path>,
     skip: bool,
+    into: Option<syn::Path>,
 }
 
 impl TryFrom<&[syn::Attribute]> for Attribute {
