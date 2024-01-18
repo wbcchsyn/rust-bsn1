@@ -62,6 +62,11 @@ impl<'a> OctetString<'a> {
             octets: Cow::Borrowed(val.as_ref()),
         }
     }
+
+    /// Consumes `self` and returns the inner slice.
+    pub fn into_vec(self) -> Vec<u8> {
+        self.octets.into_owned()
+    }
 }
 
 impl Serialize for OctetString<'_> {
