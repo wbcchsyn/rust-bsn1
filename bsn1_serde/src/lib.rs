@@ -36,6 +36,7 @@
 pub mod de;
 #[doc(hidden)]
 pub mod macro_alias;
+mod octet_string;
 pub mod ser;
 
 use bsn1::{Ber, BerRef, Buffer, Der, DerRef, Error, Length};
