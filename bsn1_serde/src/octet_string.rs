@@ -52,6 +52,18 @@ pub struct OctetString<'a> {
     octets: Cow<'a, [u8]>,
 }
 
+impl<'a> OctetString<'a> {
+    /// Creates a new instance of `OctetString` from `val`.
+    pub fn new<T>(val: &'a T) -> Self
+    where
+        T: ?Sized + AsRef<[u8]>,
+    {
+        Self {
+            octets: Cow::Borrowed(val.as_ref()),
+        }
+    }
+}
+
 impl Serialize for OctetString<'_> {
     fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
         const ID: [u8; 1] = [0x04];
