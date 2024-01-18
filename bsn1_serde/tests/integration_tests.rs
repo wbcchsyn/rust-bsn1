@@ -44,6 +44,9 @@ fn serialize() {
 
     t.pass("tests/ser/skip.rs");
     t.pass("tests/ser/skip_serializing.rs");
+
+    t.pass("tests/ser/into_struct.rs");
+    t.pass("tests/ser/into_enum.rs");
 }
 
 #[test]
