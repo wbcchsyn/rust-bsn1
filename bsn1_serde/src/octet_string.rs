@@ -30,13 +30,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ser::Serialize;
-use bsn1::Error;
+use crate::{de::Deserialize, ser::Serialize};
+use bsn1::{ContentsRef, Error, IdRef, Length};
 use std::borrow::Cow;
 use std::io::Write;
 
 /// `OctetString` is a wrapper of `std::borrow::Cow<[u8]>` and implements trait
-/// [`Serialize`] and [`crate::de::Deserialize`].
+/// [`Serialize`] and [`Deserialize`].
 ///
 /// The identifier of `OctetString` is either `UNIVERSAL PRIMITIVE OctetString`
 /// or `UNIVERSAL CONSTRUCTED OctetString` while that of `Vec<u8>` is `SEQUENCE OF INTEGER`.
@@ -71,11 +71,35 @@ impl Serialize for OctetString<'_> {
     }
 }
 
+impl Deserialize for OctetString<'static> {
+    unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::octet_string() && id != IdRef::octet_string_constructed() {
+            return Err(Error::UnmatchedId);
+        }
+        if length.is_indefinite() {
+            return Err(Error::IndefiniteLength);
+        }
+
+        Ok(Self {
+            octets: Cow::Owned(contents.as_ref().to_vec()),
+        })
+    }
+
+    fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
+        if id != IdRef::octet_string() {
+            return Err(Error::UnmatchedId);
+        }
+
+        Ok(Self {
+            octets: Cow::Owned(contents.as_ref().to_vec()),
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::to_der;
-    use bsn1::IdRef;
+    use crate::{from_ber, from_der, to_ber, to_der};
 
     #[test]
     fn serialize_octet_string() {
@@ -89,5 +113,21 @@ mod tests {
         assert_eq!(der.id().len(), val.id_len().unwrap());
         assert_eq!(der.contents().as_ref(), &OCTETS);
         assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    }
+
+    #[test]
+    fn deserialize_octet_string() {
+        const OCTESTS: [u8; 3] = [0x01, 0x02, 0x03];
+        let val = OctetString {
+            octets: Cow::Borrowed(&OCTESTS),
+        };
+
+        let ber = to_ber(&val).unwrap();
+        let deserialized: OctetString = from_ber(&ber).unwrap();
+        assert_eq!(val.octets, deserialized.octets);
+
+        let der = to_der(&val).unwrap();
+        let deserialized: OctetString = from_der(&der).unwrap();
+        assert_eq!(val.octets, deserialized.octets);
     }
 }
