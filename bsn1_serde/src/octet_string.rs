@@ -69,6 +69,12 @@ impl<'a> OctetString<'a> {
     }
 }
 
+impl AsRef<[u8]> for OctetString<'_> {
+    fn as_ref(&self) -> &[u8] {
+        self.octets.as_ref()
+    }
+}
+
 impl Serialize for OctetString<'_> {
     fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
         const ID: [u8; 1] = [0x04];
