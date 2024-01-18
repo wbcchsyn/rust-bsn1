@@ -41,6 +41,7 @@ pub mod ser;
 
 use bsn1::{Ber, BerRef, Buffer, Der, DerRef, Error, Length};
 pub use bsn1_serde_macros::{Deserialize, Serialize};
+pub use octet_string::OctetString;
 use std::io::Write as _;
 
 /// Serializes `value` into ASN.1 DER format.

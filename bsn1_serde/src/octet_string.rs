@@ -29,3 +29,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+use std::borrow::Cow;
+
+/// `OctetString` is a wrapper of `std::borrow::Cow<[u8]>` and implements trait
+/// [`crate::ser::Serialize`] and [`crate::de::Deserialize`].
+///
+/// The identifier of `OctetString` is either `UNIVERSAL PRIMITIVE OctetString`
+/// or `UNIVERSAL CONSTRUCTED OctetString` while that of `Vec<u8>` is `SEQUENCE OF INTEGER`.
+///
+/// Note that ASN.1 BER allows both `UNIVERSAL PRIMITIVE OctetString` and
+/// `UNIVERSAL CONSTRUCTED OctetString` while ASN.1 DER allows only
+/// `UNIVERSAL PRIMITIVE OctetString`.
+///
+/// `OctetString` is always serialized into `UNIVERSAL PRIMITIVE OctetString`, deserialized
+/// as a DER from `UNIVERSAL PRIMITIVE OctetString`, and deserialized as a BER from
+/// `UNIVERSAL PRIMITIVE OctetString` or `UNIVERSAL CONSTRUCTED OctetString`.
+pub struct OctetString<'a> {
+    octets: Cow<'a, [u8]>,
+}
