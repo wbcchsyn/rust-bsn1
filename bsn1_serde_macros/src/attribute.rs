@@ -122,7 +122,7 @@ impl Attribute {
                         error(&ident, "Duplicated `default` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.default = Some(parse_default_path(&value)?);
+                    ret.default = Some(parse_path(&value)?);
                 }
                 TokenTree::Ident(ident) if ident == "skip" => {
                     if ret.skip {
@@ -343,7 +343,7 @@ fn parse_tag_num_value(value: &TokenTree) -> syn::Result<u128> {
     }
 }
 
-fn parse_default_path(path: &TokenTree) -> syn::Result<syn::Path> {
+fn parse_path(path: &TokenTree) -> syn::Result<syn::Path> {
     match path {
         TokenTree::Literal(path) => {
             let path = path.to_string();
