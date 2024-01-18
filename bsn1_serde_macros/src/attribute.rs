@@ -211,6 +211,10 @@ impl Attribute {
             None => syn::parse_str::<syn::Path>("Default::default").unwrap(),
         }
     }
+
+    pub fn into_type(&self) -> Option<&syn::Path> {
+        self.into.as_ref()
+    }
 }
 
 fn error<T: ToTokens, U: std::fmt::Display>(tt: T, message: U) -> syn::Result<()> {
