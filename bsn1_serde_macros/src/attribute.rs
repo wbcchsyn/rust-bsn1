@@ -131,6 +131,13 @@ impl Attribute {
                     }
                     ret.skip = true;
                 }
+                TokenTree::Ident(ident) if ident == "into" => {
+                    if ret.into.is_some() {
+                        error(&ident, "Duplicated `into` attribute.")?;
+                    }
+                    let value = take_value(&ident, it.next(), it.next())?;
+                    ret.into = Some(parse_path(&value)?);
+                }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
             }
