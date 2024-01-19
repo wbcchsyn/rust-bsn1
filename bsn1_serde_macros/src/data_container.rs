@@ -231,7 +231,7 @@ impl DataContainer {
     }
 
     #[allow(non_snake_case)]
-    pub fn from_ber(
+    pub fn from_ber_contents(
         &self,
         length: &TokenStream,
         contents: &TokenStream,
