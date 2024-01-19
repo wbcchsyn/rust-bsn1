@@ -254,6 +254,17 @@ impl DataContainer {
             if attribute.is_skip_deserializing() {
                 let path = attribute.default_path();
                 quote! { #path() }
+            } else if let Some(from_ty) = attribute.from_type() {
+                let From = quote! { ::std::convert::From };
+                let tmp_val = quote! { bsn1_macro_1704080283_tmp_val };
+                quote! {{
+                    let #tmp_ber = #BerRef::parse(#contents_bytes)?;
+                    let #tmp_val: #from_ty = #Deserialize::from_ber(
+                                                #tmp_ber.id(),
+                                                #tmp_ber.length(),
+                                                #tmp_ber.contents())?;
+                    #From::from(#tmp_val)
+                }}
             } else {
                 quote! {{
                     let #tmp_ber = #BerRef::parse(#contents_bytes)?;
@@ -315,6 +326,16 @@ impl DataContainer {
             if attribute.is_skip_deserializing() {
                 let path = attribute.default_path();
                 quote! { #path() }
+            } else if let Some(from_ty) = attribute.from_type() {
+                let From = quote! { ::std::convert::From };
+                let tmp_val = quote! { bsn1_macro_1704080283_tmp_val };
+                quote! {{
+                    let #tmp_der = #DerRef::parse(#contents_bytes)?;
+                    let #tmp_val: #from_ty = #Deserialize::from_der(
+                                                #tmp_der.id(),
+                                                #tmp_der.contents())?;
+                    #From::from(#tmp_val)
+                }}
             } else {
                 quote! {{
                     let #tmp_der = #DerRef::parse(#contents_bytes)?;
