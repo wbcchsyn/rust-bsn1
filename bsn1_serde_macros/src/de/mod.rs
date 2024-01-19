@@ -38,15 +38,48 @@ pub fn do_deserialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
     let name = &ast.ident;
     let attribute = Attribute::try_from(&ast.attrs[..])?;
 
-    let methods = match ast.data {
-        syn::Data::Struct(data) => do_deserialize_struct(attribute, data)?,
-        syn::Data::Enum(data) => do_deserialize_enum(attribute, &ast.ident, data)?,
-        _ => return Err(syn::Error::new_spanned(ast, "Only struct or enum is supported.").into()),
+    let methods = if let Some(ty) = attribute.from_type() {
+        do_from_deserialize(ty)?
+    } else {
+        match ast.data {
+            syn::Data::Struct(data) => do_deserialize_struct(attribute, data)?,
+            syn::Data::Enum(data) => do_deserialize_enum(attribute, &ast.ident, data)?,
+            _ => {
+                return Err(
+                    syn::Error::new_spanned(ast, "Only struct or enum is supported.").into(),
+                )
+            }
+        }
     };
 
     Ok(quote! {
         impl ::bsn1_serde::de::Deserialize for #name {
             #methods
+        }
+    })
+}
+
+#[allow(non_snake_case)]
+fn do_from_deserialize(ty: &syn::Path) -> syn::Result<TokenStream> {
+    let IdRef = quote! { ::bsn1_serde::macro_alias::IdRef };
+    let Length = quote! { ::bsn1_serde::macro_alias::Length };
+    let ContentsRef = quote! { ::bsn1_serde::macro_alias::ContentsRef };
+    let Error = quote! { ::bsn1_serde::macro_alias::Error };
+    let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
+
+    let Result = quote! { ::std::result::Result };
+    let From = quote! { ::std::convert::From };
+
+    Ok(quote! {
+        unsafe fn from_ber(id: &#IdRef, length: #Length, contents: &#ContentsRef)
+            -> #Result<Self, #Error> {
+            let val: #ty = #Deserialize::from_ber(id, length, contents)?;
+            #Result::Ok(#From::from(val))
+        }
+
+        fn from_der(id: &#IdRef, contents: &#ContentsRef) -> #Result<Self, #Error> {
+            let val: #ty = #Deserialize::from_der(id, contents)?;
+            #Result::Ok(#From::from(val))
         }
     })
 }
