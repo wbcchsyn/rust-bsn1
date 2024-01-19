@@ -97,7 +97,7 @@ fn do_deserialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Re
     let length = quote! { length };
     let contents = quote! { contents };
     let from_ber = data.from_ber(&length, &contents)?;
-    let from_der = data.from_der(&contents)?;
+    let from_der = data.from_der_contents(&contents)?;
     let id_slice = data.id_slice()?;
 
     Ok(quote! {
@@ -142,7 +142,7 @@ fn do_deserialize_enum(
         let variant = DataContainer::try_from((enum_name.clone(), variant))?;
         let id_slice = variant.id_slice()?;
         let from_ber = variant.from_ber(&length, &contents)?;
-        let from_der = variant.from_der(&contents)?;
+        let from_der = variant.from_der_contents(&contents)?;
 
         variants.push(variant);
         from_bers.push(from_ber);
