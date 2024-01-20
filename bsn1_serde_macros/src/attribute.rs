@@ -43,6 +43,7 @@ pub struct Attribute {
     skip_deserialzing: bool,
     default: Option<syn::Path>,
     skip: bool,
+    into: Option<syn::Path>,
 }
 
 impl TryFrom<&[syn::Attribute]> for Attribute {
@@ -122,13 +123,20 @@ impl Attribute {
                         error(&ident, "Duplicated `default` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.default = Some(parse_default_path(&value)?);
+                    ret.default = Some(parse_path(&value)?);
                 }
                 TokenTree::Ident(ident) if ident == "skip" => {
                     if ret.skip {
                         error(&ident, "Duplicated `skip` attribute.")?;
                     }
                     ret.skip = true;
+                }
+                TokenTree::Ident(ident) if ident == "into" => {
+                    if ret.into.is_some() {
+                        error(&ident, "Duplicated `into` attribute.")?;
+                    }
+                    let value = take_value(&ident, it.next(), it.next())?;
+                    ret.into = Some(parse_path(&value)?);
                 }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
@@ -202,6 +210,10 @@ impl Attribute {
             Some(path) => path.clone(),
             None => syn::parse_str::<syn::Path>("Default::default").unwrap(),
         }
+    }
+
+    pub fn into_type(&self) -> Option<&syn::Path> {
+        self.into.as_ref()
     }
 }
 
@@ -343,7 +355,7 @@ fn parse_tag_num_value(value: &TokenTree) -> syn::Result<u128> {
     }
 }
 
-fn parse_default_path(path: &TokenTree) -> syn::Result<syn::Path> {
+fn parse_path(path: &TokenTree) -> syn::Result<syn::Path> {
     match path {
         TokenTree::Literal(path) => {
             let path = path.to_string();

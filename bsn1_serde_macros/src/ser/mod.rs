@@ -40,17 +40,58 @@ pub fn do_serialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
     let Serialize = quote! { ::bsn1_serde::ser::Serialize };
 
     let attribute = Attribute::try_from(&ast.attrs[..])?;
-    let methods = match ast.data {
-        syn::Data::Struct(data) => do_serialize_struct(attribute, data)?,
-        syn::Data::Enum(data) => do_serialize_enum(attribute, &ast.ident, data)?,
-        syn::Data::Union(_) => {
-            return Err(syn::Error::new_spanned(name, "Union is not supported."))
+
+    let methods = if let Some(ty) = attribute.into_type() {
+        do_into_serialize(&ty)?
+    } else {
+        match ast.data {
+            syn::Data::Struct(data) => do_serialize_struct(attribute, data)?,
+            syn::Data::Enum(data) => do_serialize_enum(attribute, &ast.ident, data)?,
+            syn::Data::Union(_) => {
+                return Err(syn::Error::new_spanned(name, "Union is not supported."))
+            }
         }
     };
 
     Ok(quote! {
         impl #Serialize for #name {
             #methods
+        }
+    })
+}
+
+#[allow(non_snake_case)]
+fn do_into_serialize(ty: &syn::Path) -> syn::Result<TokenStream> {
+    let Result = quote! { ::std::result::Result };
+    let Write = quote! { ::std::io::Write };
+    let Error = quote! { ::bsn1_serde::macro_alias::Error };
+    let Clone = quote! { ::std::clone::Clone };
+    let Into = quote! { ::std::convert::Into };
+    let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+
+    Ok(quote! {
+        fn write_id<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
+            let this: Self = #Clone::clone(self);
+            let this: #ty = #Into::into(this);
+            #Serialize::write_id(&this, buffer)
+        }
+
+        fn write_der_contents<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
+            let this: Self = #Clone::clone(self);
+            let this: #ty = #Into::into(this);
+            #Serialize::write_der_contents(&this, buffer)
+        }
+
+        fn id_len(&self) -> #Result<usize, #Error> {
+            let this: Self = #Clone::clone(self);
+            let this: #ty = #Into::into(this);
+            #Serialize::id_len(&this)
+        }
+
+        fn der_contents_len(&self) -> #Result<usize, #Error> {
+            let this: Self = #Clone::clone(self);
+            let this: #ty = #Into::into(this);
+            #Serialize::der_contents_len(&this)
         }
     })
 }

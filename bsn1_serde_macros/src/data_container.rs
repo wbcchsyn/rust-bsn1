@@ -153,6 +153,21 @@ impl DataContainer {
             .map(|(field, attribute)| {
                 if attribute.is_skip_serializing() {
                     quote! {}
+                } else if let Some(into_ty) = attribute.into_type() {
+                    let Clone = quote! { ::std::clone::Clone };
+                    let Into = quote! { ::std::convert::Into };
+                    let this = quote! { bsn1_macro_1704044765_this };
+
+                    quote! {{
+                        let #this = #Clone::clone(#field);
+                        let #this: #into_ty = #Into::into(#this);
+                        #Serialize::write_id(&#this, buffer)?;
+
+                        let #contents_len = #Serialize::der_contents_len(&#this)?;
+                        let #length = #Length::Definite(#contents_len).to_bytes();
+                        #Write::write_all(#buffer, &#length).map_err(#Error::from)?;
+                        #Serialize::write_der_contents(&#this, buffer)?;
+                    }}
                 } else {
                     quote! {{
                         #Serialize::write_id(#field, buffer)?;
@@ -187,6 +202,18 @@ impl DataContainer {
             .map(|(field, attribute)| {
                 if attribute.is_skip_serializing() {
                     quote! {}
+                } else if let Some(into_ty) = attribute.into_type() {
+                    let Clone = quote! { ::std::clone::Clone };
+                    let Into = quote! { ::std::convert::Into };
+                    let this = quote! { bsn1_macro_1704043457_this };
+
+                    quote! {{
+                        let #this = #Clone::clone(#field);
+                        let #this: #into_ty = #Into::into(#this);
+                        let #contents_len = #Serialize::der_contents_len(&#this)?;
+                        let #length_len = #Length::Definite(#contents_len).len();
+                        #ret += #Serialize::id_len(&#this)? + #length_len + #contents_len;
+                    }}
                 } else {
                     quote! {{
                         let #contents_len = #Serialize::der_contents_len(#field)?;
