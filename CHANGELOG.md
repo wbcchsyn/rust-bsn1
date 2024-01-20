@@ -288,6 +288,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - `IndefiniteLength`
   - `InvalidAsUtf8`
   - `InvalidKeyValuePair`
+  - `Boxed`
 
 ### Removed
 
