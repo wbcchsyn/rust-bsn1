@@ -247,6 +247,10 @@ impl Attribute {
     pub fn to_path(&self) -> Option<&syn::Path> {
         self.to.as_ref()
     }
+
+    pub fn try_from_type(&self) -> Option<&syn::Path> {
+        self.try_from.as_ref()
+    }
 }
 
 fn error<T: ToTokens, U: std::fmt::Display>(tt: T, message: U) -> syn::Result<()> {
