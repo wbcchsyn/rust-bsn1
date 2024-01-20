@@ -286,6 +286,17 @@ impl DataContainer {
                                                 #tmp_ber.contents())?;
                     #From::from(#tmp_val)
                 }}
+            } else if let Some(try_from_ty) = attribute.try_from_type() {
+                let TryFrom = quote! { ::std::convert::TryFrom };
+                let tmp_val = quote! { bsn1_macro_1705741001_tmp_val };
+                quote! {{
+                    let #tmp_ber = #BerRef::parse(#contents_bytes)?;
+                    let #tmp_val: #try_from_ty = #Deserialize::from_ber(
+                                                #tmp_ber.id(),
+                                                #tmp_ber.length(),
+                                                #tmp_ber.contents())?;
+                    #TryFrom::try_from(#tmp_val).map_err(|err| #Error::from(Box::new(err)))?
+                }}
             } else {
                 quote! {{
                     let #tmp_ber = #BerRef::parse(#contents_bytes)?;
@@ -356,6 +367,16 @@ impl DataContainer {
                                                 #tmp_der.id(),
                                                 #tmp_der.contents())?;
                     #From::from(#tmp_val)
+                }}
+            } else if let Some(try_from_ty) = attribute.try_from_type() {
+                let TryFrom = quote! { ::std::convert::TryFrom };
+                let tmp_val = quote! { bsn1_macro_1705741001_tmp_val };
+                quote! {{
+                    let #tmp_der = #DerRef::parse(#contents_bytes)?;
+                    let #tmp_val: #try_from_ty = #Deserialize::from_der(
+                                                #tmp_der.id(),
+                                                #tmp_der.contents())?;
+                    #TryFrom::try_from(#tmp_val).map_err(|err| #Error::from(Box::new(err)))?
                 }}
             } else {
                 quote! {{

@@ -78,4 +78,5 @@ fn deserialize() {
 
     t.pass("tests/de/try_from_struct.rs");
     t.pass("tests/de/try_from_enum.rs");
+    t.pass("tests/de/try_from_field.rs");
 }
