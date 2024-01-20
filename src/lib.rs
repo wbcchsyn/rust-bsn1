@@ -142,3 +142,12 @@ impl From<std::io::Error> for Error {
         Self::Io(err)
     }
 }
+
+impl<T> From<Box<T>> for Error
+where
+    T: 'static + std::error::Error,
+{
+    fn from(err: Box<T>) -> Self {
+        Self::Boxed(err as Box<dyn std::error::Error>)
+    }
+}
