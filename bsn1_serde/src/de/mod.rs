@@ -304,16 +304,21 @@ impl Deserialize for usize {
 
 impl Deserialize for String {
     unsafe fn from_ber(id: &IdRef, length: Length, contents: &ContentsRef) -> Result<Self, Error> {
-        if length == Length::Indefinite {
+        if id != IdRef::utf8_string() && id != IdRef::utf8_string_constructed() {
+            Err(Error::UnmatchedId)
+        } else if length == Length::Indefinite {
             Err(Error::IndefiniteLength)
         } else {
             debug_assert_eq!(length.definite(), Some(contents.len()));
-            Self::from_der(id, contents)
+            match std::str::from_utf8(contents.as_ref()) {
+                Ok(s) => Ok(s.into()),
+                Err(_) => Err(Error::InvalidUtf8),
+            }
         }
     }
 
     fn from_der(id: &IdRef, contents: &ContentsRef) -> Result<Self, Error> {
-        if id != IdRef::utf8_string() && id != IdRef::utf8_string_constructed() {
+        if id != IdRef::utf8_string() {
             Err(Error::UnmatchedId)
         } else {
             match std::str::from_utf8(contents.as_ref()) {
