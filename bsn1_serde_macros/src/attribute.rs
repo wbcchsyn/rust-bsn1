@@ -45,6 +45,7 @@ pub struct Attribute {
     skip: bool,
     into: Option<syn::Path>,
     from: Option<syn::Path>,
+    to: Option<syn::Path>,
 }
 
 impl TryFrom<&[syn::Attribute]> for Attribute {
