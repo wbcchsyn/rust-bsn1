@@ -147,6 +147,13 @@ impl Attribute {
                     let value = take_value(&ident, it.next(), it.next())?;
                     ret.from = Some(parse_path(&value)?);
                 }
+                TokenTree::Ident(ident) if ident == "to" => {
+                    if ret.to.is_some() {
+                        error(&ident, "Duplicated `to` attribute.")?;
+                    }
+                    let value = take_value(&ident, it.next(), it.next())?;
+                    ret.to = Some(parse_path(&value)?);
+                }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
             }
