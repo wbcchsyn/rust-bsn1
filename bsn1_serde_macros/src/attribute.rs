@@ -46,6 +46,7 @@ pub struct Attribute {
     into: Option<syn::Path>,
     from: Option<syn::Path>,
     to: Option<syn::Path>,
+    try_from: Option<syn::Path>,
 }
 
 impl TryFrom<&[syn::Attribute]> for Attribute {
