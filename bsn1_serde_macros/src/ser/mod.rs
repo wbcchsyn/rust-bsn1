@@ -43,6 +43,8 @@ pub fn do_serialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
 
     let methods = if let Some(ty) = attribute.into_type() {
         do_into_serialize(&ty)?
+    } else if let Some(to_fn) = attribute.to_path() {
+        do_to_serialize(&to_fn)?
     } else {
         match ast.data {
             syn::Data::Struct(data) => do_serialize_struct(attribute, data)?,
@@ -91,6 +93,36 @@ fn do_into_serialize(ty: &syn::Path) -> syn::Result<TokenStream> {
         fn der_contents_len(&self) -> #Result<usize, #Error> {
             let this: Self = #Clone::clone(self);
             let this: #ty = #Into::into(this);
+            #Serialize::der_contents_len(&this)
+        }
+    })
+}
+
+#[allow(non_snake_case)]
+fn do_to_serialize(to_fn: &syn::Path) -> syn::Result<TokenStream> {
+    let Result = quote! { ::std::result::Result };
+    let Write = quote! { ::std::io::Write };
+    let Error = quote! { ::bsn1_serde::macro_alias::Error };
+    let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+
+    Ok(quote! {
+        fn write_id<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
+            let this = #to_fn(self);
+            #Serialize::write_id(&this, buffer)
+        }
+
+        fn write_der_contents<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
+            let this = #to_fn(self);
+            #Serialize::write_der_contents(&this, buffer)
+        }
+
+        fn id_len(&self) -> #Result<usize, #Error> {
+            let this = #to_fn(self);
+            #Serialize::id_len(&this)
+        }
+
+        fn der_contents_len(&self) -> #Result<usize, #Error> {
+            let this = #to_fn(self);
             #Serialize::der_contents_len(&this)
         }
     })
