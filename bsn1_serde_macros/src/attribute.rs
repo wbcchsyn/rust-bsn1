@@ -30,8 +30,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use proc_macro2::{TokenStream, TokenTree};
+use proc_macro2::{Ident, TokenStream, TokenTree};
 use quote::{quote, ToTokens};
+
+struct AttrArgument<T> {
+    val: T,
+    ident: Ident,
+}
 
 #[derive(Default)]
 pub struct Attribute {
