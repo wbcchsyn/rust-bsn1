@@ -48,7 +48,7 @@ pub struct Attribute {
     skip_deserialzing: Option<AttrArgument<()>>,
     default: Option<AttrArgument<syn::Path>>,
     skip: Option<AttrArgument<()>>,
-    into: Option<syn::Path>,
+    into: Option<AttrArgument<syn::Path>>,
     from: Option<syn::Path>,
     to: Option<syn::Path>,
     try_from: Option<syn::Path>,
@@ -159,7 +159,10 @@ impl Attribute {
                         error(&ident, "Duplicated `into` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.into = Some(parse_path(&value)?);
+                    ret.into = Some(AttrArgument {
+                        val: parse_path(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Ident(ident) if ident == "from" => {
                     if ret.from.is_some() {
@@ -258,7 +261,7 @@ impl Attribute {
     }
 
     pub fn into_type(&self) -> Option<&syn::Path> {
-        self.into.as_ref()
+        self.into.as_ref().map(|arg| &arg.val)
     }
 
     pub fn from_type(&self) -> Option<&syn::Path> {
