@@ -50,7 +50,7 @@ pub struct Attribute {
     skip: Option<AttrArgument<()>>,
     into: Option<AttrArgument<syn::Path>>,
     from: Option<AttrArgument<syn::Path>>,
-    to: Option<syn::Path>,
+    to: Option<AttrArgument<syn::Path>>,
     try_from: Option<syn::Path>,
 }
 
@@ -179,7 +179,10 @@ impl Attribute {
                         error(&ident, "Duplicated `to` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.to = Some(parse_path(&value)?);
+                    ret.to = Some(AttrArgument {
+                        val: parse_path(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Ident(ident) if ident == "try_from" => {
                     if ret.try_from.is_some() {
@@ -272,7 +275,7 @@ impl Attribute {
     }
 
     pub fn to_path(&self) -> Option<&syn::Path> {
-        self.to.as_ref()
+        self.to.as_ref().map(|arg| &arg.val)
     }
 
     pub fn try_from_type(&self) -> Option<&syn::Path> {
