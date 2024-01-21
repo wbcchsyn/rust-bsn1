@@ -42,7 +42,7 @@ struct AttrArgument<T> {
 pub struct Attribute {
     id_: Option<AttrArgument<u8>>,
     tag_class: Option<AttrArgument<u8>>,
-    tag_pc: Option<u8>,
+    tag_pc: Option<AttrArgument<u8>>,
     tag_num: Option<u128>,
     skip_serialzing: bool,
     skip_deserialzing: bool,
@@ -111,7 +111,10 @@ impl Attribute {
                         error(&ident, "Duplicated `tag_pc` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.tag_pc = Some(parse_tag_pc_value(&value)?);
+                    ret.tag_pc = Some(AttrArgument {
+                        val: parse_tag_pc_value(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Ident(ident) if ident == "tag_num" => {
                     if ret.tag_num.is_some() {
@@ -202,9 +205,9 @@ impl Attribute {
             octets[0] = (octets[0] & MASK) | arg.val;
         }
 
-        if let Some(tag_pc) = self.tag_pc {
+        if let Some(ref arg) = self.tag_pc {
             const MASK: u8 = 0xdf;
-            octets[0] = (octets[0] & MASK) | tag_pc;
+            octets[0] = (octets[0] & MASK) | arg.val;
         }
 
         if let Some(mut tag_num) = self.tag_num {
