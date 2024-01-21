@@ -168,6 +168,18 @@ impl DataContainer {
                         #Write::write_all(#buffer, &#length).map_err(#Error::from)?;
                         #Serialize::write_der_contents(&#this, buffer)?;
                     }}
+                } else if let Some(to_path) = attribute.to_path() {
+                    let this = quote! { bsn1_macro_1705721776_this };
+
+                    quote! {{
+                        let #this = #to_path(#field);
+                        #Serialize::write_id(&#this, buffer)?;
+
+                        let #contents_len = #Serialize::der_contents_len(&#this)?;
+                        let #length = #Length::Definite(#contents_len).to_bytes();
+                        #Write::write_all(#buffer, &#length).map_err(#Error::from)?;
+                        #Serialize::write_der_contents(&#this, buffer)?;
+                    }}
                 } else {
                     quote! {{
                         #Serialize::write_id(#field, buffer)?;
@@ -210,6 +222,15 @@ impl DataContainer {
                     quote! {{
                         let #this = #Clone::clone(#field);
                         let #this: #into_ty = #Into::into(#this);
+                        let #contents_len = #Serialize::der_contents_len(&#this)?;
+                        let #length_len = #Length::Definite(#contents_len).len();
+                        #ret += #Serialize::id_len(&#this)? + #length_len + #contents_len;
+                    }}
+                } else if let Some(to_path) = attribute.to_path() {
+                    let this = quote! { bsn1_macro_1705721776_this };
+
+                    quote! {{
+                        let #this = #to_path(#field);
                         let #contents_len = #Serialize::der_contents_len(&#this)?;
                         let #length_len = #Length::Definite(#contents_len).len();
                         #ret += #Serialize::id_len(&#this)? + #length_len + #contents_len;

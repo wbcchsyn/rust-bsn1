@@ -48,6 +48,10 @@ fn serialize() {
     t.pass("tests/ser/into_struct.rs");
     t.pass("tests/ser/into_enum.rs");
     t.pass("tests/ser/into_field.rs");
+
+    t.pass("tests/ser/to_struct.rs");
+    t.pass("tests/ser/to_enum.rs");
+    t.pass("tests/ser/to_field.rs");
 }
 
 #[test]
