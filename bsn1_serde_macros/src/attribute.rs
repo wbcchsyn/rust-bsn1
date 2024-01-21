@@ -47,7 +47,7 @@ pub struct Attribute {
     skip_serialzing: Option<AttrArgument<()>>,
     skip_deserialzing: Option<AttrArgument<()>>,
     default: Option<AttrArgument<syn::Path>>,
-    skip: bool,
+    skip: Option<AttrArgument<()>>,
     into: Option<syn::Path>,
     from: Option<syn::Path>,
     to: Option<syn::Path>,
@@ -149,10 +149,10 @@ impl Attribute {
                     });
                 }
                 TokenTree::Ident(ident) if ident == "skip" => {
-                    if ret.skip {
+                    if ret.skip.is_some() {
                         error(&ident, "Duplicated `skip` attribute.")?;
                     }
-                    ret.skip = true;
+                    ret.skip = AttrArgument { val: (), ident }.into();
                 }
                 TokenTree::Ident(ident) if ident == "into" => {
                     if ret.into.is_some() {
@@ -243,11 +243,11 @@ impl Attribute {
     }
 
     pub fn is_skip_serializing(&self) -> bool {
-        self.skip || self.skip_serialzing.is_some()
+        self.skip.is_some() || self.skip_serialzing.is_some()
     }
 
     pub fn is_skip_deserializing(&self) -> bool {
-        self.skip || self.skip_deserialzing.is_some()
+        self.skip.is_some() || self.skip_deserialzing.is_some()
     }
 
     pub fn default_path(&self) -> syn::Path {
