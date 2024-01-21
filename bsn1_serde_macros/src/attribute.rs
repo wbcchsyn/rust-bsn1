@@ -80,6 +80,9 @@ impl TryFrom<&[syn::Attribute]> for Attribute {
             }
         }
 
+        if let Some(ref attr) = ret {
+            attr.sanitize()?;
+        }
         Ok(ret.unwrap_or_default())
     }
 }
