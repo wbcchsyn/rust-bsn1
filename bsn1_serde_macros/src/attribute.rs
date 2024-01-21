@@ -43,7 +43,7 @@ pub struct Attribute {
     id_: Option<AttrArgument<u8>>,
     tag_class: Option<AttrArgument<u8>>,
     tag_pc: Option<AttrArgument<u8>>,
-    tag_num: Option<u128>,
+    tag_num: Option<AttrArgument<u128>>,
     skip_serialzing: bool,
     skip_deserialzing: bool,
     default: Option<syn::Path>,
@@ -121,7 +121,10 @@ impl Attribute {
                         error(&ident, "Duplicated `tag_num` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.tag_num = Some(parse_tag_num_value(&value)?);
+                    ret.tag_num = Some(AttrArgument {
+                        val: parse_tag_num_value(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Ident(ident) if ident == "skip_serializing" => {
                     if ret.skip_serialzing {
@@ -210,7 +213,8 @@ impl Attribute {
             octets[0] = (octets[0] & MASK) | arg.val;
         }
 
-        if let Some(mut tag_num) = self.tag_num {
+        if let Some(ref arg) = self.tag_num {
+            let mut tag_num = arg.val;
             const LONG_FORM: u8 = 0x1f;
 
             if tag_num < LONG_FORM as u128 {
