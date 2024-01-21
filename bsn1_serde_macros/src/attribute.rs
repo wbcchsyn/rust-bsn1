@@ -46,7 +46,7 @@ pub struct Attribute {
     tag_num: Option<AttrArgument<u128>>,
     skip_serialzing: Option<AttrArgument<()>>,
     skip_deserialzing: Option<AttrArgument<()>>,
-    default: Option<syn::Path>,
+    default: Option<AttrArgument<syn::Path>>,
     skip: bool,
     into: Option<syn::Path>,
     from: Option<syn::Path>,
@@ -143,7 +143,10 @@ impl Attribute {
                         error(&ident, "Duplicated `default` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.default = Some(parse_path(&value)?);
+                    ret.default = Some(AttrArgument {
+                        val: parse_path(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Ident(ident) if ident == "skip" => {
                     if ret.skip {
@@ -248,8 +251,8 @@ impl Attribute {
     }
 
     pub fn default_path(&self) -> syn::Path {
-        match self.default.as_ref() {
-            Some(path) => path.clone(),
+        match self.default {
+            Some(ref arg) => arg.val.clone(),
             None => syn::parse_str::<syn::Path>("Default::default").unwrap(),
         }
     }
