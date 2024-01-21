@@ -44,7 +44,7 @@ pub struct Attribute {
     tag_class: Option<AttrArgument<u8>>,
     tag_pc: Option<AttrArgument<u8>>,
     tag_num: Option<AttrArgument<u128>>,
-    skip_serialzing: bool,
+    skip_serialzing: Option<AttrArgument<()>>,
     skip_deserialzing: bool,
     default: Option<syn::Path>,
     skip: bool,
@@ -127,10 +127,10 @@ impl Attribute {
                     });
                 }
                 TokenTree::Ident(ident) if ident == "skip_serializing" => {
-                    if ret.skip_serialzing {
+                    if ret.skip_serialzing.is_some() {
                         error(&ident, "Duplicated `skip_serializing` attribute.")?;
                     }
-                    ret.skip_serialzing = true;
+                    ret.skip_serialzing = Some(AttrArgument { val: (), ident })
                 }
                 TokenTree::Ident(ident) if ident == "skip_deserializing" => {
                     if ret.skip_deserialzing {
@@ -240,7 +240,7 @@ impl Attribute {
     }
 
     pub fn is_skip_serializing(&self) -> bool {
-        self.skip || self.skip_serialzing
+        self.skip || self.skip_serialzing.is_some()
     }
 
     pub fn is_skip_deserializing(&self) -> bool {
