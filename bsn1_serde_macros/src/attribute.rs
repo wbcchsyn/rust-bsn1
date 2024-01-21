@@ -213,6 +213,56 @@ impl Attribute {
         Ok(Some(ret))
     }
 
+    fn sanitize(&self) -> syn::Result<()> {
+        macro_rules! exclusive {
+            ($a: ident, $b: ident) => {
+                if self.$a.is_some() && self.$b.is_some() {
+                    let a = self.$a.as_ref().unwrap();
+                    let b = self.$b.as_ref().unwrap();
+                    error(
+                        &a.ident,
+                        format!(
+                            "The arguemnt `{}` and `{}` are exclusive.",
+                            a.ident, b.ident
+                        ),
+                    )?;
+                }
+            };
+        }
+
+        macro_rules! loop_exclusive {
+            ([$a: ident], [$b: ident]) => {
+                exclusive!($a, $b);
+            };
+            ([$a: ident], [$b: ident, $($b_: ident),+]) => {
+                exclusive!($a, $b);
+                loop_exclusive!([$a], [$($b_),+]);
+            };
+            ([$a: ident, $($a_: ident),+], [$($b: ident),+]) => {
+                loop_exclusive!([$a], [$($b),+]);
+                loop_exclusive!([$($a_),+], [$($b),+]);
+            };
+        }
+
+        loop_exclusive!(
+            [id_, tag_class, tag_pc, tag_num],
+            [skip_serialzing, skip_deserialzing, skip, default]
+        );
+        loop_exclusive!(
+            [id_, tag_class, tag_pc, tag_num],
+            [into, from, to, try_from]
+        );
+        loop_exclusive!(
+            [skip_serialzing, skip_deserialzing, skip, default],
+            [into, from, to, try_from]
+        );
+
+        exclusive!(from, try_from);
+        exclusive!(into, to);
+
+        Ok(())
+    }
+
     pub fn id(&self, default_id: u8) -> Option<TokenStream> {
         if self.id_.is_none()
             && self.tag_class.is_none()
