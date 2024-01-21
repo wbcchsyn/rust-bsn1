@@ -40,7 +40,7 @@ struct AttrArgument<T> {
 
 #[derive(Default)]
 pub struct Attribute {
-    id_: Option<u8>,
+    id_: Option<AttrArgument<u8>>,
     tag_class: Option<u8>,
     tag_pc: Option<u8>,
     tag_num: Option<u128>,
@@ -91,7 +91,10 @@ impl Attribute {
                         error(&ident, "Duplicated `id` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.id_ = Some(parse_id_value(&value)?);
+                    ret.id_ = Some(AttrArgument {
+                        val: parse_id_value(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Ident(ident) if ident == "tag_class" => {
                     if ret.tag_class.is_some() {
@@ -187,7 +190,7 @@ impl Attribute {
         let mut octets: Vec<u8> = Vec::new();
 
         match self.id_ {
-            Some(id) => octets.push(id),
+            Some(ref arg) => octets.push(arg.val),
             None => octets.push(default_id),
         };
 
