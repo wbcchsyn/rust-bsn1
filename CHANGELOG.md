@@ -229,6 +229,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - AsRef\<BerRef\> for Ber
   - AsRef\<DerRef\> for Der
   - From\<std::io::Error\> for Error
+  - From\<Box\<T: std::error::Error\>\> for Error
   - From\<IdRef\> for Id
   - From\<bool\> for Ber
   - From\<T: PrimInt\> for Ber (`PrimInt` is `i8` or `u8` or ... `u128` or `isize` or `usize`.)
@@ -288,6 +289,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - `IndefiniteLength`
   - `InvalidAsUtf8`
   - `InvalidKeyValuePair`
+  - `Boxed`
 
 ### Removed
 

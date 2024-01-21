@@ -34,104 +34,49 @@ use bsn1_serde::{from_ber, from_der, to_ber, to_der, OctetString};
 
 #[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Clone, Debug, PartialEq)]
 #[bsn1_serde(to = "OctetString::new", try_from = "OctetString")]
-struct A {
-    inner: String,
+enum X {
+    A { inner: String },
+    B { inner: String, _dummy: i8 },
+    C(String),
+    D(i8, String),
 }
 
-impl TryFrom<OctetString<'_>> for A {
+impl TryFrom<OctetString<'_>> for X {
     type Error = std::string::FromUtf8Error;
 
     fn try_from(octet_string: OctetString) -> Result<Self, Self::Error> {
-        Ok(Self {
-            inner: String::from_utf8(octet_string.into_vec())?,
-        })
+        let inner = String::from_utf8(octet_string.into_vec())?;
+
+        match inner.chars().next().unwrap() {
+            'a' => Ok(Self::A { inner }),
+            'b' => Ok(Self::B { inner, _dummy: 2 }),
+            'c' => Ok(Self::C(inner)),
+            'd' => Ok(Self::D(3, inner)),
+            _ => unreachable!(),
+        }
     }
 }
 
-impl AsRef<[u8]> for A {
+impl AsRef<[u8]> for X {
     fn as_ref(&self) -> &[u8] {
-        self.inner.as_bytes()
-    }
-}
-
-#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Clone, Debug, PartialEq)]
-#[bsn1_serde(to = "OctetString::new", try_from = "OctetString")]
-struct B {
-    inner: String,
-    _dummy: i8,
-}
-
-impl TryFrom<OctetString<'_>> for B {
-    type Error = std::string::FromUtf8Error;
-
-    fn try_from(octet_string: OctetString) -> Result<Self, Self::Error> {
-        Ok(Self {
-            inner: String::from_utf8(octet_string.into_vec())?,
-            _dummy: -2,
-        })
-    }
-}
-
-impl AsRef<[u8]> for B {
-    fn as_ref(&self) -> &[u8] {
-        self.inner.as_bytes()
-    }
-}
-
-#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Clone, Debug, PartialEq)]
-#[bsn1_serde(to = "OctetString::new", try_from = "OctetString")]
-struct C(String);
-
-impl TryFrom<OctetString<'_>> for C {
-    type Error = std::string::FromUtf8Error;
-
-    fn try_from(octet_string: OctetString) -> Result<Self, Self::Error> {
-        Ok(Self(String::from_utf8(octet_string.into_vec())?))
-    }
-}
-
-impl AsRef<[u8]> for C {
-    fn as_ref(&self) -> &[u8] {
-        self.0.as_bytes()
-    }
-}
-
-#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Clone, Debug, PartialEq)]
-#[bsn1_serde(to = "OctetString::new", try_from = "OctetString")]
-struct D(i8, String);
-
-impl TryFrom<OctetString<'_>> for D {
-    type Error = std::string::FromUtf8Error;
-
-    fn try_from(octet_string: OctetString) -> Result<Self, Self::Error> {
-        Ok(Self(3, String::from_utf8(octet_string.into_vec())?))
-    }
-}
-
-impl AsRef<[u8]> for D {
-    fn as_ref(&self) -> &[u8] {
-        self.1.as_bytes()
+        match self {
+            Self::A { inner } => inner.as_bytes(),
+            Self::B { inner, .. } => inner.as_bytes(),
+            Self::C(inner) => inner.as_bytes(),
+            Self::D(_, inner) => inner.as_bytes(),
+        }
     }
 }
 
 fn main() {
-    test_a();
-    test_b();
-    test_c();
-    test_d();
+    test_xa();
+    test_xb();
+    test_xc();
+    test_xd();
 }
 
-fn test_a() {
-    let val = A::try_from(OctetString::new("abc")).unwrap();
-    let ber = to_ber(&val).unwrap();
-    assert_eq!(val, from_ber(&ber).unwrap());
-
-    let der = to_der(&val).unwrap();
-    assert_eq!(val, from_der(&der).unwrap());
-}
-
-fn test_b() {
-    let val = B::try_from(OctetString::new("abc")).unwrap();
+fn test_xa() {
+    let val = X::try_from(OctetString::new("aaa".as_bytes())).unwrap();
 
     let ber = to_ber(&val).unwrap();
     assert_eq!(val, from_ber(&ber).unwrap());
@@ -140,8 +85,8 @@ fn test_b() {
     assert_eq!(val, from_der(&der).unwrap());
 }
 
-fn test_c() {
-    let val = C::try_from(OctetString::new("abc")).unwrap();
+fn test_xb() {
+    let val = X::try_from(OctetString::new("bbb".as_bytes())).unwrap();
 
     let ber = to_ber(&val).unwrap();
     assert_eq!(val, from_ber(&ber).unwrap());
@@ -150,8 +95,18 @@ fn test_c() {
     assert_eq!(val, from_der(&der).unwrap());
 }
 
-fn test_d() {
-    let val = D::try_from(OctetString::new("abc")).unwrap();
+fn test_xc() {
+    let val = X::try_from(OctetString::new("ccc".as_bytes())).unwrap();
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
+
+    let der = to_der(&val).unwrap();
+    assert_eq!(val, from_der(&der).unwrap());
+}
+
+fn test_xd() {
+    let val = X::try_from(OctetString::new("ddd".as_bytes())).unwrap();
 
     let ber = to_ber(&val).unwrap();
     assert_eq!(val, from_ber(&ber).unwrap());

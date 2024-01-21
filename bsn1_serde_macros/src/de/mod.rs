@@ -40,6 +40,8 @@ pub fn do_deserialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
 
     let methods = if let Some(ty) = attribute.from_type() {
         do_from_deserialize(ty)?
+    } else if let Some(ty) = attribute.try_from_type() {
+        do_try_from_deserialize(ty)?
     } else {
         match ast.data {
             syn::Data::Struct(data) => do_deserialize_struct(attribute, data)?,
@@ -80,6 +82,38 @@ fn do_from_deserialize(ty: &syn::Path) -> syn::Result<TokenStream> {
         fn from_der(id: &#IdRef, contents: &#ContentsRef) -> #Result<Self, #Error> {
             let val: #ty = #Deserialize::from_der(id, contents)?;
             #Result::Ok(#From::from(val))
+        }
+    })
+}
+
+#[allow(non_snake_case)]
+fn do_try_from_deserialize(ty: &syn::Path) -> syn::Result<TokenStream> {
+    let IdRef = quote! { ::bsn1_serde::macro_alias::IdRef };
+    let Length = quote! { ::bsn1_serde::macro_alias::Length };
+    let ContentsRef = quote! { ::bsn1_serde::macro_alias::ContentsRef };
+    let Error = quote! { ::bsn1_serde::macro_alias::Error };
+    let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
+
+    let Result = quote! { ::std::result::Result };
+    let TryFrom = quote! { ::std::convert::TryFrom };
+    let Box = quote! { ::std::boxed::Box };
+
+    Ok(quote! {
+        unsafe fn from_ber(id: &#IdRef, length: #Length, contents: &#ContentsRef)
+            -> #Result<Self, #Error> {
+            let val: #ty = #Deserialize::from_ber(id, length, contents)?;
+            #TryFrom::try_from(val).map_err(|err| {
+                let err = #Box::new(err);
+                #Error::from(err)
+            })
+        }
+
+        fn from_der(id: &#IdRef, contents: &#ContentsRef) -> #Result<Self, #Error> {
+            let val: #ty = #Deserialize::from_der(id, contents)?;
+            #TryFrom::try_from(val).map_err(|err| {
+                let err = #Box::new(err);
+                #Error::from(err)
+            })
         }
     })
 }
