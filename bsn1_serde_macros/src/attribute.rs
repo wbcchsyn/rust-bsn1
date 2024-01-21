@@ -44,6 +44,7 @@ pub struct Attribute {
     default: Option<syn::Path>,
     skip: bool,
     into: Option<syn::Path>,
+    from: Option<syn::Path>,
 }
 
 impl TryFrom<&[syn::Attribute]> for Attribute {
@@ -138,6 +139,13 @@ impl Attribute {
                     let value = take_value(&ident, it.next(), it.next())?;
                     ret.into = Some(parse_path(&value)?);
                 }
+                TokenTree::Ident(ident) if ident == "from" => {
+                    if ret.from.is_some() {
+                        error(&ident, "Duplicated `from` attribute.")?;
+                    }
+                    let value = take_value(&ident, it.next(), it.next())?;
+                    ret.from = Some(parse_path(&value)?);
+                }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
             }
@@ -214,6 +222,10 @@ impl Attribute {
 
     pub fn into_type(&self) -> Option<&syn::Path> {
         self.into.as_ref()
+    }
+
+    pub fn from_type(&self) -> Option<&syn::Path> {
+        self.from.as_ref()
     }
 }
 
