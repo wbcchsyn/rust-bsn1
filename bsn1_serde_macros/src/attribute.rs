@@ -273,6 +273,13 @@ impl Attribute {
         exclusive!(from, try_from);
         exclusive!(into, to);
 
+        loop_exclusive!([id_, tag_class, tag_pc, tag_num], [transparent]);
+        loop_exclusive!(
+            [skip_serializing, skip_deserializing, skip, default],
+            [transparent]
+        );
+        loop_exclusive!([into, from, to, try_from], [transparent]);
+
         Ok(())
     }
 
