@@ -452,6 +452,10 @@ impl Attribute {
     pub fn try_from_type(&self) -> Option<&syn::Path> {
         self.try_from.as_ref().map(|arg| &arg.val)
     }
+
+    pub fn is_transparent(&self) -> bool {
+        self.transparent.is_some()
+    }
 }
 
 fn error<T: ToTokens, U: std::fmt::Display>(tt: T, message: U) -> syn::Result<()> {
