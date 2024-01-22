@@ -469,6 +469,10 @@ impl Attribute {
     pub fn is_transparent(&self) -> bool {
         self.transparent.is_some()
     }
+
+    pub fn transparent_token(&self) -> Option<&Ident> {
+        self.transparent.as_ref().map(|arg| &arg.ident)
+    }
 }
 
 fn error<T: ToTokens, U: std::fmt::Display>(tt: T, message: U) -> syn::Result<()> {
