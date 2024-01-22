@@ -40,14 +40,25 @@ struct AttrArgument<T> {
 
 #[derive(Default)]
 pub struct Attribute {
+    // Arguments about Identifier for struct and variant.
+    // Exclusive with arguments about skip and about conversion.
     id_: Option<AttrArgument<u8>>,
     tag_class: Option<AttrArgument<u8>>,
     tag_pc: Option<AttrArgument<u8>>,
     tag_num: Option<AttrArgument<u128>>,
+
+    // Arguments about skip for field.
+    // Exclusive with arguments about identifier and about conversion.
     skip_serialzing: Option<AttrArgument<()>>,
     skip_deserialzing: Option<AttrArgument<()>>,
     default: Option<AttrArgument<syn::Path>>,
     skip: Option<AttrArgument<()>>,
+
+    // Arguments about conversion for struct, enum, and field.
+    // Exclusive with arguments about identifier and about skip.
+    //
+    // `into` and `to` are exclusive.
+    // `from` and `try_from` are exclusive.
     into: Option<AttrArgument<syn::Path>>,
     from: Option<AttrArgument<syn::Path>>,
     to: Option<AttrArgument<syn::Path>>,
