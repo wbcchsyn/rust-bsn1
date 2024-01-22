@@ -164,10 +164,12 @@ fn do_serialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Resu
 
 #[allow(non_snake_case)]
 fn do_serialize_enum(
-    _attribute: Attribute,
+    attribute: Attribute,
     enum_name: &Ident,
     data: syn::DataEnum,
 ) -> syn::Result<TokenStream> {
+    attribute.sanitize_as_enum()?;
+
     let Result = quote! { ::std::result::Result };
     let Write = quote! { ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };
