@@ -36,7 +36,9 @@ use quote::quote;
 
 pub fn do_deserialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
     let name = &ast.ident;
+
     let attribute = Attribute::try_from(&ast.attrs[..])?;
+    attribute.sanitize_as_container()?;
 
     let methods = if let Some(ty) = attribute.from_type() {
         do_from_deserialize(ty)?
