@@ -63,6 +63,10 @@ pub struct Attribute {
     from: Option<AttrArgument<syn::Path>>,
     to: Option<AttrArgument<syn::Path>>,
     try_from: Option<AttrArgument<syn::Path>>,
+
+    // Arguments for struct with exactly one field.
+    // Exclusive the other arguments.
+    transparent: Option<AttrArgument<()>>,
 }
 
 impl TryFrom<&[syn::Attribute]> for Attribute {
