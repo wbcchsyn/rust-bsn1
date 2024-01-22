@@ -291,6 +291,10 @@ impl Attribute {
         self.sanitize()
     }
 
+    pub fn sanitize_as_struct(&self) -> syn::Result<()> {
+        self.sanitize_as_container()
+    }
+
     pub fn id(&self, default_id: u8) -> Option<TokenStream> {
         if self.id_.is_none()
             && self.tag_class.is_none()
