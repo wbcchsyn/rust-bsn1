@@ -295,6 +295,26 @@ impl Attribute {
         self.sanitize_as_container()
     }
 
+    pub fn sanitize_as_enum(&self) -> syn::Result<()> {
+        macro_rules! not_allowed {
+            ($a: ident) => {
+                if let Some(ref a) = self.$a {
+                    error(
+                        &a.ident,
+                        format!("The arguemnt `{}` is not allowed for enum.", a.ident),
+                    )?;
+                }
+            };
+        }
+
+        not_allowed!(id_);
+        not_allowed!(tag_class);
+        not_allowed!(tag_pc);
+        not_allowed!(tag_num);
+
+        self.sanitize_as_container()
+    }
+
     pub fn id(&self, default_id: u8) -> Option<TokenStream> {
         if self.id_.is_none()
             && self.tag_class.is_none()
