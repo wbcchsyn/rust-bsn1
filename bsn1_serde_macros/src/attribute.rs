@@ -329,6 +329,8 @@ impl Attribute {
         not_allowed!(tag_pc);
         not_allowed!(tag_num);
 
+        not_allowed!(transparent);
+
         self.sanitize_as_container()
     }
 
@@ -354,6 +356,8 @@ impl Attribute {
         not_allowed!(to);
         not_allowed!(try_from);
 
+        not_allowed!(transparent);
+
         self.sanitize()
     }
 
@@ -373,6 +377,8 @@ impl Attribute {
         not_allowed!(tag_class);
         not_allowed!(tag_pc);
         not_allowed!(tag_num);
+
+        not_allowed!(transparent);
 
         self.sanitize()
     }
