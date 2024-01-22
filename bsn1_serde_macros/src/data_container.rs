@@ -54,9 +54,13 @@ impl TryFrom<(Attribute, syn::DataStruct)> for DataContainer {
     type Error = syn::Error;
 
     fn try_from((attribute, data): (Attribute, syn::DataStruct)) -> Result<Self, Self::Error> {
+        attribute.sanitize_as_struct()?;
+
         let mut field_attributes = Vec::new();
         for field in data.fields.iter() {
-            field_attributes.push(Attribute::try_from(&field.attrs[..])?);
+            let attribute = Attribute::try_from(&field.attrs[..])?;
+            attribute.sanitize_as_field()?;
+            field_attributes.push(attribute);
         }
 
         Ok(Self::DataStruct {
@@ -72,9 +76,13 @@ impl TryFrom<(Ident, syn::Variant)> for DataContainer {
 
     fn try_from((enum_name, value): (Ident, syn::Variant)) -> Result<Self, Self::Error> {
         let attribute = Attribute::try_from(&value.attrs[..])?;
+        attribute.sanitize_as_variant()?;
+
         let mut field_attributes = Vec::new();
         for field in value.fields.iter() {
-            field_attributes.push(Attribute::try_from(&field.attrs[..])?);
+            let attribute = Attribute::try_from(&field.attrs[..])?;
+            attribute.sanitize_as_field()?;
+            field_attributes.push(attribute);
         }
 
         Ok(Self::Variant {
