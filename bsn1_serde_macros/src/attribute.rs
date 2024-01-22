@@ -266,6 +266,31 @@ impl Attribute {
         Ok(())
     }
 
+    /// Makes sure that `self` does not have any arguments not allowed either for enum or for
+    /// struct.
+    pub fn sanitize_as_container(&self) -> syn::Result<()> {
+        macro_rules! not_allowed {
+            ($a: ident) => {
+                if let Some(ref a) = self.$a {
+                    error(
+                        &a.ident,
+                        format!(
+                            "The arguemnt `{}` is not allowed either for enum or for struct.",
+                            a.ident
+                        ),
+                    )?;
+                }
+            };
+        }
+
+        not_allowed!(skip_serialzing);
+        not_allowed!(skip_deserialzing);
+        not_allowed!(skip);
+        not_allowed!(default);
+
+        self.sanitize()
+    }
+
     pub fn id(&self, default_id: u8) -> Option<TokenStream> {
         if self.id_.is_none()
             && self.tag_class.is_none()
