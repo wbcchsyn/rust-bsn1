@@ -156,10 +156,12 @@ fn do_deserialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Re
 
 #[allow(non_snake_case)]
 fn do_deserialize_enum(
-    _attribute: Attribute,
+    attribute: Attribute,
     enum_name: &Ident,
     data: syn::DataEnum,
 ) -> syn::Result<TokenStream> {
+    attribute.sanitize_as_enum()?;
+
     let IdRef = quote! { ::bsn1_serde::macro_alias::IdRef };
     let Length = quote! { ::bsn1_serde::macro_alias::Length };
     let ContentsRef = quote! { ::bsn1_serde::macro_alias::ContentsRef };
