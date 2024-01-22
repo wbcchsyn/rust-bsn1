@@ -212,6 +212,12 @@ impl Attribute {
                         ident,
                     });
                 }
+                TokenTree::Ident(ident) if ident == "transparent" => {
+                    if ret.transparent.is_some() {
+                        error(&ident, "Duplicated `transparent` attribute.")?;
+                    }
+                    ret.transparent = AttrArgument { val: (), ident }.into();
+                }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
             }
