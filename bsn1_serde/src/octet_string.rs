@@ -134,6 +134,14 @@ impl From<Vec<u8>> for OctetString<'static> {
     }
 }
 
+impl<'a> From<&'a [u8]> for OctetString<'a> {
+    fn from(val: &'a [u8]) -> Self {
+        Self {
+            octets: Cow::Borrowed(val),
+        }
+    }
+}
+
 impl TryFrom<OctetString<'_>> for String {
     type Error = std::string::FromUtf8Error;
 
