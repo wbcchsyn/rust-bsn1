@@ -49,8 +49,8 @@ pub struct Attribute {
 
     // Arguments about skip for field.
     // Exclusive with arguments about identifier and about conversion.
-    skip_serialzing: Option<AttrArgument<()>>,
-    skip_deserialzing: Option<AttrArgument<()>>,
+    skip_serializing: Option<AttrArgument<()>>,
+    skip_deserializing: Option<AttrArgument<()>>,
     default: Option<AttrArgument<syn::Path>>,
     skip: Option<AttrArgument<()>>,
 
@@ -141,16 +141,16 @@ impl Attribute {
                     });
                 }
                 TokenTree::Ident(ident) if ident == "skip_serializing" => {
-                    if ret.skip_serialzing.is_some() {
+                    if ret.skip_serializing.is_some() {
                         error(&ident, "Duplicated `skip_serializing` attribute.")?;
                     }
-                    ret.skip_serialzing = Some(AttrArgument { val: (), ident })
+                    ret.skip_serializing = Some(AttrArgument { val: (), ident })
                 }
                 TokenTree::Ident(ident) if ident == "skip_deserializing" => {
-                    if ret.skip_deserialzing.is_some() {
+                    if ret.skip_deserializing.is_some() {
                         error(&ident, "Duplicated `skip_deserializing` attribute.")?;
                     }
-                    ret.skip_deserialzing = Some(AttrArgument { val: (), ident });
+                    ret.skip_deserializing = Some(AttrArgument { val: (), ident });
                 }
                 TokenTree::Ident(ident) if ident == "default" => {
                     if ret.default.is_some() {
@@ -249,14 +249,14 @@ impl Attribute {
 
         loop_exclusive!(
             [id_, tag_class, tag_pc, tag_num],
-            [skip_serialzing, skip_deserialzing, skip, default]
+            [skip_serializing, skip_deserializing, skip, default]
         );
         loop_exclusive!(
             [id_, tag_class, tag_pc, tag_num],
             [into, from, to, try_from]
         );
         loop_exclusive!(
-            [skip_serialzing, skip_deserialzing, skip, default],
+            [skip_serializing, skip_deserializing, skip, default],
             [into, from, to, try_from]
         );
 
@@ -283,8 +283,8 @@ impl Attribute {
             };
         }
 
-        not_allowed!(skip_serialzing);
-        not_allowed!(skip_deserialzing);
+        not_allowed!(skip_serializing);
+        not_allowed!(skip_deserializing);
         not_allowed!(skip);
         not_allowed!(default);
 
@@ -327,8 +327,8 @@ impl Attribute {
             };
         }
 
-        not_allowed!(skip_serialzing);
-        not_allowed!(skip_deserialzing);
+        not_allowed!(skip_serializing);
+        not_allowed!(skip_deserializing);
         not_allowed!(skip);
         not_allowed!(default);
 
@@ -413,11 +413,11 @@ impl Attribute {
     }
 
     pub fn is_skip_serializing(&self) -> bool {
-        self.skip.is_some() || self.skip_serialzing.is_some()
+        self.skip.is_some() || self.skip_serializing.is_some()
     }
 
     pub fn is_skip_deserializing(&self) -> bool {
-        self.skip.is_some() || self.skip_deserialzing.is_some()
+        self.skip.is_some() || self.skip_deserializing.is_some()
     }
 
     pub fn default_path(&self) -> syn::Path {
