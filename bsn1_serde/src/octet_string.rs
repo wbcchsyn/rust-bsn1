@@ -142,6 +142,14 @@ impl TryFrom<OctetString<'_>> for String {
     }
 }
 
+impl From<String> for OctetString<'static> {
+    fn from(val: String) -> Self {
+        Self {
+            octets: Cow::Owned(val.into_bytes()),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
