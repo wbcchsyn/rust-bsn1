@@ -158,6 +158,14 @@ impl From<String> for OctetString<'static> {
     }
 }
 
+impl<'a> From<&'a str> for OctetString<'a> {
+    fn from(val: &'a str) -> Self {
+        Self {
+            octets: Cow::Borrowed(val.as_bytes()),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
