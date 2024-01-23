@@ -119,6 +119,12 @@ impl Deserialize for OctetString<'static> {
     }
 }
 
+impl From<OctetString<'_>> for Vec<u8> {
+    fn from(val: OctetString) -> Self {
+        val.into_vec()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
