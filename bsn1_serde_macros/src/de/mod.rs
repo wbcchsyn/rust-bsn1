@@ -36,7 +36,9 @@ use quote::quote;
 
 pub fn do_deserialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
     let name = &ast.ident;
+
     let attribute = Attribute::try_from(&ast.attrs[..])?;
+    attribute.sanitize_as_container()?;
 
     let methods = if let Some(ty) = attribute.from_type() {
         do_from_deserialize(ty)?
@@ -154,10 +156,12 @@ fn do_deserialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Re
 
 #[allow(non_snake_case)]
 fn do_deserialize_enum(
-    _attribute: Attribute,
+    attribute: Attribute,
     enum_name: &Ident,
     data: syn::DataEnum,
 ) -> syn::Result<TokenStream> {
+    attribute.sanitize_as_enum()?;
+
     let IdRef = quote! { ::bsn1_serde::macro_alias::IdRef };
     let Length = quote! { ::bsn1_serde::macro_alias::Length };
     let ContentsRef = quote! { ::bsn1_serde::macro_alias::ContentsRef };

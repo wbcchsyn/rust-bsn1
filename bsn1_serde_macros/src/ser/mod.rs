@@ -37,9 +37,9 @@ use quote::quote;
 #[allow(non_snake_case)]
 pub fn do_serialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
     let name = &ast.ident;
-    let Serialize = quote! { ::bsn1_serde::ser::Serialize };
 
     let attribute = Attribute::try_from(&ast.attrs[..])?;
+    attribute.sanitize_as_container()?;
 
     let methods = if let Some(ty) = attribute.into_type() {
         do_into_serialize(&ty)?
@@ -54,6 +54,8 @@ pub fn do_serialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
             }
         }
     };
+
+    let Serialize = quote! { ::bsn1_serde::ser::Serialize };
 
     Ok(quote! {
         impl #Serialize for #name {
@@ -162,10 +164,12 @@ fn do_serialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Resu
 
 #[allow(non_snake_case)]
 fn do_serialize_enum(
-    _attribute: Attribute,
+    attribute: Attribute,
     enum_name: &Ident,
     data: syn::DataEnum,
 ) -> syn::Result<TokenStream> {
+    attribute.sanitize_as_enum()?;
+
     let Result = quote! { ::std::result::Result };
     let Write = quote! { ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };

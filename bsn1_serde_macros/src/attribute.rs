@@ -30,23 +30,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use proc_macro2::{TokenStream, TokenTree};
+use proc_macro2::{Ident, TokenStream, TokenTree};
 use quote::{quote, ToTokens};
+
+struct AttrArgument<T> {
+    val: T,
+    ident: Ident,
+}
 
 #[derive(Default)]
 pub struct Attribute {
-    id_: Option<u8>,
-    tag_class: Option<u8>,
-    tag_pc: Option<u8>,
-    tag_num: Option<u128>,
-    skip_serialzing: bool,
-    skip_deserialzing: bool,
-    default: Option<syn::Path>,
-    skip: bool,
-    into: Option<syn::Path>,
-    from: Option<syn::Path>,
-    to: Option<syn::Path>,
-    try_from: Option<syn::Path>,
+    // Arguments about Identifier for struct and variant.
+    // Exclusive with arguments about skip and about conversion.
+    id_: Option<AttrArgument<u8>>,
+    tag_class: Option<AttrArgument<u8>>,
+    tag_pc: Option<AttrArgument<u8>>,
+    tag_num: Option<AttrArgument<u128>>,
+
+    // Arguments about skip for field.
+    // Exclusive with arguments about identifier and about conversion.
+    skip_serialzing: Option<AttrArgument<()>>,
+    skip_deserialzing: Option<AttrArgument<()>>,
+    default: Option<AttrArgument<syn::Path>>,
+    skip: Option<AttrArgument<()>>,
+
+    // Arguments about conversion for struct, enum, and field.
+    // Exclusive with arguments about identifier and about skip.
+    //
+    // `into` and `to` are exclusive.
+    // `from` and `try_from` are exclusive.
+    into: Option<AttrArgument<syn::Path>>,
+    from: Option<AttrArgument<syn::Path>>,
+    to: Option<AttrArgument<syn::Path>>,
+    try_from: Option<AttrArgument<syn::Path>>,
 }
 
 impl TryFrom<&[syn::Attribute]> for Attribute {
@@ -64,6 +80,9 @@ impl TryFrom<&[syn::Attribute]> for Attribute {
             }
         }
 
+        if let Some(ref attr) = ret {
+            attr.sanitize()?;
+        }
         Ok(ret.unwrap_or_default())
     }
 }
@@ -86,81 +105,108 @@ impl Attribute {
                         error(&ident, "Duplicated `id` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.id_ = Some(parse_id_value(&value)?);
+                    ret.id_ = Some(AttrArgument {
+                        val: parse_id_value(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Ident(ident) if ident == "tag_class" => {
                     if ret.tag_class.is_some() {
                         error(&ident, "Duplicated `tag_class` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.tag_class = Some(parse_tag_class_value(&value)?);
+                    ret.tag_class = Some(AttrArgument {
+                        val: parse_tag_class_value(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Ident(ident) if ident == "tag_pc" => {
                     if ret.tag_pc.is_some() {
                         error(&ident, "Duplicated `tag_pc` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.tag_pc = Some(parse_tag_pc_value(&value)?);
+                    ret.tag_pc = Some(AttrArgument {
+                        val: parse_tag_pc_value(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Ident(ident) if ident == "tag_num" => {
                     if ret.tag_num.is_some() {
                         error(&ident, "Duplicated `tag_num` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.tag_num = Some(parse_tag_num_value(&value)?);
+                    ret.tag_num = Some(AttrArgument {
+                        val: parse_tag_num_value(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Ident(ident) if ident == "skip_serializing" => {
-                    if ret.skip_serialzing {
+                    if ret.skip_serialzing.is_some() {
                         error(&ident, "Duplicated `skip_serializing` attribute.")?;
                     }
-                    ret.skip_serialzing = true;
+                    ret.skip_serialzing = Some(AttrArgument { val: (), ident })
                 }
                 TokenTree::Ident(ident) if ident == "skip_deserializing" => {
-                    if ret.skip_deserialzing {
+                    if ret.skip_deserialzing.is_some() {
                         error(&ident, "Duplicated `skip_deserializing` attribute.")?;
                     }
-                    ret.skip_deserialzing = true;
+                    ret.skip_deserialzing = Some(AttrArgument { val: (), ident });
                 }
                 TokenTree::Ident(ident) if ident == "default" => {
                     if ret.default.is_some() {
                         error(&ident, "Duplicated `default` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.default = Some(parse_path(&value)?);
+                    ret.default = Some(AttrArgument {
+                        val: parse_path(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Ident(ident) if ident == "skip" => {
-                    if ret.skip {
+                    if ret.skip.is_some() {
                         error(&ident, "Duplicated `skip` attribute.")?;
                     }
-                    ret.skip = true;
+                    ret.skip = AttrArgument { val: (), ident }.into();
                 }
                 TokenTree::Ident(ident) if ident == "into" => {
                     if ret.into.is_some() {
                         error(&ident, "Duplicated `into` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.into = Some(parse_path(&value)?);
+                    ret.into = Some(AttrArgument {
+                        val: parse_path(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Ident(ident) if ident == "from" => {
                     if ret.from.is_some() {
                         error(&ident, "Duplicated `from` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.from = Some(parse_path(&value)?);
+                    ret.from = Some(AttrArgument {
+                        val: parse_path(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Ident(ident) if ident == "to" => {
                     if ret.to.is_some() {
                         error(&ident, "Duplicated `to` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.to = Some(parse_path(&value)?);
+                    ret.to = Some(AttrArgument {
+                        val: parse_path(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Ident(ident) if ident == "try_from" => {
                     if ret.try_from.is_some() {
                         error(&ident, "Duplicated `try_from` attribute.")?;
                     }
                     let value = take_value(&ident, it.next(), it.next())?;
-                    ret.try_from = Some(parse_path(&value)?);
+                    ret.try_from = Some(AttrArgument {
+                        val: parse_path(&value)?,
+                        ident,
+                    });
                 }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
@@ -168,6 +214,150 @@ impl Attribute {
         }
 
         Ok(Some(ret))
+    }
+
+    fn sanitize(&self) -> syn::Result<()> {
+        macro_rules! exclusive {
+            ($a: ident, $b: ident) => {
+                if self.$a.is_some() && self.$b.is_some() {
+                    let a = self.$a.as_ref().unwrap();
+                    let b = self.$b.as_ref().unwrap();
+                    error(
+                        &a.ident,
+                        format!(
+                            "The arguemnt `{}` and `{}` are exclusive.",
+                            a.ident, b.ident
+                        ),
+                    )?;
+                }
+            };
+        }
+
+        macro_rules! loop_exclusive {
+            ([$a: ident], [$b: ident]) => {
+                exclusive!($a, $b);
+            };
+            ([$a: ident], [$b: ident, $($b_: ident),+]) => {
+                exclusive!($a, $b);
+                loop_exclusive!([$a], [$($b_),+]);
+            };
+            ([$a: ident, $($a_: ident),+], [$($b: ident),+]) => {
+                loop_exclusive!([$a], [$($b),+]);
+                loop_exclusive!([$($a_),+], [$($b),+]);
+            };
+        }
+
+        loop_exclusive!(
+            [id_, tag_class, tag_pc, tag_num],
+            [skip_serialzing, skip_deserialzing, skip, default]
+        );
+        loop_exclusive!(
+            [id_, tag_class, tag_pc, tag_num],
+            [into, from, to, try_from]
+        );
+        loop_exclusive!(
+            [skip_serialzing, skip_deserialzing, skip, default],
+            [into, from, to, try_from]
+        );
+
+        exclusive!(from, try_from);
+        exclusive!(into, to);
+
+        Ok(())
+    }
+
+    /// Makes sure that `self` does not have any arguments not allowed either for enum or for
+    /// struct.
+    pub fn sanitize_as_container(&self) -> syn::Result<()> {
+        macro_rules! not_allowed {
+            ($a: ident) => {
+                if let Some(ref a) = self.$a {
+                    error(
+                        &a.ident,
+                        format!(
+                            "The arguemnt `{}` is not allowed either for enum or for struct.",
+                            a.ident
+                        ),
+                    )?;
+                }
+            };
+        }
+
+        not_allowed!(skip_serialzing);
+        not_allowed!(skip_deserialzing);
+        not_allowed!(skip);
+        not_allowed!(default);
+
+        self.sanitize()
+    }
+
+    pub fn sanitize_as_struct(&self) -> syn::Result<()> {
+        self.sanitize_as_container()
+    }
+
+    pub fn sanitize_as_enum(&self) -> syn::Result<()> {
+        macro_rules! not_allowed {
+            ($a: ident) => {
+                if let Some(ref a) = self.$a {
+                    error(
+                        &a.ident,
+                        format!("The arguemnt `{}` is not allowed for enum.", a.ident),
+                    )?;
+                }
+            };
+        }
+
+        not_allowed!(id_);
+        not_allowed!(tag_class);
+        not_allowed!(tag_pc);
+        not_allowed!(tag_num);
+
+        self.sanitize_as_container()
+    }
+
+    pub fn sanitize_as_variant(&self) -> syn::Result<()> {
+        macro_rules! not_allowed {
+            ($a: ident) => {
+                if let Some(ref a) = self.$a {
+                    error(
+                        &a.ident,
+                        format!("The arguemnt `{}` is not allowed for enum.", a.ident),
+                    )?;
+                }
+            };
+        }
+
+        not_allowed!(skip_serialzing);
+        not_allowed!(skip_deserialzing);
+        not_allowed!(skip);
+        not_allowed!(default);
+
+        not_allowed!(into);
+        not_allowed!(from);
+        not_allowed!(to);
+        not_allowed!(try_from);
+
+        self.sanitize()
+    }
+
+    pub fn sanitize_as_field(&self) -> syn::Result<()> {
+        macro_rules! not_allowed {
+            ($a: ident) => {
+                if let Some(ref a) = self.$a {
+                    error(
+                        &a.ident,
+                        format!("The arguemnt `{}` is not allowed for field.", a.ident),
+                    )?;
+                }
+            };
+        }
+
+        not_allowed!(id_);
+        not_allowed!(tag_class);
+        not_allowed!(tag_pc);
+        not_allowed!(tag_num);
+
+        self.sanitize()
     }
 
     pub fn id(&self, default_id: u8) -> Option<TokenStream> {
@@ -182,21 +372,22 @@ impl Attribute {
         let mut octets: Vec<u8> = Vec::new();
 
         match self.id_ {
-            Some(id) => octets.push(id),
+            Some(ref arg) => octets.push(arg.val),
             None => octets.push(default_id),
         };
 
-        if let Some(tag_class) = self.tag_class {
+        if let Some(ref arg) = self.tag_class {
             const MASK: u8 = 0x3f;
-            octets[0] = (octets[0] & MASK) | tag_class;
+            octets[0] = (octets[0] & MASK) | arg.val;
         }
 
-        if let Some(tag_pc) = self.tag_pc {
+        if let Some(ref arg) = self.tag_pc {
             const MASK: u8 = 0xdf;
-            octets[0] = (octets[0] & MASK) | tag_pc;
+            octets[0] = (octets[0] & MASK) | arg.val;
         }
 
-        if let Some(mut tag_num) = self.tag_num {
+        if let Some(ref arg) = self.tag_num {
+            let mut tag_num = arg.val;
             const LONG_FORM: u8 = 0x1f;
 
             if tag_num < LONG_FORM as u128 {
@@ -222,34 +413,34 @@ impl Attribute {
     }
 
     pub fn is_skip_serializing(&self) -> bool {
-        self.skip || self.skip_serialzing
+        self.skip.is_some() || self.skip_serialzing.is_some()
     }
 
     pub fn is_skip_deserializing(&self) -> bool {
-        self.skip || self.skip_deserialzing
+        self.skip.is_some() || self.skip_deserialzing.is_some()
     }
 
     pub fn default_path(&self) -> syn::Path {
-        match self.default.as_ref() {
-            Some(path) => path.clone(),
+        match self.default {
+            Some(ref arg) => arg.val.clone(),
             None => syn::parse_str::<syn::Path>("Default::default").unwrap(),
         }
     }
 
     pub fn into_type(&self) -> Option<&syn::Path> {
-        self.into.as_ref()
+        self.into.as_ref().map(|arg| &arg.val)
     }
 
     pub fn from_type(&self) -> Option<&syn::Path> {
-        self.from.as_ref()
+        self.from.as_ref().map(|arg| &arg.val)
     }
 
     pub fn to_path(&self) -> Option<&syn::Path> {
-        self.to.as_ref()
+        self.to.as_ref().map(|arg| &arg.val)
     }
 
     pub fn try_from_type(&self) -> Option<&syn::Path> {
-        self.try_from.as_ref()
+        self.try_from.as_ref().map(|arg| &arg.val)
     }
 }
 
