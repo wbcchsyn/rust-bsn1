@@ -125,6 +125,14 @@ impl From<OctetString<'_>> for Vec<u8> {
     }
 }
 
+impl TryFrom<OctetString<'_>> for String {
+    type Error = std::string::FromUtf8Error;
+
+    fn try_from(val: OctetString) -> Result<Self, Self::Error> {
+        String::from_utf8(val.into_vec())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
