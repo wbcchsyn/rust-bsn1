@@ -48,6 +48,7 @@ use std::io::Write;
 /// `OctetString` is always serialized into `UNIVERSAL PRIMITIVE OctetString`, deserialized
 /// as a DER from `UNIVERSAL PRIMITIVE OctetString`, and deserialized as a BER from
 /// `UNIVERSAL PRIMITIVE OctetString` or `UNIVERSAL CONSTRUCTED OctetString`.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct OctetString<'a> {
     octets: Cow<'a, [u8]>,
 }
