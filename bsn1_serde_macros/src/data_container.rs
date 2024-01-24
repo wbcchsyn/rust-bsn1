@@ -498,6 +498,14 @@ impl DataContainer {
         }
     }
 
+    fn transparent_field_var(&self) -> TokenStream {
+        assert!(self.attribute().is_transparent());
+
+        let mut field_vars = self.field_vars();
+        assert!(field_vars.len() == 1);
+        field_vars.pop().unwrap()
+    }
+
     fn field_attributes(&self) -> &[Attribute] {
         match self {
             Self::Variant {
