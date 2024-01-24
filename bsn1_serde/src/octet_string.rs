@@ -48,6 +48,7 @@ use std::io::Write;
 /// `OctetString` is always serialized into `UNIVERSAL PRIMITIVE OctetString`, deserialized
 /// as a DER from `UNIVERSAL PRIMITIVE OctetString`, and deserialized as a BER from
 /// `UNIVERSAL PRIMITIVE OctetString` or `UNIVERSAL CONSTRUCTED OctetString`.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct OctetString<'a> {
     octets: Cow<'a, [u8]>,
 }
@@ -116,6 +117,52 @@ impl Deserialize for OctetString<'static> {
         Ok(Self {
             octets: Cow::Owned(contents.as_ref().to_vec()),
         })
+    }
+}
+
+impl From<OctetString<'_>> for Vec<u8> {
+    fn from(val: OctetString) -> Self {
+        val.into_vec()
+    }
+}
+
+impl From<Vec<u8>> for OctetString<'static> {
+    fn from(val: Vec<u8>) -> Self {
+        Self {
+            octets: Cow::Owned(val),
+        }
+    }
+}
+
+impl<'a> From<&'a [u8]> for OctetString<'a> {
+    fn from(val: &'a [u8]) -> Self {
+        Self {
+            octets: Cow::Borrowed(val),
+        }
+    }
+}
+
+impl TryFrom<OctetString<'_>> for String {
+    type Error = std::string::FromUtf8Error;
+
+    fn try_from(val: OctetString) -> Result<Self, Self::Error> {
+        String::from_utf8(val.into_vec())
+    }
+}
+
+impl From<String> for OctetString<'static> {
+    fn from(val: String) -> Self {
+        Self {
+            octets: Cow::Owned(val.into_bytes()),
+        }
+    }
+}
+
+impl<'a> From<&'a str> for OctetString<'a> {
+    fn from(val: &'a str) -> Self {
+        Self {
+            octets: Cow::Borrowed(val.as_bytes()),
+        }
     }
 }
 
