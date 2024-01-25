@@ -242,6 +242,16 @@ impl DataContainer {
     }
 
     #[allow(non_snake_case)]
+    pub fn write_der_contents_transparent(&self, buffer: &TokenStream) -> syn::Result<TokenStream> {
+        assert!(self.attribute().is_transparent());
+
+        let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+        let field = self.transparent_field_var();
+
+        Ok(quote! { #Serialize::write_der_contents(#field, #buffer) })
+    }
+
+    #[allow(non_snake_case)]
     pub fn der_contents_len(&self) -> syn::Result<TokenStream> {
         let Length = quote! { ::bsn1_serde::macro_alias::Length };
         let Result = quote! { ::std::result::Result };
