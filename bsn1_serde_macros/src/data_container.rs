@@ -134,6 +134,16 @@ impl DataContainer {
     }
 
     #[allow(non_snake_case)]
+    pub fn write_id_transparent(&self, buffer: &TokenStream) -> syn::Result<TokenStream> {
+        assert!(self.attribute().is_transparent());
+
+        let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+        let field = self.transparent_field_var();
+
+        Ok(quote! { #Serialize::write_id(#field, #buffer) })
+    }
+
+    #[allow(non_snake_case)]
     pub fn id_len(&self) -> syn::Result<TokenStream> {
         let Result = quote! { ::std::result::Result };
 
