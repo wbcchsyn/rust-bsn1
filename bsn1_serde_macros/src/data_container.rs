@@ -306,6 +306,16 @@ impl DataContainer {
     }
 
     #[allow(non_snake_case)]
+    pub fn der_contents_len_transparent(&self) -> syn::Result<TokenStream> {
+        assert!(self.attribute().is_transparent());
+
+        let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+        let field = self.transparent_field_var();
+
+        Ok(quote! { #Serialize::der_contents_len(#field) })
+    }
+
+    #[allow(non_snake_case)]
     pub fn from_ber_contents(
         &self,
         length: &TokenStream,
