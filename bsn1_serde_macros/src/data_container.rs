@@ -151,6 +151,16 @@ impl DataContainer {
         Ok(quote! { #Result::Ok(#id.len()) })
     }
 
+    #[allow(non_snake_case)]
+    pub fn id_len_transparent(&self) -> syn::Result<TokenStream> {
+        assert!(self.attribute().is_transparent());
+
+        let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+        let field = self.transparent_field_var();
+
+        Ok(quote! { #Serialize::id_len(#field) })
+    }
+
     pub fn id_slice(&self) -> syn::Result<TokenStream> {
         // This method should not be called if converting annottation is specified.
         assert!(self.attribute().into_type().is_none());
