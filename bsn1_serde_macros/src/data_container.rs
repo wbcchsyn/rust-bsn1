@@ -615,4 +615,13 @@ impl DataContainer {
             } => field_attributes,
         }
     }
+
+    fn transparent_field_attribute(&self) -> &Attribute {
+        assert!(self.attribute().is_transparent());
+
+        let field_attributes = self.field_attributes();
+        assert!(field_attributes.len() == 1);
+
+        field_attributes.first().unwrap()
+    }
 }
