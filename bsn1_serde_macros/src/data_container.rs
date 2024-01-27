@@ -472,7 +472,7 @@ impl DataContainer {
         }})
     }
 
-    fn attribute(&self) -> &Attribute {
+    pub fn attribute(&self) -> &Attribute {
         match self {
             Self::DataStruct { attribute, .. } => attribute,
             Self::Variant { attribute, .. } => attribute,
