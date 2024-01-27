@@ -63,6 +63,10 @@ pub struct Attribute {
     from: Option<AttrArgument<syn::Path>>,
     to: Option<AttrArgument<syn::Path>>,
     try_from: Option<AttrArgument<syn::Path>>,
+
+    // Arguments for struct with exactly one field.
+    // Exclusive the other arguments.
+    transparent: Option<AttrArgument<()>>,
 }
 
 impl TryFrom<&[syn::Attribute]> for Attribute {
@@ -208,6 +212,12 @@ impl Attribute {
                         ident,
                     });
                 }
+                TokenTree::Ident(ident) if ident == "transparent" => {
+                    if ret.transparent.is_some() {
+                        error(&ident, "Duplicated `transparent` attribute.")?;
+                    }
+                    ret.transparent = AttrArgument { val: (), ident }.into();
+                }
                 TokenTree::Punct(punct) if punct.as_char() == ',' => continue,
                 _ => error(tt, "Unexpected token.")?,
             }
@@ -263,6 +273,13 @@ impl Attribute {
         exclusive!(from, try_from);
         exclusive!(into, to);
 
+        loop_exclusive!([id_, tag_class, tag_pc, tag_num], [transparent]);
+        loop_exclusive!(
+            [skip_serializing, skip_deserializing, skip, default],
+            [transparent]
+        );
+        loop_exclusive!([into, from, to, try_from], [transparent]);
+
         Ok(())
     }
 
@@ -312,6 +329,8 @@ impl Attribute {
         not_allowed!(tag_pc);
         not_allowed!(tag_num);
 
+        not_allowed!(transparent);
+
         self.sanitize_as_container()
     }
 
@@ -337,6 +356,8 @@ impl Attribute {
         not_allowed!(to);
         not_allowed!(try_from);
 
+        not_allowed!(transparent);
+
         self.sanitize()
     }
 
@@ -356,6 +377,8 @@ impl Attribute {
         not_allowed!(tag_class);
         not_allowed!(tag_pc);
         not_allowed!(tag_num);
+
+        not_allowed!(transparent);
 
         self.sanitize()
     }
@@ -441,6 +464,14 @@ impl Attribute {
 
     pub fn try_from_type(&self) -> Option<&syn::Path> {
         self.try_from.as_ref().map(|arg| &arg.val)
+    }
+
+    pub fn is_transparent(&self) -> bool {
+        self.transparent.is_some()
+    }
+
+    pub fn transparent_token(&self) -> Option<&Ident> {
+        self.transparent.as_ref().map(|arg| &arg.ident)
     }
 }
 

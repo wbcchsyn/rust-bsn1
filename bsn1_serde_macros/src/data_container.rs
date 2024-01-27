@@ -56,6 +56,13 @@ impl TryFrom<(Attribute, syn::DataStruct)> for DataContainer {
     fn try_from((attribute, data): (Attribute, syn::DataStruct)) -> Result<Self, Self::Error> {
         attribute.sanitize_as_struct()?;
 
+        if attribute.is_transparent() && data.fields.len() != 1 {
+            return Err(syn::Error::new_spanned(
+                attribute.transparent_token(),
+                "The field count of transparent struct must be 1.",
+            ));
+        }
+
         let mut field_attributes = Vec::new();
         for field in data.fields.iter() {
             let attribute = Attribute::try_from(&field.attrs[..])?;
@@ -127,11 +134,31 @@ impl DataContainer {
     }
 
     #[allow(non_snake_case)]
+    pub fn write_id_transparent(&self, buffer: &TokenStream) -> syn::Result<TokenStream> {
+        assert!(self.attribute().is_transparent());
+
+        let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+        let field = self.transparent_field_var();
+
+        Ok(quote! { #Serialize::write_id(#field, #buffer) })
+    }
+
+    #[allow(non_snake_case)]
     pub fn id_len(&self) -> syn::Result<TokenStream> {
         let Result = quote! { ::std::result::Result };
 
         let id = self.id_slice()?;
         Ok(quote! { #Result::Ok(#id.len()) })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn id_len_transparent(&self) -> syn::Result<TokenStream> {
+        assert!(self.attribute().is_transparent());
+
+        let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+        let field = self.transparent_field_var();
+
+        Ok(quote! { #Serialize::id_len(#field) })
     }
 
     pub fn id_slice(&self) -> syn::Result<TokenStream> {
@@ -140,6 +167,9 @@ impl DataContainer {
         assert!(self.attribute().from_type().is_none());
         assert!(self.attribute().to_path().is_none());
         assert!(self.attribute().try_from_type().is_none());
+
+        // This method should not be called if `transparent` is specified.
+        assert!(self.attribute().is_transparent() == false);
 
         const SEQUENCE: u8 = 0x30;
 
@@ -212,6 +242,16 @@ impl DataContainer {
     }
 
     #[allow(non_snake_case)]
+    pub fn write_der_contents_transparent(&self, buffer: &TokenStream) -> syn::Result<TokenStream> {
+        assert!(self.attribute().is_transparent());
+
+        let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+        let field = self.transparent_field_var();
+
+        Ok(quote! { #Serialize::write_der_contents(#field, #buffer) })
+    }
+
+    #[allow(non_snake_case)]
     pub fn der_contents_len(&self) -> syn::Result<TokenStream> {
         let Length = quote! { ::bsn1_serde::macro_alias::Length };
         let Result = quote! { ::std::result::Result };
@@ -263,6 +303,16 @@ impl DataContainer {
             #(#field_acc)*
             #Result::Ok(#ret)
         })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn der_contents_len_transparent(&self) -> syn::Result<TokenStream> {
+        assert!(self.attribute().is_transparent());
+
+        let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+        let field = self.transparent_field_var();
+
+        Ok(quote! { #Serialize::der_contents_len(#field) })
     }
 
     #[allow(non_snake_case)]
@@ -356,6 +406,32 @@ impl DataContainer {
     }
 
     #[allow(non_snake_case)]
+    pub fn from_ber_transparent(
+        &self,
+        id: &TokenStream,
+        length: &TokenStream,
+        contents: &TokenStream,
+    ) -> syn::Result<TokenStream> {
+        assert!(self.attribute().is_transparent());
+
+        let Result = quote! { ::std::result::Result };
+        let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
+
+        let field_ident = self.transparent_field_ident();
+        let ty = self.ty();
+
+        match self.fields() {
+            syn::Fields::Named(_) => Ok(quote! {
+                #Result::Ok(#ty { #field_ident: #Deserialize::from_ber(#id, #length, #contents)? })
+            }),
+            syn::Fields::Unnamed(_) => Ok(quote! {
+                #Result::Ok(#ty ( #Deserialize::from_ber(#id, #length, #contents)? ))
+            }),
+            syn::Fields::Unit => unreachable!(),
+        }
+    }
+
+    #[allow(non_snake_case)]
     pub fn from_der_contents(&self, contents: &TokenStream) -> syn::Result<TokenStream> {
         let DerRef = quote! { ::bsn1_serde::macro_alias::DerRef };
         let Error = quote! { ::bsn1_serde::macro_alias::Error };
@@ -422,7 +498,32 @@ impl DataContainer {
         }})
     }
 
-    fn attribute(&self) -> &Attribute {
+    #[allow(non_snake_case)]
+    pub fn from_der_transparent(
+        &self,
+        id: &TokenStream,
+        contents: &TokenStream,
+    ) -> syn::Result<TokenStream> {
+        assert!(self.attribute().is_transparent());
+
+        let Result = quote! { ::std::result::Result };
+        let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
+
+        let field_ident = self.transparent_field_ident();
+        let ty = self.ty();
+
+        match self.fields() {
+            syn::Fields::Named(_) => Ok(quote! {
+                #Result::Ok(#ty { #field_ident: #Deserialize::from_der(#id, #contents)? })
+            }),
+            syn::Fields::Unnamed(_) => Ok(quote! {
+                #Result::Ok(#ty ( #Deserialize::from_der(#id, #contents)? ))
+            }),
+            syn::Fields::Unit => unreachable!(),
+        }
+    }
+
+    pub fn attribute(&self) -> &Attribute {
         match self {
             Self::DataStruct { attribute, .. } => attribute,
             Self::Variant { attribute, .. } => attribute,
@@ -469,6 +570,14 @@ impl DataContainer {
         }
     }
 
+    fn transparent_field_ident(&self) -> TokenStream {
+        assert!(self.attribute().is_transparent());
+
+        let mut field_idents = self.field_idents();
+        assert!(field_idents.len() == 1);
+        field_idents.pop().unwrap()
+    }
+
     fn field_vars(&self) -> Vec<TokenStream> {
         match self {
             Self::Variant { .. } => {
@@ -486,6 +595,14 @@ impl DataContainer {
                 .map(|ident| quote! { &self.#ident })
                 .collect(),
         }
+    }
+
+    fn transparent_field_var(&self) -> TokenStream {
+        assert!(self.attribute().is_transparent());
+
+        let mut field_vars = self.field_vars();
+        assert!(field_vars.len() == 1);
+        field_vars.pop().unwrap()
     }
 
     fn field_attributes(&self) -> &[Attribute] {
