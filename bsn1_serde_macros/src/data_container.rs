@@ -406,6 +406,32 @@ impl DataContainer {
     }
 
     #[allow(non_snake_case)]
+    pub fn from_ber_transparent(
+        &self,
+        id: &TokenStream,
+        length: &TokenStream,
+        contents: &TokenStream,
+    ) -> syn::Result<TokenStream> {
+        assert!(self.attribute().is_transparent());
+
+        let Result = quote! { ::std::result::Result };
+        let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
+
+        let field_ident = self.transparent_field_ident();
+        let ty = self.ty();
+
+        match self.fields() {
+            syn::Fields::Named(_) => Ok(quote! {
+                #Result::Ok(#ty { #field_ident: #Deserialize::from_ber(#id, #length, #contents)? })
+            }),
+            syn::Fields::Unnamed(_) => Ok(quote! {
+                #Result::Ok(#ty ( #Deserialize::from_ber(#id, #length, #contents)? ))
+            }),
+            syn::Fields::Unit => unreachable!(),
+        }
+    }
+
+    #[allow(non_snake_case)]
     pub fn from_der_contents(&self, contents: &TokenStream) -> syn::Result<TokenStream> {
         let DerRef = quote! { ::bsn1_serde::macro_alias::DerRef };
         let Error = quote! { ::bsn1_serde::macro_alias::Error };
