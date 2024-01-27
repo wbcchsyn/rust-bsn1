@@ -130,25 +130,43 @@ fn do_deserialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Re
     let Result = quote! { ::std::result::Result };
 
     let data = DataContainer::try_from((attribute, data))?;
+    let id = quote! { id };
     let length = quote! { length };
     let contents = quote! { contents };
-    let from_ber = data.from_ber_contents(&length, &contents)?;
-    let from_der = data.from_der_contents(&contents)?;
-    let id_slice = data.id_slice()?;
+
+    let (from_ber, from_der) = if data.attribute().is_transparent() {
+        let from_ber = data.from_ber_transparent(&id, &length, &contents)?;
+        let from_der = data.from_der_transparent(&id, &contents)?;
+
+        (from_ber, from_der)
+    } else {
+        let id_slice = data.id_slice()?;
+        let from_ber = data.from_ber_contents(&length, &contents)?;
+        let from_der = data.from_der_contents(&contents)?;
+
+        (
+            quote! {
+                if #id.as_ref() as &[u8] != #id_slice {
+                    return #Result::Err(#Error::UnmatchedId);
+                }
+                #from_ber
+            },
+            quote! {
+                if #id.as_ref() as &[u8] != #id_slice {
+                    return #Result::Err(#Error::UnmatchedId);
+                }
+                #from_der
+            },
+        )
+    };
 
     Ok(quote! {
         unsafe fn from_ber(id: &#IdRef, length: #Length, contents: &#ContentsRef)
             -> #Result<Self, #Error> {
-            if id.as_ref() as &[u8] != #id_slice {
-                return #Result::Err(#Error::UnmatchedId);
-            }
             #from_ber
         }
 
         fn from_der(id: &#IdRef, contents: &#ContentsRef) -> #Result<Self, #Error> {
-            if id.as_ref() as &[u8] != #id_slice {
-                return #Result::Err(#Error::UnmatchedId);
-            }
             #from_der
         }
     })
