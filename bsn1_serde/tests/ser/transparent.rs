@@ -31,7 +31,7 @@
 // limitations under the License.
 
 use bsn1_serde::ser::Serialize as _;
-use bsn1_serde::to_der;
+use bsn1_serde::{to_der, OctetString};
 
 #[derive(bsn1_serde::Serialize)]
 #[bsn1_serde(transparent)]
@@ -43,9 +43,22 @@ struct A {
 #[bsn1_serde(transparent)]
 struct B(String);
 
+#[derive(bsn1_serde::Serialize)]
+#[bsn1_serde(transparent)]
+struct C {
+    #[bsn1_serde(into = "OctetString")]
+    x: String,
+}
+
+#[derive(bsn1_serde::Serialize)]
+#[bsn1_serde(transparent)]
+struct D(#[bsn1_serde(into = "OctetString")] Vec<u8>);
+
 fn main() {
     test_a();
     test_b();
+    test_c();
+    test_d();
 }
 
 fn test_a() {
@@ -66,6 +79,30 @@ fn test_b() {
     let der = to_der(&val).unwrap();
 
     assert_eq!(der, to_der(&inner).unwrap());
+
+    assert_eq!(der.id().len(), val.id_len().unwrap());
+
+    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+}
+
+fn test_c() {
+    let inner = String::from("abc");
+    let val = C { x: inner.clone() };
+    let der = to_der(&val).unwrap();
+
+    assert_eq!(der, to_der(&OctetString::from(inner)).unwrap());
+
+    assert_eq!(der.id().len(), val.id_len().unwrap());
+
+    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+}
+
+fn test_d() {
+    let inner = vec![0x01, 0x02, 0x03];
+    let val = D(inner.clone());
+    let der = to_der(&val).unwrap();
+
+    assert_eq!(der, to_der(&OctetString::from(inner)).unwrap());
 
     assert_eq!(der.id().len(), val.id_len().unwrap());
 
