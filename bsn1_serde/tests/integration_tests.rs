@@ -52,6 +52,8 @@ fn serialize() {
     t.pass("tests/ser/to_struct.rs");
     t.pass("tests/ser/to_enum.rs");
     t.pass("tests/ser/to_field.rs");
+
+    t.pass("tests/ser/transparent.rs");
 }
 
 #[test]

@@ -138,10 +138,23 @@ fn do_serialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Resu
 
     let data = DataContainer::try_from((attribute, data))?;
     let buffer = quote! { buffer };
-    let write_id = data.write_id(&buffer)?;
-    let id_len = data.id_len()?;
-    let der_contents_len = data.der_contents_len()?;
-    let write_der_contents = data.write_der_contents(&buffer)?;
+
+    let (write_id, id_len, der_contents_len, write_der_contents) =
+        if data.attribute().is_transparent() {
+            (
+                data.write_id_transparent(&buffer)?,
+                data.id_len_transparent()?,
+                data.der_contents_len_transparent()?,
+                data.write_der_contents_transparent(&buffer)?,
+            )
+        } else {
+            (
+                data.write_id(&buffer)?,
+                data.id_len()?,
+                data.der_contents_len()?,
+                data.write_der_contents(&buffer)?,
+            )
+        };
 
     Ok(quote! {
             fn write_id<W: #Write>(&self, buffer: &mut W) -> #Result<(), #Error> {
