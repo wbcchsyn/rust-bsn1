@@ -26,7 +26,7 @@ pub mod ser;
 use bsn1::{Ber, BerRef, Buffer, Der, DerRef, Error, Length};
 pub use bsn1_serde_macros::{Deserialize, Serialize};
 pub use octet_string::OctetString;
-use std::io::Write as _;
+use std::io::Write;
 
 /// Serializes `value` into ASN.1 DER format.
 pub fn to_der<T>(value: &T) -> Result<Der, Error>
@@ -52,6 +52,22 @@ where
 {
     // DER is always valid as BER.
     to_der(value).map(Ber::from)
+}
+
+/// Serializes `value` into ASN.1 DER format, and writes it into `write`.
+pub fn write_der<T, W>(value: &T, write: &mut W) -> Result<(), Error>
+where
+    T: ?Sized + ser::Serialize,
+    W: ?Sized + Write,
+{
+    let contents_len = value.der_contents_len()?;
+    let length = Length::Definite(contents_len).to_bytes();
+
+    value.write_id(write)?;
+    write.write_all(&length).map_err(|err| Error::from(err))?;
+    value.write_der_contents(write)?;
+
+    Ok(())
 }
 
 /// Deserializes `T` from ASN.1 BER format.
@@ -119,5 +135,16 @@ mod tests {
         let der = to_der(&value).unwrap();
 
         assert_eq!(value, from_der::<Vec<i32>>(&der).unwrap());
+    }
+
+    #[test]
+    fn test_write_der() {
+        let value = true;
+        let der = to_der(&value).unwrap();
+
+        let mut buffer: Vec<u8> = Vec::new();
+        write_der(&value, &mut buffer).unwrap();
+
+        assert_eq!(&buffer[..], der.as_ref() as &[u8]);
     }
 }
