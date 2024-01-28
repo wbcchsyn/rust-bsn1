@@ -469,17 +469,37 @@ impl DataContainer {
         let Result = quote! { ::std::result::Result };
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
 
+        let field_attribute = self.transparent_field_attribute();
         let field_ident = self.transparent_field_ident();
         let ty = self.ty();
 
-        match self.fields() {
-            syn::Fields::Named(_) => Ok(quote! {
-                #Result::Ok(#ty { #field_ident: #Deserialize::from_ber(#id, #length, #contents)? })
-            }),
-            syn::Fields::Unnamed(_) => Ok(quote! {
-                #Result::Ok(#ty ( #Deserialize::from_ber(#id, #length, #contents)? ))
-            }),
-            syn::Fields::Unit => unreachable!(),
+        if let Some(from_ty) = field_attribute.from_type() {
+            let From = quote! { ::std::convert::From };
+            let tmp_val = quote! { bsn1_macro_1706375252_tmp_val };
+
+            match self.fields() {
+                syn::Fields::Named(_) => Ok(quote! {
+                    let #tmp_val: #from_ty = #Deserialize::from_ber(#id, #length, #contents)?;
+                    #Result::Ok(#ty { #field_ident: #From::from(#tmp_val) })
+                }),
+                syn::Fields::Unnamed(_) => Ok(quote! {
+                    let #tmp_val: #from_ty = #Deserialize::from_ber(#id, #length, #contents)?;
+                    #Result::Ok(#ty ( #From::from(#tmp_val) ))
+                }),
+                syn::Fields::Unit => unreachable!(),
+            }
+        } else {
+            match self.fields() {
+                syn::Fields::Named(_) => Ok(quote! {
+                    #Result::Ok(#ty {
+                        #field_ident: #Deserialize::from_ber(#id, #length, #contents)?
+                    })
+                }),
+                syn::Fields::Unnamed(_) => Ok(quote! {
+                    #Result::Ok(#ty ( #Deserialize::from_ber(#id, #length, #contents)? ))
+                }),
+                syn::Fields::Unit => unreachable!(),
+            }
         }
     }
 
@@ -561,17 +581,35 @@ impl DataContainer {
         let Result = quote! { ::std::result::Result };
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
 
+        let field_attribute = self.transparent_field_attribute();
         let field_ident = self.transparent_field_ident();
         let ty = self.ty();
 
-        match self.fields() {
-            syn::Fields::Named(_) => Ok(quote! {
-                #Result::Ok(#ty { #field_ident: #Deserialize::from_der(#id, #contents)? })
-            }),
-            syn::Fields::Unnamed(_) => Ok(quote! {
-                #Result::Ok(#ty ( #Deserialize::from_der(#id, #contents)? ))
-            }),
-            syn::Fields::Unit => unreachable!(),
+        if let Some(from_ty) = field_attribute.from_type() {
+            let From = quote! { ::std::convert::From };
+            let tmp_val = quote! { bsn1_macro_1706375252_tmp_val };
+
+            match self.fields() {
+                syn::Fields::Named(_) => Ok(quote! {{
+                    let #tmp_val: #from_ty = #Deserialize::from_der(#id, #contents)?;
+                    #Result::Ok(#ty { #field_ident: #From::from(#tmp_val) })
+                }}),
+                syn::Fields::Unnamed(_) => Ok(quote! {{
+                    let #tmp_val: #from_ty = #Deserialize::from_der(#id, #contents)?;
+                    #Result::Ok(#ty ( #From::from(#tmp_val) ))
+                }}),
+                syn::Fields::Unit => unreachable!(),
+            }
+        } else {
+            match self.fields() {
+                syn::Fields::Named(_) => Ok(quote! {
+                    #Result::Ok(#ty { #field_ident: #Deserialize::from_der(#id, #contents)? })
+                }),
+                syn::Fields::Unnamed(_) => Ok(quote! {
+                    #Result::Ok(#ty ( #Deserialize::from_der(#id, #contents)? ))
+                }),
+                syn::Fields::Unit => unreachable!(),
+            }
         }
     }
 

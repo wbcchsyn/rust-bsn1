@@ -30,7 +30,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use bsn1_serde::{from_ber, from_der, to_ber, to_der};
+use bsn1_serde::{from_ber, from_der, to_ber, to_der, OctetString};
 
 #[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Debug, PartialEq)]
 #[bsn1_serde(transparent)]
@@ -42,9 +42,22 @@ struct A {
 #[bsn1_serde(transparent)]
 struct B(String);
 
+#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Debug, PartialEq)]
+#[bsn1_serde(transparent)]
+struct C {
+    #[bsn1_serde(from = "OctetString<'static>", into = "OctetString")]
+    x: Vec<u8>,
+}
+
+#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Debug, PartialEq)]
+#[bsn1_serde(transparent)]
+struct D(#[bsn1_serde(from = "OctetString<'static>", into = "OctetString")] Vec<u8>);
+
 fn main() {
     test_a();
     test_b();
+    test_c();
+    test_d();
 }
 
 fn test_a() {
@@ -61,6 +74,28 @@ fn test_a() {
 
 fn test_b() {
     let val = B("abc".to_string());
+
+    let der = to_der(&val).unwrap();
+    assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
+}
+
+fn test_c() {
+    let val = C {
+        x: vec![0x01, 0x02, 0x03],
+    };
+
+    let der = to_der(&val).unwrap();
+    assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
+}
+
+fn test_d() {
+    let val = D(vec![0x01, 0x02, 0x03]);
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
