@@ -1,4 +1,4 @@
-// Copyright 2023 Shin Yoshida
+// Copyright 2023-2024 Shin Yoshida
 //
 // "LGPL-3.0-or-later OR Apache-2.0"
 //
