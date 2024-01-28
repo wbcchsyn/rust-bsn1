@@ -70,6 +70,16 @@ where
     Ok(())
 }
 
+/// Serializes `value` into ASN.1 BER format, and writes it into `write`.
+pub fn write_ber<T, W>(value: &T, write: &mut W) -> Result<(), Error>
+where
+    T: ?Sized + ser::Serialize,
+    W: ?Sized + Write,
+{
+    // DER is always valid as BER.
+    write_der(value, write)
+}
+
 /// Deserializes `T` from ASN.1 BER format.
 pub fn from_ber<T>(ber: &BerRef) -> Result<T, Error>
 where
@@ -140,6 +150,17 @@ mod tests {
     #[test]
     fn test_write_der() {
         let value = true;
+        let der = to_der(&value).unwrap();
+
+        let mut buffer: Vec<u8> = Vec::new();
+        write_der(&value, &mut buffer).unwrap();
+
+        assert_eq!(&buffer[..], der.as_ref() as &[u8]);
+    }
+
+    #[test]
+    fn test_write_ber() {
+        let value = 0x1234i32;
         let der = to_der(&value).unwrap();
 
         let mut buffer: Vec<u8> = Vec::new();
