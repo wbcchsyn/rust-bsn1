@@ -71,3 +71,53 @@ where
     let (id, _, contents) = der.disassemble();
     de::Deserialize::from_der(id, contents)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bsn1::{Contents, IdRef};
+
+    #[test]
+    fn test_to_der() {
+        let value = 0x1234u16;
+        let der = to_der(&value).unwrap();
+
+        assert_eq!(der.id(), IdRef::integer());
+        assert_eq!(der.contents(), &Contents::from(value));
+    }
+
+    #[test]
+    fn test_to_ber() {
+        let value = "abc".to_string();
+        let ber = to_ber(&value).unwrap();
+
+        assert_eq!(ber.id(), IdRef::utf8_string());
+        assert_eq!(ber.contents(), &Contents::from(value));
+    }
+
+    #[test]
+    fn test_from_ber() {
+        let value = vec![0x01, 0x02, 0x03];
+        let ber = to_ber(&value).unwrap();
+
+        assert_eq!(value, from_ber::<Vec<i32>>(&ber).unwrap());
+    }
+
+    #[test]
+    fn test_from_ber_indefinite() {
+        let value = vec![0x01, 0x02, 0x03];
+        let ber = to_ber(&value).unwrap();
+        let mut ber = unsafe { Ber::new_indefinite(IdRef::sequence(), ber.contents()) };
+        ber.extend_from_slice(BerRef::eoc());
+
+        assert_eq!(value, from_ber::<Vec<i32>>(&ber).unwrap());
+    }
+
+    #[test]
+    fn test_from_der() {
+        let value = vec![0x01, 0x02, 0x03];
+        let der = to_der(&value).unwrap();
+
+        assert_eq!(value, from_der::<Vec<i32>>(&der).unwrap());
+    }
+}
