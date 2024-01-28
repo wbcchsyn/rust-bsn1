@@ -151,6 +151,13 @@ impl DataContainer {
                 let #this: #into_ty = #Into::into(#this);
                 #Serialize::write_id(&#this, #buffer)
             }})
+        } else if let Some(path) = field_attribute.to_path() {
+            let this = quote! { bsn1_macro_1706411411_this };
+
+            Ok(quote! {{
+                let #this = #path(#field);
+                #Serialize::write_id(&#this, #buffer)
+            }})
         } else {
             Ok(quote! { #Serialize::write_id(#field, #buffer) })
         }
@@ -180,6 +187,13 @@ impl DataContainer {
             Ok(quote! {{
                 let #this = #Clone::clone(#field);
                 let #this: #into_ty = #Into::into(#this);
+                #Serialize::id_len(&#this)
+            }})
+        } else if let Some(path) = field_attribute.to_path() {
+            let this = quote! { bsn1_macro_1706411411_this };
+
+            Ok(quote! {{
+                let #this = #path(#field);
                 #Serialize::id_len(&#this)
             }})
         } else {
@@ -285,6 +299,13 @@ impl DataContainer {
                 let #this: #into_ty = #Into::into(#this);
                 #Serialize::write_der_contents(&#this, #buffer)
             }})
+        } else if let Some(to_path) = field_attribute.to_path() {
+            let this = quote! { bsn1_macro_1705721776_this };
+
+            Ok(quote! {{
+                let #this = #to_path(#field);
+                #Serialize::write_der_contents(&#this, #buffer)
+            }})
         } else {
             Ok(quote! { #Serialize::write_der_contents(#field, #buffer) })
         }
@@ -360,6 +381,13 @@ impl DataContainer {
             Ok(quote! {{
                 let #this = #Clone::clone(#field);
                 let #this: #into_ty = #Into::into(#this);
+                #Serialize::der_contents_len(&#this)
+            }})
+        } else if let Some(to_path) = field_attribute.to_path() {
+            let this = quote! { bsn1_macro_1705721776_this };
+
+            Ok(quote! {{
+                let #this = #to_path(#field);
                 #Serialize::der_contents_len(&#this)
             }})
         } else {
