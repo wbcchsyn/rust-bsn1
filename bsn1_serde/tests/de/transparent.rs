@@ -53,11 +53,24 @@ struct C {
 #[bsn1_serde(transparent)]
 struct D(#[bsn1_serde(from = "OctetString<'static>", into = "OctetString")] Vec<u8>);
 
+#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Debug, PartialEq)]
+#[bsn1_serde(transparent)]
+struct E {
+    #[bsn1_serde(try_from = "OctetString", to = "OctetString::new")]
+    x: String,
+}
+
+#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Debug, PartialEq)]
+#[bsn1_serde(transparent)]
+struct F(#[bsn1_serde(try_from = "OctetString", to = "OctetString::new")] String);
+
 fn main() {
     test_a();
     test_b();
     test_c();
     test_d();
+    test_e();
+    test_f();
 }
 
 fn test_a() {
@@ -96,6 +109,28 @@ fn test_c() {
 
 fn test_d() {
     let val = D(vec![0x01, 0x02, 0x03]);
+
+    let der = to_der(&val).unwrap();
+    assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
+}
+
+fn test_e() {
+    let val = E {
+        x: "foo".to_string(),
+    };
+
+    let der = to_der(&val).unwrap();
+    assert_eq!(val, from_der(&der).unwrap());
+
+    let ber = to_ber(&val).unwrap();
+    assert_eq!(val, from_ber(&ber).unwrap());
+}
+
+fn test_f() {
+    let val = F("".to_string());
 
     let der = to_der(&val).unwrap();
     assert_eq!(val, from_der(&der).unwrap());
