@@ -6,7 +6,7 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-license = "LGPL-3.0-or-later OR Apache-2.0"
+license = "GPL-3.0-only"
 description = "Rust BER and DER serializer/deserializer."
 documentation = "https://docs.rs/bsn1/1.0.0/bsn1/"
 readme = "README.md"
