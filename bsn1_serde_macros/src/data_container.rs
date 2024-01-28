@@ -139,8 +139,28 @@ impl DataContainer {
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
         let field = self.transparent_field_var();
+        let field_attribute = self.transparent_field_attribute();
 
-        Ok(quote! { #Serialize::write_id(#field, #buffer) })
+        if let Some(into_ty) = field_attribute.into_type() {
+            let Clone = quote! { ::std::clone::Clone };
+            let Into = quote! { ::std::convert::Into };
+            let this = quote! { bsn1_macro_1704044765_this };
+
+            Ok(quote! {{
+                let #this = #Clone::clone(#field);
+                let #this: #into_ty = #Into::into(#this);
+                #Serialize::write_id(&#this, #buffer)
+            }})
+        } else if let Some(path) = field_attribute.to_path() {
+            let this = quote! { bsn1_macro_1706411411_this };
+
+            Ok(quote! {{
+                let #this = #path(#field);
+                #Serialize::write_id(&#this, #buffer)
+            }})
+        } else {
+            Ok(quote! { #Serialize::write_id(#field, #buffer) })
+        }
     }
 
     #[allow(non_snake_case)]
@@ -157,8 +177,28 @@ impl DataContainer {
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
         let field = self.transparent_field_var();
+        let field_attribute = self.transparent_field_attribute();
 
-        Ok(quote! { #Serialize::id_len(#field) })
+        if let Some(into_ty) = field_attribute.into_type() {
+            let Clone = quote! { ::std::clone::Clone };
+            let Into = quote! { ::std::convert::Into };
+            let this = quote! { bsn1_macro_1704044765_this };
+
+            Ok(quote! {{
+                let #this = #Clone::clone(#field);
+                let #this: #into_ty = #Into::into(#this);
+                #Serialize::id_len(&#this)
+            }})
+        } else if let Some(path) = field_attribute.to_path() {
+            let this = quote! { bsn1_macro_1706411411_this };
+
+            Ok(quote! {{
+                let #this = #path(#field);
+                #Serialize::id_len(&#this)
+            }})
+        } else {
+            Ok(quote! { #Serialize::id_len(#field) })
+        }
     }
 
     pub fn id_slice(&self) -> syn::Result<TokenStream> {
@@ -247,8 +287,28 @@ impl DataContainer {
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
         let field = self.transparent_field_var();
+        let field_attribute = self.transparent_field_attribute();
 
-        Ok(quote! { #Serialize::write_der_contents(#field, #buffer) })
+        if let Some(into_ty) = field_attribute.into_type() {
+            let Clone = quote! { ::std::clone::Clone };
+            let Into = quote! { ::std::convert::Into };
+            let this = quote! { bsn1_macro_1704044765_this };
+
+            Ok(quote! {{
+                let #this = #Clone::clone(#field);
+                let #this: #into_ty = #Into::into(#this);
+                #Serialize::write_der_contents(&#this, #buffer)
+            }})
+        } else if let Some(to_path) = field_attribute.to_path() {
+            let this = quote! { bsn1_macro_1705721776_this };
+
+            Ok(quote! {{
+                let #this = #to_path(#field);
+                #Serialize::write_der_contents(&#this, #buffer)
+            }})
+        } else {
+            Ok(quote! { #Serialize::write_der_contents(#field, #buffer) })
+        }
     }
 
     #[allow(non_snake_case)]
@@ -311,8 +371,28 @@ impl DataContainer {
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
         let field = self.transparent_field_var();
+        let field_attribute = self.transparent_field_attribute();
 
-        Ok(quote! { #Serialize::der_contents_len(#field) })
+        if let Some(into_ty) = field_attribute.into_type() {
+            let Clone = quote! { ::std::clone::Clone };
+            let Into = quote! { ::std::convert::Into };
+            let this = quote! { bsn1_macro_1704043457_this };
+
+            Ok(quote! {{
+                let #this = #Clone::clone(#field);
+                let #this: #into_ty = #Into::into(#this);
+                #Serialize::der_contents_len(&#this)
+            }})
+        } else if let Some(to_path) = field_attribute.to_path() {
+            let this = quote! { bsn1_macro_1705721776_this };
+
+            Ok(quote! {{
+                let #this = #to_path(#field);
+                #Serialize::der_contents_len(&#this)
+            }})
+        } else {
+            Ok(quote! { #Serialize::der_contents_len(#field) })
+        }
     }
 
     #[allow(non_snake_case)]
@@ -417,17 +497,58 @@ impl DataContainer {
         let Result = quote! { ::std::result::Result };
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
 
+        let field_attribute = self.transparent_field_attribute();
         let field_ident = self.transparent_field_ident();
         let ty = self.ty();
 
-        match self.fields() {
-            syn::Fields::Named(_) => Ok(quote! {
-                #Result::Ok(#ty { #field_ident: #Deserialize::from_ber(#id, #length, #contents)? })
-            }),
-            syn::Fields::Unnamed(_) => Ok(quote! {
-                #Result::Ok(#ty ( #Deserialize::from_ber(#id, #length, #contents)? ))
-            }),
-            syn::Fields::Unit => unreachable!(),
+        if let Some(from_ty) = field_attribute.from_type() {
+            let From = quote! { ::std::convert::From };
+            let tmp_val = quote! { bsn1_macro_1706375252_tmp_val };
+
+            match self.fields() {
+                syn::Fields::Named(_) => Ok(quote! {
+                    let #tmp_val: #from_ty = #Deserialize::from_ber(#id, #length, #contents)?;
+                    #Result::Ok(#ty { #field_ident: #From::from(#tmp_val) })
+                }),
+                syn::Fields::Unnamed(_) => Ok(quote! {
+                    let #tmp_val: #from_ty = #Deserialize::from_ber(#id, #length, #contents)?;
+                    #Result::Ok(#ty ( #From::from(#tmp_val) ))
+                }),
+                syn::Fields::Unit => unreachable!(),
+            }
+        } else if let Some(try_from_ty) = field_attribute.try_from_type() {
+            let TryFrom = quote! { ::std::convert::TryFrom };
+            let Box = quote! { ::std::boxed::Box };
+            let Error = quote! { ::bsn1_serde::macro_alias::Error };
+            let tmp_val = quote! { bsn1_macro_1706411792_tmp_val };
+
+            match self.fields() {
+                syn::Fields::Named(_) => Ok(quote! {
+                    let #tmp_val: #try_from_ty = #Deserialize::from_ber(#id, #length, #contents)?;
+                    let #tmp_val = #TryFrom::try_from(#tmp_val)
+                        .map_err(|err| #Error::from(#Box::new(err)))?;
+                    #Result::Ok(#ty { #field_ident: #tmp_val })
+                }),
+                syn::Fields::Unnamed(_) => Ok(quote! {
+                    let #tmp_val: #try_from_ty = #Deserialize::from_ber(#id, #length, #contents)?;
+                    let #tmp_val = #TryFrom::try_from(#tmp_val)
+                        .map_err(|err| #Error::from(#Box::new(err)))?;
+                    #Result::Ok(#ty ( #tmp_val ))
+                }),
+                syn::Fields::Unit => unreachable!(),
+            }
+        } else {
+            match self.fields() {
+                syn::Fields::Named(_) => Ok(quote! {
+                    #Result::Ok(#ty {
+                        #field_ident: #Deserialize::from_ber(#id, #length, #contents)?
+                    })
+                }),
+                syn::Fields::Unnamed(_) => Ok(quote! {
+                    #Result::Ok(#ty ( #Deserialize::from_ber(#id, #length, #contents)? ))
+                }),
+                syn::Fields::Unit => unreachable!(),
+            }
         }
     }
 
@@ -509,17 +630,56 @@ impl DataContainer {
         let Result = quote! { ::std::result::Result };
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
 
+        let field_attribute = self.transparent_field_attribute();
         let field_ident = self.transparent_field_ident();
         let ty = self.ty();
 
-        match self.fields() {
-            syn::Fields::Named(_) => Ok(quote! {
-                #Result::Ok(#ty { #field_ident: #Deserialize::from_der(#id, #contents)? })
-            }),
-            syn::Fields::Unnamed(_) => Ok(quote! {
-                #Result::Ok(#ty ( #Deserialize::from_der(#id, #contents)? ))
-            }),
-            syn::Fields::Unit => unreachable!(),
+        if let Some(from_ty) = field_attribute.from_type() {
+            let From = quote! { ::std::convert::From };
+            let tmp_val = quote! { bsn1_macro_1706375252_tmp_val };
+
+            match self.fields() {
+                syn::Fields::Named(_) => Ok(quote! {{
+                    let #tmp_val: #from_ty = #Deserialize::from_der(#id, #contents)?;
+                    #Result::Ok(#ty { #field_ident: #From::from(#tmp_val) })
+                }}),
+                syn::Fields::Unnamed(_) => Ok(quote! {{
+                    let #tmp_val: #from_ty = #Deserialize::from_der(#id, #contents)?;
+                    #Result::Ok(#ty ( #From::from(#tmp_val) ))
+                }}),
+                syn::Fields::Unit => unreachable!(),
+            }
+        } else if let Some(try_from_ty) = field_attribute.try_from_type() {
+            let TryFrom = quote! { ::std::convert::TryFrom };
+            let Box = quote! { ::std::boxed::Box };
+            let Error = quote! { ::bsn1_serde::macro_alias::Error };
+            let tmp_val = quote! { bsn1_macro_1706411792_tmp_val };
+
+            match self.fields() {
+                syn::Fields::Named(_) => Ok(quote! {
+                    let #tmp_val: #try_from_ty = #Deserialize::from_der(#id, #contents)?;
+                    let #tmp_val = #TryFrom::try_from(#tmp_val)
+                        .map_err(|err| #Error::from(#Box::new(err)))?;
+                    #Result::Ok(#ty { #field_ident: #tmp_val })
+                }),
+                syn::Fields::Unnamed(_) => Ok(quote! {
+                    let #tmp_val: #try_from_ty = #Deserialize::from_der(#id, #contents)?;
+                    let #tmp_val = #TryFrom::try_from(#tmp_val)
+                        .map_err(|err| #Error::from(#Box::new(err)))?;
+                    #Result::Ok(#ty ( #tmp_val ))
+                }),
+                syn::Fields::Unit => unreachable!(),
+            }
+        } else {
+            match self.fields() {
+                syn::Fields::Named(_) => Ok(quote! {
+                    #Result::Ok(#ty { #field_ident: #Deserialize::from_der(#id, #contents)? })
+                }),
+                syn::Fields::Unnamed(_) => Ok(quote! {
+                    #Result::Ok(#ty ( #Deserialize::from_der(#id, #contents)? ))
+                }),
+                syn::Fields::Unit => unreachable!(),
+            }
         }
     }
 
@@ -614,5 +774,14 @@ impl DataContainer {
                 field_attributes, ..
             } => field_attributes,
         }
+    }
+
+    fn transparent_field_attribute(&self) -> &Attribute {
+        assert!(self.attribute().is_transparent());
+
+        let field_attributes = self.field_attributes();
+        assert!(field_attributes.len() == 1);
+
+        field_attributes.first().unwrap()
     }
 }
