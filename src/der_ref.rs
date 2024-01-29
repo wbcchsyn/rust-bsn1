@@ -31,7 +31,7 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{DerRef, IdRef, Contents};
+    /// use bsn1::{DerRef, IdRef};
     ///
     /// let true_ = DerRef::boolean(true);
     /// assert_eq!(true_.id(), IdRef::boolean());
@@ -237,6 +237,7 @@ impl DerRef {
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         std::mem::transmute(bytes)
     }
+
     /// Returns a reference to the `IdRef` of `self`.
     ///
     /// # Examples
@@ -257,7 +258,7 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ClassTag, Der, DerRef, IdRef, PCTag};
+    /// use bsn1::{ClassTag, Der, DerRef, PCTag};
     ///
     /// let mut der = Der::from(4_i32);
     /// let der: &mut DerRef = der.as_mut();
@@ -303,7 +304,7 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ContentsRef, Der, DerRef};
+    /// use bsn1::{Der, DerRef};
     ///
     /// let der = Der::from("Foo");
     /// let der: &DerRef = der.as_ref();
@@ -319,7 +320,7 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{ContentsRef, Der, DerRef};
+    /// use bsn1::{Der, DerRef};
     ///
     /// let mut der = Der::from("Foo");
     /// let der: &mut DerRef = der.as_mut();

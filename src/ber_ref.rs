@@ -196,7 +196,7 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, IdRef};
+    /// use bsn1::{Ber, BerRef};
     ///
     /// let ber = Ber::from(0x34_u8);
     /// let serialized: &[u8] = ber.as_ref();
@@ -223,7 +223,7 @@ impl BerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, IdRef};
+    /// use bsn1::{Ber, BerRef};
     ///
     /// let ber = Ber::from(0x34_u8);
     /// let mut serialized: Vec<u8> = Vec::from(ber.as_ref() as &[u8]);
