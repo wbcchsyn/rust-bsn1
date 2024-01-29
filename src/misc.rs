@@ -18,7 +18,10 @@ use crate::{Error, Length};
 use std::io::{Read, Write};
 
 /// Tries to read one byte from `readable`.
-pub fn read_u8<T: Read>(readable: &mut T) -> Result<u8, Error> {
+pub fn read_u8<T>(readable: &mut T) -> Result<u8, Error>
+where
+    T: ?Sized + Read,
+{
     let mut buf = [0; 1];
     match readable.read(&mut buf) {
         Err(e) => Err(e.into()),
@@ -34,7 +37,10 @@ pub fn read_u8<T: Read>(readable: &mut T) -> Result<u8, Error> {
 ///
 /// The behavior is undefined if `writeable` is closed or broken before this function returns.
 /// `writeable` should be `std::io::Sink` or `Buffer`.
-pub unsafe fn write_u8<T: Write>(writeable: &mut T, byte: u8) -> Result<(), Error> {
+pub unsafe fn write_u8<T>(writeable: &mut T, byte: u8) -> Result<(), Error>
+where
+    T: ?Sized + Write,
+{
     let buf = [byte];
     match writeable.write(&buf) {
         Err(e) => Err(e.into()),
@@ -50,10 +56,11 @@ pub unsafe fn write_u8<T: Write>(writeable: &mut T, byte: u8) -> Result<(), Erro
 ///
 /// The behavior is undefined if `writeable` is closed or broken before this function returns.
 /// `writeable` should be `std::io::Sink` or `Buffer`.
-pub unsafe fn parse_id_length<R: Read, W: Write>(
-    readable: &mut R,
-    writeable: &mut W,
-) -> Result<Length, Error> {
+pub unsafe fn parse_id_length<R, W>(readable: &mut R, writeable: &mut W) -> Result<Length, Error>
+where
+    R: ?Sized + Read,
+    W: ?Sized + Write,
+{
     let _ = crate::identifier_ref::parse_id(readable, writeable)?;
     crate::length::parse_length(readable, writeable)
 }

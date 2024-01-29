@@ -131,7 +131,10 @@ impl Id {
     /// let deserialized: Id = IdRef::parse(&mut &serialized[..]).map(ToOwned::to_owned).unwrap();
     /// assert_eq!(id, &deserialized);
     /// ```
-    pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
+    pub fn parse<R>(readable: &mut R) -> Result<Self, Error>
+    where
+        R: ?Sized + Read,
+    {
         let mut buffer = Buffer::new();
         unsafe { crate::identifier_ref::parse_id(readable, &mut buffer)? };
         Ok(Self { buffer })

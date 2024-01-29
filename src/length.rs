@@ -70,7 +70,10 @@ impl Length {
     /// let deserialized = Length::parse(&mut &serialized[..]).unwrap();
     /// assert_eq!(length, deserialized);
     /// ```
-    pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
+    pub fn parse<R>(readable: &mut R) -> Result<Self, Error>
+    where
+        R: ?Sized + Read,
+    {
         let mut writeable = std::io::sink();
         unsafe { parse_length(readable, &mut writeable) }
     }
@@ -246,10 +249,11 @@ impl PartialOrd for Length {
 ///
 /// The behavior is undefined if `writeable` is closed or broken before this function returns.
 /// `writeable` should be `std::io::Sink` or `Buffer`.
-pub unsafe fn parse_length<R: Read, W: Write>(
-    readable: &mut R,
-    writeable: &mut W,
-) -> Result<Length, Error> {
+pub unsafe fn parse_length<R, W>(readable: &mut R, writeable: &mut W) -> Result<Length, Error>
+where
+    R: ?Sized + Read,
+    W: ?Sized + Write,
+{
     use crate::misc::{read_u8, write_u8};
 
     let first = read_u8(readable)?;

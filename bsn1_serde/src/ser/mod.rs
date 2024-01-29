@@ -23,10 +23,10 @@ use std::io::Write;
 /// A **data structure** that can be serialized into ASN.1 format.
 pub trait Serialize {
     /// Writes the `ID` of ASN.1 format into `buffer` .
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error>;
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error>;
 
     /// Serializes `self` into contents of ASN.1 DER format and writes it into `buffer` .
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error>;
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error>;
 
     /// Returns the byte count of the identifier of ASN.1 format.
     fn id_len(&self) -> Result<usize, Error>;
@@ -36,13 +36,13 @@ pub trait Serialize {
 }
 
 impl Serialize for bool {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::boolean().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(<&ContentsRef>::from(*self).as_ref())
             .map_err(Error::from)
@@ -58,13 +58,13 @@ impl Serialize for bool {
 }
 
 impl Serialize for i8 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::integer().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         let contents = Contents::from(*self);
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
@@ -79,13 +79,13 @@ impl Serialize for i8 {
 }
 
 impl Serialize for u8 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::integer().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         let contents = Contents::from(*self);
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
@@ -104,13 +104,13 @@ impl Serialize for u8 {
 }
 
 impl Serialize for i16 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::integer().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         let contents = Contents::from(*self);
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
@@ -129,13 +129,13 @@ impl Serialize for i16 {
 }
 
 impl Serialize for u16 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::integer().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         let contents = Contents::from(*self);
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
@@ -156,13 +156,13 @@ impl Serialize for u16 {
 }
 
 impl Serialize for i32 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::integer().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         let contents = Contents::from(*self);
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
@@ -183,13 +183,13 @@ impl Serialize for i32 {
 }
 
 impl Serialize for u32 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::integer().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         let contents = Contents::from(*self);
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
@@ -205,13 +205,13 @@ impl Serialize for u32 {
 }
 
 impl Serialize for i64 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::integer().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         let contents = Contents::from(*self);
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
@@ -232,13 +232,13 @@ impl Serialize for i64 {
 }
 
 impl Serialize for u64 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::integer().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         let contents = Contents::from(*self);
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
@@ -254,13 +254,13 @@ impl Serialize for u64 {
 }
 
 impl Serialize for i128 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::integer().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         let contents = Contents::from(*self);
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
@@ -281,13 +281,13 @@ impl Serialize for i128 {
 }
 
 impl Serialize for u128 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::integer().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         let contents = Contents::from(*self);
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
@@ -303,13 +303,13 @@ impl Serialize for u128 {
 }
 
 impl Serialize for isize {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::integer().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         let contents = Contents::from(*self);
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
@@ -330,13 +330,13 @@ impl Serialize for isize {
 }
 
 impl Serialize for usize {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::integer().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         let contents = Contents::from(*self);
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
@@ -352,13 +352,13 @@ impl Serialize for usize {
 }
 
 impl Serialize for String {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::utf8_string().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer.write_all(self.as_bytes()).map_err(Error::from)
     }
 
@@ -375,13 +375,13 @@ impl<T> Serialize for Vec<T>
 where
     T: Serialize,
 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::sequence().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         for t in self.iter() {
             write_der(t, buffer)?;
         }
@@ -406,13 +406,13 @@ impl<T> Serialize for LinkedList<T>
 where
     T: Serialize,
 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::sequence().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         for t in self.iter() {
             write_der(t, buffer)?;
         }
@@ -436,13 +436,13 @@ impl<T> Serialize for VecDeque<T>
 where
     T: Serialize,
 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::sequence().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         for t in self.iter() {
             write_der(t, buffer)?;
         }
@@ -466,13 +466,13 @@ impl<T> Serialize for BTreeSet<T>
 where
     T: Serialize,
 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::sequence().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         for t in self.iter() {
             write_der(t, buffer)?;
         }
@@ -497,13 +497,13 @@ where
     K: Serialize,
     V: Serialize,
 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer
             .write_all(IdRef::sequence().as_ref())
             .map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         for (k, v) in self.iter() {
             let length = Length::Definite(der_len(k)? + der_len(v)?);
 
@@ -534,11 +534,11 @@ impl<T> Serialize for HashSet<T>
 where
     T: Serialize,
 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer.write_all(IdRef::set().as_ref()).map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         for t in self.iter() {
             write_der(t, buffer)?;
         }
@@ -563,11 +563,11 @@ where
     K: Serialize,
     V: Serialize,
 {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer.write_all(IdRef::set().as_ref()).map_err(Error::from)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         for (k, v) in self.iter() {
             let length = Length::Definite(der_len(k)? + der_len(v)?);
 
@@ -601,7 +601,7 @@ fn der_len<T: Serialize>(t: &T) -> Result<usize, Error> {
     Ok(id_len + Length::Definite(contents_len).len() + contents_len)
 }
 
-fn write_der<T: Serialize, W: Write>(t: &T, buffer: &mut W) -> Result<(), Error> {
+fn write_der<T: Serialize, W: ?Sized + Write>(t: &T, buffer: &mut W) -> Result<(), Error> {
     t.write_id(buffer)?;
 
     let contents_len = t.der_contents_len()?;

@@ -61,12 +61,12 @@ impl AsRef<[u8]> for OctetString<'_> {
 }
 
 impl Serialize for OctetString<'_> {
-    fn write_id<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         const ID: [u8; 1] = [0x04];
         buffer.write_all(&ID).map_err(Into::into)
     }
 
-    fn write_der_contents<W: Write>(&self, buffer: &mut W) -> Result<(), Error> {
+    fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         buffer.write_all(&self.octets.as_ref()).map_err(Into::into)
     }
 

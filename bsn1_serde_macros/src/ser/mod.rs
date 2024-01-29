@@ -51,7 +51,7 @@ pub fn do_serialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
 #[allow(non_snake_case)]
 fn do_into_serialize(ty: &syn::Path) -> syn::Result<TokenStream> {
     let Result = quote! { ::std::result::Result };
-    let Write = quote! { ::std::io::Write };
+    let Write = quote! { ?Sized + ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };
     let Clone = quote! { ::std::clone::Clone };
     let Into = quote! { ::std::convert::Into };
@@ -87,7 +87,7 @@ fn do_into_serialize(ty: &syn::Path) -> syn::Result<TokenStream> {
 #[allow(non_snake_case)]
 fn do_to_serialize(to_fn: &syn::Path) -> syn::Result<TokenStream> {
     let Result = quote! { ::std::result::Result };
-    let Write = quote! { ::std::io::Write };
+    let Write = quote! { ?Sized + ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };
     let Serialize = quote! { ::bsn1_serde::ser::Serialize };
 
@@ -117,7 +117,7 @@ fn do_to_serialize(to_fn: &syn::Path) -> syn::Result<TokenStream> {
 #[allow(non_snake_case)]
 fn do_serialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Result<TokenStream> {
     let Result = quote! { ::std::result::Result };
-    let Write = quote! { ::std::io::Write };
+    let Write = quote! { ?Sized + ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };
 
     let data = DataContainer::try_from((attribute, data))?;
@@ -168,7 +168,7 @@ fn do_serialize_enum(
     attribute.sanitize_as_enum()?;
 
     let Result = quote! { ::std::result::Result };
-    let Write = quote! { ::std::io::Write };
+    let Write = quote! { ?Sized + ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };
 
     let mut variants: Vec<DataContainer> = Vec::new();
