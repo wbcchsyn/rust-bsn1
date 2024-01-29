@@ -68,5 +68,6 @@ pub fn from_der<T>(der: &DerRef) -> Result<T, Error>
 where
     T: de::Deserialize,
 {
-    de::Deserialize::from_der(der.id(), der.contents())
+    let (id, _, contents) = der.disassemble();
+    de::Deserialize::from_der(id, contents)
 }
