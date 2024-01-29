@@ -274,12 +274,7 @@ impl BerRef {
     /// assert_eq!(ber.id().pc(), PCTag::Constructed);
     /// ```
     pub fn mut_id(&mut self) -> &mut IdRef {
-        unsafe {
-            let ret = self.id();
-            let ptr = ret as *const IdRef;
-            let ptr = ptr as *mut IdRef;
-            &mut *ptr
-        }
+        self.disassemble_mut().0
     }
 
     /// Returns the [`Length`] of `self`.
