@@ -300,7 +300,10 @@ impl Ber {
     /// let deserialized: Ber = BerRef::parse(&mut &serialized[..]).unwrap().into();
     /// assert_eq!(ber, deserialized);
     /// ```
-    pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
+    pub fn parse<R>(readable: &mut R) -> Result<Self, Error>
+    where
+        R: ?Sized + Read,
+    {
         let mut buffer = Buffer::new();
         let mut stack_depth: isize = 0;
 
@@ -312,7 +315,10 @@ impl Ber {
         Ok(Self { buffer })
     }
 
-    fn do_parse<R: Read>(readable: &mut R, writeable: &mut Buffer) -> Result<i8, Error> {
+    fn do_parse<R>(readable: &mut R, writeable: &mut Buffer) -> Result<i8, Error>
+    where
+        R: ?Sized + Read,
+    {
         let init_len = writeable.len();
 
         match unsafe { crate::misc::parse_id_length(readable, writeable)? } {
