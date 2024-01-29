@@ -107,7 +107,7 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, Contents, ContentsRef, IdRef, Length};
+    /// use bsn1::{Ber, BerRef, Contents, IdRef, Length};
     ///
     /// let id = IdRef::sequence();
     ///
@@ -212,7 +212,7 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, Contents, IdRef, Length};
+    /// use bsn1::{Ber, BerRef, Contents, IdRef};
     ///
     /// let contents0 = Ber::new(IdRef::utf8_string(), "Foo".as_bytes().into());
     /// let contents1 = Ber::new(IdRef::integer(), &Contents::from(29_i32));
@@ -356,7 +356,7 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, ContentsRef, IdRef};
+    /// use bsn1::Ber;
     ///
     /// let ber = Ber::from(5_i32);
     /// let serialized: &[u8] = ber.as_ref();
@@ -453,7 +453,7 @@ impl Ber {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{Ber, BerRef, ContentsRef, IdRef};
+    /// use bsn1::{Ber, BerRef, IdRef};
     ///
     /// // Build an sequence DER containing 2 other DERs.
     /// let contents0 = vec![Ber::from("foo"), Ber::from(29_i32), BerRef::eoc().into()];
