@@ -18,7 +18,10 @@ use crate::{Error, Length};
 use std::io::{Read, Write};
 
 /// Tries to read one byte from `readable`.
-pub fn read_u8<T: Read>(readable: &mut T) -> Result<u8, Error> {
+pub fn read_u8<T>(readable: &mut T) -> Result<u8, Error>
+where
+    T: ?Sized + Read,
+{
     let mut buf = [0; 1];
     match readable.read(&mut buf) {
         Err(e) => Err(e.into()),
