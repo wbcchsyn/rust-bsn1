@@ -250,10 +250,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Create the following functions and methods
   - Ber::from\_id\_iterator\_indefinite
   - Ber::from\_vec\_unchecked()
-  - BerRef::eoc()
   - Ber::extend\_from\_slice()
   - Ber::push()
   - Ber::truncate()
+  - BerRef::disassemble()
+  - BerRef::eoc()
   - Der::from\_vec\_unchecked()
   - Der::extend\_from\_slice()
   - Der::push()

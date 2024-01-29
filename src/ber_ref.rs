@@ -353,6 +353,32 @@ impl BerRef {
             &mut *ptr
         }
     }
+
+    /// Returns references to `IdRef`, `Length`, and `ContentsRef` of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Ber, BerRef, IdRef};
+    ///
+    /// let ber = Ber::from("Foo");
+    /// let ber: &BerRef = ber.as_ref();
+    ///
+    /// let (id, length, contents) = ber.disassemble();
+    ///
+    /// assert_eq!(id, IdRef::utf8_string());
+    /// assert_eq!(length.definite().unwrap(), "Foo".len());
+    /// assert_eq!(contents.as_ref(), "Foo".as_bytes());
+    /// ```
+    pub fn disassemble(&self) -> (&IdRef, Length, &ContentsRef) {
+        let mut bytes = &self.bytes;
+
+        let id = unsafe { identifier_ref::parse_id_unchecked(&mut bytes) };
+        let length = unsafe { length::parse_length_unchecked(&mut bytes) };
+        let contents = bytes.into();
+
+        (id, length, contents)
+    }
 }
 
 impl<'a> From<&'a DerRef> for &'a BerRef {
