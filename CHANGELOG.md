@@ -260,6 +260,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - Der::truncate()
   - DerRef::boolean()
   - DerRef::disassemble()
+  - DerRef::disassemble\_mut()
 
 - Create struct `TagNumber`, and change the following functions and methods type.
   - The return type of `IdRef::number`
