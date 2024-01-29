@@ -333,10 +333,7 @@ impl DerRef {
     /// assert_eq!(der.contents().as_ref(), "Boo".as_bytes());
     /// ```
     pub fn mut_contents(&mut self) -> &mut ContentsRef {
-        let ret = self.contents();
-        let ptr = ret as *const ContentsRef;
-        let ptr = ptr as *mut ContentsRef;
-        unsafe { &mut *ptr }
+        self.disassemble_mut().2
     }
 
     /// Returns references to `IdRef`, `Length`, and `ContentsRef` of `self`.
