@@ -298,11 +298,7 @@ impl DerRef {
     /// assert_eq!(Length::Definite("Foo".len()), der.length());
     /// ```
     pub fn length(&self) -> Length {
-        let mut bytes = &self.bytes;
-        unsafe {
-            identifier_ref::parse_id_unchecked(&mut bytes);
-            length::parse_length_unchecked(&mut bytes)
-        }
+        self.disassemble().1
     }
 
     /// Returns a reference to the contents octets of `self`.
