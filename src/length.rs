@@ -70,7 +70,10 @@ impl Length {
     /// let deserialized = Length::parse(&mut &serialized[..]).unwrap();
     /// assert_eq!(length, deserialized);
     /// ```
-    pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
+    pub fn parse<R>(readable: &mut R) -> Result<Self, Error>
+    where
+        R: ?Sized + Read,
+    {
         let mut writeable = std::io::sink();
         unsafe { parse_length(readable, &mut writeable) }
     }
