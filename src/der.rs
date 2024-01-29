@@ -166,7 +166,10 @@ impl Der {
     /// let deserialized: Der = DerRef::parse(&mut &serialized[..]).unwrap().into();
     /// assert_eq!(der, deserialized);
     /// ```
-    pub fn parse<R: Read>(readable: &mut R) -> Result<Self, Error> {
+    pub fn parse<R>(readable: &mut R) -> Result<Self, Error>
+    where
+        R: ?Sized + Read,
+    {
         let mut writeable = Buffer::new();
 
         let contents_length =
