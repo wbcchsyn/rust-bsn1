@@ -271,10 +271,7 @@ impl DerRef {
     /// assert_eq!(der.id().pc(), PCTag::Constructed);
     /// ```
     pub fn mut_id(&mut self) -> &mut IdRef {
-        let ret = self.id();
-        let ptr = ret as *const IdRef;
-        let ptr = ptr as *mut IdRef;
-        unsafe { &mut *ptr }
+        self.disassemble_mut().0
     }
 
     /// Returns `Length` of `self`.
@@ -298,11 +295,7 @@ impl DerRef {
     /// assert_eq!(Length::Definite("Foo".len()), der.length());
     /// ```
     pub fn length(&self) -> Length {
-        let mut bytes = &self.bytes;
-        unsafe {
-            identifier_ref::parse_id_unchecked(&mut bytes);
-            length::parse_length_unchecked(&mut bytes)
-        }
+        self.disassemble().1
     }
 
     /// Returns a reference to the contents octets of `self`.
@@ -318,12 +311,7 @@ impl DerRef {
     /// assert_eq!(der.contents().as_ref(), "Foo".as_bytes());
     /// ```
     pub fn contents(&self) -> &ContentsRef {
-        let mut bytes = &self.bytes;
-        unsafe {
-            identifier_ref::parse_id_unchecked(&mut bytes);
-            length::parse_length_unchecked(&mut bytes);
-        }
-        bytes.into()
+        self.disassemble().2
     }
 
     /// Returns a mutable reference to the 'contents octets' of `self`.
@@ -342,10 +330,63 @@ impl DerRef {
     /// assert_eq!(der.contents().as_ref(), "Boo".as_bytes());
     /// ```
     pub fn mut_contents(&mut self) -> &mut ContentsRef {
-        let ret = self.contents();
-        let ptr = ret as *const ContentsRef;
-        let ptr = ptr as *mut ContentsRef;
-        unsafe { &mut *ptr }
+        self.disassemble_mut().2
+    }
+
+    /// Returns references to `IdRef`, `Length`, and `ContentsRef` of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, DerRef, IdRef};
+    ///
+    /// let der = Der::from("Foo");
+    /// let der: &DerRef = der.as_ref();
+    ///
+    /// let (id, length, contents) = der.disassemble();
+    ///
+    /// assert_eq!(id, IdRef::utf8_string());
+    /// assert_eq!(length.definite().unwrap(), "Foo".len());
+    /// assert_eq!(contents.as_ref(), "Foo".as_bytes());
+    /// ```
+    pub fn disassemble(&self) -> (&IdRef, Length, &ContentsRef) {
+        let mut bytes = &self.bytes;
+
+        let id = unsafe { identifier_ref::parse_id_unchecked(&mut bytes) };
+        let length = unsafe { length::parse_length_unchecked(&mut bytes) };
+        let contents = bytes.into();
+
+        (id, length, contents)
+    }
+
+    /// Returns mutable references to `IdRef`, `Length`, and `ContentsRef` of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, DerRef, IdRef};
+    ///
+    /// let mut der = Der::from("Foo");
+    /// let der: &mut DerRef = der.as_mut();
+    ///
+    /// let (id, length, contents) = der.disassemble_mut();
+    ///
+    /// assert_eq!(id, IdRef::utf8_string());
+    /// assert_eq!(length.definite().unwrap(), "Foo".len());
+    /// assert_eq!(contents.as_ref(), "Foo".as_bytes());
+    ///
+    /// contents[0] = 'B' as u8;
+    /// assert_eq!(der.contents().as_ref() as &[u8], "Boo".as_bytes());
+    /// ```
+    pub fn disassemble_mut(&mut self) -> (&mut IdRef, Length, &mut ContentsRef) {
+        let (id, length, contents) = self.disassemble();
+
+        let id_ptr = id as *const IdRef;
+        let id_ptr = id_ptr as *mut IdRef;
+        let contents_ptr = contents as *const ContentsRef;
+        let contents_ptr = contents_ptr as *mut ContentsRef;
+
+        unsafe { (&mut *id_ptr, length, &mut *contents_ptr) }
     }
 }
 

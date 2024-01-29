@@ -250,15 +250,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Create the following functions and methods
   - Ber::from\_id\_iterator\_indefinite
   - Ber::from\_vec\_unchecked()
-  - BerRef::eoc()
   - Ber::extend\_from\_slice()
   - Ber::push()
   - Ber::truncate()
+  - BerRef::disassemble()
+  - BerRef::disassemble\_mut()
+  - BerRef::eoc()
   - Der::from\_vec\_unchecked()
-  - DerRef::boolean()
   - Der::extend\_from\_slice()
   - Der::push()
   - Der::truncate()
+  - DerRef::boolean()
+  - DerRef::disassemble()
+  - DerRef::disassemble\_mut()
+
 - Create struct `TagNumber`, and change the following functions and methods type.
   - The return type of `IdRef::number`
   - The argument type of `Id::new`
