@@ -31,7 +31,7 @@ impl DerRef {
     /// # Examples
     ///
     /// ```
-    /// use bsn1::{DerRef, IdRef, Contents};
+    /// use bsn1::{DerRef, IdRef};
     ///
     /// let true_ = DerRef::boolean(true);
     /// assert_eq!(true_.id(), IdRef::boolean());
@@ -237,6 +237,7 @@ impl DerRef {
     pub unsafe fn from_mut_bytes_unchecked(bytes: &mut [u8]) -> &mut Self {
         std::mem::transmute(bytes)
     }
+
     /// Returns a reference to the `IdRef` of `self`.
     ///
     /// # Examples
