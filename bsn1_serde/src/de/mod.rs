@@ -499,9 +499,14 @@ where
                 let mut pair_contents: &[u8] = pair.contents().as_ref();
                 let key = BerRef::parse(&mut pair_contents)?;
                 let val = BerRef::parse(&mut pair_contents)?;
+
                 if pair_contents.is_empty() {
-                    let key = Deserialize::from_ber(key.id(), key.length(), key.contents())?;
-                    let val = Deserialize::from_ber(val.id(), val.length(), val.contents())?;
+                    let (id, length, key) = key.disassemble();
+                    let key = Deserialize::from_ber(id, length, key)?;
+
+                    let (id, length, val) = val.disassemble();
+                    let val = Deserialize::from_ber(id, length, val)?;
+
                     ret.insert(key, val);
                 }
             }
