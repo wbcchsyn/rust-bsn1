@@ -59,7 +59,8 @@ pub fn from_ber<T>(ber: &BerRef) -> Result<T, Error>
 where
     T: de::Deserialize,
 {
-    unsafe { de::Deserialize::from_ber(ber.id(), ber.length(), ber.contents()) }
+    let (id, length, contents) = ber.disassemble();
+    unsafe { de::Deserialize::from_ber(id, length, contents) }
 }
 
 /// Deserializes `T` from ASN.1 DER format.
@@ -67,5 +68,6 @@ pub fn from_der<T>(der: &DerRef) -> Result<T, Error>
 where
     T: de::Deserialize,
 {
-    de::Deserialize::from_der(der.id(), der.contents())
+    let (id, _, contents) = der.disassemble();
+    de::Deserialize::from_der(id, contents)
 }

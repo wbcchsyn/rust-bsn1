@@ -326,7 +326,8 @@ where
 
             while !contents.is_empty() {
                 let ber = BerRef::parse(&mut contents)?;
-                let t: T = Deserialize::from_ber(ber.id(), ber.length(), ber.contents())?;
+                let (id, length, contents) = ber.disassemble();
+                let t: T = Deserialize::from_ber(id, length, contents)?;
                 ret.push(t);
             }
 
@@ -343,7 +344,8 @@ where
 
             while !contents.is_empty() {
                 let der = DerRef::parse(&mut contents)?;
-                let t: T = Deserialize::from_der(der.id(), der.contents())?;
+                let (id, _, contents) = der.disassemble();
+                let t: T = Deserialize::from_der(id, contents)?;
                 ret.push(t);
             }
 
@@ -365,7 +367,8 @@ where
 
             while !contents.is_empty() {
                 let ber = BerRef::parse(&mut contents)?;
-                let t: T = Deserialize::from_ber(ber.id(), ber.length(), ber.contents())?;
+                let (id, length, contents) = ber.disassemble();
+                let t: T = Deserialize::from_ber(id, length, contents)?;
                 ret.push_back(t);
             }
 
@@ -382,7 +385,8 @@ where
 
             while !contents.is_empty() {
                 let der = DerRef::parse(&mut contents)?;
-                let t: T = Deserialize::from_der(der.id(), der.contents())?;
+                let (id, _, contents) = der.disassemble();
+                let t: T = Deserialize::from_der(id, contents)?;
                 ret.push_back(t);
             }
 
@@ -404,7 +408,8 @@ where
 
             while !contents.is_empty() {
                 let ber = BerRef::parse(&mut contents)?;
-                let t: T = Deserialize::from_ber(ber.id(), ber.length(), ber.contents())?;
+                let (id, length, contents) = ber.disassemble();
+                let t: T = Deserialize::from_ber(id, length, contents)?;
                 ret.push_back(t);
             }
 
@@ -421,7 +426,8 @@ where
 
             while !contents.is_empty() {
                 let der = DerRef::parse(&mut contents)?;
-                let t: T = Deserialize::from_der(der.id(), der.contents())?;
+                let (id, _, contents) = der.disassemble();
+                let t: T = Deserialize::from_der(id, contents)?;
                 ret.push_back(t);
             }
 
@@ -443,7 +449,8 @@ where
 
             while !contents.is_empty() {
                 let ber = BerRef::parse(&mut contents)?;
-                let t: T = Deserialize::from_ber(ber.id(), ber.length(), ber.contents())?;
+                let (id, length, contents) = ber.disassemble();
+                let t: T = Deserialize::from_ber(id, length, contents)?;
                 ret.insert(t);
             }
 
@@ -460,7 +467,8 @@ where
 
             while !contents.is_empty() {
                 let der = DerRef::parse(&mut contents)?;
-                let t: T = Deserialize::from_der(der.id(), der.contents())?;
+                let (id, _, contents) = der.disassemble();
+                let t: T = Deserialize::from_der(id, contents)?;
                 ret.insert(t);
             }
 
@@ -491,9 +499,14 @@ where
                 let mut pair_contents: &[u8] = pair.contents().as_ref();
                 let key = BerRef::parse(&mut pair_contents)?;
                 let val = BerRef::parse(&mut pair_contents)?;
+
                 if pair_contents.is_empty() {
-                    let key = Deserialize::from_ber(key.id(), key.length(), key.contents())?;
-                    let val = Deserialize::from_ber(val.id(), val.length(), val.contents())?;
+                    let (id, length, key) = key.disassemble();
+                    let key = Deserialize::from_ber(id, length, key)?;
+
+                    let (id, length, val) = val.disassemble();
+                    let val = Deserialize::from_ber(id, length, val)?;
+
                     ret.insert(key, val);
                 }
             }
@@ -519,9 +532,14 @@ where
                 let mut pair_contents: &[u8] = pair.contents().as_ref();
                 let key = DerRef::parse(&mut pair_contents)?;
                 let val = DerRef::parse(&mut pair_contents)?;
+
                 if pair_contents.is_empty() {
-                    let key = Deserialize::from_der(key.id(), key.contents())?;
-                    let val = Deserialize::from_der(val.id(), val.contents())?;
+                    let (id, _, contents) = key.disassemble();
+                    let key = Deserialize::from_der(id, contents)?;
+
+                    let (id, _, contents) = val.disassemble();
+                    let val = Deserialize::from_der(id, contents)?;
+
                     ret.insert(key, val);
                 }
             }
@@ -544,7 +562,8 @@ where
 
             while !contents.is_empty() {
                 let ber = BerRef::parse(&mut contents)?;
-                let t: T = Deserialize::from_ber(ber.id(), ber.length(), ber.contents())?;
+                let (id, length, contents) = ber.disassemble();
+                let t: T = Deserialize::from_ber(id, length, contents)?;
                 ret.insert(t);
             }
 
@@ -561,7 +580,8 @@ where
 
             while !contents.is_empty() {
                 let der = DerRef::parse(&mut contents)?;
-                let t: T = Deserialize::from_der(der.id(), der.contents())?;
+                let (id, _, contents) = der.disassemble();
+                let t: T = Deserialize::from_der(id, contents)?;
                 ret.insert(t);
             }
 
@@ -592,9 +612,14 @@ where
                 let mut pair_contents: &[u8] = pair.contents().as_ref();
                 let key = BerRef::parse(&mut pair_contents)?;
                 let val = BerRef::parse(&mut pair_contents)?;
+
                 if pair_contents.is_empty() {
-                    let key = Deserialize::from_ber(key.id(), key.length(), key.contents())?;
-                    let val = Deserialize::from_ber(val.id(), val.length(), val.contents())?;
+                    let (id, length, contents) = key.disassemble();
+                    let key = Deserialize::from_ber(id, length, contents)?;
+
+                    let (id, length, contents) = val.disassemble();
+                    let val = Deserialize::from_ber(id, length, contents)?;
+
                     ret.insert(key, val);
                 }
             }
@@ -620,9 +645,14 @@ where
                 let mut pair_contents: &[u8] = pair.contents().as_ref();
                 let key = DerRef::parse(&mut pair_contents)?;
                 let val = DerRef::parse(&mut pair_contents)?;
+
                 if pair_contents.is_empty() {
-                    let key = Deserialize::from_der(key.id(), key.contents())?;
-                    let val = Deserialize::from_der(val.id(), val.contents())?;
+                    let (id, _, contents) = key.disassemble();
+                    let key = Deserialize::from_der(id, contents)?;
+
+                    let (id, _, contents) = val.disassemble();
+                    let val = Deserialize::from_der(id, contents)?;
+
                     ret.insert(key, val);
                 }
             }
