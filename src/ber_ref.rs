@@ -301,11 +301,7 @@ impl BerRef {
     /// assert_eq!(ber.length(), Length::Definite(ber.contents().len()));
     /// ```
     pub fn length(&self) -> Length {
-        let mut bytes = &self.bytes;
-        unsafe {
-            identifier_ref::parse_id_unchecked(&mut bytes);
-            length::parse_length_unchecked(&mut bytes)
-        }
+        self.disassemble().1
     }
 
     /// Provides a reference to the [`ContentsRef`] of `self`.
