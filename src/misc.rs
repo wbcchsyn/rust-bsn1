@@ -56,10 +56,11 @@ where
 ///
 /// The behavior is undefined if `writeable` is closed or broken before this function returns.
 /// `writeable` should be `std::io::Sink` or `Buffer`.
-pub unsafe fn parse_id_length<R: Read, W: Write>(
-    readable: &mut R,
-    writeable: &mut W,
-) -> Result<Length, Error> {
+pub unsafe fn parse_id_length<R, W>(readable: &mut R, writeable: &mut W) -> Result<Length, Error>
+where
+    R: ?Sized + Read,
+    W: ?Sized + Write,
+{
     let _ = crate::identifier_ref::parse_id(readable, writeable)?;
     crate::length::parse_length(readable, writeable)
 }
