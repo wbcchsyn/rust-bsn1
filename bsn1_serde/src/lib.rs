@@ -98,6 +98,19 @@ where
     de::Deserialize::from_der(id, contents)
 }
 
+/// Parses ASN.1 BER format from `read`, and deserializes `T` from it.
+///
+/// The state of `read` is unspecified on failure to parse BER; otherwise,
+/// `read` is advanced to the end of the BER (even if this function fails to deserialize `T`.)
+pub fn read_ber<R, T>(read: &mut R) -> Result<T, Error>
+where
+    R: ?Sized + Read,
+    T: de::Deserialize,
+{
+    let ber = Ber::parse(read)?;
+    from_ber(&ber)
+}
+
 /// Parses ASN.1 DER format from `read`, and deserializes `T` from it.
 ///
 /// The state of `read` is unspecified on failure to parse DER; otherwise,
@@ -190,6 +203,17 @@ mod tests {
         write_der(&value, &mut buffer).unwrap();
 
         let value2 = read_der::<_, i32>(&mut &buffer[..]).unwrap();
+        assert_eq!(value, value2);
+    }
+
+    #[test]
+    fn test_read_ber() {
+        let value = 0x1234i32;
+
+        let mut buffer: Vec<u8> = Vec::new();
+        write_ber(&value, &mut buffer).unwrap();
+
+        let value2 = read_ber::<_, i32>(&mut &buffer[..]).unwrap();
         assert_eq!(value, value2);
     }
 }
