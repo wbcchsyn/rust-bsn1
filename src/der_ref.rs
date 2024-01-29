@@ -271,10 +271,7 @@ impl DerRef {
     /// assert_eq!(der.id().pc(), PCTag::Constructed);
     /// ```
     pub fn mut_id(&mut self) -> &mut IdRef {
-        let ret = self.id();
-        let ptr = ret as *const IdRef;
-        let ptr = ptr as *mut IdRef;
-        unsafe { &mut *ptr }
+        self.disassemble_mut().0
     }
 
     /// Returns `Length` of `self`.
