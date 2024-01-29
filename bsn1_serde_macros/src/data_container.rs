@@ -549,8 +549,6 @@ impl DataContainer {
         let tmp_val = quote! { bsn1_macro_1704080283_tmp_val };
         let tmp_id = quote! { bsn1_macro_1704080283_tmp_id };
         let tmp_contents = quote! { bsn1_macro_1704080283_tmp_contents };
-        let ret = quote! { bsn1_macro_1704080283_ret };
-        let ty = self.ty();
 
         let field_constructors = self.field_attributes().iter().map(|attribute| {
             if attribute.is_skip_deserializing() {
@@ -581,6 +579,8 @@ impl DataContainer {
             }
         });
 
+        let ty = self.ty();
+
         let constructor = match self.fields() {
             syn::Fields::Named(_) => {
                 let fields = self.field_idents();
@@ -589,6 +589,8 @@ impl DataContainer {
             syn::Fields::Unnamed(_) => quote! { #ty ( #(#field_constructors,)* ) },
             syn::Fields::Unit => quote! { #ty },
         };
+
+        let ret = quote! { bsn1_macro_1704080283_ret };
 
         Ok(quote! {{
             let mut #contents_bytes: &[u8] = #contents.as_ref();
