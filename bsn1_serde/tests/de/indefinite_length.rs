@@ -1,34 +1,18 @@
-// Copyright 2023 Shin Yoshida
+// Copyright 2023-2024 Shin Yoshida
 //
-// "LGPL-3.0-or-later OR Apache-2.0"
+// "GPL-3.0-only"
 //
-// This is part of bsn1_serde
+// This is part of BSN1_SERDE
 //
-//  bsn1_serde is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU Lesser General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
+// BSN1_SERDE is free software: you can redistribute it and/or modify it under the terms of the
+// GNU General Public License as published by the Free Software Foundation, version 3.
 //
-//  bsn1_serde is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU Lesser General Public License for more details.
+// BSN1_SERDE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+// even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+// General Public License for more details.
 //
-//  You should have received a copy of the GNU Lesser General Public License
-//  along with bsn1_serde.  If not, see <http://www.gnu.org/licenses/>.
-//
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// You should have received a copy of the GNU General Public License along with this program. If
+// not, see <https://www.gnu.org/licenses/>.
 
 use bsn1::{Ber, BerRef, IdRef};
 use bsn1_serde::from_ber;
