@@ -467,7 +467,8 @@ where
 
             while !contents.is_empty() {
                 let der = DerRef::parse(&mut contents)?;
-                let t: T = Deserialize::from_der(der.id(), der.contents())?;
+                let (id, _, contents) = der.disassemble();
+                let t: T = Deserialize::from_der(id, contents)?;
                 ret.insert(t);
             }
 
