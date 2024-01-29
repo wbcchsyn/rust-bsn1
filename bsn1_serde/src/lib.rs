@@ -26,7 +26,7 @@ pub mod ser;
 use bsn1::{Ber, BerRef, Buffer, Der, DerRef, Error, Length};
 pub use bsn1_serde_macros::{Deserialize, Serialize};
 pub use octet_string::OctetString;
-use std::io::Write;
+use std::io::{Read, Write};
 
 /// Serializes `value` into ASN.1 DER format.
 pub fn to_der<T>(value: &T) -> Result<Der, Error>
@@ -98,6 +98,19 @@ where
     de::Deserialize::from_der(id, contents)
 }
 
+/// Parses ASN.1 DER format from `read`, and deserializes `T` from it.
+///
+/// The state of `read` is unspecified on failure to parse DER; otherwise,
+/// `read` is advanced to the end of the DER (even if this function fails to deserialize `T`.)
+pub fn read_der<R, T>(read: &mut R) -> Result<T, Error>
+where
+    R: ?Sized + Read,
+    T: de::Deserialize,
+{
+    let der = Der::parse(read)?;
+    from_der(&der)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -167,5 +180,16 @@ mod tests {
         write_der(&value, &mut buffer).unwrap();
 
         assert_eq!(&buffer[..], der.as_ref() as &[u8]);
+    }
+
+    #[test]
+    fn test_read_der() {
+        let value = 0x1234i32;
+
+        let mut buffer: Vec<u8> = Vec::new();
+        write_der(&value, &mut buffer).unwrap();
+
+        let value2 = read_der::<_, i32>(&mut &buffer[..]).unwrap();
+        assert_eq!(value, value2);
     }
 }
