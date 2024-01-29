@@ -246,10 +246,11 @@ impl PartialOrd for Length {
 ///
 /// The behavior is undefined if `writeable` is closed or broken before this function returns.
 /// `writeable` should be `std::io::Sink` or `Buffer`.
-pub unsafe fn parse_length<R: Read, W: Write>(
-    readable: &mut R,
-    writeable: &mut W,
-) -> Result<Length, Error> {
+pub unsafe fn parse_length<R, W>(readable: &mut R, writeable: &mut W) -> Result<Length, Error>
+where
+    R: ?Sized + Read,
+    W: ?Sized + Write,
+{
     use crate::misc::{read_u8, write_u8};
 
     let first = read_u8(readable)?;
