@@ -37,7 +37,10 @@ where
 ///
 /// The behavior is undefined if `writeable` is closed or broken before this function returns.
 /// `writeable` should be `std::io::Sink` or `Buffer`.
-pub unsafe fn write_u8<T: Write>(writeable: &mut T, byte: u8) -> Result<(), Error> {
+pub unsafe fn write_u8<T>(writeable: &mut T, byte: u8) -> Result<(), Error>
+where
+    T: ?Sized + Write,
+{
     let buf = [byte];
     match writeable.write(&buf) {
         Err(e) => Err(e.into()),
