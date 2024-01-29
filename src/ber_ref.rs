@@ -337,12 +337,7 @@ impl BerRef {
     /// assert_eq!(ber.contents().to_bool_ber(), Ok(true));
     /// ```
     pub fn mut_contents(&mut self) -> &mut ContentsRef {
-        unsafe {
-            let ret = self.contents();
-            let ptr = ret as *const ContentsRef;
-            let ptr = ptr as *mut ContentsRef;
-            &mut *ptr
-        }
+        self.disassemble_mut().2
     }
 
     /// Returns references to `IdRef`, `Length`, and `ContentsRef` of `self`.
