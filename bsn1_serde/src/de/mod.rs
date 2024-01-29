@@ -645,9 +645,14 @@ where
                 let mut pair_contents: &[u8] = pair.contents().as_ref();
                 let key = DerRef::parse(&mut pair_contents)?;
                 let val = DerRef::parse(&mut pair_contents)?;
+
                 if pair_contents.is_empty() {
-                    let key = Deserialize::from_der(key.id(), key.contents())?;
-                    let val = Deserialize::from_der(val.id(), val.contents())?;
+                    let (id, _, contents) = key.disassemble();
+                    let key = Deserialize::from_der(id, contents)?;
+
+                    let (id, _, contents) = val.disassemble();
+                    let val = Deserialize::from_der(id, contents)?;
+
                     ret.insert(key, val);
                 }
             }
