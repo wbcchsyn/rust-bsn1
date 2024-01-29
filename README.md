@@ -97,7 +97,7 @@ fn new_bind_authentication(password: &[u8]) -> Ber {
    const ID_NUMBER: u32 = 0;
    let id = Id::new(ClassTag::ContextSpecific, PCTag::Primitive, ID_NUMBER.into());
 
-   let contents = <&ContentsRef>::from(password);
+   let contents: &ContentsRef = password.into();
 
    Ber::new(&id, contents)
 }
