@@ -321,12 +321,7 @@ impl BerRef {
     /// assert_eq!(ber.contents().to_bool_ber(), Ok(false));
     /// ```
     pub fn contents(&self) -> &ContentsRef {
-        let mut bytes = &self.bytes;
-        unsafe {
-            identifier_ref::parse_id_unchecked(&mut bytes);
-            length::parse_length_unchecked(&mut bytes);
-        }
-        bytes.into()
+        self.disassemble().2
     }
 
     /// Provides a mutable reference to the [`ContentsRef`] of `self`.
