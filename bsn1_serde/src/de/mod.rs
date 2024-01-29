@@ -408,7 +408,8 @@ where
 
             while !contents.is_empty() {
                 let ber = BerRef::parse(&mut contents)?;
-                let t: T = Deserialize::from_ber(ber.id(), ber.length(), ber.contents())?;
+                let (id, length, contents) = ber.disassemble();
+                let t: T = Deserialize::from_ber(id, length, contents)?;
                 ret.push_back(t);
             }
 
