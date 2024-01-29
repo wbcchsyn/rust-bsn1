@@ -318,12 +318,7 @@ impl DerRef {
     /// assert_eq!(der.contents().as_ref(), "Foo".as_bytes());
     /// ```
     pub fn contents(&self) -> &ContentsRef {
-        let mut bytes = &self.bytes;
-        unsafe {
-            identifier_ref::parse_id_unchecked(&mut bytes);
-            length::parse_length_unchecked(&mut bytes);
-        }
-        bytes.into()
+        self.disassemble().2
     }
 
     /// Returns a mutable reference to the 'contents octets' of `self`.
