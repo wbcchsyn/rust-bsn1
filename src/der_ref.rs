@@ -347,6 +347,32 @@ impl DerRef {
         let ptr = ptr as *mut ContentsRef;
         unsafe { &mut *ptr }
     }
+
+    /// Returns references to `IdRef`, `Length`, and `ContentsRef` of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bsn1::{Der, DerRef, IdRef};
+    ///
+    /// let der = Der::from("Foo");
+    /// let der: &DerRef = der.as_ref();
+    ///
+    /// let (id, length, contents) = der.disassemble();
+    ///
+    /// assert_eq!(id, IdRef::utf8_string());
+    /// assert_eq!(length.definite().unwrap(), "Foo".len());
+    /// assert_eq!(contents.as_ref(), "Foo".as_bytes());
+    /// ```
+    pub fn disassemble(&self) -> (&IdRef, Length, &ContentsRef) {
+        let mut bytes = &self.bytes;
+
+        let id = unsafe { identifier_ref::parse_id_unchecked(&mut bytes) };
+        let length = unsafe { length::parse_length_unchecked(&mut bytes) };
+        let contents = bytes.into();
+
+        (id, length, contents)
+    }
 }
 
 impl AsRef<[u8]> for DerRef {

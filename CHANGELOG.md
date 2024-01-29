@@ -255,10 +255,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - Ber::push()
   - Ber::truncate()
   - Der::from\_vec\_unchecked()
-  - DerRef::boolean()
   - Der::extend\_from\_slice()
   - Der::push()
   - Der::truncate()
+  - DerRef::boolean()
+  - DerRef::disassemble()
+
 - Create struct `TagNumber`, and change the following functions and methods type.
   - The return type of `IdRef::number`
   - The argument type of `Id::new`
