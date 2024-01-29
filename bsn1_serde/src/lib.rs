@@ -132,6 +132,8 @@ where
 ///
 /// The state of `read` is unspecified on failure to parse BER; otherwise,
 /// `read` is advanced to the end of the BER (even if this function fails to deserialize `T`.)
+///
+/// Note that if `R` is `&[u8]`, [`parse_ber`] is more efficient.
 pub fn read_ber<R, T>(read: &mut R) -> Result<T, Error>
 where
     R: ?Sized + Read,
@@ -145,6 +147,8 @@ where
 ///
 /// The state of `read` is unspecified on failure to parse DER; otherwise,
 /// `read` is advanced to the end of the DER (even if this function fails to deserialize `T`.)
+///
+/// Note that if `R` is `&[u8]`, [`parse_der`] is more efficient.
 pub fn read_der<R, T>(read: &mut R) -> Result<T, Error>
 where
     R: ?Sized + Read,
