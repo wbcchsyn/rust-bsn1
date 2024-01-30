@@ -6,3 +6,7 @@ While `serde` is renowned for its serialization/deserialization capabilities, it
 ASN.1 has many unique features not commonly found in other serialization formats, making it hard to fit into the `serde` way of doing things.
 
 `bsn1_serde` steps in to fill this gap by providing macros tailored for the ASN.1 format, taking inspiration from `serde`'s design.
+
+See also [`bsn1`].
+
+[`bsn1`]: https://crates.io/crates/bsn1
