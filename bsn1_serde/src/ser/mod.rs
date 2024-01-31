@@ -23,9 +23,19 @@ use std::io::Write;
 /// A **data structure** that can be serialized into ASN.1 format.
 pub trait Serialize {
     /// Writes the `ID` of ASN.1 format into `buffer` .
+    ///
+    /// # Warnings
+    ///
+    /// It depends on the implementation whether `buffer.flush()` is called or not.
+    /// Users should call `buffer.flush()` explicitly if necessary.
     fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error>;
 
     /// Serializes `self` into contents of ASN.1 DER format and writes it into `buffer` .
+    ///
+    /// # Warnings
+    ///
+    /// It depends on the implementation whether `buffer.flush()` is called or not.
+    /// Users should call `buffer.flush()` explicitly if necessary.
     fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error>;
 
     /// Returns the byte count of the identifier of ASN.1 format.

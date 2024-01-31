@@ -55,6 +55,11 @@ where
 }
 
 /// Serializes `value` into ASN.1 DER format, and writes it into `write`.
+///
+/// # Warnings
+///
+/// It depends on the implementation whether `write.flush()` is called or not.
+/// Users should call `write.flush()` explicitly if necessary.
 pub fn write_der<T, W>(value: &T, write: &mut W) -> Result<(), Error>
 where
     T: ?Sized + ser::Serialize,
@@ -71,6 +76,11 @@ where
 }
 
 /// Serializes `value` into ASN.1 BER format, and writes it into `write`.
+///
+/// # Warnings
+///
+/// It depends on the implementation whether `write.flush()` is called or not.
+/// Users should call `write.flush()` explicitly if necessary.
 pub fn write_ber<T, W>(value: &T, write: &mut W) -> Result<(), Error>
 where
     T: ?Sized + ser::Serialize,
