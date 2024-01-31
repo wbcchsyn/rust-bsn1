@@ -60,4 +60,8 @@ impl Generics {
             quote! { <#(#it,)*> }
         }
     }
+
+    pub fn where_clause(&self) -> Option<&syn::WhereClause> {
+        self.0.where_clause.as_ref()
+    }
 }
