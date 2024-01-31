@@ -26,6 +26,28 @@ impl From<syn::Generics> for Generics {
 }
 
 impl Generics {
+    pub fn ident_bounds(&self) -> TokenStream {
+        if self.0.params.is_empty() {
+            quote! {}
+        } else {
+            let it = self.0.params.iter().map(|param| match param {
+                syn::GenericParam::Lifetime(lifetime) => lifetime.to_token_stream(),
+                syn::GenericParam::Type(ty) => {
+                    let ident = &ty.ident;
+                    let colon = &ty.colon_token;
+                    let bounds = &ty.bounds;
+                    quote! { #ident #colon #bounds }
+                }
+                syn::GenericParam::Const(constant) => {
+                    let ident = &constant.ident;
+                    let ty = &constant.ty;
+                    quote! { const #ident : #ty }
+                }
+            });
+            quote! { <#(#it,)*> }
+        }
+    }
+
     pub fn idents(&self) -> TokenStream {
         if self.0.params.is_empty() {
             quote! {}
