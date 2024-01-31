@@ -30,13 +30,13 @@ check_license() {
 (
     cd `git rev-parse --show-toplevel`
 
-    for f in $(find -type f -name '*.rs' ! -path '*/target/*'); do
+    for f in $(find bsn1 bsn1_serde bsn1_serde_macros -type f -name '*.rs'); do
         rustfmt --check -- "$f" || exit "$?"
         check_line_length "$f"
         check_license "$f"
     done
 
-    cargo test --workspace --lib -- || exit "$?"
+    cargo test --workspace -- || exit "$?"
 
     exit 0
 )
