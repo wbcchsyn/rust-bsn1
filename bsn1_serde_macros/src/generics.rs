@@ -15,3 +15,9 @@
 // not, see <https://www.gnu.org/licenses/>.
 
 pub struct Generics(syn::Generics);
+
+impl From<syn::Generics> for Generics {
+    fn from(generics: syn::Generics) -> Self {
+        Self(generics)
+    }
+}
