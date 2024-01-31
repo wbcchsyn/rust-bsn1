@@ -20,6 +20,7 @@
 mod attribute;
 mod data_container;
 mod de;
+mod generics;
 mod ser;
 
 use attribute::Attribute;
