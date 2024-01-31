@@ -14,10 +14,28 @@
 // You should have received a copy of the GNU General Public License along with this program. If
 // not, see <https://www.gnu.org/licenses/>.
 
+use proc_macro2::TokenStream;
+use quote::{quote, ToTokens};
+
 pub struct Generics(syn::Generics);
 
 impl From<syn::Generics> for Generics {
     fn from(generics: syn::Generics) -> Self {
         Self(generics)
+    }
+}
+
+impl Generics {
+    pub fn idents(&self) -> TokenStream {
+        if self.0.params.is_empty() {
+            quote! {}
+        } else {
+            let it = self.0.params.iter().map(|param| match param {
+                syn::GenericParam::Lifetime(lifetime) => lifetime.lifetime.to_token_stream(),
+                syn::GenericParam::Type(ty) => ty.ident.to_token_stream(),
+                syn::GenericParam::Const(constant) => constant.ident.to_token_stream(),
+            });
+            quote! { <#(#it,)*> }
+        }
     }
 }
