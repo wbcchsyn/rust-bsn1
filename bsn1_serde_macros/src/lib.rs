@@ -26,7 +26,12 @@ use attribute::Attribute;
 use data_container::DataContainer;
 use proc_macro::TokenStream;
 
-/// Derive macro to implement `bsn1_serde::ser::Serialize` trait.
+/// Derive macro to implement `ser::Serialize` trait for struct or enum.
+///
+/// User can customize the implementation by attributes `bsn1_serde`.
+///
+/// All the fields of the struct or enum must implement `ser::Serialize`
+/// unless the field is annotated with `#[bsn1_serde(to = "...")]` or `#[bsn1_serde(into = "...")]`
 #[proc_macro_derive(Serialize, attributes(bsn1_serde))]
 pub fn serialize(input: TokenStream) -> TokenStream {
     let ast = syn::parse_macro_input!(input as syn::DeriveInput);
@@ -37,7 +42,13 @@ pub fn serialize(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Derive macro to implement `bsn1_serde::de::Deserialize` trait.
+/// Derive macro to implement `de::Deserialize` trait for struct or enum.
+///
+/// User can customize the implementation by attributes `bsn1_serde`.
+///
+/// All the fields of the struct or enum must implement `de::Deserialize`
+/// unless the field is annotated with `#[bsn1_serde(from = "...")]` or
+/// `#[bsn1_serde(try_from = "...")]`
 #[proc_macro_derive(Deserialize, attributes(bsn1_serde))]
 pub fn deserialize(input: TokenStream) -> TokenStream {
     let ast = syn::parse_macro_input!(input as syn::DeriveInput);
