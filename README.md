@@ -32,6 +32,17 @@ See also [X.690 (07/2002)] and [Wikipedia].
 [X.690 (07/2002)]: https://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
 [Wikipedia]: https://en.wikipedia.org/wiki/X.690
 
+## bsn1_serde
+
+[`bsn1_serde`] offers derive macros `Serialize` and `Deserialize`, similar to those found in the widely-known crate, `serde`. Designed to be used in conjunction with `bsn1`, it offers specialized serialization support tailored for the ASN.1 format.
+
+While `serde` is renowned for its serialization/deserialization capabilities, it's fundamentally designed as a general-purpose framework. This means it might not handle all the special features of every format, like those in ASN.1.
+ASN.1 has many unique features not commonly found in other serialization formats, making it hard to fit into the `serde` way of doing things.
+
+[`bsn1_serde`] steps in to fill this gap by providing macros tailored for the ASN.1 format, taking inspiration from `serde`'s design.
+
+See also [`bsn1_serde`].
+
 ## Examples
 
 'Lightweight Directory Access Protocol (LDAP)' adopts BER.
@@ -186,3 +197,5 @@ let (name_, password_) = parse_bind_request(bytes).unwrap();
 assert_eq!(name, name_);
 assert_eq!(password, password_);
 ```
+
+[`bsn1_serde`]: https://crates.io/crates/bsn1_serde
