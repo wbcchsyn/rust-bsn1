@@ -22,16 +22,16 @@ use std::io::Write;
 /// `OctetString` is a wrapper of `std::borrow::Cow<[u8]>` and implements trait
 /// [`Serialize`] and [`Deserialize`].
 ///
-/// The identifier of `OctetString` is either `UNIVERSAL PRIMITIVE OctetString`
-/// or `UNIVERSAL CONSTRUCTED OctetString` while that of `Vec<u8>` is `SEQUENCE OF INTEGER`.
+/// The identifier of `OctetString` is "UNIVERSAL OCTET STRING"
+/// while that of `Vec<u8>` is "SEQUENCE OF INTEGER".
 ///
-/// Note that ASN.1 BER allows both `UNIVERSAL PRIMITIVE OctetString` and
-/// `UNIVERSAL CONSTRUCTED OctetString` while ASN.1 DER allows only
-/// `UNIVERSAL PRIMITIVE OctetString`.
+/// Note that ASN.1 BER allows both "UNIVERSAL PRIMITIVE OCTET STRING" and
+/// "UNIVERSAL CONSTRUCTED OCTET STRING" while ASN.1 DER allows only
+/// "UNIVERSAL PRIMITIVE OCTET STRING".
 ///
-/// `OctetString` is always serialized into `UNIVERSAL PRIMITIVE OctetString`, deserialized
-/// as a DER from `UNIVERSAL PRIMITIVE OctetString`, and deserialized as a BER from
-/// `UNIVERSAL PRIMITIVE OctetString` or `UNIVERSAL CONSTRUCTED OctetString`.
+/// `OctetString` is always serialized into "UNIVERSAL PRIMITIVE OCTET STRING" format,
+/// deserialized as DER from "UNIVERSAL PRIMITIVE OCTET STRING", and deserialized as BER from
+/// either "UNIVERSAL PRIMITIVE OCTET STRING" or "UNIVERSAL CONSTRUCTED OCTET STRING".
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct OctetString<'a> {
     octets: Cow<'a, [u8]>,
