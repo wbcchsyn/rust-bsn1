@@ -38,6 +38,8 @@ fn serialize() {
     t.pass("tests/ser/to_field.rs");
 
     t.pass("tests/ser/transparent.rs");
+
+    t.pass("tests/ser/generics.rs");
 }
 
 #[test]

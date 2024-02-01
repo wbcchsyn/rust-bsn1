@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License along with this program. If
 // not, see <https://www.gnu.org/licenses/>.
 
+use crate::generics::Generics;
 use crate::{Attribute, DataContainer};
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
@@ -24,6 +25,11 @@ pub fn do_serialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
 
     let attribute = Attribute::try_from(&ast.attrs[..])?;
     attribute.sanitize_as_container()?;
+
+    let generics = Generics::from(ast.generics);
+    let idents = generics.idents();
+    let ident_bounds = generics.ident_bounds();
+    let where_clause = generics.where_clause();
 
     let methods = if let Some(ty) = attribute.into_type() {
         do_into_serialize(&ty)?
@@ -42,7 +48,8 @@ pub fn do_serialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
     let Serialize = quote! { ::bsn1_serde::ser::Serialize };
 
     Ok(quote! {
-        impl #Serialize for #name {
+        impl #ident_bounds  #Serialize for #name #idents
+            #where_clause {
             #methods
         }
     })
