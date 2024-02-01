@@ -1,6 +1,6 @@
 [package]
 name = "bsn1"
-version = "1.0.0"
+version = "2.0.1"
 authors = ["Yoshida Shin <wbcchsyn@gmail.com>"]
 edition = "2021"
 
@@ -8,7 +8,7 @@ edition = "2021"
 
 license = "GPL-3.0-only"
 description = "Rust BER and DER serializer/deserializer."
-documentation = "https://docs.rs/bsn1/1.0.0/bsn1/"
+documentation = "https://docs.rs/bsn1/latest/bsn1/"
 readme = "README.md"
 repository = "https://github.com/wbcchsyn/rust-bsn1.git"
 keywords = ["ASN1", "DER", "BER", "serialize", "X690"]

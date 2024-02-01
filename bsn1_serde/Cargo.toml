@@ -8,6 +8,7 @@ edition = "2021"
 
 license = "GPL-3.0-only"
 description = "Provides derive macros for bsn1."
+documentation = "https://docs.rs/bsn1_serde/latest/bsn1_serde/"
 readme = "README.md"
 repository = "https://github.com/wbcchsyn/rust-bsn1.git"
 keywords = ["ASN1", "DER", "BER", "serialize", "X690"]
