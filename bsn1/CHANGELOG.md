@@ -219,7 +219,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - PartialOrd for ContentsRef
   - Ord for ContentsRef
 
-## 2.0 - 2023-03-02
+## 2.0.0 - 2024-02-01
 
 ### Added
 
@@ -301,12 +301,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 - Delete the following builder functions. Use `From` implementation instead.
   - Ber::boolean()
   - Ber::integer()
-  - Ber::octet_string()
-  - Ber::utf8_string()
+  - Ber::octet\_string()
+  - Ber::utf8\_string()
   - Der::boolean()
   - Der::integer()
-  - Der::octet_string()
-  - Der::utf8_string()
+  - Der::octet\_string()
+  - Der::utf8\_string()
   - Contents::from\_bool()
   - Contents::from\_bytes()
   - Contents::from\_integer()

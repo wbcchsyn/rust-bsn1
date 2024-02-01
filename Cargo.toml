@@ -1,2 +1,3 @@
 [workspace]
 members = ["bsn1", "bsn1_serde", "bsn1_serde_macros"]
+resolver = "2"
