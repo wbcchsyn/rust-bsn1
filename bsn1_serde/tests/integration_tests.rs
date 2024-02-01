@@ -69,4 +69,6 @@ fn deserialize() {
     t.pass("tests/de/try_from_field.rs");
 
     t.pass("tests/de/transparent.rs");
+
+    t.pass("tests/de/generics.rs");
 }
