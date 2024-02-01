@@ -14,15 +14,22 @@
 // You should have received a copy of the GNU General Public License along with this program. If
 // not, see <https://www.gnu.org/licenses/>.
 
+use crate::generics::Generics;
 use crate::{Attribute, DataContainer};
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 
+#[allow(non_snake_case)]
 pub fn do_deserialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
     let name = &ast.ident;
 
     let attribute = Attribute::try_from(&ast.attrs[..])?;
     attribute.sanitize_as_container()?;
+
+    let generics = Generics::from(ast.generics);
+    let idents = generics.idents();
+    let ident_bounds = generics.ident_bounds();
+    let where_clause = generics.where_clause();
 
     let methods = if let Some(ty) = attribute.from_type() {
         do_from_deserialize(ty)?
@@ -34,14 +41,17 @@ pub fn do_deserialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
             syn::Data::Enum(data) => do_deserialize_enum(attribute, &ast.ident, data)?,
             _ => {
                 return Err(
-                    syn::Error::new_spanned(ast, "Only struct or enum is supported.").into(),
+                    syn::Error::new_spanned(name, "Only struct or enum is supported.").into(),
                 )
             }
         }
     };
 
+    let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
+
     Ok(quote! {
-        impl ::bsn1_serde::de::Deserialize for #name {
+        impl #ident_bounds #Deserialize for #name #idents
+            #where_clause {
             #methods
         }
     })
