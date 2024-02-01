@@ -19,8 +19,8 @@ name = "integration_tests"
 path = "tests/integration_tests.rs"
 
 [dependencies]
-bsn1 = { path = "../bsn1" }
-bsn1_serde_macros = { path = "../bsn1_serde_macros" }
+bsn1 = "2.0.0"
+bsn1_serde_macros = "0.1.0"
 
 [dev-dependencies]
 trybuild = "1.0.85"
