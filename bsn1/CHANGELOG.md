@@ -219,7 +219,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
   - PartialOrd for ContentsRef
   - Ord for ContentsRef
 
-## 2.0 - 2023-03-02
+## 2.0.0 - 2024-02-01
 
 ### Added
 
