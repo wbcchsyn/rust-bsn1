@@ -398,3 +398,4 @@ Nothing is changed.
 ### Removed
 
 - The implementation of `From<Box<std::error::Error>>` for `Error`
+- variant `Error::Boxed`

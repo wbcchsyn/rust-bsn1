@@ -74,13 +74,6 @@ pub enum Error {
     /// Note that this error cannot be compared with others.
     /// `PartialEq::eq` always returns `false` for this error.
     Io(std::io::Error),
-    /// Wrapper of [`std::error::Error`].
-    ///
-    /// This is used when users want to use their own error type.
-    ///
-    /// Note that this error cannot be compared with others.
-    /// `PartialEq::eq` always returns `false` for this error.
-    Boxed(Box<dyn std::error::Error>),
     /// Wrapper of [`anyhow::Error`].
     ///
     /// Note that this error cannot be compared with others.
@@ -101,7 +94,6 @@ impl fmt::Display for Error {
             Self::InvalidUtf8 => f.write_str("Invalid as UTF-8."),
             Self::InvalidKeyValuePair => f.write_str("The key-value pair is invalid."),
             Self::Io(err) => err.fmt(f),
-            Self::Boxed(err) => err.fmt(f),
             Self::Anyhow(err) => err.fmt(f),
         }
     }
@@ -122,7 +114,6 @@ impl PartialEq for Error {
             Self::InvalidUtf8 => matches!(other, Self::InvalidUtf8),
             Self::InvalidKeyValuePair => matches!(other, Self::InvalidKeyValuePair),
             Self::Io(_) => false,
-            Self::Boxed(_) => false,
             Self::Anyhow(_) => false,
         }
     }
