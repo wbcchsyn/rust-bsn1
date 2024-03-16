@@ -394,3 +394,7 @@ Nothing is changed.
 
 - Add variant `Anyhow` to enum `Error`
 - Implement `From<anyhow::Error>` for `Error`
+
+### Removed
+
+- The implementation of `From<Box<std::error::Error>>` for `Error`

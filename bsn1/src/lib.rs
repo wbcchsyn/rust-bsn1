@@ -134,15 +134,6 @@ impl From<std::io::Error> for Error {
     }
 }
 
-impl<T> From<Box<T>> for Error
-where
-    T: 'static + std::error::Error,
-{
-    fn from(err: Box<T>) -> Self {
-        Self::Boxed(err as Box<dyn std::error::Error>)
-    }
-}
-
 impl From<anyhow::Error> for Error {
     fn from(err: anyhow::Error) -> Self {
         Self::Anyhow(err)
