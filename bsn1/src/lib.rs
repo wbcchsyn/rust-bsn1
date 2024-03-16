@@ -142,3 +142,9 @@ where
         Self::Boxed(err as Box<dyn std::error::Error>)
     }
 }
+
+impl From<anyhow::Error> for Error {
+    fn from(err: anyhow::Error) -> Self {
+        Self::Anyhow(err)
+    }
+}
