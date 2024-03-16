@@ -387,3 +387,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 ## 2.0.1 - 2024-02-01
 
 Nothing is changed.
+
+## 3.0.0 -
+
+### Added
+
+- Add variant `Anyhow` to enum `Error`
