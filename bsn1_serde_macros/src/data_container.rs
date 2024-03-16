@@ -390,6 +390,7 @@ impl DataContainer {
         let Error = quote! { ::bsn1_serde::macro_alias::Error };
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
 
+        let Anyhow = quote! { ::anyhow::Error };
         let Result = quote! { ::std::result::Result };
 
         let contents_bytes = quote! { bsn1_macro_1704080283_contents_bytes };
@@ -425,7 +426,7 @@ impl DataContainer {
                                                 #tmp_id,
                                                 #tmp_length,
                                                 #tmp_contents)?;
-                    #TryFrom::try_from(#tmp_val).map_err(|err| #Error::from(Box::new(err)))?
+                    #TryFrom::try_from(#tmp_val).map_err(|err| #Error::from(#Anyhow::new(err)))?
                 }}
             } else {
                 quote! {{
@@ -509,7 +510,7 @@ impl DataContainer {
             }
         } else if let Some(try_from_ty) = field_attribute.try_from_type() {
             let TryFrom = quote! { ::std::convert::TryFrom };
-            let Box = quote! { ::std::boxed::Box };
+            let Anyhow = quote! { ::anyhow::Error };
             let Error = quote! { ::bsn1_serde::macro_alias::Error };
             let tmp_val = quote! { bsn1_macro_1706411792_tmp_val };
 
@@ -517,13 +518,13 @@ impl DataContainer {
                 syn::Fields::Named(_) => Ok(quote! {
                     let #tmp_val: #try_from_ty = #Deserialize::from_ber(#id, #length, #contents)?;
                     let #tmp_val = #TryFrom::try_from(#tmp_val)
-                        .map_err(|err| #Error::from(#Box::new(err)))?;
+                        .map_err(|err| #Error::from(#Anyhow::new(err)))?;
                     #Result::Ok(#ty { #field_ident: #tmp_val })
                 }),
                 syn::Fields::Unnamed(_) => Ok(quote! {
                     let #tmp_val: #try_from_ty = #Deserialize::from_ber(#id, #length, #contents)?;
                     let #tmp_val = #TryFrom::try_from(#tmp_val)
-                        .map_err(|err| #Error::from(#Box::new(err)))?;
+                        .map_err(|err| #Error::from(#Anyhow::new(err)))?;
                     #Result::Ok(#ty ( #tmp_val ))
                 }),
                 syn::Fields::Unit => unreachable!(),
@@ -550,6 +551,7 @@ impl DataContainer {
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
 
         let Result = quote! { ::std::result::Result };
+        let Anyhow = quote! { ::anyhow::Error };
 
         let contents_bytes = quote! { bsn1_macro_1704080283_contents_bytes };
         let tmp_der = quote! { bsn1_macro_1704080283_tmp_der };
@@ -575,7 +577,7 @@ impl DataContainer {
                     let #tmp_der = #DerRef::parse(#contents_bytes)?;
                     let (#tmp_id, _, #tmp_contents) = #tmp_der.disassemble();
                     let #tmp_val: #try_from_ty = #Deserialize::from_der(#tmp_id, #tmp_contents)?;
-                    #TryFrom::try_from(#tmp_val).map_err(|err| #Error::from(Box::new(err)))?
+                    #TryFrom::try_from(#tmp_val).map_err(|err| #Error::from(#Anyhow::new(err)))?
                 }}
             } else {
                 quote! {{
@@ -644,7 +646,7 @@ impl DataContainer {
             }
         } else if let Some(try_from_ty) = field_attribute.try_from_type() {
             let TryFrom = quote! { ::std::convert::TryFrom };
-            let Box = quote! { ::std::boxed::Box };
+            let Anyhow = quote! { ::anyhow::Error };
             let Error = quote! { ::bsn1_serde::macro_alias::Error };
             let tmp_val = quote! { bsn1_macro_1706411792_tmp_val };
 
@@ -652,13 +654,13 @@ impl DataContainer {
                 syn::Fields::Named(_) => Ok(quote! {
                     let #tmp_val: #try_from_ty = #Deserialize::from_der(#id, #contents)?;
                     let #tmp_val = #TryFrom::try_from(#tmp_val)
-                        .map_err(|err| #Error::from(#Box::new(err)))?;
+                        .map_err(|err| #Error::from(#Anyhow::new(err)))?;
                     #Result::Ok(#ty { #field_ident: #tmp_val })
                 }),
                 syn::Fields::Unnamed(_) => Ok(quote! {
                     let #tmp_val: #try_from_ty = #Deserialize::from_der(#id, #contents)?;
                     let #tmp_val = #TryFrom::try_from(#tmp_val)
-                        .map_err(|err| #Error::from(#Box::new(err)))?;
+                        .map_err(|err| #Error::from(#Anyhow::new(err)))?;
                     #Result::Ok(#ty ( #tmp_val ))
                 }),
                 syn::Fields::Unit => unreachable!(),
