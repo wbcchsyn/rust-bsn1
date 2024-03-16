@@ -508,6 +508,8 @@ where
                     let val = Deserialize::from_ber(id, length, val)?;
 
                     ret.insert(key, val);
+                } else {
+                    return Err(Error::InvalidKeyValuePair);
                 }
             }
 
@@ -541,6 +543,8 @@ where
                     let val = Deserialize::from_der(id, contents)?;
 
                     ret.insert(key, val);
+                } else {
+                    return Err(Error::InvalidKeyValuePair);
                 }
             }
 
@@ -621,6 +625,8 @@ where
                     let val = Deserialize::from_ber(id, length, contents)?;
 
                     ret.insert(key, val);
+                } else {
+                    return Err(Error::InvalidKeyValuePair);
                 }
             }
 
@@ -654,6 +660,8 @@ where
                     let val = Deserialize::from_der(id, contents)?;
 
                     ret.insert(key, val);
+                } else {
+                    return Err(Error::InvalidKeyValuePair);
                 }
             }
 

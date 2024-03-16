@@ -15,3 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 ### Changed
 
 - Wrap `TryFrom::Error` into `bsn1::Error::Anyhow`, instead of `bsn1::Error::Boxed`
+
+### Fixed
+
+- Make `BTreeMap` and `HashMap` error to deserialize from BER or DER if the key-value pair includes (an) extra octet(s).
