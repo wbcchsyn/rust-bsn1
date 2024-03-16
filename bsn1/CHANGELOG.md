@@ -383,3 +383,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 
 - According to X.690, the length octets of 'end-of-contents' should be 0x00, i.e. 0 as definite length.
   Add the sanitization of that when parsing BER.
+
+## 2.0.1 - 2024-02-01
+
+Nothing is changed.
