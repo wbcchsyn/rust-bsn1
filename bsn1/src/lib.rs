@@ -130,3 +130,16 @@ impl From<anyhow::Error> for Error {
         Self::Anyhow(err)
     }
 }
+
+impl Error {
+    /// Consumes `self`, converting it into an [`anyhow::Error`].
+    ///
+    /// If `self` matches `Error::Anyhow`, returns the inner value;
+    /// otherwise, wraps `self` and returns.
+    pub fn into_anyhow(self) -> anyhow::Error {
+        match self {
+            Self::Anyhow(err) => err,
+            _ => anyhow::Error::new(self),
+        }
+    }
+}
