@@ -202,7 +202,7 @@ Fields with `from` are not required to implement `de::Deserialize`.
 
 Deserializes into `TryFromType`, and then converting. `TryFromType` must implements `de::Deserialize` and the annotated struct or enum or field must implements `TryFrom<TryFromType>`.
 
-If `TryFrom::try_from` fails, wraps the error into `[::bsn1::Error::Boxed]` and returns it.
+If `TryFrom::try_from` fails, wraps the error into [`::bsn1::Error`] and returns it.
 
 Fields with `try_from` are not required to implement `de::Deserialize`.
 
