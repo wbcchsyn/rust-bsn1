@@ -142,4 +142,23 @@ impl Error {
             _ => anyhow::Error::new(self),
         }
     }
+
+    /// If `self` matches `Error::Anyhow`, returns a reference to the first `Self` type error
+    /// in the chain; otherwise, returns `self`.
+    pub fn root_cause(&self) -> &Self {
+        match self {
+            Self::Anyhow(err) => {
+                let mut ret = self;
+                for cause in err.chain() {
+                    if let Some(e) = cause.downcast_ref::<Self>() {
+                        ret = e;
+                    } else {
+                        break;
+                    }
+                }
+                return ret;
+            }
+            _ => self,
+        }
+    }
 }

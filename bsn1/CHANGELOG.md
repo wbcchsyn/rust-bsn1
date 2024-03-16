@@ -395,6 +395,7 @@ Nothing is changed.
 - Add variant `Anyhow` to enum `Error`
 - Implement `From<anyhow::Error>` for `Error`
 - Create method `Error::into\_anyhow()`
+- Create method `Error::root\_cause()`
 
 ### Removed
 
