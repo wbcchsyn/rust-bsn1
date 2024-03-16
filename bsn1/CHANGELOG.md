@@ -396,6 +396,7 @@ Nothing is changed.
 - Implement `From<anyhow::Error>` for `Error`
 - Create method `Error::into\_anyhow()`
 - Create method `Error::root\_cause()`
+- Create method `Error::context()`
 
 ### Removed
 

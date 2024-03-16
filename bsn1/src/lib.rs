@@ -143,6 +143,14 @@ impl Error {
         }
     }
 
+    /// Consumes `self`, wrapping it with `context`.
+    pub fn context<C>(self, context: C) -> Self
+    where
+        C: fmt::Display + Send + Sync + 'static,
+    {
+        self.into_anyhow().context(context).into()
+    }
+
     /// If `self` matches `Error::Anyhow`, returns a reference to the first `Self` type error
     /// in the chain; otherwise, returns `self`.
     pub fn root_cause(&self) -> &Self {
