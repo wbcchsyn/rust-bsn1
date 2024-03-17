@@ -22,6 +22,7 @@ use quote::{format_ident, quote, ToTokens};
 
 pub enum DataContainer {
     DataStruct {
+        struct_name: Ident,
         attribute: Attribute,
         field_attributes: Vec<Attribute>,
         data_structure: syn::DataStruct,
@@ -34,10 +35,12 @@ pub enum DataContainer {
     },
 }
 
-impl TryFrom<(Attribute, syn::DataStruct)> for DataContainer {
+impl TryFrom<(Attribute, Ident, syn::DataStruct)> for DataContainer {
     type Error = syn::Error;
 
-    fn try_from((attribute, data): (Attribute, syn::DataStruct)) -> Result<Self, Self::Error> {
+    fn try_from(
+        (attribute, struct_name, data): (Attribute, Ident, syn::DataStruct),
+    ) -> Result<Self, Self::Error> {
         attribute.sanitize_as_struct()?;
 
         if attribute.is_transparent() && data.fields.len() != 1 {
@@ -55,6 +58,7 @@ impl TryFrom<(Attribute, syn::DataStruct)> for DataContainer {
         }
 
         Ok(Self::DataStruct {
+            struct_name,
             attribute,
             field_attributes,
             data_structure: data,
