@@ -718,26 +718,63 @@ impl DeserializeHelper<'_> {
         if self.contents.is_empty() {
             Ok(None)
         } else {
-            let pair = BerRef::parse(&mut self.contents)?;
+            self.index += 1;
+
+            let pair = BerRef::parse(&mut self.contents).map_err(|err| {
+                err.context(format!(
+                    "Failed to parse BER of the key-value pair at index {}",
+                    self.index - 1
+                ))
+            })?;
 
             if pair.id() != IdRef::sequence() {
-                return Err(Error::UnmatchedId);
+                return Err(Error::UnmatchedId.context(format!(
+                    "The id of key-value pair at index {} is not SEQUENCE",
+                    self.index - 1
+                )));
             }
 
             let mut pair_contents: &[u8] = pair.contents().as_ref();
-            let key = BerRef::parse(&mut pair_contents)?;
-            let val = BerRef::parse(&mut pair_contents)?;
+            let key = BerRef::parse(&mut pair_contents).map_err(|err| {
+                err.context(format!(
+                    "Failed to parse BER of the key at index {}",
+                    self.index - 1
+                ))
+            })?;
+            let val = BerRef::parse(&mut pair_contents).map_err(|err| {
+                err.context(format!(
+                    "Failed to parse BER of the value at index {}",
+                    self.index - 1
+                ))
+            })?;
 
             if pair_contents.is_empty() {
                 let (id, length, contents) = key.disassemble();
-                let key = unsafe { Deserialize::from_ber(id, length, contents)? };
+                let key = unsafe {
+                    Deserialize::from_ber(id, length, contents).map_err(|err| {
+                        err.context(format!(
+                            "Failed to deserialize BER into the key at index {}",
+                            self.index - 1
+                        ))
+                    })?
+                };
 
                 let (id, length, contents) = val.disassemble();
-                let val = unsafe { Deserialize::from_ber(id, length, contents)? };
+                let val = unsafe {
+                    Deserialize::from_ber(id, length, contents).map_err(|err| {
+                        err.context(format!(
+                            "Failed to deserialize BER into the value at index {}",
+                            self.index - 1
+                        ))
+                    })?
+                };
 
                 Ok(Some((key, val)))
             } else {
-                Err(Error::InvalidKeyValuePair)
+                Err(Error::InvalidKeyValuePair.context(format!(
+                    "The key-value pair at index {} includes (an) extra octet(s)",
+                    self.index - 1
+                )))
             }
         }
     }
