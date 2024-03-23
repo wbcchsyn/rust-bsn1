@@ -663,7 +663,7 @@ impl DeserializeHelper<'_> {
             })?;
 
             if pair.id() != IdRef::sequence() {
-                return Err(Error::UnmatchedId.context(format!(
+                return Err(Error::InvalidKeyValuePair.context(format!(
                     "The id of key-value pair at index {} is not SEQUENCE",
                     self.index - 1
                 )));
@@ -728,7 +728,7 @@ impl DeserializeHelper<'_> {
             })?;
 
             if pair.id() != IdRef::sequence() {
-                return Err(Error::UnmatchedId.context(format!(
+                return Err(Error::InvalidKeyValuePair.context(format!(
                     "The id of key-value pair at index {} is not SEQUENCE",
                     self.index - 1
                 )));
