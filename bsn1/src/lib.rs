@@ -92,7 +92,7 @@ impl fmt::Display for Error {
             Self::InvalidContents => f.write_str("Contents include invlid octet(s)."),
             Self::UnmatchedId => f.write_str("The identifier does not match to that of data type."),
             Self::InvalidUtf8 => f.write_str("Invalid as UTF-8."),
-            Self::InvalidKeyValuePair => f.write_str("The key-value pair is invalid."),
+            Self::InvalidKeyValuePair => f.write_str("SEQUENCE of key-value pair is required."),
             Self::Io(err) => err.fmt(f),
             Self::Anyhow(err) => err.fmt(f),
         }
