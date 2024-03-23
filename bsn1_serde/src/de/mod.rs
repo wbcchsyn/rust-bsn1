@@ -690,6 +690,10 @@ fn exclude_eoc(length: Length, contents: &ContentsRef) -> Result<&ContentsRef, E
     }
 }
 
+struct DeserializeHelper<'a> {
+    contents: &'a [u8],
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
