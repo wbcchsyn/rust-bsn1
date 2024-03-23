@@ -694,6 +694,38 @@ impl DeserializeHelper<'_> {
             }
         }
     }
+
+    fn ber_to_key_val<K, V>(&mut self) -> Result<Option<(K, V)>, Error>
+    where
+        K: Deserialize,
+        V: Deserialize,
+    {
+        if self.contents.is_empty() {
+            Ok(None)
+        } else {
+            let pair = BerRef::parse(&mut self.contents)?;
+
+            if pair.id() != IdRef::sequence() {
+                return Err(Error::UnmatchedId);
+            }
+
+            let mut pair_contents: &[u8] = pair.contents().as_ref();
+            let key = BerRef::parse(&mut pair_contents)?;
+            let val = BerRef::parse(&mut pair_contents)?;
+
+            if pair_contents.is_empty() {
+                let (id, length, contents) = key.disassemble();
+                let key = unsafe { Deserialize::from_ber(id, length, contents)? };
+
+                let (id, length, contents) = val.disassemble();
+                let val = unsafe { Deserialize::from_ber(id, length, contents)? };
+
+                Ok(Some((key, val)))
+            } else {
+                Err(Error::InvalidKeyValuePair)
+            }
+        }
+    }
 }
 
 #[cfg(test)]
