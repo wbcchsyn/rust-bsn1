@@ -663,6 +663,21 @@ impl DeserializeHelper<'_> {
         }
     }
 
+    fn ber_to_val<T>(&mut self) -> Result<Option<T>, Error>
+    where
+        T: Deserialize,
+    {
+        if self.contents.is_empty() {
+            Ok(None)
+        } else {
+            let ber = BerRef::parse(&mut self.contents)?;
+            let (id, length, contents) = ber.disassemble();
+            let val = unsafe { Deserialize::from_ber(id, length, contents)? };
+
+            Ok(Some(val))
+        }
+    }
+
     fn der_to_key_val<K, V>(&mut self) -> Result<Option<(K, V)>, Error>
     where
         K: Deserialize,
