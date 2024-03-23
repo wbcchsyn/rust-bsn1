@@ -626,9 +626,20 @@ impl DeserializeHelper<'_> {
         if self.contents.is_empty() {
             Ok(None)
         } else {
-            let ber = BerRef::parse(&mut self.contents)?;
+            self.index += 1;
+
+            let ber = BerRef::parse(&mut self.contents).map_err(|err| {
+                err.context(format!("Failed to parse BER at index {}", self.index - 1))
+            })?;
             let (id, length, contents) = ber.disassemble();
-            let val = unsafe { Deserialize::from_ber(id, length, contents)? };
+            let val = unsafe {
+                Deserialize::from_ber(id, length, contents).map_err(|err| {
+                    err.context(format!(
+                        "Failed to deserialize BER into element at index {}",
+                        self.index - 1
+                    ))
+                })?
+            };
 
             Ok(Some(val))
         }
