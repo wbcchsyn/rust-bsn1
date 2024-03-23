@@ -321,13 +321,10 @@ where
         if id != IdRef::sequence() {
             Err(Error::UnmatchedId)
         } else {
-            let mut contents: &[u8] = exclude_eoc(length, contents).map(AsRef::as_ref)?;
             let mut ret = Vec::new();
+            let mut helper = DeserializeHelper::from(exclude_eoc(length, contents)?);
 
-            while !contents.is_empty() {
-                let ber = BerRef::parse(&mut contents)?;
-                let (id, length, contents) = ber.disassemble();
-                let t: T = Deserialize::from_ber(id, length, contents)?;
+            while let Some(t) = helper.ber_to_val()? {
                 ret.push(t);
             }
 
@@ -340,12 +337,9 @@ where
             Err(Error::UnmatchedId)
         } else {
             let mut ret = Vec::new();
-            let mut contents: &[u8] = contents.as_ref();
+            let mut helper = DeserializeHelper::from(contents);
 
-            while !contents.is_empty() {
-                let der = DerRef::parse(&mut contents)?;
-                let (id, _, contents) = der.disassemble();
-                let t: T = Deserialize::from_der(id, contents)?;
+            while let Some(t) = helper.der_to_val()? {
                 ret.push(t);
             }
 
@@ -362,13 +356,10 @@ where
         if id != IdRef::sequence() {
             Err(Error::UnmatchedId)
         } else {
-            let mut contents: &[u8] = exclude_eoc(length, contents).map(AsRef::as_ref)?;
             let mut ret = LinkedList::new();
+            let mut helper = DeserializeHelper::from(exclude_eoc(length, contents)?);
 
-            while !contents.is_empty() {
-                let ber = BerRef::parse(&mut contents)?;
-                let (id, length, contents) = ber.disassemble();
-                let t: T = Deserialize::from_ber(id, length, contents)?;
+            while let Some(t) = helper.ber_to_val()? {
                 ret.push_back(t);
             }
 
@@ -381,12 +372,9 @@ where
             Err(Error::UnmatchedId)
         } else {
             let mut ret = LinkedList::new();
-            let mut contents: &[u8] = contents.as_ref();
+            let mut helper = DeserializeHelper::from(contents);
 
-            while !contents.is_empty() {
-                let der = DerRef::parse(&mut contents)?;
-                let (id, _, contents) = der.disassemble();
-                let t: T = Deserialize::from_der(id, contents)?;
+            while let Some(t) = helper.der_to_val()? {
                 ret.push_back(t);
             }
 
@@ -403,13 +391,10 @@ where
         if id != IdRef::sequence() {
             Err(Error::UnmatchedId)
         } else {
-            let mut contents: &[u8] = exclude_eoc(length, contents).map(AsRef::as_ref)?;
             let mut ret = VecDeque::new();
+            let mut helper = DeserializeHelper::from(exclude_eoc(length, contents)?);
 
-            while !contents.is_empty() {
-                let ber = BerRef::parse(&mut contents)?;
-                let (id, length, contents) = ber.disassemble();
-                let t: T = Deserialize::from_ber(id, length, contents)?;
+            while let Some(t) = helper.ber_to_val()? {
                 ret.push_back(t);
             }
 
@@ -422,12 +407,9 @@ where
             Err(Error::UnmatchedId)
         } else {
             let mut ret = VecDeque::new();
-            let mut contents: &[u8] = contents.as_ref();
+            let mut helper = DeserializeHelper::from(contents);
 
-            while !contents.is_empty() {
-                let der = DerRef::parse(&mut contents)?;
-                let (id, _, contents) = der.disassemble();
-                let t: T = Deserialize::from_der(id, contents)?;
+            while let Some(t) = helper.der_to_val()? {
                 ret.push_back(t);
             }
 
@@ -444,13 +426,10 @@ where
         if id != IdRef::sequence() {
             Err(Error::UnmatchedId)
         } else {
-            let mut contents: &[u8] = exclude_eoc(length, contents).map(AsRef::as_ref)?;
             let mut ret = BTreeSet::new();
+            let mut helper = DeserializeHelper::from(exclude_eoc(length, contents)?);
 
-            while !contents.is_empty() {
-                let ber = BerRef::parse(&mut contents)?;
-                let (id, length, contents) = ber.disassemble();
-                let t: T = Deserialize::from_ber(id, length, contents)?;
+            while let Some(t) = helper.ber_to_val()? {
                 ret.insert(t);
             }
 
@@ -463,12 +442,9 @@ where
             Err(Error::UnmatchedId)
         } else {
             let mut ret = BTreeSet::new();
-            let mut contents: &[u8] = contents.as_ref();
+            let mut helper = DeserializeHelper::from(contents);
 
-            while !contents.is_empty() {
-                let der = DerRef::parse(&mut contents)?;
-                let (id, _, contents) = der.disassemble();
-                let t: T = Deserialize::from_der(id, contents)?;
+            while let Some(t) = helper.der_to_val()? {
                 ret.insert(t);
             }
 
@@ -486,31 +462,11 @@ where
         if id != IdRef::sequence() {
             Err(Error::UnmatchedId)
         } else {
-            let mut contents: &[u8] = exclude_eoc(length, contents).map(AsRef::as_ref)?;
             let mut ret = BTreeMap::new();
+            let mut helper = DeserializeHelper::from(exclude_eoc(length, contents)?);
 
-            while !contents.is_empty() {
-                let pair = BerRef::parse(&mut contents)?;
-
-                if pair.id() != IdRef::sequence() {
-                    return Err(Error::UnmatchedId);
-                }
-
-                let mut pair_contents: &[u8] = pair.contents().as_ref();
-                let key = BerRef::parse(&mut pair_contents)?;
-                let val = BerRef::parse(&mut pair_contents)?;
-
-                if pair_contents.is_empty() {
-                    let (id, length, key) = key.disassemble();
-                    let key = Deserialize::from_ber(id, length, key)?;
-
-                    let (id, length, val) = val.disassemble();
-                    let val = Deserialize::from_ber(id, length, val)?;
-
-                    ret.insert(key, val);
-                } else {
-                    return Err(Error::InvalidKeyValuePair);
-                }
+            while let Some((key, val)) = helper.ber_to_key_val()? {
+                ret.insert(key, val);
             }
 
             Ok(ret)
@@ -522,30 +478,10 @@ where
             Err(Error::UnmatchedId)
         } else {
             let mut ret = BTreeMap::new();
-            let mut contents: &[u8] = contents.as_ref();
+            let mut helper = DeserializeHelper::from(contents);
 
-            while !contents.is_empty() {
-                let pair = DerRef::parse(&mut contents)?;
-
-                if pair.id() != IdRef::sequence() {
-                    return Err(Error::UnmatchedId);
-                }
-
-                let mut pair_contents: &[u8] = pair.contents().as_ref();
-                let key = DerRef::parse(&mut pair_contents)?;
-                let val = DerRef::parse(&mut pair_contents)?;
-
-                if pair_contents.is_empty() {
-                    let (id, _, contents) = key.disassemble();
-                    let key = Deserialize::from_der(id, contents)?;
-
-                    let (id, _, contents) = val.disassemble();
-                    let val = Deserialize::from_der(id, contents)?;
-
-                    ret.insert(key, val);
-                } else {
-                    return Err(Error::InvalidKeyValuePair);
-                }
+            while let Some((key, val)) = helper.der_to_key_val()? {
+                ret.insert(key, val);
             }
 
             Ok(ret)
@@ -561,13 +497,10 @@ where
         if id != IdRef::set() {
             Err(Error::UnmatchedId)
         } else {
-            let mut contents: &[u8] = exclude_eoc(length, contents).map(AsRef::as_ref)?;
             let mut ret = HashSet::new();
+            let mut helper = DeserializeHelper::from(exclude_eoc(length, contents)?);
 
-            while !contents.is_empty() {
-                let ber = BerRef::parse(&mut contents)?;
-                let (id, length, contents) = ber.disassemble();
-                let t: T = Deserialize::from_ber(id, length, contents)?;
+            while let Some(t) = helper.ber_to_val()? {
                 ret.insert(t);
             }
 
@@ -580,12 +513,9 @@ where
             Err(Error::UnmatchedId)
         } else {
             let mut ret = HashSet::new();
-            let mut contents: &[u8] = contents.as_ref();
+            let mut helper = DeserializeHelper::from(contents);
 
-            while !contents.is_empty() {
-                let der = DerRef::parse(&mut contents)?;
-                let (id, _, contents) = der.disassemble();
-                let t: T = Deserialize::from_der(id, contents)?;
+            while let Some(t) = helper.der_to_val()? {
                 ret.insert(t);
             }
 
@@ -603,31 +533,11 @@ where
         if id != IdRef::set() {
             Err(Error::UnmatchedId)
         } else {
-            let mut contents: &[u8] = exclude_eoc(length, contents).map(AsRef::as_ref)?;
             let mut ret = HashMap::new();
+            let mut helper = DeserializeHelper::from(exclude_eoc(length, contents)?);
 
-            while !contents.is_empty() {
-                let pair = BerRef::parse(&mut contents)?;
-
-                if pair.id() != IdRef::sequence() {
-                    return Err(Error::UnmatchedId);
-                }
-
-                let mut pair_contents: &[u8] = pair.contents().as_ref();
-                let key = BerRef::parse(&mut pair_contents)?;
-                let val = BerRef::parse(&mut pair_contents)?;
-
-                if pair_contents.is_empty() {
-                    let (id, length, contents) = key.disassemble();
-                    let key = Deserialize::from_ber(id, length, contents)?;
-
-                    let (id, length, contents) = val.disassemble();
-                    let val = Deserialize::from_ber(id, length, contents)?;
-
-                    ret.insert(key, val);
-                } else {
-                    return Err(Error::InvalidKeyValuePair);
-                }
+            while let Some((key, val)) = helper.ber_to_key_val()? {
+                ret.insert(key, val);
             }
 
             Ok(ret)
@@ -639,30 +549,10 @@ where
             Err(Error::UnmatchedId)
         } else {
             let mut ret = HashMap::new();
-            let mut contents: &[u8] = contents.as_ref();
+            let mut helper = DeserializeHelper::from(contents);
 
-            while !contents.is_empty() {
-                let pair = DerRef::parse(&mut contents)?;
-
-                if pair.id() != IdRef::sequence() {
-                    return Err(Error::UnmatchedId);
-                }
-
-                let mut pair_contents: &[u8] = pair.contents().as_ref();
-                let key = DerRef::parse(&mut pair_contents)?;
-                let val = DerRef::parse(&mut pair_contents)?;
-
-                if pair_contents.is_empty() {
-                    let (id, _, contents) = key.disassemble();
-                    let key = Deserialize::from_der(id, contents)?;
-
-                    let (id, _, contents) = val.disassemble();
-                    let val = Deserialize::from_der(id, contents)?;
-
-                    ret.insert(key, val);
-                } else {
-                    return Err(Error::InvalidKeyValuePair);
-                }
+            while let Some((key, val)) = helper.der_to_key_val()? {
+                ret.insert(key, val);
             }
 
             Ok(ret)
@@ -685,6 +575,114 @@ fn exclude_eoc(length: Length, contents: &ContentsRef) -> Result<&ContentsRef, E
                 Ok(contents.into())
             } else {
                 Err(Error::UnTerminatedBytes)
+            }
+        }
+    }
+}
+
+struct DeserializeHelper<'a> {
+    contents: &'a [u8],
+}
+
+impl<'a> From<&'a ContentsRef> for DeserializeHelper<'a> {
+    fn from(contents: &'a ContentsRef) -> Self {
+        Self {
+            contents: contents.as_ref(),
+        }
+    }
+}
+
+impl DeserializeHelper<'_> {
+    fn der_to_val<T>(&mut self) -> Result<Option<T>, Error>
+    where
+        T: Deserialize,
+    {
+        if self.contents.is_empty() {
+            Ok(None)
+        } else {
+            let der = DerRef::parse(&mut self.contents)?;
+            let (id, _, contents) = der.disassemble();
+            let val = Deserialize::from_der(id, contents)?;
+
+            Ok(Some(val))
+        }
+    }
+
+    fn ber_to_val<T>(&mut self) -> Result<Option<T>, Error>
+    where
+        T: Deserialize,
+    {
+        if self.contents.is_empty() {
+            Ok(None)
+        } else {
+            let ber = BerRef::parse(&mut self.contents)?;
+            let (id, length, contents) = ber.disassemble();
+            let val = unsafe { Deserialize::from_ber(id, length, contents)? };
+
+            Ok(Some(val))
+        }
+    }
+
+    fn der_to_key_val<K, V>(&mut self) -> Result<Option<(K, V)>, Error>
+    where
+        K: Deserialize,
+        V: Deserialize,
+    {
+        if self.contents.is_empty() {
+            Ok(None)
+        } else {
+            let pair = DerRef::parse(&mut self.contents)?;
+
+            if pair.id() != IdRef::sequence() {
+                return Err(Error::UnmatchedId);
+            }
+
+            let mut pair_contents: &[u8] = pair.contents().as_ref();
+            let key = DerRef::parse(&mut pair_contents)?;
+            let val = DerRef::parse(&mut pair_contents)?;
+
+            if pair_contents.is_empty() {
+                let (id, _, contents) = key.disassemble();
+                let key = Deserialize::from_der(id, contents)?;
+
+                let (id, _, contents) = val.disassemble();
+                let val = Deserialize::from_der(id, contents)?;
+
+                Ok(Some((key, val)))
+            } else {
+                Err(Error::InvalidKeyValuePair)
+            }
+        }
+    }
+
+    fn ber_to_key_val<K, V>(&mut self) -> Result<Option<(K, V)>, Error>
+    where
+        K: Deserialize,
+        V: Deserialize,
+    {
+        if self.contents.is_empty() {
+            Ok(None)
+        } else {
+            let pair = BerRef::parse(&mut self.contents)?;
+
+            if pair.id() != IdRef::sequence() {
+                return Err(Error::UnmatchedId);
+            }
+
+            let mut pair_contents: &[u8] = pair.contents().as_ref();
+            let key = BerRef::parse(&mut pair_contents)?;
+            let val = BerRef::parse(&mut pair_contents)?;
+
+            if pair_contents.is_empty() {
+                let (id, length, contents) = key.disassemble();
+                let key = unsafe { Deserialize::from_ber(id, length, contents)? };
+
+                let (id, length, contents) = val.disassemble();
+                let val = unsafe { Deserialize::from_ber(id, length, contents)? };
+
+                Ok(Some((key, val)))
+            } else {
+                Err(Error::InvalidKeyValuePair)
             }
         }
     }
