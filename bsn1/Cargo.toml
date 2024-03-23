@@ -16,3 +16,4 @@ categories = ["encoding"]
 
 [dependencies]
 num = "0.4.1"
+anyhow = "1.0.81"

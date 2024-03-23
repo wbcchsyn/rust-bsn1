@@ -387,3 +387,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 ## 2.0.1 - 2024-02-01
 
 Nothing is changed.
+
+## 3.0.0 -
+
+### Added
+
+- Add variant `Anyhow` to enum `Error`
+- Implement `From<anyhow::Error>` for `Error`
+- Create method `Error::into\_anyhow()`
+- Create method `Error::root\_cause()`
+- Create method `Error::context()`
+- Create method `Error::as_anyhow()`
+
+### Removed
+
+- The implementation of `From<Box<std::error::Error>>` for `Error`
+- variant `Error::Boxed`

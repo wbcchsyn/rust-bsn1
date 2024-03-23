@@ -10,3 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 
 - First release.
 
+## 0.2.0 -
+
+### Changed
+
+- Wrap `TryFrom::Error` into `bsn1::Error::Anyhow`, instead of `bsn1::Error::Boxed`

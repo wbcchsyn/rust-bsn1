@@ -92,14 +92,14 @@ fn do_try_from_deserialize(ty: &syn::Path) -> syn::Result<TokenStream> {
 
     let Result = quote! { ::std::result::Result };
     let TryFrom = quote! { ::std::convert::TryFrom };
-    let Box = quote! { ::std::boxed::Box };
+    let Anyhow = quote! { ::anyhow::Error };
 
     Ok(quote! {
         unsafe fn from_ber(id: &#IdRef, length: #Length, contents: &#ContentsRef)
             -> #Result<Self, #Error> {
             let val: #ty = #Deserialize::from_ber(id, length, contents)?;
             #TryFrom::try_from(val).map_err(|err| {
-                let err = #Box::new(err);
+                let err = #Anyhow::new(err);
                 #Error::from(err)
             })
         }
@@ -107,7 +107,7 @@ fn do_try_from_deserialize(ty: &syn::Path) -> syn::Result<TokenStream> {
         fn from_der(id: &#IdRef, contents: &#ContentsRef) -> #Result<Self, #Error> {
             let val: #ty = #Deserialize::from_der(id, contents)?;
             #TryFrom::try_from(val).map_err(|err| {
-                let err = #Box::new(err);
+                let err = #Anyhow::new(err);
                 #Error::from(err)
             })
         }

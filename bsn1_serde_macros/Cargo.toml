@@ -24,3 +24,4 @@ syn = "2.0.43"
 
 [dev-dependencies]
 bsn1_serde = { path = "../bsn1_serde" }
+anyhow = "1.0.81"
