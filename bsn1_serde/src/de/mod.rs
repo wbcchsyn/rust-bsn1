@@ -694,6 +694,14 @@ struct DeserializeHelper<'a> {
     contents: &'a [u8],
 }
 
+impl<'a> From<&'a ContentsRef> for DeserializeHelper<'a> {
+    fn from(contents: &'a ContentsRef) -> Self {
+        Self {
+            contents: contents.as_ref(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
