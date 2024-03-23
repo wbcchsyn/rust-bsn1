@@ -702,6 +702,23 @@ impl<'a> From<&'a ContentsRef> for DeserializeHelper<'a> {
     }
 }
 
+impl DeserializeHelper<'_> {
+    fn der_to_val<T>(&mut self) -> Result<Option<T>, Error>
+    where
+        T: Deserialize,
+    {
+        if self.contents.is_empty() {
+            Ok(None)
+        } else {
+            let der = DerRef::parse(&mut self.contents)?;
+            let (id, _, contents) = der.disassemble();
+            let val = Deserialize::from_der(id, contents)?;
+
+            Ok(Some(val))
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
