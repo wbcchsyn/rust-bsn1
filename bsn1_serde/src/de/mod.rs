@@ -378,12 +378,9 @@ where
             Err(Error::UnmatchedId)
         } else {
             let mut ret = LinkedList::new();
-            let mut contents: &[u8] = contents.as_ref();
+            let mut helper = DeserializeHelper::from(contents);
 
-            while !contents.is_empty() {
-                let der = DerRef::parse(&mut contents)?;
-                let (id, _, contents) = der.disassemble();
-                let t: T = Deserialize::from_der(id, contents)?;
+            while let Some(t) = helper.der_to_val()? {
                 ret.push_back(t);
             }
 
