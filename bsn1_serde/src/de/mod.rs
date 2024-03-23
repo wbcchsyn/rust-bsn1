@@ -462,31 +462,11 @@ where
         if id != IdRef::sequence() {
             Err(Error::UnmatchedId)
         } else {
-            let mut contents: &[u8] = exclude_eoc(length, contents).map(AsRef::as_ref)?;
             let mut ret = BTreeMap::new();
+            let mut helper = DeserializeHelper::from(exclude_eoc(length, contents)?);
 
-            while !contents.is_empty() {
-                let pair = BerRef::parse(&mut contents)?;
-
-                if pair.id() != IdRef::sequence() {
-                    return Err(Error::UnmatchedId);
-                }
-
-                let mut pair_contents: &[u8] = pair.contents().as_ref();
-                let key = BerRef::parse(&mut pair_contents)?;
-                let val = BerRef::parse(&mut pair_contents)?;
-
-                if pair_contents.is_empty() {
-                    let (id, length, key) = key.disassemble();
-                    let key = Deserialize::from_ber(id, length, key)?;
-
-                    let (id, length, val) = val.disassemble();
-                    let val = Deserialize::from_ber(id, length, val)?;
-
-                    ret.insert(key, val);
-                } else {
-                    return Err(Error::InvalidKeyValuePair);
-                }
+            while let Some((key, val)) = helper.ber_to_key_val()? {
+                ret.insert(key, val);
             }
 
             Ok(ret)
