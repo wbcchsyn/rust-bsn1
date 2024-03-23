@@ -582,12 +582,14 @@ fn exclude_eoc(length: Length, contents: &ContentsRef) -> Result<&ContentsRef, E
 
 struct DeserializeHelper<'a> {
     contents: &'a [u8],
+    index: usize,
 }
 
 impl<'a> From<&'a ContentsRef> for DeserializeHelper<'a> {
     fn from(contents: &'a ContentsRef) -> Self {
         Self {
             contents: contents.as_ref(),
+            index: 0,
         }
     }
 }
