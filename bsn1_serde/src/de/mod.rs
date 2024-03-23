@@ -321,13 +321,10 @@ where
         if id != IdRef::sequence() {
             Err(Error::UnmatchedId)
         } else {
-            let mut contents: &[u8] = exclude_eoc(length, contents).map(AsRef::as_ref)?;
             let mut ret = Vec::new();
+            let mut helper = DeserializeHelper::from(exclude_eoc(length, contents)?);
 
-            while !contents.is_empty() {
-                let ber = BerRef::parse(&mut contents)?;
-                let (id, length, contents) = ber.disassemble();
-                let t: T = Deserialize::from_ber(id, length, contents)?;
+            while let Some(t) = helper.ber_to_val()? {
                 ret.push(t);
             }
 
