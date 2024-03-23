@@ -602,9 +602,18 @@ impl DeserializeHelper<'_> {
         if self.contents.is_empty() {
             Ok(None)
         } else {
-            let der = DerRef::parse(&mut self.contents)?;
+            self.index += 1;
+
+            let der = DerRef::parse(&mut self.contents).map_err(|err| {
+                err.context(format!("Failed to parse DER at index {}", self.index - 1))
+            })?;
             let (id, _, contents) = der.disassemble();
-            let val = Deserialize::from_der(id, contents)?;
+            let val = Deserialize::from_der(id, contents).map_err(|err| {
+                err.context(format!(
+                    "Failed to deserialize DER into element at index {}",
+                    self.index - 1
+                ))
+            })?;
 
             Ok(Some(val))
         }
