@@ -143,6 +143,15 @@ impl Error {
         }
     }
 
+    /// Returns a reference to the inner [`anyhow::Error`] if `self` is `Error::Anyhow`;
+    /// otherwise, returns `None`.
+    pub fn as_anyhow(&self) -> Option<&anyhow::Error> {
+        match self {
+            Self::Anyhow(err) => Some(err),
+            _ => None,
+        }
+    }
+
     /// Consumes `self`, wrapping it with `context`.
     pub fn context<C>(self, context: C) -> Self
     where
