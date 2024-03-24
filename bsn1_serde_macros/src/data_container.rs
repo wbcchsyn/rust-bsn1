@@ -775,34 +775,6 @@ impl DataContainer {
         }
     }
 
-    fn transparent_field_ident(&self, is_serializing: bool) -> Result<TokenStream, syn::Error> {
-        assert!(self.attribute().is_transparent());
-
-        let mut it = self
-            .field_idents()
-            .into_iter()
-            .zip(self.field_attributes())
-            .filter_map(|(ident, attr)| {
-                if is_serializing && attr.is_skip_serializing() {
-                    None
-                } else if is_serializing == false && attr.is_skip_deserializing() {
-                    None
-                } else {
-                    Some(ident)
-                }
-            });
-        let ret = it.next();
-
-        if ret.is_some() && it.next().is_none() {
-            Ok(ret.unwrap())
-        } else {
-            Err(syn::Error::new_spanned(
-                self.attribute().transparent_token(),
-                "Transparent struct must have exactly one field to be serialized/deserialized.",
-            ))
-        }
-    }
-
     fn field_vars(&self) -> Vec<TokenStream> {
         match self {
             Self::Variant { .. } => {
