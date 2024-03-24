@@ -43,13 +43,6 @@ impl TryFrom<(Attribute, Ident, syn::DataStruct)> for DataContainer {
     ) -> Result<Self, Self::Error> {
         attribute.sanitize_as_struct()?;
 
-        if attribute.is_transparent() && data.fields.len() != 1 {
-            return Err(syn::Error::new_spanned(
-                attribute.transparent_token(),
-                "The field count of transparent struct must be 1.",
-            ));
-        }
-
         let mut field_attributes = Vec::new();
         for field in data.fields.iter() {
             let attribute = Attribute::try_from(&field.attrs[..])?;
@@ -126,8 +119,8 @@ impl DataContainer {
         assert!(self.attribute().is_transparent());
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
-        let field = self.transparent_field_var();
-        let field_attribute = self.transparent_field_attribute();
+        let field = self.transparent_field_var(true)?;
+        let field_attribute = self.transparent_field_attribute(true)?;
 
         if let Some(into_ty) = field_attribute.into_type() {
             let Clone = quote! { ::std::clone::Clone };
@@ -164,8 +157,8 @@ impl DataContainer {
         assert!(self.attribute().is_transparent());
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
-        let field = self.transparent_field_var();
-        let field_attribute = self.transparent_field_attribute();
+        let field = self.transparent_field_var(true)?;
+        let field_attribute = self.transparent_field_attribute(true)?;
 
         if let Some(into_ty) = field_attribute.into_type() {
             let Clone = quote! { ::std::clone::Clone };
@@ -274,8 +267,8 @@ impl DataContainer {
         assert!(self.attribute().is_transparent());
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
-        let field = self.transparent_field_var();
-        let field_attribute = self.transparent_field_attribute();
+        let field = self.transparent_field_var(true)?;
+        let field_attribute = self.transparent_field_attribute(true)?;
 
         if let Some(into_ty) = field_attribute.into_type() {
             let Clone = quote! { ::std::clone::Clone };
@@ -358,8 +351,8 @@ impl DataContainer {
         assert!(self.attribute().is_transparent());
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
-        let field = self.transparent_field_var();
-        let field_attribute = self.transparent_field_attribute();
+        let field = self.transparent_field_var(true)?;
+        let field_attribute = self.transparent_field_attribute(true)?;
 
         if let Some(into_ty) = field_attribute.into_type() {
             let Clone = quote! { ::std::clone::Clone };
@@ -503,60 +496,76 @@ impl DataContainer {
     ) -> syn::Result<TokenStream> {
         assert!(self.attribute().is_transparent());
 
-        let Result = quote! { ::std::result::Result };
+        let Error = quote! { ::bsn1_serde::macro_alias::Error };
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
 
-        let field_attribute = self.transparent_field_attribute();
+        let Result = quote! { ::std::result::Result };
+        let Anyhow = quote! { ::anyhow::Error };
+
         let ty = self.ty();
-        let field_ident = self.transparent_field_ident();
-        let field_ident = quote! { #ty.#field_ident };
-        let tmp_val = quote! {
-            #Deserialize::from_ber(#id, #length, #contents).map_err(|err| {
-                let context = concat!(
-                    "Failed to deserialize BER into `",
-                    stringify!(#field_ident),
-                    "`"
-                );
-                err.context(context)
-            })?
-        };
+        let field_idents = self.field_idents();
+        let mut deserialized_fields: usize = 0;
 
-        let inner = if let Some(from_ty) = field_attribute.from_type() {
-            let From = quote! { ::std::convert::From };
-            quote! { #From::<#from_ty>::from(#tmp_val) }
-        } else if let Some(try_from_ty) = field_attribute.try_from_type() {
-            let TryFrom = quote! { ::std::convert::TryFrom };
-            let Anyhow = quote! { ::anyhow::Error };
-            let Error = quote! { ::bsn1_serde::macro_alias::Error };
+        let field_constructors =
+            self.field_attributes()
+                .iter()
+                .zip(&field_idents)
+                .map(|(attribute, field_ident)| {
+                    let field_ident = quote! { #ty.#field_ident };
+                    let tmp_val =
+                        quote! { #Deserialize::from_ber(#id, #length, #contents).map_err(|err| {
+                            let context = concat!(
+                                "Failed to deserialize BER into `",
+                                stringify!(#field_ident),
+                                "`"
+                            );
+                            err.context(context)
+                        })? };
 
-            quote! {
-                #TryFrom::<#try_from_ty>::try_from(#tmp_val).map_err(|err| {
-                    let context = concat!(
-                        "Failed to convert `",
-                        stringify!(#try_from_ty),
-                        "` into `",
-                        stringify!(#field_ident),
-                        "`"
-                    );
-                    #Error::from(#Anyhow::new(err)).context(context)
-                })?
-            }
-        } else {
-            tmp_val
-        };
+                    if attribute.is_skip_deserializing() {
+                        let path = attribute.default_path();
+                        quote! { #path() }
+                    } else if let Some(from_ty) = attribute.from_type() {
+                        deserialized_fields += 1;
+                        let From = quote! { ::std::convert::From };
+                        quote! { #From::<#from_ty>::from(#tmp_val) }
+                    } else if let Some(try_from_ty) = attribute.try_from_type() {
+                        deserialized_fields += 1;
+                        let TryFrom = quote! { ::std::convert::TryFrom };
+                        quote! {
+                            #TryFrom::<#try_from_ty>::try_from(#tmp_val).map_err(|err| {
+                                let context = concat!(
+                                    "Failed to convert `",
+                                    stringify!(#try_from_ty),
+                                    "` into `",
+                                    stringify!(#field_ident),
+                                    "`"
+                                );
+                                #Error::from(#Anyhow::new(err)).context(context)
+                            })?
+                        }
+                    } else {
+                        deserialized_fields += 1;
+                        tmp_val
+                    }
+                });
 
-        match self.fields() {
+        let ret = match self.fields() {
             syn::Fields::Named(_) => {
-                let field_ident = self.transparent_field_ident();
-                Ok(quote! {
-                    #Result::Ok(#ty { #field_ident: #inner })
-                })
+                quote! { #ty { #(#field_idents: #field_constructors,)* } }
             }
-            syn::Fields::Unnamed(_) => Ok(quote! {
-                #Result::Ok(#ty ( #inner ))
-            }),
-            syn::Fields::Unit => unreachable!(),
+            syn::Fields::Unnamed(_) => quote! { #ty ( #(#field_constructors,)* ) },
+            syn::Fields::Unit => quote! { #ty },
+        };
+
+        if deserialized_fields != 1 {
+            return Err(syn::Error::new_spanned(
+                self.attribute().transparent_token(),
+                "Transparent struct must have exactly one field to be deserialized.",
+            ));
         }
+
+        Ok(quote! { #Result::Ok(#ret) })
     }
 
     #[allow(non_snake_case)]
@@ -655,58 +664,75 @@ impl DataContainer {
     ) -> syn::Result<TokenStream> {
         assert!(self.attribute().is_transparent());
 
-        let Result = quote! { ::std::result::Result };
+        let Error = quote! { ::bsn1_serde::macro_alias::Error };
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
 
-        let field_attribute = self.transparent_field_attribute();
+        let Result = quote! { ::std::result::Result };
+        let Anyhow = quote! { ::anyhow::Error };
+
         let ty = self.ty();
-        let field_ident = self.transparent_field_ident();
-        let field_ident = quote! { #ty.#field_ident };
-        let tmp_val = quote! {
-            #Deserialize::from_der(#id, #contents).map_err(|err| {
-                let context = concat!(
-                    "Failed to deserialize DER into `",
-                    stringify!(#field_ident),
-                    "`"
-                );
-                err.context(context)
-            })?
-        };
+        let field_idents = self.field_idents();
+        let mut deserialized_fields: usize = 0;
 
-        let inner = if let Some(from_ty) = field_attribute.from_type() {
-            let From = quote! { ::std::convert::From };
-            quote! { #From::<#from_ty>::from(#tmp_val) }
-        } else if let Some(try_from_ty) = field_attribute.try_from_type() {
-            let TryFrom = quote! { ::std::convert::TryFrom };
-            let Anyhow = quote! { ::anyhow::Error };
-            let Error = quote! { ::bsn1_serde::macro_alias::Error };
+        let field_constructors =
+            self.field_attributes()
+                .iter()
+                .zip(&field_idents)
+                .map(|(attribute, field_ident)| {
+                    let field_ident = quote! { #ty.#field_ident };
+                    let tmp_val = quote! { #Deserialize::from_der(#id, #contents).map_err(|err| {
+                        let context = concat!(
+                            "Failed to deserialize DER into `",
+                            stringify!(#field_ident),
+                            "`"
+                        );
+                        err.context(context)
+                    })? };
 
-            quote! {
-                #TryFrom::<#try_from_ty>::try_from(#tmp_val).map_err(|err| {
-                    let context = concat!(
-                        "Failed to convert `",
-                        stringify!(#try_from_ty),
-                        "` into `",
-                        stringify!(#field_ident),
-                        "`"
-                    );
-                    #Error::from(#Anyhow::new(err)).context(context)
-                })?
-            }
-        } else {
-            tmp_val
-        };
+                    if attribute.is_skip_deserializing() {
+                        let path = attribute.default_path();
+                        quote! { #path() }
+                    } else if let Some(from_ty) = attribute.from_type() {
+                        deserialized_fields += 1;
+                        let From = quote! { ::std::convert::From };
+                        quote! { #From::<#from_ty>::from(#tmp_val) }
+                    } else if let Some(try_from_ty) = attribute.try_from_type() {
+                        deserialized_fields += 1;
+                        let TryFrom = quote! { ::std::convert::TryFrom };
+                        quote! {
+                            #TryFrom::<#try_from_ty>::try_from(#tmp_val).map_err(|err| {
+                                let context = concat!(
+                                    "Failed to convert `",
+                                    stringify!(#try_from_ty),
+                                    "` into `",
+                                    stringify!(#field_ident),
+                                    "`"
+                                );
+                                #Error::from(#Anyhow::new(err)).context(context)
+                            })?
+                        }
+                    } else {
+                        deserialized_fields += 1;
+                        tmp_val
+                    }
+                });
 
-        match self.fields() {
+        let ret = match self.fields() {
             syn::Fields::Named(_) => {
-                let field_ident = self.transparent_field_ident();
-                Ok(quote! { #Result::Ok(#ty { #field_ident: #inner }) })
+                quote! { #ty { #(#field_idents: #field_constructors,)* } }
             }
-            syn::Fields::Unnamed(_) => Ok(quote! {
-                #Result::Ok(#ty ( #inner ))
-            }),
-            syn::Fields::Unit => unreachable!(),
+            syn::Fields::Unnamed(_) => quote! { #ty ( #(#field_constructors,)* ) },
+            syn::Fields::Unit => quote! { #ty },
+        };
+
+        if deserialized_fields != 1 {
+            return Err(syn::Error::new_spanned(
+                self.attribute().transparent_token(),
+                "Transparent struct must have exactly one field to be deserialized.",
+            ));
         }
+
+        Ok(quote! { #Result::Ok(#ret) })
     }
 
     pub fn attribute(&self) -> &Attribute {
@@ -749,14 +775,6 @@ impl DataContainer {
         }
     }
 
-    fn transparent_field_ident(&self) -> TokenStream {
-        assert!(self.attribute().is_transparent());
-
-        let mut field_idents = self.field_idents();
-        assert!(field_idents.len() == 1);
-        field_idents.pop().unwrap()
-    }
-
     fn field_vars(&self) -> Vec<TokenStream> {
         match self {
             Self::Variant { .. } => {
@@ -776,12 +794,32 @@ impl DataContainer {
         }
     }
 
-    fn transparent_field_var(&self) -> TokenStream {
+    fn transparent_field_var(&self, is_serializing: bool) -> Result<TokenStream, syn::Error> {
         assert!(self.attribute().is_transparent());
 
-        let mut field_vars = self.field_vars();
-        assert!(field_vars.len() == 1);
-        field_vars.pop().unwrap()
+        let mut it = self
+            .field_vars()
+            .into_iter()
+            .zip(self.field_attributes())
+            .filter_map(|(var, attr)| {
+                if is_serializing && attr.is_skip_serializing() {
+                    None
+                } else if is_serializing == false && attr.is_skip_deserializing() {
+                    None
+                } else {
+                    Some(var)
+                }
+            });
+        let ret = it.next();
+
+        if ret.is_some() && it.next().is_none() {
+            Ok(ret.unwrap())
+        } else {
+            Err(syn::Error::new_spanned(
+                self.attribute().transparent_token(),
+                "Transparent struct must have exactly one field to be serialized/deserialized.",
+            ))
+        }
     }
 
     fn field_attributes(&self) -> &[Attribute] {
@@ -795,12 +833,27 @@ impl DataContainer {
         }
     }
 
-    fn transparent_field_attribute(&self) -> &Attribute {
+    fn transparent_field_attribute(&self, is_serializing: bool) -> Result<&Attribute, syn::Error> {
         assert!(self.attribute().is_transparent());
 
-        let field_attributes = self.field_attributes();
-        assert!(field_attributes.len() == 1);
+        let mut it = self.field_attributes().iter().filter(|attr| {
+            if is_serializing && attr.is_skip_serializing() {
+                false
+            } else if is_serializing == false && attr.is_skip_deserializing() {
+                false
+            } else {
+                true
+            }
+        });
+        let ret = it.next();
 
-        field_attributes.first().unwrap()
+        if ret.is_some() && it.next().is_none() {
+            Ok(ret.unwrap())
+        } else {
+            Err(syn::Error::new_spanned(
+                self.attribute().transparent_token(),
+                "Transparent struct must have exactly one field to be serialized/deserialized.",
+            ))
+        }
     }
 }

@@ -32,22 +32,32 @@ struct B(String);
 struct C {
     #[bsn1_serde(into = "OctetString")]
     x: String,
+    #[bsn1_serde(skip)]
+    _y: u8,
 }
 
 #[derive(bsn1_serde::Serialize)]
 #[bsn1_serde(transparent)]
-struct D(#[bsn1_serde(into = "OctetString")] Vec<u8>);
+struct D(
+    #[bsn1_serde(into = "OctetString")] Vec<u8>,
+    #[bsn1_serde(skip)] Option<String>,
+);
 
 #[derive(bsn1_serde::Serialize)]
 #[bsn1_serde(transparent)]
 struct E {
+    #[bsn1_serde(skip_serializing)]
+    _x: i32,
     #[bsn1_serde(to = "OctetString::new")]
-    x: String,
+    y: String,
 }
 
 #[derive(bsn1_serde::Serialize)]
 #[bsn1_serde(transparent)]
-struct F(#[bsn1_serde(to = "OctetString::new")] Vec<u8>);
+struct F(
+    #[bsn1_serde(skip_serializing)] String,
+    #[bsn1_serde(to = "OctetString::new")] Vec<u8>,
+);
 
 fn main() {
     test_a();
@@ -83,11 +93,15 @@ fn test_b() {
 }
 
 fn test_c() {
-    let inner = String::from("abc");
-    let val = C { x: inner.clone() };
+    let x = String::from("abc");
+    let y = 0x12;
+    let val = C {
+        x: x.clone(),
+        _y: y,
+    };
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der, to_der(&OctetString::from(inner)).unwrap());
+    assert_eq!(der, to_der(&OctetString::from(x)).unwrap());
 
     assert_eq!(der.id().len(), val.id_len().unwrap());
 
@@ -95,11 +109,11 @@ fn test_c() {
 }
 
 fn test_d() {
-    let inner = vec![0x01, 0x02, 0x03];
-    let val = D(inner.clone());
+    let inner = (vec![0x01, 0x02, 0x03], Some(String::from("abc")));
+    let val = D(inner.0.clone(), inner.1.clone());
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der, to_der(&OctetString::from(inner)).unwrap());
+    assert_eq!(der, to_der(&OctetString::from(inner.0)).unwrap());
 
     assert_eq!(der.id().len(), val.id_len().unwrap());
 
@@ -107,11 +121,15 @@ fn test_d() {
 }
 
 fn test_e() {
-    let inner = String::from("abc");
-    let val = E { x: inner.clone() };
+    let x = -0x1234;
+    let y = String::from("abc");
+    let val = E {
+        _x: x,
+        y: y.clone(),
+    };
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der, to_der(&OctetString::new(&inner)).unwrap());
+    assert_eq!(der, to_der(&OctetString::new(&y)).unwrap());
 
     assert_eq!(der.id().len(), val.id_len().unwrap());
 
@@ -119,11 +137,11 @@ fn test_e() {
 }
 
 fn test_f() {
-    let inner = vec![0x01, 0x02, 0x03];
-    let val = F(inner.clone());
+    let inner = (String::from(""), vec![0x01, 0x02, 0x03]);
+    let val = F(inner.0.clone(), inner.1.clone());
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der, to_der(&OctetString::new(&inner)).unwrap());
+    assert_eq!(der, to_der(&OctetString::new(&inner.1)).unwrap());
 
     assert_eq!(der.id().len(), val.id_len().unwrap());
 

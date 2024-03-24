@@ -278,7 +278,7 @@ struct B(#[bsn1_serde(to = "OctetString::new", try_from = "OctetString")] String
 
 # \#\[bsn1\_serde(transparent)\]
 
-`transparent` can be passed to attribute for struct with one field.
+`transparent` can be passed to attribute for struct that has exactly 1 field to be serialized/deserialized.
 
 Serializes and deserializes the annotated struct exactly the same as if the field were serialized and deserialized by itself.
 
@@ -311,15 +311,21 @@ assert!(a.0 == deserialized);
 struct B {
     #[bsn1_serde(to = "OctetString::new", try_from = "OctetString")]
     x: String,
+    #[bsn1_serde(skip)]
+    y: i32,
 }
 
 // Build a new instance of `B`.
-let b = B { x: "bar".to_string() };
+let b = B {
+    x: "bar".to_string(),
+    y: 10,
+};
 
 // Serialize and deserialize.
 let serialized = to_der(&b).unwrap();
 let deserialized: B = from_der(&serialized).unwrap();
-assert!(b == deserialized);
+assert!(deserialized.x == b.x);
+assert!(deserialized.y == i32::default());
 
 // `serialized` can be deserialized as `OctetString` as well.
 let deserialized: OctetString = from_der(&serialized).unwrap();
