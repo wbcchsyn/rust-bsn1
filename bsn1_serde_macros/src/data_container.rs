@@ -43,13 +43,6 @@ impl TryFrom<(Attribute, Ident, syn::DataStruct)> for DataContainer {
     ) -> Result<Self, Self::Error> {
         attribute.sanitize_as_struct()?;
 
-        if attribute.is_transparent() && data.fields.len() != 1 {
-            return Err(syn::Error::new_spanned(
-                attribute.transparent_token(),
-                "The field count of transparent struct must be 1.",
-            ));
-        }
-
         let mut field_attributes = Vec::new();
         for field in data.fields.iter() {
             let attribute = Attribute::try_from(&field.attrs[..])?;
