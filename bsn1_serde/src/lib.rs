@@ -33,14 +33,27 @@ pub fn to_der<T>(value: &T) -> Result<Der, Error>
 where
     T: ?Sized + ser::Serialize,
 {
-    let contents_len = value.der_contents_len()?;
+    let (contents_len, contents) = match value.der_contents_len()? {
+        Some(len) => (len, None),
+        None => {
+            let mut contents = Buffer::new();
+            value.write_der_contents(&mut contents)?;
+            (contents.len(), Some(contents))
+        }
+    };
+
     let length = Length::Definite(contents_len).to_bytes();
     let der_len = value.id_len()? + length.len() + contents_len;
 
     let mut buffer = Buffer::with_capacity(der_len);
     value.write_id(&mut buffer)?;
     buffer.write_all(&length).unwrap(); // Buffer::write_all() never fails.
-    value.write_der_contents(&mut buffer)?;
+
+    if let Some(contents) = contents {
+        unsafe { buffer.extend_from_slice(contents.as_slice()) };
+    } else {
+        value.write_der_contents(&mut buffer)?;
+    }
 
     Ok(buffer.into())
 }
