@@ -539,37 +539,32 @@ impl DataContainer {
         let Anyhow = quote! { ::anyhow::Error };
 
         let contents_bytes = quote! { bsn1_macro_1704080283_contents_bytes };
-        let tmp_der = quote! { bsn1_macro_1704080283_tmp_der };
-        let tmp_val = quote! { bsn1_macro_1704080283_tmp_val };
-        let tmp_id = quote! { bsn1_macro_1704080283_tmp_id };
-        let tmp_contents = quote! { bsn1_macro_1704080283_tmp_contents };
 
         let field_constructors = self.field_attributes().iter().map(|attribute| {
+            let tmp_der = quote! { bsn1_macro_1704080283_tmp_der };
+            let tmp_id = quote! { bsn1_macro_1704080283_tmp_id };
+            let tmp_contents = quote! { bsn1_macro_1704080283_tmp_contents };
+            let tmp_val = quote! {{
+                let #tmp_der = #DerRef::parse(#contents_bytes)?;
+                let (#tmp_id, _, #tmp_contents) = #tmp_der.disassemble();
+                #Deserialize::from_der(#tmp_id, #tmp_contents)?
+            }};
+
             if attribute.is_skip_deserializing() {
                 let path = attribute.default_path();
                 quote! { #path() }
             } else if let Some(from_ty) = attribute.from_type() {
                 let From = quote! { ::std::convert::From };
-                quote! {{
-                    let #tmp_der = #DerRef::parse(#contents_bytes)?;
-                    let (#tmp_id, _, #tmp_contents) = #tmp_der.disassemble();
-                    let #tmp_val: #from_ty = #Deserialize::from_der(#tmp_id, #tmp_contents)?;
-                    #From::from(#tmp_val)
-                }}
+                quote! { #From::<#from_ty>::from(#tmp_val) }
             } else if let Some(try_from_ty) = attribute.try_from_type() {
                 let TryFrom = quote! { ::std::convert::TryFrom };
-                quote! {{
-                    let #tmp_der = #DerRef::parse(#contents_bytes)?;
-                    let (#tmp_id, _, #tmp_contents) = #tmp_der.disassemble();
-                    let #tmp_val: #try_from_ty = #Deserialize::from_der(#tmp_id, #tmp_contents)?;
-                    #TryFrom::try_from(#tmp_val).map_err(|err| #Error::from(#Anyhow::new(err)))?
-                }}
+                quote! {
+                    #TryFrom::<#try_from_ty>::try_from(#tmp_val).map_err(|err| {
+                        #Error::from(#Anyhow::new(err))
+                    })?
+                }
             } else {
-                quote! {{
-                    let #tmp_der = #DerRef::parse(#contents_bytes)?;
-                    let (#tmp_id, _, #tmp_contents) = #tmp_der.disassemble();
-                    #Deserialize::from_der(#tmp_id, #tmp_contents)?
-                }}
+                tmp_val
             }
         });
 
