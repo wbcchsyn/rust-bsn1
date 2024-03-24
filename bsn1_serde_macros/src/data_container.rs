@@ -642,35 +642,31 @@ impl DataContainer {
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
 
         let field_attribute = self.transparent_field_attribute();
-        let field_ident = self.transparent_field_ident();
         let ty = self.ty();
+        let tmp_val = quote! { #Deserialize::from_der(#id, #contents)? };
 
         let inner = if let Some(from_ty) = field_attribute.from_type() {
             let From = quote! { ::std::convert::From };
-            let tmp_val = quote! { bsn1_macro_1706375252_tmp_val };
-
-            quote! {{
-                let #tmp_val: #from_ty = #Deserialize::from_der(#id, #contents)?;
-                #From::from(#tmp_val)
-            }}
+            quote! { #From::<#from_ty>::from(#tmp_val) }
         } else if let Some(try_from_ty) = field_attribute.try_from_type() {
             let TryFrom = quote! { ::std::convert::TryFrom };
             let Anyhow = quote! { ::anyhow::Error };
             let Error = quote! { ::bsn1_serde::macro_alias::Error };
-            let tmp_val = quote! { bsn1_macro_1706411792_tmp_val };
 
-            quote! {{
-                let #tmp_val: #try_from_ty = #Deserialize::from_der(#id, #contents)?;
-                #TryFrom::try_from(#tmp_val).map_err(|err| #Error::from(#Anyhow::new(err)))?
-            }}
+            quote! {
+                #TryFrom::<#try_from_ty>::try_from(#tmp_val).map_err(|err| {
+                    #Error::from(#Anyhow::new(err))
+                })?
+            }
         } else {
-            quote! { #Deserialize::from_der(#id, #contents)? }
+            tmp_val
         };
 
         match self.fields() {
-            syn::Fields::Named(_) => Ok(quote! {
-                #Result::Ok(#ty { #field_ident: #inner })
-            }),
+            syn::Fields::Named(_) => {
+                let field_ident = self.transparent_field_ident();
+                Ok(quote! { #Result::Ok(#ty { #field_ident: #inner }) })
+            }
             syn::Fields::Unnamed(_) => Ok(quote! {
                 #Result::Ok(#ty ( #inner ))
             }),
