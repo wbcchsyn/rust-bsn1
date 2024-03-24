@@ -50,7 +50,7 @@ use std::fmt;
 #[non_exhaustive]
 pub enum Error {
     /// The bytes finish before the last octet.
-    UnTerminatedBytes,
+    UnterminatedBytes,
     /// The bytes include some redundant octet(s).
     /// ('ASN.1' does not allow such bytes.)
     RedundantBytes,
@@ -61,12 +61,14 @@ pub enum Error {
     IndefiniteLength,
     /// The contents of 'EOC' of the 'Indefinite Length BER' must be empty.
     BadEoc,
-    /// The contents include invalid octet(s).
-    InvalidContents,
+    /// The contents include (an) invalid octet(s) at the end.
+    ExtraContentsOctet,
     /// The identifier does not match to that of data type when deserialized.
     UnmatchedId,
     /// Invarid as UTF-8.
     InvalidUtf8,
+    /// The contents of DER BOOLEAN must be 0x00 or 0xFF.
+    InvalidDerBooleanContents,
     /// The key-value pair is invalid.
     InvalidKeyValuePair,
     /// IO Error for serialization/deserialization.
@@ -84,14 +86,19 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::UnTerminatedBytes => f.write_str("The bytes finish before the last octet."),
+            Self::UnterminatedBytes => f.write_str("The bytes finish before the last octet."),
             Self::RedundantBytes => f.write_str("The bytes include some redundant octet(s)."),
             Self::OverFlow => f.write_str("Over flow is occurred to parse bytes as a number."),
             Self::IndefiniteLength => f.write_str("'Indefinite Length' is used where not allowed."),
             Self::BadEoc => f.write_str("'Indefinite Length BER' includes a bad 'EOC.'"),
-            Self::InvalidContents => f.write_str("Contents include invlid octet(s)."),
+            Self::ExtraContentsOctet => {
+                f.write_str("Contents include (an) invlid octet(s) at the end.")
+            }
             Self::UnmatchedId => f.write_str("The identifier does not match to that of data type."),
             Self::InvalidUtf8 => f.write_str("Invalid as UTF-8."),
+            Self::InvalidDerBooleanContents => {
+                f.write_str("The contents of DER BOOLEAN must be 0x00 or 0xFF.")
+            }
             Self::InvalidKeyValuePair => f.write_str("SEQUENCE of key-value pair is required."),
             Self::Io(err) => err.fmt(f),
             Self::Anyhow(err) => err.fmt(f),
@@ -104,14 +111,15 @@ impl std::error::Error for Error {}
 impl PartialEq for Error {
     fn eq(&self, other: &Self) -> bool {
         match self {
-            Self::UnTerminatedBytes => matches!(other, Self::UnTerminatedBytes),
+            Self::UnterminatedBytes => matches!(other, Self::UnterminatedBytes),
             Self::RedundantBytes => matches!(other, Self::RedundantBytes),
             Self::OverFlow => matches!(other, Self::OverFlow),
             Self::IndefiniteLength => matches!(other, Self::IndefiniteLength),
             Self::BadEoc => matches!(other, Self::BadEoc),
-            Self::InvalidContents => matches!(other, Self::InvalidContents),
+            Self::ExtraContentsOctet => matches!(other, Self::ExtraContentsOctet),
             Self::UnmatchedId => matches!(other, Self::UnmatchedId),
             Self::InvalidUtf8 => matches!(other, Self::InvalidUtf8),
+            Self::InvalidDerBooleanContents => matches!(other, Self::InvalidDerBooleanContents),
             Self::InvalidKeyValuePair => matches!(other, Self::InvalidKeyValuePair),
             Self::Io(_) => false,
             Self::Anyhow(_) => false,

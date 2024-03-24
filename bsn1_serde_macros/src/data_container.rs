@@ -479,7 +479,7 @@ impl DataContainer {
                     if #contents_bytes.ends_with(#eoc) {
                         &#contents_bytes[..(#contents_bytes.len() - #eoc.len())]
                     } else {
-                        return #Result::Err(#Error::UnTerminatedBytes);
+                        return #Result::Err(#Error::UnterminatedBytes);
                     }
                 }
             };
@@ -489,7 +489,7 @@ impl DataContainer {
             if #contents_bytes.len() == 0 {
                 #Result::Ok(#ret)
             } else {
-                return #Result::Err(#Error::InvalidContents);
+                return #Result::Err(#Error::ExtraContentsOctet);
             }
         }})
     }
@@ -642,7 +642,7 @@ impl DataContainer {
             if #contents_bytes.len() == 0 {
                 #Result::Ok(#ret)
             } else {
-                return #Result::Err(#Error::InvalidContents);
+                return #Result::Err(#Error::ExtraContentsOctet);
             }
         }})
     }

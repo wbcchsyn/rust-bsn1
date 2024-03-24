@@ -173,7 +173,7 @@ impl DerRef {
         };
 
         if readable.len() < length {
-            Err(Error::UnTerminatedBytes)
+            Err(Error::UnterminatedBytes)
         } else {
             *readable = &readable[length..];
             Ok(())

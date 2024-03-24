@@ -872,7 +872,7 @@ mod tests {
     fn parse_empty_unterminated() {
         let mut bytes: &[u8] = &[];
         let e = IdRef::parse(&mut bytes);
-        assert_eq!(Err(Error::UnTerminatedBytes), e);
+        assert_eq!(Err(Error::UnterminatedBytes), e);
         assert_eq!(bytes, &[]);
     }
 
@@ -884,7 +884,7 @@ mod tests {
                 let mut bytes: &[u8] = &[first];
 
                 let e = IdRef::parse(&mut bytes);
-                assert_eq!(Err(Error::UnTerminatedBytes), e);
+                assert_eq!(Err(Error::UnterminatedBytes), e);
                 assert_eq!(bytes, &[first]);
             }
         }
@@ -899,7 +899,7 @@ mod tests {
                     let mut bytes: &[u8] = &[first, i];
 
                     let e = IdRef::parse(&mut bytes);
-                    assert_eq!(Err(Error::UnTerminatedBytes), e);
+                    assert_eq!(Err(Error::UnterminatedBytes), e);
                     assert_eq!(bytes, &[first, i]);
                 }
             }
@@ -916,7 +916,7 @@ mod tests {
                         let mut bytes: &[u8] = &[first, i, j];
 
                         let e = IdRef::parse(&mut bytes);
-                        assert_eq!(Err(Error::UnTerminatedBytes), e);
+                        assert_eq!(Err(Error::UnterminatedBytes), e);
                         assert_eq!(bytes, &[first, i, j]);
                     }
                 }

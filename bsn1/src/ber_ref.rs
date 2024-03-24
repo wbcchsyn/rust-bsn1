@@ -171,7 +171,7 @@ impl BerRef {
         match unsafe { crate::misc::parse_id_length(readable, &mut writeable)? } {
             Length::Definite(contents_len) => {
                 if readable.len() < contents_len {
-                    Err(Error::UnTerminatedBytes)
+                    Err(Error::UnterminatedBytes)
                 } else {
                     *readable = &readable[contents_len..];
                     Ok(0)
