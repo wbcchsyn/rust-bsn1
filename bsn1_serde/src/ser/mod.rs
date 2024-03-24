@@ -393,7 +393,7 @@ where
 
     fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         for t in self.iter() {
-            write_der(t, buffer)?;
+            crate::write_der(t, buffer)?;
         }
 
         Ok(())
@@ -404,11 +404,7 @@ where
     }
 
     fn der_contents_len(&self) -> Result<usize, Error> {
-        let mut ret = 0;
-        for t in self.iter() {
-            ret += der_len(t)?;
-        }
-        Ok(ret)
+        der_contents_len(self.iter())
     }
 }
 
@@ -424,7 +420,7 @@ where
 
     fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         for t in self.iter() {
-            write_der(t, buffer)?;
+            crate::write_der(t, buffer)?;
         }
         Ok(())
     }
@@ -434,11 +430,7 @@ where
     }
 
     fn der_contents_len(&self) -> Result<usize, Error> {
-        let mut ret = 0;
-        for t in self.iter() {
-            ret += der_len(t)?;
-        }
-        Ok(ret)
+        der_contents_len(self.iter())
     }
 }
 
@@ -454,7 +446,7 @@ where
 
     fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         for t in self.iter() {
-            write_der(t, buffer)?;
+            crate::write_der(t, buffer)?;
         }
         Ok(())
     }
@@ -464,11 +456,7 @@ where
     }
 
     fn der_contents_len(&self) -> Result<usize, Error> {
-        let mut ret = 0;
-        for t in self.iter() {
-            ret += der_len(t)?;
-        }
-        Ok(ret)
+        der_contents_len(self.iter())
     }
 }
 
@@ -484,7 +472,7 @@ where
 
     fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         for t in self.iter() {
-            write_der(t, buffer)?;
+            crate::write_der(t, buffer)?;
         }
         Ok(())
     }
@@ -494,11 +482,7 @@ where
     }
 
     fn der_contents_len(&self) -> Result<usize, Error> {
-        let mut ret = 0;
-        for t in self.iter() {
-            ret += der_len(t)?;
-        }
-        Ok(ret)
+        der_contents_len(self.iter())
     }
 }
 
@@ -519,8 +503,8 @@ where
 
             buffer.write_all(IdRef::sequence().as_ref())?;
             buffer.write_all(length.to_bytes().as_ref())?;
-            write_der(k, buffer)?;
-            write_der(v, buffer)?;
+            crate::write_der(k, buffer)?;
+            crate::write_der(v, buffer)?;
         }
         Ok(())
     }
@@ -550,7 +534,7 @@ where
 
     fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         for t in self.iter() {
-            write_der(t, buffer)?;
+            crate::write_der(t, buffer)?;
         }
         Ok(())
     }
@@ -560,11 +544,7 @@ where
     }
 
     fn der_contents_len(&self) -> Result<usize, Error> {
-        let mut ret = 0;
-        for t in self.iter() {
-            ret += der_len(t)?;
-        }
-        Ok(ret)
+        der_contents_len(self.iter())
     }
 }
 
@@ -583,8 +563,8 @@ where
 
             buffer.write_all(IdRef::sequence().as_ref())?;
             buffer.write_all(length.to_bytes().as_ref())?;
-            write_der(k, buffer)?;
-            write_der(v, buffer)?;
+            crate::write_der(k, buffer)?;
+            crate::write_der(v, buffer)?;
         }
 
         Ok(())
@@ -611,15 +591,16 @@ fn der_len<T: Serialize>(t: &T) -> Result<usize, Error> {
     Ok(id_len + Length::Definite(contents_len).len() + contents_len)
 }
 
-fn write_der<T: Serialize, W: ?Sized + Write>(t: &T, buffer: &mut W) -> Result<(), Error> {
-    t.write_id(buffer)?;
-
-    let contents_len = t.der_contents_len()?;
-    let length = Length::Definite(contents_len).to_bytes();
-    buffer.write_all(&length).unwrap(); // Buffer::write_all() never fails.
-    t.write_der_contents(buffer)?;
-
-    Ok(())
+fn der_contents_len<'a, T, I>(it: I) -> Result<usize, Error>
+where
+    T: 'a + Serialize,
+    I: Iterator<Item = &'a T>,
+{
+    let mut ret = 0;
+    for t in it {
+        ret += der_len(t)?;
+    }
+    Ok(ret)
 }
 
 #[cfg(test)]
