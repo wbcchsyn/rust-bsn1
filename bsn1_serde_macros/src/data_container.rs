@@ -527,37 +527,60 @@ impl DataContainer {
         let Result = quote! { ::std::result::Result };
         let Anyhow = quote! { ::anyhow::Error };
 
+        let ty = self.ty();
         let contents_bytes = quote! { bsn1_macro_1704080283_contents_bytes };
 
-        let field_constructors = self.field_attributes().iter().map(|attribute| {
-            let tmp_der = quote! { bsn1_macro_1704080283_tmp_der };
-            let tmp_id = quote! { bsn1_macro_1704080283_tmp_id };
-            let tmp_contents = quote! { bsn1_macro_1704080283_tmp_contents };
-            let tmp_val = quote! {{
-                let #tmp_der = #DerRef::parse(#contents_bytes)?;
-                let (#tmp_id, _, #tmp_contents) = #tmp_der.disassemble();
-                #Deserialize::from_der(#tmp_id, #tmp_contents)?
-            }};
+        let field_constructors = self.field_attributes().iter().zip(self.field_idents()).map(
+            |(attribute, field_ident)| {
+                let field_ident = quote! { #ty.#field_ident };
 
-            if attribute.is_skip_deserializing() {
-                let path = attribute.default_path();
-                quote! { #path() }
-            } else if let Some(from_ty) = attribute.from_type() {
-                let From = quote! { ::std::convert::From };
-                quote! { #From::<#from_ty>::from(#tmp_val) }
-            } else if let Some(try_from_ty) = attribute.try_from_type() {
-                let TryFrom = quote! { ::std::convert::TryFrom };
-                quote! {
-                    #TryFrom::<#try_from_ty>::try_from(#tmp_val).map_err(|err| {
-                        #Error::from(#Anyhow::new(err))
+                let tmp_der = quote! { bsn1_macro_1704080283_tmp_der };
+                let tmp_id = quote! { bsn1_macro_1704080283_tmp_id };
+                let tmp_contents = quote! { bsn1_macro_1704080283_tmp_contents };
+                let tmp_val = quote! {{
+                    let #tmp_der = #DerRef::parse(#contents_bytes).map_err(|err| {
+                        let context = concat!(
+                            "Failed to parse DER for `",
+                            stringify!(#field_ident),
+                            "`"
+                        );
+                        err.context(context)
+                    })?;
+                    let (#tmp_id, _, #tmp_contents) = #tmp_der.disassemble();
+                    #Deserialize::from_der(#tmp_id, #tmp_contents).map_err(|err| {
+                        let context = concat!(
+                            "Failed to deserialize DER into `",
+                            stringify!(#field_ident),
+                            "`");
+                        err.context(context)
                     })?
-                }
-            } else {
-                tmp_val
-            }
-        });
+                }};
 
-        let ty = self.ty();
+                if attribute.is_skip_deserializing() {
+                    let path = attribute.default_path();
+                    quote! { #path() }
+                } else if let Some(from_ty) = attribute.from_type() {
+                    let From = quote! { ::std::convert::From };
+                    quote! { #From::<#from_ty>::from(#tmp_val) }
+                } else if let Some(try_from_ty) = attribute.try_from_type() {
+                    let TryFrom = quote! { ::std::convert::TryFrom };
+                    quote! {
+                        #TryFrom::<#try_from_ty>::try_from(#tmp_val).map_err(|err| {
+                            let context = concat!(
+                                "Failed to convert `",
+                                stringify!(#try_from_ty),
+                                "` into `",
+                                stringify!(#field_ident),
+                                "`"
+                            );
+                            #Error::from(#Anyhow::new(err)).context(context)
+                        })?
+                    }
+                } else {
+                    tmp_val
+                }
+            },
+        );
 
         let constructor = match self.fields() {
             syn::Fields::Named(_) => {
