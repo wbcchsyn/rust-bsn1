@@ -230,7 +230,7 @@ impl ContentsRef {
             match self.bytes[0] {
                 0x00 => Ok(false),
                 0xff => Ok(true),
-                _ => Err(Error::InvalidContents),
+                _ => Err(Error::InvalidDerBooleanContents),
             }
         }
     }
