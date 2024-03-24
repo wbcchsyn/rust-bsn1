@@ -95,8 +95,8 @@ impl DataContainer {
     /// This method supports only `DataContainer::Variant`.
     pub unsafe fn to_match_arm(&self) -> syn::Result<TokenStream> {
         match self {
-            Self::Variant { .. } => {
-                let ident = self.ident();
+            Self::Variant { variant, .. } => {
+                let ident = variant.ident.to_token_stream();
                 let fields = self.field_idents();
                 let vars = self.field_vars();
 
@@ -663,13 +663,6 @@ impl DataContainer {
                 let variant_name = &variant.ident;
                 quote! { #enum_name::#variant_name }
             }
-        }
-    }
-
-    fn ident(&self) -> TokenStream {
-        match self {
-            Self::DataStruct { .. } => quote! { Self },
-            Self::Variant { variant, .. } => variant.ident.to_token_stream(),
         }
     }
 
