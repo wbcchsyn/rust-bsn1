@@ -65,8 +65,8 @@ impl Serialize for bool {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 }
 
@@ -86,8 +86,8 @@ impl Serialize for i8 {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 }
 
@@ -107,11 +107,11 @@ impl Serialize for u8 {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         if *self <= (i8::MAX as u8) {
-            Ok(1)
+            Ok(Some(1))
         } else {
-            Ok(2)
+            Ok(Some(2))
         }
     }
 }
@@ -132,11 +132,11 @@ impl Serialize for i16 {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         if (i8::MIN as i16) <= *self && *self <= (i8::MAX as i16) {
-            Ok(1)
+            Ok(Some(1))
         } else {
-            Ok(2)
+            Ok(Some(2))
         }
     }
 }
@@ -157,13 +157,13 @@ impl Serialize for u16 {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         if *self <= (i8::MAX as u16) {
-            Ok(1)
+            Ok(Some(1))
         } else if *self <= (i16::MAX as u16) {
-            Ok(2)
+            Ok(Some(2))
         } else {
-            Ok(3)
+            Ok(Some(3))
         }
     }
 }
@@ -184,14 +184,14 @@ impl Serialize for i32 {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         let ret = if self.is_negative() {
             (Self::BITS + u8::BITS - self.leading_ones()) / u8::BITS
         } else {
             (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS
         };
 
-        Ok(ret as usize)
+        Ok(Some(ret as usize))
     }
 }
 
@@ -211,9 +211,9 @@ impl Serialize for u32 {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         let ret = (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS;
-        Ok(ret as usize)
+        Ok(Some(ret as usize))
     }
 }
 
@@ -233,14 +233,14 @@ impl Serialize for i64 {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         let ret = if self.is_negative() {
             (Self::BITS + u8::BITS - self.leading_ones()) / u8::BITS
         } else {
             (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS
         };
 
-        Ok(ret as usize)
+        Ok(Some(ret as usize))
     }
 }
 
@@ -260,9 +260,9 @@ impl Serialize for u64 {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         let ret = (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS;
-        Ok(ret as usize)
+        Ok(Some(ret as usize))
     }
 }
 
@@ -282,14 +282,14 @@ impl Serialize for i128 {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         let ret = if self.is_negative() {
             (Self::BITS + u8::BITS - self.leading_ones()) / u8::BITS
         } else {
             (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS
         };
 
-        Ok(ret as usize)
+        Ok(Some(ret as usize))
     }
 }
 
@@ -309,9 +309,9 @@ impl Serialize for u128 {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         let ret = (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS;
-        Ok(ret as usize)
+        Ok(Some(ret as usize))
     }
 }
 
@@ -331,14 +331,14 @@ impl Serialize for isize {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         let ret = if self.is_negative() {
             (Self::BITS + u8::BITS - self.leading_ones()) / u8::BITS
         } else {
             (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS
         };
 
-        Ok(ret as usize)
+        Ok(Some(ret as usize))
     }
 }
 
@@ -358,9 +358,9 @@ impl Serialize for usize {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         let ret = (Self::BITS + u8::BITS - self.leading_zeros()) / u8::BITS;
-        Ok(ret as usize)
+        Ok(Some(ret as usize))
     }
 }
 
@@ -379,8 +379,8 @@ impl Serialize for String {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
-        Ok(self.len())
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(self.len()))
     }
 }
 
@@ -406,7 +406,7 @@ where
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         der_contents_len(self.iter())
     }
 }
@@ -432,7 +432,7 @@ where
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         der_contents_len(self.iter())
     }
 }
@@ -458,7 +458,7 @@ where
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         der_contents_len(self.iter())
     }
 }
@@ -484,7 +484,7 @@ where
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         der_contents_len(self.iter())
     }
 }
@@ -502,12 +502,39 @@ where
 
     fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         for (k, v) in self.iter() {
-            let length = Length::Definite(der_len(k)? + der_len(v)?);
+            let (k_len, der_k) = match der_len(k)? {
+                Some(k_len) => (k_len, None),
+                None => {
+                    let der_k = crate::to_der(k)?;
+                    let bytes: &[u8] = der_k.as_ref();
+                    (bytes.len(), Some(der_k))
+                }
+            };
+            let (v_len, der_v) = match der_len(v)? {
+                Some(v_len) => (v_len, None),
+                None => {
+                    let der_v = crate::to_der(v)?;
+                    let bytes: &[u8] = der_v.as_ref();
+                    (bytes.as_ref().len(), Some(der_v))
+                }
+            };
 
+            let content_len = k_len + v_len;
+            let length = Length::Definite(content_len);
             buffer.write_all(IdRef::sequence().as_ref())?;
             buffer.write_all(length.to_bytes().as_ref())?;
-            crate::write_der(k, buffer)?;
-            crate::write_der(v, buffer)?;
+
+            if let Some(der_k) = der_k {
+                buffer.write_all(der_k.as_ref())?;
+            } else {
+                crate::write_der(k, buffer)?;
+            }
+
+            if let Some(der_v) = der_v {
+                buffer.write_all(der_v.as_ref())?;
+            } else {
+                crate::write_der(v, buffer)?;
+            }
         }
         Ok(())
     }
@@ -516,14 +543,22 @@ where
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         let mut ret = 0;
         for (k, v) in self.iter() {
-            let content_len = der_len(k)? + der_len(v)?;
-            let length = Length::Definite(content_len);
-            ret += IdRef::sequence().len() + length.len() + content_len;
+            if let Some(k_len) = der_len(k)? {
+                if let Some(v_len) = der_len(v)? {
+                    let content_len = k_len + v_len;
+                    let length = Length::Definite(content_len);
+                    ret += IdRef::sequence().len() + length.len() + content_len;
+                } else {
+                    return Ok(None);
+                }
+            } else {
+                return Ok(None);
+            }
         }
-        Ok(ret)
+        Ok(Some(ret))
     }
 }
 
@@ -546,7 +581,7 @@ where
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         der_contents_len(self.iter())
     }
 }
@@ -562,12 +597,40 @@ where
 
     fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
         for (k, v) in self.iter() {
-            let length = Length::Definite(der_len(k)? + der_len(v)?);
+            let (k_len, der_k) = match der_len(k)? {
+                Some(k_len) => (k_len, None),
+                None => {
+                    let der_k = crate::to_der(k)?;
+                    let bytes: &[u8] = der_k.as_ref();
+                    (bytes.len(), Some(der_k))
+                }
+            };
+            let (v_len, der_v) = match der_len(v)? {
+                Some(v_len) => (v_len, None),
+                None => {
+                    let der_v = crate::to_der(v)?;
+                    let bytes: &[u8] = der_v.as_ref();
+                    (bytes.len(), Some(der_v))
+                }
+            };
+
+            let contents_len = k_len + v_len;
+            let length = Length::Definite(contents_len);
 
             buffer.write_all(IdRef::sequence().as_ref())?;
             buffer.write_all(length.to_bytes().as_ref())?;
-            crate::write_der(k, buffer)?;
-            crate::write_der(v, buffer)?;
+
+            if let Some(der_k) = der_k {
+                buffer.write_all(der_k.as_ref())?;
+            } else {
+                crate::write_der(k, buffer)?;
+            }
+
+            if let Some(der_v) = der_v {
+                buffer.write_all(der_v.as_ref())?;
+            } else {
+                crate::write_der(v, buffer)?;
+            }
         }
 
         Ok(())
@@ -577,33 +640,47 @@ where
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
         let mut ret = 0;
         for (k, v) in self.iter() {
-            let content_len = der_len(k)? + der_len(v)?;
-            let length = Length::Definite(content_len);
-            ret += IdRef::sequence().len() + length.len() + content_len;
+            if let Some(k_len) = der_len(k)? {
+                if let Some(v_len) = der_len(v)? {
+                    let content_len = k_len + v_len;
+                    let length = Length::Definite(content_len);
+                    ret += IdRef::sequence().len() + length.len() + content_len;
+                } else {
+                    return Ok(None);
+                }
+            }
         }
-        Ok(ret)
+        Ok(Some(ret))
     }
 }
 
-fn der_len<T: Serialize>(t: &T) -> Result<usize, Error> {
-    let id_len = t.id_len()?;
-    let contents_len = t.der_contents_len()?;
-    Ok(id_len + Length::Definite(contents_len).len() + contents_len)
+fn der_len<T: Serialize>(t: &T) -> Result<Option<usize>, Error> {
+    if let Some(contents_len) = t.der_contents_len()? {
+        Ok(Some(
+            t.id_len()? + Length::Definite(contents_len).len() + contents_len,
+        ))
+    } else {
+        Ok(None)
+    }
 }
 
-fn der_contents_len<'a, T, I>(it: I) -> Result<usize, Error>
+fn der_contents_len<'a, T, I>(it: I) -> Result<Option<usize>, Error>
 where
     T: 'a + Serialize,
     I: Iterator<Item = &'a T>,
 {
     let mut ret = 0;
     for t in it {
-        ret += der_len(t)?;
+        if let Some(len) = der_len(t)? {
+            ret += len;
+        } else {
+            return Ok(None);
+        }
     }
-    Ok(ret)
+    Ok(Some(ret))
 }
 
 #[cfg(test)]
