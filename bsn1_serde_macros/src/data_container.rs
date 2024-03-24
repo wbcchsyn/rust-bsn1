@@ -796,16 +796,30 @@ impl DataContainer {
         }
     }
 
-    fn transparent_field_var(&self, _is_serializing: bool) -> Result<TokenStream, syn::Error> {
+    fn transparent_field_var(&self, is_serializing: bool) -> Result<TokenStream, syn::Error> {
         assert!(self.attribute().is_transparent());
 
-        let mut field_vars = self.field_vars();
-        if field_vars.len() == 1 {
-            Ok(field_vars.pop().unwrap())
+        let mut it = self
+            .field_vars()
+            .into_iter()
+            .zip(self.field_attributes())
+            .filter_map(|(var, attr)| {
+                if is_serializing && attr.is_skip_serializing() {
+                    None
+                } else if is_serializing == false && attr.is_skip_deserializing() {
+                    None
+                } else {
+                    Some(var)
+                }
+            });
+        let ret = it.next();
+
+        if ret.is_some() && it.next().is_none() {
+            Ok(ret.unwrap())
         } else {
             Err(syn::Error::new_spanned(
                 self.attribute().transparent_token(),
-                "The field count of transparent struct must be 1.",
+                "Transparent struct must have exactly one field to be serialized/deserialized.",
             ))
         }
     }
