@@ -508,7 +508,7 @@ impl DataContainer {
 
         let field_attribute = self.transparent_field_attribute()?;
         let ty = self.ty();
-        let field_ident = self.transparent_field_ident()?;
+        let field_ident = self.transparent_field_ident(false)?;
         let field_ident = quote! { #ty.#field_ident };
         let tmp_val = quote! {
             #Deserialize::from_ber(#id, #length, #contents).map_err(|err| {
@@ -547,7 +547,7 @@ impl DataContainer {
 
         match self.fields() {
             syn::Fields::Named(_) => {
-                let field_ident = self.transparent_field_ident()?;
+                let field_ident = self.transparent_field_ident(false)?;
                 Ok(quote! {
                     #Result::Ok(#ty { #field_ident: #inner })
                 })
@@ -660,7 +660,7 @@ impl DataContainer {
 
         let field_attribute = self.transparent_field_attribute()?;
         let ty = self.ty();
-        let field_ident = self.transparent_field_ident()?;
+        let field_ident = self.transparent_field_ident(false)?;
         let field_ident = quote! { #ty.#field_ident };
         let tmp_val = quote! {
             #Deserialize::from_der(#id, #contents).map_err(|err| {
@@ -699,7 +699,7 @@ impl DataContainer {
 
         match self.fields() {
             syn::Fields::Named(_) => {
-                let field_ident = self.transparent_field_ident()?;
+                let field_ident = self.transparent_field_ident(false)?;
                 Ok(quote! { #Result::Ok(#ty { #field_ident: #inner }) })
             }
             syn::Fields::Unnamed(_) => Ok(quote! {
@@ -749,7 +749,7 @@ impl DataContainer {
         }
     }
 
-    fn transparent_field_ident(&self) -> Result<TokenStream, syn::Error> {
+    fn transparent_field_ident(&self, _is_serializing: bool) -> Result<TokenStream, syn::Error> {
         assert!(self.attribute().is_transparent());
 
         let mut field_idents = self.field_idents();
