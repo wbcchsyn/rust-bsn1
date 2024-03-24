@@ -41,8 +41,11 @@ pub trait Serialize {
     /// Returns the byte count of the identifier of ASN.1 format.
     fn id_len(&self) -> Result<usize, Error>;
 
-    /// Returns the byte count of the contents of ASN.1 DER format.
-    fn der_contents_len(&self) -> Result<usize, Error>;
+    /// Returns the byte count of the contents of ASN.1 DER format
+    /// if it is known before serialization, or `None`.
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
+        Ok(None)
+    }
 }
 
 impl Serialize for bool {
