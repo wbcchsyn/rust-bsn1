@@ -127,7 +127,7 @@ impl DataContainer {
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
         let field = self.transparent_field_var()?;
-        let field_attribute = self.transparent_field_attribute();
+        let field_attribute = self.transparent_field_attribute()?;
 
         if let Some(into_ty) = field_attribute.into_type() {
             let Clone = quote! { ::std::clone::Clone };
@@ -165,7 +165,7 @@ impl DataContainer {
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
         let field = self.transparent_field_var()?;
-        let field_attribute = self.transparent_field_attribute();
+        let field_attribute = self.transparent_field_attribute()?;
 
         if let Some(into_ty) = field_attribute.into_type() {
             let Clone = quote! { ::std::clone::Clone };
@@ -275,7 +275,7 @@ impl DataContainer {
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
         let field = self.transparent_field_var()?;
-        let field_attribute = self.transparent_field_attribute();
+        let field_attribute = self.transparent_field_attribute()?;
 
         if let Some(into_ty) = field_attribute.into_type() {
             let Clone = quote! { ::std::clone::Clone };
@@ -359,7 +359,7 @@ impl DataContainer {
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
         let field = self.transparent_field_var()?;
-        let field_attribute = self.transparent_field_attribute();
+        let field_attribute = self.transparent_field_attribute()?;
 
         if let Some(into_ty) = field_attribute.into_type() {
             let Clone = quote! { ::std::clone::Clone };
@@ -506,7 +506,7 @@ impl DataContainer {
         let Result = quote! { ::std::result::Result };
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
 
-        let field_attribute = self.transparent_field_attribute();
+        let field_attribute = self.transparent_field_attribute()?;
         let ty = self.ty();
         let field_ident = self.transparent_field_ident()?;
         let field_ident = quote! { #ty.#field_ident };
@@ -658,7 +658,7 @@ impl DataContainer {
         let Result = quote! { ::std::result::Result };
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
 
-        let field_attribute = self.transparent_field_attribute();
+        let field_attribute = self.transparent_field_attribute()?;
         let ty = self.ty();
         let field_ident = self.transparent_field_ident()?;
         let field_ident = quote! { #ty.#field_ident };
@@ -808,12 +808,17 @@ impl DataContainer {
         }
     }
 
-    fn transparent_field_attribute(&self) -> &Attribute {
+    fn transparent_field_attribute(&self) -> Result<&Attribute, syn::Error> {
         assert!(self.attribute().is_transparent());
 
         let field_attributes = self.field_attributes();
-        assert!(field_attributes.len() == 1);
-
-        field_attributes.first().unwrap()
+        if field_attributes.len() == 1 {
+            Ok(field_attributes.first().unwrap())
+        } else {
+            Err(syn::Error::new_spanned(
+                self.attribute().transparent_token(),
+                "The field count of transparent struct must be 1.",
+            ))
+        }
     }
 }
