@@ -126,7 +126,7 @@ impl DataContainer {
         assert!(self.attribute().is_transparent());
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
-        let field = self.transparent_field_var();
+        let field = self.transparent_field_var()?;
         let field_attribute = self.transparent_field_attribute();
 
         if let Some(into_ty) = field_attribute.into_type() {
@@ -164,7 +164,7 @@ impl DataContainer {
         assert!(self.attribute().is_transparent());
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
-        let field = self.transparent_field_var();
+        let field = self.transparent_field_var()?;
         let field_attribute = self.transparent_field_attribute();
 
         if let Some(into_ty) = field_attribute.into_type() {
@@ -274,7 +274,7 @@ impl DataContainer {
         assert!(self.attribute().is_transparent());
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
-        let field = self.transparent_field_var();
+        let field = self.transparent_field_var()?;
         let field_attribute = self.transparent_field_attribute();
 
         if let Some(into_ty) = field_attribute.into_type() {
@@ -358,7 +358,7 @@ impl DataContainer {
         assert!(self.attribute().is_transparent());
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
-        let field = self.transparent_field_var();
+        let field = self.transparent_field_var()?;
         let field_attribute = self.transparent_field_attribute();
 
         if let Some(into_ty) = field_attribute.into_type() {
@@ -783,12 +783,18 @@ impl DataContainer {
         }
     }
 
-    fn transparent_field_var(&self) -> TokenStream {
+    fn transparent_field_var(&self) -> Result<TokenStream, syn::Error> {
         assert!(self.attribute().is_transparent());
 
         let mut field_vars = self.field_vars();
-        assert!(field_vars.len() == 1);
-        field_vars.pop().unwrap()
+        if field_vars.len() == 1 {
+            Ok(field_vars.pop().unwrap())
+        } else {
+            Err(syn::Error::new_spanned(
+                self.attribute().transparent_token(),
+                "The field count of transparent struct must be 1.",
+            ))
+        }
     }
 
     fn field_attributes(&self) -> &[Attribute] {
