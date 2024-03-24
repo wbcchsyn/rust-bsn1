@@ -642,7 +642,18 @@ impl DataContainer {
 
         let field_attribute = self.transparent_field_attribute();
         let ty = self.ty();
-        let tmp_val = quote! { #Deserialize::from_der(#id, #contents)? };
+        let field_ident = self.transparent_field_ident();
+        let field_ident = quote! { #ty.#field_ident };
+        let tmp_val = quote! {
+            #Deserialize::from_der(#id, #contents).map_err(|err| {
+                let context = concat!(
+                    "Failed to deserialize DER into `",
+                    stringify!(#field_ident),
+                    "`"
+                );
+                err.context(context)
+            })?
+        };
 
         let inner = if let Some(from_ty) = field_attribute.from_type() {
             let From = quote! { ::std::convert::From };
@@ -654,7 +665,14 @@ impl DataContainer {
 
             quote! {
                 #TryFrom::<#try_from_ty>::try_from(#tmp_val).map_err(|err| {
-                    #Error::from(#Anyhow::new(err))
+                    let context = concat!(
+                        "Failed to convert `",
+                        stringify!(#try_from_ty),
+                        "` into `",
+                        stringify!(#field_ident),
+                        "`"
+                    );
+                    #Error::from(#Anyhow::new(err)).context(context)
                 })?
             }
         } else {
