@@ -31,22 +31,32 @@ struct B(String);
 struct C {
     #[bsn1_serde(from = "OctetString<'static>", into = "OctetString")]
     x: Vec<u8>,
+    #[bsn1_serde(skip)]
+    y: u8,
 }
 
-#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Debug, PartialEq)]
+#[derive(bsn1_serde::Deserialize, Debug, PartialEq)]
 #[bsn1_serde(transparent)]
-struct D(#[bsn1_serde(from = "OctetString<'static>", into = "OctetString")] Vec<u8>);
+struct D(
+    #[bsn1_serde(from = "OctetString<'static>")] Vec<u8>,
+    #[bsn1_serde(skip_deserializing)] String,
+);
 
-#[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Debug, PartialEq)]
+#[derive(bsn1_serde::Deserialize, Debug, PartialEq)]
 #[bsn1_serde(transparent)]
 struct E {
-    #[bsn1_serde(try_from = "OctetString", to = "OctetString::new")]
+    #[bsn1_serde(skip_deserializing)]
     x: String,
+    #[bsn1_serde(try_from = "OctetString", to = "OctetString::new")]
+    y: String,
 }
 
 #[derive(bsn1_serde::Serialize, bsn1_serde::Deserialize, Debug, PartialEq)]
 #[bsn1_serde(transparent)]
-struct F(#[bsn1_serde(try_from = "OctetString", to = "OctetString::new")] String);
+struct F(
+    #[bsn1_serde(skip)] u8,
+    #[bsn1_serde(try_from = "OctetString", to = "OctetString::new")] String,
+);
 
 fn main() {
     test_a();
@@ -82,43 +92,59 @@ fn test_b() {
 fn test_c() {
     let val = C {
         x: vec![0x01, 0x02, 0x03],
+        y: 0x04,
     };
 
     let der = to_der(&val).unwrap();
-    assert_eq!(val, from_der(&der).unwrap());
+    let val2: C = from_der(&der).unwrap();
+    assert_eq!(val2.x, val.x);
+    assert_eq!(val2.y, Default::default());
 
     let ber = to_ber(&val).unwrap();
-    assert_eq!(val, from_ber(&ber).unwrap());
+    let val3: C = from_ber(&ber).unwrap();
+    assert_eq!(val3.x, val.x);
+    assert_eq!(val3.y, Default::default());
 }
 
 fn test_d() {
-    let val = D(vec![0x01, 0x02, 0x03]);
+    let inner0: Vec<u8> = vec![0x01, 0x02, 0x03];
 
-    let der = to_der(&val).unwrap();
-    assert_eq!(val, from_der(&der).unwrap());
+    let der = to_der(&OctetString::new(&inner0)).unwrap();
+    let val: D = from_der(&der).unwrap();
+    assert_eq!(val.0, inner0);
+    assert_eq!(val.1, String::default());
 
-    let ber = to_ber(&val).unwrap();
-    assert_eq!(val, from_ber(&ber).unwrap());
+    let ber = to_ber(&OctetString::new(&inner0)).unwrap();
+    let val: D = from_ber(&ber).unwrap();
+    assert_eq!(val.0, inner0);
+    assert_eq!(val.1, String::default());
 }
 
 fn test_e() {
-    let val = E {
-        x: "foo".to_string(),
-    };
+    let y = "foo".to_string();
 
-    let der = to_der(&val).unwrap();
-    assert_eq!(val, from_der(&der).unwrap());
+    let der = to_der(&OctetString::new(&y)).unwrap();
+    let val: E = from_der(&der).unwrap();
+    assert_eq!(val.x, String::default());
+    assert_eq!(val.y, y);
 
-    let ber = to_ber(&val).unwrap();
-    assert_eq!(val, from_ber(&ber).unwrap());
+    let ber = to_ber(&OctetString::new(&y)).unwrap();
+    let val: E = from_ber(&ber).unwrap();
+    assert_eq!(val.x, String::default());
+    assert_eq!(val.y, y);
 }
 
 fn test_f() {
-    let val = F("".to_string());
+    let inner1 = "bar".to_string();
+    let val = F(3, inner1.clone());
 
     let der = to_der(&val).unwrap();
-    assert_eq!(val, from_der(&der).unwrap());
+    let val2: F = from_der(&der).unwrap();
+    assert_eq!(val2.0, u8::default());
+    assert_eq!(val2.1, inner1);
 
     let ber = to_ber(&val).unwrap();
-    assert_eq!(val, from_ber(&ber).unwrap());
+    let val3: F = from_ber(&ber).unwrap();
+    assert_eq!(val3.0, u8::default());
+    assert_eq!(val3.1, inner1);
 }
