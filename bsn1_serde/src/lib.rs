@@ -78,12 +78,25 @@ where
     T: ?Sized + ser::Serialize,
     W: ?Sized + Write,
 {
-    let contents_len = value.der_contents_len()?;
+    let (contents_len, contents) = match value.der_contents_len()? {
+        Some(len) => (len, None),
+        None => {
+            let mut contents = Buffer::new();
+            value.write_der_contents(&mut contents)?;
+            (contents.len(), Some(contents))
+        }
+    };
+
     let length = Length::Definite(contents_len).to_bytes();
 
     value.write_id(write)?;
-    write.write_all(&length).map_err(|err| Error::from(err))?;
-    value.write_der_contents(write)?;
+    write.write_all(&length).map_err(Error::from)?;
+
+    if let Some(contents) = contents {
+        write.write_all(contents.as_slice())?;
+    } else {
+        value.write_der_contents(write)?;
+    }
 
     Ok(())
 }
