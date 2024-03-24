@@ -37,7 +37,7 @@ pub fn do_serialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
         do_to_serialize(&to_fn)?
     } else {
         match ast.data {
-            syn::Data::Struct(data) => do_serialize_struct(attribute, data)?,
+            syn::Data::Struct(data) => do_serialize_struct(attribute, &ast.ident, data)?,
             syn::Data::Enum(data) => do_serialize_enum(attribute, &ast.ident, data)?,
             syn::Data::Union(_) => {
                 return Err(syn::Error::new_spanned(name, "Union is not supported."))
@@ -122,12 +122,16 @@ fn do_to_serialize(to_fn: &syn::Path) -> syn::Result<TokenStream> {
 }
 
 #[allow(non_snake_case)]
-fn do_serialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Result<TokenStream> {
+fn do_serialize_struct(
+    attribute: Attribute,
+    struct_name: &Ident,
+    data: syn::DataStruct,
+) -> syn::Result<TokenStream> {
     let Result = quote! { ::std::result::Result };
     let Write = quote! { ?Sized + ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };
 
-    let data = DataContainer::try_from((attribute, data))?;
+    let data = DataContainer::try_from((attribute, struct_name.clone(), data))?;
     let buffer = quote! { buffer };
 
     let (write_id, id_len, der_contents_len, write_der_contents) =

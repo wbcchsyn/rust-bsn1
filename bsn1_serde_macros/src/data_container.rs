@@ -22,6 +22,7 @@ use quote::{format_ident, quote, ToTokens};
 
 pub enum DataContainer {
     DataStruct {
+        struct_name: Ident,
         attribute: Attribute,
         field_attributes: Vec<Attribute>,
         data_structure: syn::DataStruct,
@@ -34,10 +35,12 @@ pub enum DataContainer {
     },
 }
 
-impl TryFrom<(Attribute, syn::DataStruct)> for DataContainer {
+impl TryFrom<(Attribute, Ident, syn::DataStruct)> for DataContainer {
     type Error = syn::Error;
 
-    fn try_from((attribute, data): (Attribute, syn::DataStruct)) -> Result<Self, Self::Error> {
+    fn try_from(
+        (attribute, struct_name, data): (Attribute, Ident, syn::DataStruct),
+    ) -> Result<Self, Self::Error> {
         attribute.sanitize_as_struct()?;
 
         if attribute.is_transparent() && data.fields.len() != 1 {
@@ -55,6 +58,7 @@ impl TryFrom<(Attribute, syn::DataStruct)> for DataContainer {
         }
 
         Ok(Self::DataStruct {
+            struct_name,
             attribute,
             field_attributes,
             data_structure: data,
@@ -91,8 +95,8 @@ impl DataContainer {
     /// This method supports only `DataContainer::Variant`.
     pub unsafe fn to_match_arm(&self) -> syn::Result<TokenStream> {
         match self {
-            Self::Variant { .. } => {
-                let ident = self.ident();
+            Self::Variant { variant, .. } => {
+                let ident = variant.ident.to_token_stream();
                 let fields = self.field_idents();
                 let vars = self.field_vars();
 
@@ -393,51 +397,62 @@ impl DataContainer {
         let Anyhow = quote! { ::anyhow::Error };
         let Result = quote! { ::std::result::Result };
 
-        let contents_bytes = quote! { bsn1_macro_1704080283_contents_bytes };
-        let contents_length = quote! { bsn1_macro_1704080283_length };
-        let eoc = quote! { bsn1_macro_1704080283_eoc };
-        let tmp_ber = quote! { bsn1_macro_1704080283_tmp_ber };
-        let tmp_val = quote! { bsn1_macro_1704080283_tmp_val };
-        let tmp_id = quote! { bsn1_macro_1704080283_tmp_id };
-        let tmp_length = quote! { bsn1_macro_1704080283_tmp_length };
-        let tmp_contents = quote! { bsn1_macro_1704080283_tmp_contents };
-
-        let field_constructors = self.field_attributes().iter().map(|attribute| {
-            if attribute.is_skip_deserializing() {
-                let path = attribute.default_path();
-                quote! { #path() }
-            } else if let Some(from_ty) = attribute.from_type() {
-                let From = quote! { ::std::convert::From };
-                quote! {{
-                    let #tmp_ber = #BerRef::parse(#contents_bytes)?;
-                    let (#tmp_id, #tmp_length, #tmp_contents) = #tmp_ber.disassemble();
-                    let #tmp_val: #from_ty = #Deserialize::from_ber(
-                                                #tmp_id,
-                                                #tmp_length,
-                                                #tmp_contents)?;
-                    #From::from(#tmp_val)
-                }}
-            } else if let Some(try_from_ty) = attribute.try_from_type() {
-                let TryFrom = quote! { ::std::convert::TryFrom };
-                quote! {{
-                    let #tmp_ber = #BerRef::parse(#contents_bytes)?;
-                    let (#tmp_id, #tmp_length, #tmp_contents) = #tmp_ber.disassemble();
-                    let #tmp_val: #try_from_ty = #Deserialize::from_ber(
-                                                #tmp_id,
-                                                #tmp_length,
-                                                #tmp_contents)?;
-                    #TryFrom::try_from(#tmp_val).map_err(|err| #Error::from(#Anyhow::new(err)))?
-                }}
-            } else {
-                quote! {{
-                    let #tmp_ber = #BerRef::parse(#contents_bytes)?;
-                    let (#tmp_id, #tmp_length, #tmp_contents) = #tmp_ber.disassemble();
-                    #Deserialize::from_ber(#tmp_id, #tmp_length, #tmp_contents)?
-                }}
-            }
-        });
-
         let ty = self.ty();
+        let contents_bytes = quote! { bsn1_macro_1704080283_contents_bytes };
+
+        let field_constructors = self.field_attributes().iter().zip(self.field_idents()).map(
+            |(attribute, field_ident)| {
+                let field_ident = quote! { #ty.#field_ident };
+
+                let tmp_ber = quote! { bsn1_macro_1704080283_tmp_ber };
+                let tmp_id = quote! { bsn1_macro_1704080283_tmp_id };
+                let tmp_length = quote! { bsn1_macro_1704080283_tmp_length };
+                let tmp_contents = quote! { bsn1_macro_1704080283_tmp_contents };
+                let tmp_val = quote! {{
+                    let #tmp_ber = #BerRef::parse(#contents_bytes).map_err(|err| {
+                        let context = concat!(
+                            "Failed to parse BER for `",
+                            stringify!(#field_ident),
+                            "`"
+                        );
+                        err.context(context)
+                    })?;
+                    let (#tmp_id, #tmp_length, #tmp_contents) = #tmp_ber.disassemble();
+                    #Deserialize::from_ber(#tmp_id, #tmp_length, #tmp_contents).map_err(|err| {
+                        let context = concat!(
+                            "Failed to deserialize BER into `",
+                            stringify!(#field_ident),
+                            "`"
+                        );
+                        err.context(context)
+                    })?
+                }};
+
+                if attribute.is_skip_deserializing() {
+                    let path = attribute.default_path();
+                    quote! { #path() }
+                } else if let Some(from_ty) = attribute.from_type() {
+                    let From = quote! { ::std::convert::From };
+                    quote! { #From::<#from_ty>::from(#tmp_val) }
+                } else if let Some(try_from_ty) = attribute.try_from_type() {
+                    let TryFrom = quote! { ::std::convert::TryFrom };
+                    quote! {
+                        #TryFrom::<#try_from_ty>::try_from(#tmp_val).map_err(|err| {
+                            let context = concat!(
+                                "Failed to convert `",
+                                stringify!(#try_from_ty),
+                                "` into `",
+                                stringify!(#field_ident),
+                                "`"
+                            );
+                            #Error::from(#Anyhow::new(err)).context(context)
+                        })?
+                    }
+                } else {
+                    tmp_val
+                }
+            },
+        );
 
         let constructor = match self.fields() {
             syn::Fields::Named(_) => {
@@ -449,6 +464,8 @@ impl DataContainer {
         };
 
         let ret = quote! { bsn1_macro_1704080283_ret };
+        let eoc = quote! { bsn1_macro_1704080283_eoc };
+        let contents_length = quote! { bsn1_macro_1704080283_length };
 
         Ok(quote! {{
             let mut #contents_bytes: &[u8] = match #length {
@@ -490,34 +507,51 @@ impl DataContainer {
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
 
         let field_attribute = self.transparent_field_attribute();
-        let field_ident = self.transparent_field_ident();
         let ty = self.ty();
+        let field_ident = self.transparent_field_ident();
+        let field_ident = quote! { #ty.#field_ident };
+        let tmp_val = quote! {
+            #Deserialize::from_ber(#id, #length, #contents).map_err(|err| {
+                let context = concat!(
+                    "Failed to deserialize BER into `",
+                    stringify!(#field_ident),
+                    "`"
+                );
+                err.context(context)
+            })?
+        };
 
         let inner = if let Some(from_ty) = field_attribute.from_type() {
             let From = quote! { ::std::convert::From };
-            let tmp_val = quote! { bsn1_macro_1706375252_tmp_val };
-            quote! {{
-                let #tmp_val: #from_ty = #Deserialize::from_ber(#id, #length, #contents)?;
-                #From::from(#tmp_val)
-            }}
+            quote! { #From::<#from_ty>::from(#tmp_val) }
         } else if let Some(try_from_ty) = field_attribute.try_from_type() {
             let TryFrom = quote! { ::std::convert::TryFrom };
             let Anyhow = quote! { ::anyhow::Error };
             let Error = quote! { ::bsn1_serde::macro_alias::Error };
-            let tmp_val = quote! { bsn1_macro_1706411792_tmp_val };
 
-            quote! {{
-                let #tmp_val: #try_from_ty = #Deserialize::from_ber(#id, #length, #contents)?;
-                #TryFrom::try_from(#tmp_val).map_err(|err| #Error::from(#Anyhow::new(err)))?
-            }}
+            quote! {
+                #TryFrom::<#try_from_ty>::try_from(#tmp_val).map_err(|err| {
+                    let context = concat!(
+                        "Failed to convert `",
+                        stringify!(#try_from_ty),
+                        "` into `",
+                        stringify!(#field_ident),
+                        "`"
+                    );
+                    #Error::from(#Anyhow::new(err)).context(context)
+                })?
+            }
         } else {
-            quote! { #Deserialize::from_ber(#id, #length, #contents)? }
+            tmp_val
         };
 
         match self.fields() {
-            syn::Fields::Named(_) => Ok(quote! {
-                #Result::Ok(#ty { #field_ident: #inner })
-            }),
+            syn::Fields::Named(_) => {
+                let field_ident = self.transparent_field_ident();
+                Ok(quote! {
+                    #Result::Ok(#ty { #field_ident: #inner })
+                })
+            }
             syn::Fields::Unnamed(_) => Ok(quote! {
                 #Result::Ok(#ty ( #inner ))
             }),
@@ -534,42 +568,60 @@ impl DataContainer {
         let Result = quote! { ::std::result::Result };
         let Anyhow = quote! { ::anyhow::Error };
 
-        let contents_bytes = quote! { bsn1_macro_1704080283_contents_bytes };
-        let tmp_der = quote! { bsn1_macro_1704080283_tmp_der };
-        let tmp_val = quote! { bsn1_macro_1704080283_tmp_val };
-        let tmp_id = quote! { bsn1_macro_1704080283_tmp_id };
-        let tmp_contents = quote! { bsn1_macro_1704080283_tmp_contents };
-
-        let field_constructors = self.field_attributes().iter().map(|attribute| {
-            if attribute.is_skip_deserializing() {
-                let path = attribute.default_path();
-                quote! { #path() }
-            } else if let Some(from_ty) = attribute.from_type() {
-                let From = quote! { ::std::convert::From };
-                quote! {{
-                    let #tmp_der = #DerRef::parse(#contents_bytes)?;
-                    let (#tmp_id, _, #tmp_contents) = #tmp_der.disassemble();
-                    let #tmp_val: #from_ty = #Deserialize::from_der(#tmp_id, #tmp_contents)?;
-                    #From::from(#tmp_val)
-                }}
-            } else if let Some(try_from_ty) = attribute.try_from_type() {
-                let TryFrom = quote! { ::std::convert::TryFrom };
-                quote! {{
-                    let #tmp_der = #DerRef::parse(#contents_bytes)?;
-                    let (#tmp_id, _, #tmp_contents) = #tmp_der.disassemble();
-                    let #tmp_val: #try_from_ty = #Deserialize::from_der(#tmp_id, #tmp_contents)?;
-                    #TryFrom::try_from(#tmp_val).map_err(|err| #Error::from(#Anyhow::new(err)))?
-                }}
-            } else {
-                quote! {{
-                    let #tmp_der = #DerRef::parse(#contents_bytes)?;
-                    let (#tmp_id, _, #tmp_contents) = #tmp_der.disassemble();
-                    #Deserialize::from_der(#tmp_id, #tmp_contents)?
-                }}
-            }
-        });
-
         let ty = self.ty();
+        let contents_bytes = quote! { bsn1_macro_1704080283_contents_bytes };
+
+        let field_constructors = self.field_attributes().iter().zip(self.field_idents()).map(
+            |(attribute, field_ident)| {
+                let field_ident = quote! { #ty.#field_ident };
+
+                let tmp_der = quote! { bsn1_macro_1704080283_tmp_der };
+                let tmp_id = quote! { bsn1_macro_1704080283_tmp_id };
+                let tmp_contents = quote! { bsn1_macro_1704080283_tmp_contents };
+                let tmp_val = quote! {{
+                    let #tmp_der = #DerRef::parse(#contents_bytes).map_err(|err| {
+                        let context = concat!(
+                            "Failed to parse DER for `",
+                            stringify!(#field_ident),
+                            "`"
+                        );
+                        err.context(context)
+                    })?;
+                    let (#tmp_id, _, #tmp_contents) = #tmp_der.disassemble();
+                    #Deserialize::from_der(#tmp_id, #tmp_contents).map_err(|err| {
+                        let context = concat!(
+                            "Failed to deserialize DER into `",
+                            stringify!(#field_ident),
+                            "`");
+                        err.context(context)
+                    })?
+                }};
+
+                if attribute.is_skip_deserializing() {
+                    let path = attribute.default_path();
+                    quote! { #path() }
+                } else if let Some(from_ty) = attribute.from_type() {
+                    let From = quote! { ::std::convert::From };
+                    quote! { #From::<#from_ty>::from(#tmp_val) }
+                } else if let Some(try_from_ty) = attribute.try_from_type() {
+                    let TryFrom = quote! { ::std::convert::TryFrom };
+                    quote! {
+                        #TryFrom::<#try_from_ty>::try_from(#tmp_val).map_err(|err| {
+                            let context = concat!(
+                                "Failed to convert `",
+                                stringify!(#try_from_ty),
+                                "` into `",
+                                stringify!(#field_ident),
+                                "`"
+                            );
+                            #Error::from(#Anyhow::new(err)).context(context)
+                        })?
+                    }
+                } else {
+                    tmp_val
+                }
+            },
+        );
 
         let constructor = match self.fields() {
             syn::Fields::Named(_) => {
@@ -607,35 +659,49 @@ impl DataContainer {
         let Deserialize = quote! { ::bsn1_serde::de::Deserialize };
 
         let field_attribute = self.transparent_field_attribute();
-        let field_ident = self.transparent_field_ident();
         let ty = self.ty();
+        let field_ident = self.transparent_field_ident();
+        let field_ident = quote! { #ty.#field_ident };
+        let tmp_val = quote! {
+            #Deserialize::from_der(#id, #contents).map_err(|err| {
+                let context = concat!(
+                    "Failed to deserialize DER into `",
+                    stringify!(#field_ident),
+                    "`"
+                );
+                err.context(context)
+            })?
+        };
 
         let inner = if let Some(from_ty) = field_attribute.from_type() {
             let From = quote! { ::std::convert::From };
-            let tmp_val = quote! { bsn1_macro_1706375252_tmp_val };
-
-            quote! {{
-                let #tmp_val: #from_ty = #Deserialize::from_der(#id, #contents)?;
-                #From::from(#tmp_val)
-            }}
+            quote! { #From::<#from_ty>::from(#tmp_val) }
         } else if let Some(try_from_ty) = field_attribute.try_from_type() {
             let TryFrom = quote! { ::std::convert::TryFrom };
             let Anyhow = quote! { ::anyhow::Error };
             let Error = quote! { ::bsn1_serde::macro_alias::Error };
-            let tmp_val = quote! { bsn1_macro_1706411792_tmp_val };
 
-            quote! {{
-                let #tmp_val: #try_from_ty = #Deserialize::from_der(#id, #contents)?;
-                #TryFrom::try_from(#tmp_val).map_err(|err| #Error::from(#Anyhow::new(err)))?
-            }}
+            quote! {
+                #TryFrom::<#try_from_ty>::try_from(#tmp_val).map_err(|err| {
+                    let context = concat!(
+                        "Failed to convert `",
+                        stringify!(#try_from_ty),
+                        "` into `",
+                        stringify!(#field_ident),
+                        "`"
+                    );
+                    #Error::from(#Anyhow::new(err)).context(context)
+                })?
+            }
         } else {
-            quote! { #Deserialize::from_der(#id, #contents)? }
+            tmp_val
         };
 
         match self.fields() {
-            syn::Fields::Named(_) => Ok(quote! {
-                #Result::Ok(#ty { #field_ident: #inner })
-            }),
+            syn::Fields::Named(_) => {
+                let field_ident = self.transparent_field_ident();
+                Ok(quote! { #Result::Ok(#ty { #field_ident: #inner }) })
+            }
             syn::Fields::Unnamed(_) => Ok(quote! {
                 #Result::Ok(#ty ( #inner ))
             }),
@@ -652,20 +718,13 @@ impl DataContainer {
 
     fn ty(&self) -> TokenStream {
         match self {
-            Self::DataStruct { .. } => quote! { Self },
+            Self::DataStruct { struct_name, .. } => struct_name.to_token_stream(),
             Self::Variant {
                 enum_name, variant, ..
             } => {
                 let variant_name = &variant.ident;
                 quote! { #enum_name::#variant_name }
             }
-        }
-    }
-
-    fn ident(&self) -> TokenStream {
-        match self {
-            Self::DataStruct { .. } => quote! { Self },
-            Self::Variant { variant, .. } => variant.ident.to_token_stream(),
         }
     }
 

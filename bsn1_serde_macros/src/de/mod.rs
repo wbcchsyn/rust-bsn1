@@ -37,7 +37,7 @@ pub fn do_deserialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
         do_try_from_deserialize(ty)?
     } else {
         match ast.data {
-            syn::Data::Struct(data) => do_deserialize_struct(attribute, data)?,
+            syn::Data::Struct(data) => do_deserialize_struct(attribute, &ast.ident, data)?,
             syn::Data::Enum(data) => do_deserialize_enum(attribute, &ast.ident, data)?,
             _ => {
                 return Err(
@@ -94,28 +94,32 @@ fn do_try_from_deserialize(ty: &syn::Path) -> syn::Result<TokenStream> {
     let TryFrom = quote! { ::std::convert::TryFrom };
     let Anyhow = quote! { ::anyhow::Error };
 
+    let error_context = quote! { concat!("Failed to convert from `", stringify!(#ty), "`") };
+
     Ok(quote! {
         unsafe fn from_ber(id: &#IdRef, length: #Length, contents: &#ContentsRef)
             -> #Result<Self, #Error> {
             let val: #ty = #Deserialize::from_ber(id, length, contents)?;
             #TryFrom::try_from(val).map_err(|err| {
-                let err = #Anyhow::new(err);
-                #Error::from(err)
+                #Error::from(#Anyhow::new(err)).context(#error_context)
             })
         }
 
         fn from_der(id: &#IdRef, contents: &#ContentsRef) -> #Result<Self, #Error> {
             let val: #ty = #Deserialize::from_der(id, contents)?;
             #TryFrom::try_from(val).map_err(|err| {
-                let err = #Anyhow::new(err);
-                #Error::from(err)
+                #Error::from(#Anyhow::new(err)).context(#error_context)
             })
         }
     })
 }
 
 #[allow(non_snake_case)]
-fn do_deserialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Result<TokenStream> {
+fn do_deserialize_struct(
+    attribute: Attribute,
+    struct_name: &Ident,
+    data: syn::DataStruct,
+) -> syn::Result<TokenStream> {
     let IdRef = quote! { ::bsn1_serde::macro_alias::IdRef };
     let Length = quote! { ::bsn1_serde::macro_alias::Length };
     let ContentsRef = quote! { ::bsn1_serde::macro_alias::ContentsRef };
@@ -123,7 +127,7 @@ fn do_deserialize_struct(attribute: Attribute, data: syn::DataStruct) -> syn::Re
 
     let Result = quote! { ::std::result::Result };
 
-    let data = DataContainer::try_from((attribute, data))?;
+    let data = DataContainer::try_from((attribute, struct_name.clone(), data))?;
     let id = quote! { id };
     let length = quote! { length };
     let contents = quote! { contents };
