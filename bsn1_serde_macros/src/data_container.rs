@@ -479,7 +479,7 @@ impl DataContainer {
                     if #contents_bytes.ends_with(#eoc) {
                         &#contents_bytes[..(#contents_bytes.len() - #eoc.len())]
                     } else {
-                        return #Result::Err(#Error::UnTerminatedBytes);
+                        return #Result::Err(#Error::UnterminatedBytes);
                     }
                 }
             };

@@ -25,7 +25,7 @@ where
     let mut buf = [0; 1];
     match readable.read(&mut buf) {
         Err(e) => Err(e.into()),
-        Ok(0) => Err(Error::UnTerminatedBytes),
+        Ok(0) => Err(Error::UnterminatedBytes),
         Ok(1) => Ok(buf[0]),
         _ => unreachable!(),
     }

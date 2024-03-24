@@ -574,7 +574,7 @@ fn exclude_eoc(length: Length, contents: &ContentsRef) -> Result<&ContentsRef, E
                 let contents = &contents[..contents.len() - eoc.as_ref().len()];
                 Ok(contents.into())
             } else {
-                Err(Error::UnTerminatedBytes)
+                Err(Error::UnterminatedBytes)
             }
         }
     }

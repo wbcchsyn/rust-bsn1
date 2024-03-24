@@ -408,3 +408,4 @@ Nothing is changed.
 ### Changed
 
 - Rename variant `Error::InvalidContents` `Error::ExtraContentsOctet`
+- Rename variant `Error::UnTerminatedBytes` `Error::UnterminatedBytes`

@@ -93,7 +93,7 @@ impl ContentsRef {
         T: PrimInt,
     {
         if self.is_empty() {
-            return Err(Error::UnTerminatedBytes);
+            return Err(Error::UnterminatedBytes);
         }
 
         if 1 < self.len() {
@@ -189,7 +189,7 @@ impl ContentsRef {
     /// ```
     pub const fn to_bool_ber(&self) -> Result<bool, Error> {
         if self.is_empty() {
-            Err(Error::UnTerminatedBytes)
+            Err(Error::UnterminatedBytes)
         } else if 1 < self.len() {
             Err(Error::ExtraContentsOctet)
         } else if self.bytes[0] == 0x00 {
@@ -223,7 +223,7 @@ impl ContentsRef {
     /// ```
     pub const fn to_bool_der(&self) -> Result<bool, Error> {
         if self.is_empty() {
-            Err(Error::UnTerminatedBytes)
+            Err(Error::UnterminatedBytes)
         } else if 1 < self.len() {
             Err(Error::ExtraContentsOctet)
         } else {

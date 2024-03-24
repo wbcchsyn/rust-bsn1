@@ -527,7 +527,7 @@ mod tests {
                 let mut writeable = Vec::new();
                 let mut bytes: &[u8] = &bytes[..bytes.len() - 1];
                 let err = unsafe { parse_length(&mut bytes, &mut writeable).unwrap_err() };
-                assert_eq!(err, Error::UnTerminatedBytes);
+                assert_eq!(err, Error::UnterminatedBytes);
             }
         }
     }

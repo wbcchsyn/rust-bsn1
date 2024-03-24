@@ -189,7 +189,7 @@ impl Der {
             Err(e) => Err(e.into()),
             Ok(read) => {
                 if read < contents_length {
-                    Err(Error::UnTerminatedBytes)
+                    Err(Error::UnterminatedBytes)
                 } else {
                     Ok(Self { buffer: writeable })
                 }

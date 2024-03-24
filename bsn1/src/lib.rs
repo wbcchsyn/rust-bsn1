@@ -50,7 +50,7 @@ use std::fmt;
 #[non_exhaustive]
 pub enum Error {
     /// The bytes finish before the last octet.
-    UnTerminatedBytes,
+    UnterminatedBytes,
     /// The bytes include some redundant octet(s).
     /// ('ASN.1' does not allow such bytes.)
     RedundantBytes,
@@ -86,7 +86,7 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::UnTerminatedBytes => f.write_str("The bytes finish before the last octet."),
+            Self::UnterminatedBytes => f.write_str("The bytes finish before the last octet."),
             Self::RedundantBytes => f.write_str("The bytes include some redundant octet(s)."),
             Self::OverFlow => f.write_str("Over flow is occurred to parse bytes as a number."),
             Self::IndefiniteLength => f.write_str("'Indefinite Length' is used where not allowed."),
@@ -111,7 +111,7 @@ impl std::error::Error for Error {}
 impl PartialEq for Error {
     fn eq(&self, other: &Self) -> bool {
         match self {
-            Self::UnTerminatedBytes => matches!(other, Self::UnTerminatedBytes),
+            Self::UnterminatedBytes => matches!(other, Self::UnterminatedBytes),
             Self::RedundantBytes => matches!(other, Self::RedundantBytes),
             Self::OverFlow => matches!(other, Self::OverFlow),
             Self::IndefiniteLength => matches!(other, Self::IndefiniteLength),
