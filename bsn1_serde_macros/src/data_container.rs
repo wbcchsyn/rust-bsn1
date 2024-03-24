@@ -508,7 +508,7 @@ impl DataContainer {
 
         let field_attribute = self.transparent_field_attribute();
         let ty = self.ty();
-        let field_ident = self.transparent_field_ident();
+        let field_ident = self.transparent_field_ident()?;
         let field_ident = quote! { #ty.#field_ident };
         let tmp_val = quote! {
             #Deserialize::from_ber(#id, #length, #contents).map_err(|err| {
@@ -547,7 +547,7 @@ impl DataContainer {
 
         match self.fields() {
             syn::Fields::Named(_) => {
-                let field_ident = self.transparent_field_ident();
+                let field_ident = self.transparent_field_ident()?;
                 Ok(quote! {
                     #Result::Ok(#ty { #field_ident: #inner })
                 })
@@ -660,7 +660,7 @@ impl DataContainer {
 
         let field_attribute = self.transparent_field_attribute();
         let ty = self.ty();
-        let field_ident = self.transparent_field_ident();
+        let field_ident = self.transparent_field_ident()?;
         let field_ident = quote! { #ty.#field_ident };
         let tmp_val = quote! {
             #Deserialize::from_der(#id, #contents).map_err(|err| {
@@ -699,7 +699,7 @@ impl DataContainer {
 
         match self.fields() {
             syn::Fields::Named(_) => {
-                let field_ident = self.transparent_field_ident();
+                let field_ident = self.transparent_field_ident()?;
                 Ok(quote! { #Result::Ok(#ty { #field_ident: #inner }) })
             }
             syn::Fields::Unnamed(_) => Ok(quote! {
@@ -749,12 +749,19 @@ impl DataContainer {
         }
     }
 
-    fn transparent_field_ident(&self) -> TokenStream {
+    fn transparent_field_ident(&self) -> Result<TokenStream, syn::Error> {
         assert!(self.attribute().is_transparent());
 
         let mut field_idents = self.field_idents();
-        assert!(field_idents.len() == 1);
-        field_idents.pop().unwrap()
+
+        if field_idents.len() == 1 {
+            Ok(field_idents.pop().unwrap())
+        } else {
+            Err(syn::Error::new_spanned(
+                self.attribute().transparent_token(),
+                "The field count of transparent struct must be 1.",
+            ))
+        }
     }
 
     fn field_vars(&self) -> Vec<TokenStream> {
