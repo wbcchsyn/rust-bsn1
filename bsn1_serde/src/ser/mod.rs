@@ -695,7 +695,10 @@ mod tests {
 
             assert_eq!(der, Der::from(*val));
             assert_eq!(der.id().len(), val.id_len().unwrap());
-            assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+            assert_eq!(
+                der.contents().len(),
+                val.der_contents_len().unwrap().unwrap()
+            );
         }
     }
 
@@ -709,11 +712,11 @@ mod tests {
 
             assert_eq!(
                 der.length().definite().unwrap(),
-                i.der_contents_len().unwrap()
+                i.der_contents_len().unwrap().unwrap()
             );
 
             assert_eq!(der.contents(), &Contents::from(i));
-            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap().unwrap());
         }
     }
 
@@ -727,11 +730,11 @@ mod tests {
 
             assert_eq!(
                 der.length().definite().unwrap(),
-                i.der_contents_len().unwrap()
+                i.der_contents_len().unwrap().unwrap()
             );
 
             assert_eq!(der.contents(), &Contents::from(i));
-            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap().unwrap());
         }
     }
 
@@ -745,11 +748,11 @@ mod tests {
 
             assert_eq!(
                 der.length().definite().unwrap(),
-                i.der_contents_len().unwrap()
+                i.der_contents_len().unwrap().unwrap()
             );
 
             assert_eq!(der.contents(), &Contents::from(i));
-            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap().unwrap());
         }
     }
 
@@ -763,11 +766,11 @@ mod tests {
 
             assert_eq!(
                 der.length().definite().unwrap(),
-                i.der_contents_len().unwrap()
+                i.der_contents_len().unwrap().unwrap()
             );
 
             assert_eq!(der.contents(), &Contents::from(i));
-            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap().unwrap());
         }
     }
 
@@ -781,11 +784,11 @@ mod tests {
 
             assert_eq!(
                 der.length().definite().unwrap(),
-                i.der_contents_len().unwrap()
+                i.der_contents_len().unwrap().unwrap()
             );
 
             assert_eq!(der.contents(), &Contents::from(i));
-            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap().unwrap());
         }
     }
 
@@ -799,11 +802,11 @@ mod tests {
 
             assert_eq!(
                 der.length().definite().unwrap(),
-                i.der_contents_len().unwrap()
+                i.der_contents_len().unwrap().unwrap()
             );
 
             assert_eq!(der.contents(), &Contents::from(i));
-            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap().unwrap());
         }
     }
 
@@ -817,11 +820,11 @@ mod tests {
 
             assert_eq!(
                 der.length().definite().unwrap(),
-                i.der_contents_len().unwrap()
+                i.der_contents_len().unwrap().unwrap()
             );
 
             assert_eq!(der.contents(), &Contents::from(i));
-            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap().unwrap());
         }
     }
 
@@ -835,11 +838,11 @@ mod tests {
 
             assert_eq!(
                 der.length().definite().unwrap(),
-                i.der_contents_len().unwrap()
+                i.der_contents_len().unwrap().unwrap()
             );
 
             assert_eq!(der.contents(), &Contents::from(i));
-            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap().unwrap());
         }
     }
 
@@ -853,11 +856,11 @@ mod tests {
 
             assert_eq!(
                 der.length().definite().unwrap(),
-                i.der_contents_len().unwrap()
+                i.der_contents_len().unwrap().unwrap()
             );
 
             assert_eq!(der.contents(), &Contents::from(i));
-            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap().unwrap());
         }
     }
 
@@ -871,11 +874,11 @@ mod tests {
 
             assert_eq!(
                 der.length().definite().unwrap(),
-                i.der_contents_len().unwrap()
+                i.der_contents_len().unwrap().unwrap()
             );
 
             assert_eq!(der.contents(), &Contents::from(i));
-            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap().unwrap());
         }
     }
 
@@ -889,11 +892,11 @@ mod tests {
 
             assert_eq!(
                 der.length().definite().unwrap(),
-                i.der_contents_len().unwrap()
+                i.der_contents_len().unwrap().unwrap()
             );
 
             assert_eq!(der.contents(), &Contents::from(i));
-            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap().unwrap());
         }
     }
 
@@ -907,11 +910,11 @@ mod tests {
 
             assert_eq!(
                 der.length().definite().unwrap(),
-                i.der_contents_len().unwrap()
+                i.der_contents_len().unwrap().unwrap()
             );
 
             assert_eq!(der.contents(), &Contents::from(i));
-            assert_eq!(der.contents().len(), i.der_contents_len().unwrap());
+            assert_eq!(der.contents().len(), i.der_contents_len().unwrap().unwrap());
         }
     }
 
@@ -930,11 +933,11 @@ mod tests {
 
             assert_eq!(
                 der.length().definite().unwrap(),
-                s.der_contents_len().unwrap()
+                s.der_contents_len().unwrap().unwrap()
             );
 
             assert_eq!(der.contents(), &Contents::from(s.as_bytes()));
-            assert_eq!(der.contents().len(), s.der_contents_len().unwrap());
+            assert_eq!(der.contents().len(), s.der_contents_len().unwrap().unwrap());
         }
     }
 
@@ -949,11 +952,11 @@ mod tests {
 
             assert_eq!(
                 der.length().definite().unwrap(),
-                v.der_contents_len().unwrap()
+                v.der_contents_len().unwrap().unwrap()
             );
 
             let mut contents: &[u8] = der.contents().as_ref();
-            assert_eq!(contents.len(), v.der_contents_len().unwrap());
+            assert_eq!(contents.len(), v.der_contents_len().unwrap().unwrap());
 
             for &i in v.iter() {
                 let der = DerRef::parse(&mut contents).unwrap();

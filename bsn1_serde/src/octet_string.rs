@@ -166,7 +166,10 @@ mod tests {
         assert_eq!(der.id(), IdRef::octet_string());
         assert_eq!(der.id().len(), val.id_len().unwrap());
         assert_eq!(der.contents().as_ref(), &OCTETS);
-        assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+        assert_eq!(
+            der.contents().len(),
+            val.der_contents_len().unwrap().unwrap()
+        );
     }
 
     #[test]
