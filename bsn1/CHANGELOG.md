@@ -404,3 +404,7 @@ Nothing is changed.
 
 - The implementation of `From<Box<std::error::Error>>` for `Error`
 - variant `Error::Boxed`
+
+### Changed
+
+- Rename variant `Error::InvalidContents` `Error::ExtraContentsOctet`

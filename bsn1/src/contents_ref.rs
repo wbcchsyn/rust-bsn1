@@ -191,7 +191,7 @@ impl ContentsRef {
         if self.is_empty() {
             Err(Error::UnTerminatedBytes)
         } else if 1 < self.len() {
-            Err(Error::InvalidContents)
+            Err(Error::ExtraContentsOctet)
         } else if self.bytes[0] == 0x00 {
             Ok(false)
         } else {
@@ -225,7 +225,7 @@ impl ContentsRef {
         if self.is_empty() {
             Err(Error::UnTerminatedBytes)
         } else if 1 < self.len() {
-            Err(Error::InvalidContents)
+            Err(Error::ExtraContentsOctet)
         } else {
             match self.bytes[0] {
                 0x00 => Ok(false),

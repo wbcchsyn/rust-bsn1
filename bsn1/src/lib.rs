@@ -61,8 +61,8 @@ pub enum Error {
     IndefiniteLength,
     /// The contents of 'EOC' of the 'Indefinite Length BER' must be empty.
     BadEoc,
-    /// The contents include invalid octet(s).
-    InvalidContents,
+    /// The contents include (an) invalid octet(s) at the end.
+    ExtraContentsOctet,
     /// The identifier does not match to that of data type when deserialized.
     UnmatchedId,
     /// Invarid as UTF-8.
@@ -91,7 +91,9 @@ impl fmt::Display for Error {
             Self::OverFlow => f.write_str("Over flow is occurred to parse bytes as a number."),
             Self::IndefiniteLength => f.write_str("'Indefinite Length' is used where not allowed."),
             Self::BadEoc => f.write_str("'Indefinite Length BER' includes a bad 'EOC.'"),
-            Self::InvalidContents => f.write_str("Contents include invlid octet(s)."),
+            Self::ExtraContentsOctet => {
+                f.write_str("Contents include (an) invlid octet(s) at the end.")
+            }
             Self::UnmatchedId => f.write_str("The identifier does not match to that of data type."),
             Self::InvalidUtf8 => f.write_str("Invalid as UTF-8."),
             Self::InvalidDerBooleanContents => {
@@ -114,7 +116,7 @@ impl PartialEq for Error {
             Self::OverFlow => matches!(other, Self::OverFlow),
             Self::IndefiniteLength => matches!(other, Self::IndefiniteLength),
             Self::BadEoc => matches!(other, Self::BadEoc),
-            Self::InvalidContents => matches!(other, Self::InvalidContents),
+            Self::ExtraContentsOctet => matches!(other, Self::ExtraContentsOctet),
             Self::UnmatchedId => matches!(other, Self::UnmatchedId),
             Self::InvalidUtf8 => matches!(other, Self::InvalidUtf8),
             Self::InvalidDerBooleanContents => matches!(other, Self::InvalidDerBooleanContents),

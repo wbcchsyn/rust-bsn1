@@ -489,7 +489,7 @@ impl DataContainer {
             if #contents_bytes.len() == 0 {
                 #Result::Ok(#ret)
             } else {
-                return #Result::Err(#Error::InvalidContents);
+                return #Result::Err(#Error::ExtraContentsOctet);
             }
         }})
     }
@@ -642,7 +642,7 @@ impl DataContainer {
             if #contents_bytes.len() == 0 {
                 #Result::Ok(#ret)
             } else {
-                return #Result::Err(#Error::InvalidContents);
+                return #Result::Err(#Error::ExtraContentsOctet);
             }
         }})
     }
