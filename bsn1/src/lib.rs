@@ -67,6 +67,8 @@ pub enum Error {
     UnmatchedId,
     /// Invarid as UTF-8.
     InvalidUtf8,
+    /// The contents of DER BOOLEAN must be 0x00 or 0xFF.
+    InvalidDerBooleanContents,
     /// The key-value pair is invalid.
     InvalidKeyValuePair,
     /// IO Error for serialization/deserialization.
@@ -92,6 +94,9 @@ impl fmt::Display for Error {
             Self::InvalidContents => f.write_str("Contents include invlid octet(s)."),
             Self::UnmatchedId => f.write_str("The identifier does not match to that of data type."),
             Self::InvalidUtf8 => f.write_str("Invalid as UTF-8."),
+            Self::InvalidDerBooleanContents => {
+                f.write_str("The contents of DER BOOLEAN must be 0x00 or 0xFF.")
+            }
             Self::InvalidKeyValuePair => f.write_str("SEQUENCE of key-value pair is required."),
             Self::Io(err) => err.fmt(f),
             Self::Anyhow(err) => err.fmt(f),
@@ -112,6 +117,7 @@ impl PartialEq for Error {
             Self::InvalidContents => matches!(other, Self::InvalidContents),
             Self::UnmatchedId => matches!(other, Self::UnmatchedId),
             Self::InvalidUtf8 => matches!(other, Self::InvalidUtf8),
+            Self::InvalidDerBooleanContents => matches!(other, Self::InvalidDerBooleanContents),
             Self::InvalidKeyValuePair => matches!(other, Self::InvalidKeyValuePair),
             Self::Io(_) => false,
             Self::Anyhow(_) => false,
