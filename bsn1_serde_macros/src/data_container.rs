@@ -126,7 +126,7 @@ impl DataContainer {
         assert!(self.attribute().is_transparent());
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
-        let field = self.transparent_field_var()?;
+        let field = self.transparent_field_var(true)?;
         let field_attribute = self.transparent_field_attribute()?;
 
         if let Some(into_ty) = field_attribute.into_type() {
@@ -164,7 +164,7 @@ impl DataContainer {
         assert!(self.attribute().is_transparent());
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
-        let field = self.transparent_field_var()?;
+        let field = self.transparent_field_var(true)?;
         let field_attribute = self.transparent_field_attribute()?;
 
         if let Some(into_ty) = field_attribute.into_type() {
@@ -274,7 +274,7 @@ impl DataContainer {
         assert!(self.attribute().is_transparent());
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
-        let field = self.transparent_field_var()?;
+        let field = self.transparent_field_var(true)?;
         let field_attribute = self.transparent_field_attribute()?;
 
         if let Some(into_ty) = field_attribute.into_type() {
@@ -358,7 +358,7 @@ impl DataContainer {
         assert!(self.attribute().is_transparent());
 
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
-        let field = self.transparent_field_var()?;
+        let field = self.transparent_field_var(true)?;
         let field_attribute = self.transparent_field_attribute()?;
 
         if let Some(into_ty) = field_attribute.into_type() {
@@ -783,7 +783,7 @@ impl DataContainer {
         }
     }
 
-    fn transparent_field_var(&self) -> Result<TokenStream, syn::Error> {
+    fn transparent_field_var(&self, _is_serializing: bool) -> Result<TokenStream, syn::Error> {
         assert!(self.attribute().is_transparent());
 
         let mut field_vars = self.field_vars();
