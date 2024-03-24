@@ -656,7 +656,7 @@ impl DataContainer {
 
     fn ty(&self) -> TokenStream {
         match self {
-            Self::DataStruct { .. } => quote! { Self },
+            Self::DataStruct { struct_name, .. } => struct_name.to_token_stream(),
             Self::Variant {
                 enum_name, variant, ..
             } => {
