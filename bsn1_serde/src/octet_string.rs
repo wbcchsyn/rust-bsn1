@@ -74,8 +74,8 @@ impl Serialize for OctetString<'_> {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
-        Ok(self.octets.len())
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(self.octets.len()))
     }
 }
 
