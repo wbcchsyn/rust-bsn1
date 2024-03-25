@@ -293,8 +293,19 @@ impl DataContainer {
 
     #[allow(non_snake_case)]
     pub fn der_contents_len(&self) -> syn::Result<TokenStream> {
-        let Length = quote! { ::bsn1_serde::macro_alias::Length };
         let Result = quote! { ::std::result::Result };
+        let Option = quote! { ::std::option::Option };
+
+        // If any field is annotated as `into`, or `to`, return `None` immediately.
+        if self
+            .field_attributes()
+            .iter()
+            .any(|attr| attr.into_type().is_some() || attr.to_path().is_some())
+        {
+            return Ok(quote! { #Result::Ok(#Option::None) });
+        }
+
+        let Length = quote! { ::bsn1_serde::macro_alias::Length };
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
 
         let ret = quote! { bsn1_macro_1704043457_ret };
