@@ -324,18 +324,21 @@ impl DataContainer {
                     quote! {}
                 } else {
                     quote! {{
-                        let #contents_len = #Serialize::der_contents_len(#field)?;
-                        let #length_len = #Length::Definite(#contents_len).len();
-                        #ret += #Serialize::id_len(#field)? + #length_len + #contents_len;
+                        if let Some(#contents_len) = #Serialize::der_contents_len(#field)? {
+                            let #length_len = #Length::Definite(#contents_len).len();
+                            #ret += #Serialize::id_len(#field)? + #length_len + #contents_len;
+                        } else {
+                            return #Result::Ok(#Option::None);
+                        }
                     }}
                 }
             });
 
-        Ok(quote! {
+        Ok(quote! {{
             let mut #ret = 0;
             #(#field_acc)*
-            #Result::Ok(#ret)
-        })
+            #Result::Ok(#Option::Some(#ret))
+        }})
     }
 
     #[allow(non_snake_case)]
