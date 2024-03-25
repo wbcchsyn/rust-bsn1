@@ -85,9 +85,7 @@ fn do_into_serialize(ty: &syn::Path) -> syn::Result<TokenStream> {
         }
 
         fn der_contents_len(&self) -> #Result<#Option<usize>, #Error> {
-            let this: Self = #Clone::clone(self);
-            let this: #ty = #Into::into(this);
-            #Serialize::der_contents_len(&this)
+            #Result::Ok(#Option::None)
         }
     })
 }
