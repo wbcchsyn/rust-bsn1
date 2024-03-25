@@ -196,6 +196,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use self::ser::Serialize;
+
     use super::*;
     use bsn1::{Contents, IdRef};
 
@@ -307,5 +309,144 @@ mod tests {
 
         let value2 = parse_ber(&mut &buffer[..]).unwrap();
         assert_eq!(value, value2);
+    }
+
+    struct NoneDerContentsLen(i16);
+
+    impl ser::Serialize for NoneDerContentsLen {
+        fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
+            self.0.write_id(buffer)
+        }
+
+        fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
+            self.0.write_der_contents(buffer)
+        }
+
+        fn id_len(&self) -> Result<usize, Error> {
+            self.0.id_len()
+        }
+
+        fn der_contents_len(&self) -> Result<Option<usize>, Error> {
+            Ok(None)
+        }
+    }
+
+    #[test]
+    fn test_write_none_der_contents_len_into_der() {
+        for i in i16::MIN..=i16::MAX {
+            let var = NoneDerContentsLen(i);
+            assert_eq!(to_der(&var).unwrap(), to_der(&i).unwrap());
+        }
+
+        let mut va: Vec<NoneDerContentsLen> = Vec::new();
+        let mut vb: Vec<i16> = Vec::new();
+        for i in 0..10 {
+            assert_eq!(to_der(&va).unwrap(), to_der(&vb).unwrap());
+
+            va.push(NoneDerContentsLen(i));
+            vb.push(i);
+        }
+    }
+
+    #[test]
+    fn test_write_none_der_contents_len_into_ber() {
+        for i in i16::MIN..=i16::MAX {
+            let var = NoneDerContentsLen(i);
+            assert_eq!(to_ber(&var).unwrap(), to_ber(&i).unwrap());
+        }
+
+        let mut va: Vec<NoneDerContentsLen> = Vec::new();
+        let mut vb: Vec<i16> = Vec::new();
+        for i in 0..10 {
+            assert_eq!(to_ber(&va).unwrap(), to_ber(&vb).unwrap());
+
+            va.push(NoneDerContentsLen(i));
+            vb.push(i);
+        }
+    }
+
+    enum NoneLenEnum {
+        NoneDerContentsLen(i16),
+        NoneDerContentsLenWrapper(NoneDerContentsLen),
+    }
+
+    impl Serialize for NoneLenEnum {
+        fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
+            match self {
+                NoneLenEnum::NoneDerContentsLen(i) => i.write_id(buffer),
+                NoneLenEnum::NoneDerContentsLenWrapper(w) => w.write_id(buffer),
+            }
+        }
+
+        fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
+            match self {
+                NoneLenEnum::NoneDerContentsLen(i) => i.write_der_contents(buffer),
+                NoneLenEnum::NoneDerContentsLenWrapper(w) => w.write_der_contents(buffer),
+            }
+        }
+
+        fn id_len(&self) -> Result<usize, Error> {
+            match self {
+                NoneLenEnum::NoneDerContentsLen(i) => i.id_len(),
+                NoneLenEnum::NoneDerContentsLenWrapper(w) => w.id_len(),
+            }
+        }
+
+        fn der_contents_len(&self) -> Result<Option<usize>, Error> {
+            match self {
+                NoneLenEnum::NoneDerContentsLen(_) => Ok(None),
+                NoneLenEnum::NoneDerContentsLenWrapper(_) => Ok(None),
+            }
+        }
+    }
+
+    #[test]
+    fn test_write_none_len_enum_into_der() {
+        for i in i16::MIN..=i16::MAX {
+            let var = NoneLenEnum::NoneDerContentsLen(i);
+            assert_eq!(to_der(&var).unwrap(), to_der(&i).unwrap());
+
+            let var = NoneLenEnum::NoneDerContentsLenWrapper(NoneDerContentsLen(i));
+            assert_eq!(to_der(&var).unwrap(), to_der(&i).unwrap());
+        }
+
+        let mut va: Vec<NoneLenEnum> = Vec::new();
+        let mut vb: Vec<i16> = Vec::new();
+        for i in 0..10 {
+            assert_eq!(to_der(&va).unwrap(), to_der(&vb).unwrap());
+
+            va.push(NoneLenEnum::NoneDerContentsLen(i));
+            vb.push(i);
+
+            va.push(NoneLenEnum::NoneDerContentsLenWrapper(NoneDerContentsLen(
+                i,
+            )));
+            vb.push(i);
+        }
+    }
+
+    #[test]
+    fn test_write_none_der_len_into_ber() {
+        for i in i16::MIN..=i16::MAX {
+            let var = NoneLenEnum::NoneDerContentsLen(i);
+            assert_eq!(to_ber(&var).unwrap(), to_ber(&i).unwrap());
+
+            let var = NoneLenEnum::NoneDerContentsLenWrapper(NoneDerContentsLen(i));
+            assert_eq!(to_ber(&var).unwrap(), to_ber(&i).unwrap());
+        }
+
+        let mut va: Vec<NoneLenEnum> = Vec::new();
+        let mut vb: Vec<i16> = Vec::new();
+        for i in 0..10 {
+            assert_eq!(to_ber(&va).unwrap(), to_ber(&vb).unwrap());
+
+            va.push(NoneLenEnum::NoneDerContentsLen(i));
+            vb.push(i);
+
+            va.push(NoneLenEnum::NoneDerContentsLenWrapper(NoneDerContentsLen(
+                i,
+            )));
+            vb.push(i);
+        }
     }
 }
