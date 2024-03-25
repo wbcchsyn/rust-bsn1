@@ -345,28 +345,15 @@ impl DataContainer {
     pub fn der_contents_len_transparent(&self) -> syn::Result<TokenStream> {
         assert!(self.attribute().is_transparent());
 
-        let Serialize = quote! { ::bsn1_serde::ser::Serialize };
-        let field = self.transparent_field_var(true)?;
         let field_attribute = self.transparent_field_attribute(true)?;
 
-        if let Some(into_ty) = field_attribute.into_type() {
-            let Clone = quote! { ::std::clone::Clone };
-            let Into = quote! { ::std::convert::Into };
-            let this = quote! { bsn1_macro_1704043457_this };
-
-            Ok(quote! {{
-                let #this = #Clone::clone(#field);
-                let #this: #into_ty = #Into::into(#this);
-                #Serialize::der_contents_len(&#this)
-            }})
-        } else if let Some(to_path) = field_attribute.to_path() {
-            let this = quote! { bsn1_macro_1705721776_this };
-
-            Ok(quote! {{
-                let #this = #to_path(#field);
-                #Serialize::der_contents_len(&#this)
-            }})
+        if field_attribute.into_type().is_some() || field_attribute.to_path().is_some() {
+            let Result = quote! { ::std::result::Result };
+            let Option = quote! { ::std::option::Option };
+            Ok(quote! { #Result::Ok(#Option::None) })
         } else {
+            let Serialize = quote! { ::bsn1_serde::ser::Serialize };
+            let field = self.transparent_field_var(true)?;
             Ok(quote! { #Serialize::der_contents_len(#field) })
         }
     }
