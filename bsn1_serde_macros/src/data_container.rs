@@ -317,29 +317,11 @@ impl DataContainer {
             .into_iter()
             .zip(self.field_attributes())
             .map(|(field, attribute)| {
+                assert!(attribute.into_type().is_none());
+                assert!(attribute.to_path().is_none());
+
                 if attribute.is_skip_serializing() {
                     quote! {}
-                } else if let Some(into_ty) = attribute.into_type() {
-                    let Clone = quote! { ::std::clone::Clone };
-                    let Into = quote! { ::std::convert::Into };
-                    let this = quote! { bsn1_macro_1704043457_this };
-
-                    quote! {{
-                        let #this = #Clone::clone(#field);
-                        let #this: #into_ty = #Into::into(#this);
-                        let #contents_len = #Serialize::der_contents_len(&#this)?;
-                        let #length_len = #Length::Definite(#contents_len).len();
-                        #ret += #Serialize::id_len(&#this)? + #length_len + #contents_len;
-                    }}
-                } else if let Some(to_path) = attribute.to_path() {
-                    let this = quote! { bsn1_macro_1705721776_this };
-
-                    quote! {{
-                        let #this = #to_path(#field);
-                        let #contents_len = #Serialize::der_contents_len(&#this)?;
-                        let #length_len = #Length::Definite(#contents_len).len();
-                        #ret += #Serialize::id_len(&#this)? + #length_len + #contents_len;
-                    }}
                 } else {
                     quote! {{
                         let #contents_len = #Serialize::der_contents_len(#field)?;
