@@ -202,6 +202,32 @@ impl DataContainer {
 
     #[allow(non_snake_case)]
     pub fn write_der_contents(&self, buffer: &TokenStream) -> syn::Result<TokenStream> {
+        let field_ref = quote! { bsn1_macro_1711342495_field_ref };
+
+        let field_builders = self
+            .field_vars()
+            .into_iter()
+            .zip(self.field_attributes())
+            .map(|(field, attr)| {
+                if attr.is_skip_serializing() {
+                    quote! {}
+                } else if let Some(into_ty) = attr.into_type() {
+                    let Clone = quote! { ::std::clone::Clone };
+                    let Into = quote! { ::std::convert::Into };
+                    quote! {
+                        let #field_ref: #into_ty = #Into::into(#Clone::clone(#field));
+                        let #field_ref = &#field_ref;
+                    }
+                } else if let Some(to_path) = attr.to_path() {
+                    quote! {
+                        let #field_ref = #to_path(#field);
+                        let #field_ref = &#field_ref;
+                    }
+                } else {
+                    quote! { let #field_ref = #field; }
+                }
+            });
+
         let Length = quote! { ::bsn1_serde::macro_alias::Length };
         let Error = quote! { ::bsn1_serde::macro_alias::Error };
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
@@ -211,54 +237,27 @@ impl DataContainer {
         let contents_len = quote! { bsn1_macro_1704044765_contents_len };
         let length = quote! { bsn1_macro_1704044765_length };
 
-        let field_write = self
-            .field_vars()
-            .into_iter()
-            .zip(self.field_attributes())
-            .map(|(field, attribute)| {
-                if attribute.is_skip_serializing() {
-                    quote! {}
-                } else if let Some(into_ty) = attribute.into_type() {
-                    let Clone = quote! { ::std::clone::Clone };
-                    let Into = quote! { ::std::convert::Into };
-                    let this = quote! { bsn1_macro_1704044765_this };
-
-                    quote! {{
-                        let #this = #Clone::clone(#field);
-                        let #this: #into_ty = #Into::into(#this);
-                        #Serialize::write_id(&#this, buffer)?;
-
-                        let #contents_len = #Serialize::der_contents_len(&#this)?;
-                        let #length = #Length::Definite(#contents_len).to_bytes();
-                        #Write::write_all(#buffer, &#length).map_err(#Error::from)?;
-                        #Serialize::write_der_contents(&#this, buffer)?;
-                    }}
-                } else if let Some(to_path) = attribute.to_path() {
-                    let this = quote! { bsn1_macro_1705721776_this };
-
-                    quote! {{
-                        let #this = #to_path(#field);
-                        #Serialize::write_id(&#this, buffer)?;
-
-                        let #contents_len = #Serialize::der_contents_len(&#this)?;
-                        let #length = #Length::Definite(#contents_len).to_bytes();
-                        #Write::write_all(#buffer, &#length).map_err(#Error::from)?;
-                        #Serialize::write_der_contents(&#this, buffer)?;
-                    }}
-                } else {
-                    quote! {{
-                        #Serialize::write_id(#field, buffer)?;
-                        let #contents_len = #Serialize::der_contents_len(#field)?;
-                        let #length = #Length::Definite(#contents_len).to_bytes();
-                        #Write::write_all(#buffer, &#length).map_err(#Error::from)?;
-                        #Serialize::write_der_contents(#field, buffer)?;
-                    }}
-                }
-            });
+        let write_fields =
+            field_builders
+                .zip(self.field_attributes())
+                .map(|(field_builder, attr)| {
+                    if attr.is_skip_serializing() {
+                        quote! {}
+                    } else {
+                        quote! {{
+                            #field_builder
+                            #Serialize::write_id(#field_ref, buffer)?;
+                            let #contents_len = #Serialize::der_contents_len(#field_ref)?;
+                            let #length = #Length::Definite(#contents_len).to_bytes();
+                            #Write::write_all(#buffer, &#length).map_err(#Error::from)?;
+                            #Serialize::write_der_contents(#field_ref, buffer)?;
+                        }}
+                    }
+                });
 
         Ok(quote! {{
-                #(#field_write)*
-                #Result::Ok(())
+            #(#write_fields)*
+            #Result::Ok(())
         }})
     }
 
