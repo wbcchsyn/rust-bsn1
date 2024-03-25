@@ -228,14 +228,8 @@ impl DataContainer {
                 }
             });
 
-        let Length = quote! { ::bsn1_serde::macro_alias::Length };
-        let Error = quote! { ::bsn1_serde::macro_alias::Error };
-        let Serialize = quote! { ::bsn1_serde::ser::Serialize };
         let Result = quote! { ::std::result::Result };
-        let Write = quote! { ::std::io::Write };
-
-        let contents_len = quote! { bsn1_macro_1704044765_contents_len };
-        let length = quote! { bsn1_macro_1704044765_length };
+        let crate_bsn1_serde = quote! { ::bsn1_serde };
 
         let write_fields =
             field_builders
@@ -246,11 +240,7 @@ impl DataContainer {
                     } else {
                         quote! {{
                             #field_builder
-                            #Serialize::write_id(#field_ref, buffer)?;
-                            let #contents_len = #Serialize::der_contents_len(#field_ref)?;
-                            let #length = #Length::Definite(#contents_len).to_bytes();
-                            #Write::write_all(#buffer, &#length).map_err(#Error::from)?;
-                            #Serialize::write_der_contents(#field_ref, buffer)?;
+                            #crate_bsn1_serde::write_der(#field_ref, #buffer)?;
                         }}
                     }
                 });
