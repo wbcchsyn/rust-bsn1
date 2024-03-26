@@ -93,8 +93,8 @@ impl ser::Serialize for SimpleAuth {
         Ok(id.len())
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
-        Ok(self.0.len())
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(self.0.len()))
     }
 }
 
