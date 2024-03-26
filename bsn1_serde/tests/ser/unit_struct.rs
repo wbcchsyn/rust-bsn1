@@ -118,7 +118,10 @@ fn test_a() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -136,7 +139,10 @@ fn test_b() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -154,7 +160,10 @@ fn test_c() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -172,7 +181,10 @@ fn test_d() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -190,7 +202,10 @@ fn test_e() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -208,7 +223,10 @@ fn test_f() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -226,7 +244,10 @@ fn test_g() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -244,7 +265,10 @@ fn test_h() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -262,7 +286,10 @@ fn test_i() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -277,7 +304,10 @@ fn test_j() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -292,7 +322,10 @@ fn test_k() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -307,7 +340,10 @@ fn test_l() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -322,7 +358,10 @@ fn test_m() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -337,7 +376,10 @@ fn test_n() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -352,7 +394,10 @@ fn test_o() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -367,7 +412,10 @@ fn test_p() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -382,6 +430,9 @@ fn test_q() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }

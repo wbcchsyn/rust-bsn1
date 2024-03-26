@@ -51,7 +51,7 @@ fn test_xa() {
     let der = to_der(&val).unwrap();
     assert_eq!(der, to_der(&inner).unwrap());
     assert_eq!(der.id().len(), val.id_len().unwrap());
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert!(val.der_contents_len().unwrap().is_none());
 }
 
 fn test_xb() {
@@ -61,7 +61,7 @@ fn test_xb() {
     let der = to_der(&val).unwrap();
     assert_eq!(der, to_der(&inner).unwrap());
     assert_eq!(der.id().len(), val.id_len().unwrap());
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert!(val.der_contents_len().unwrap().is_none());
 }
 
 fn test_xc() {
@@ -71,7 +71,7 @@ fn test_xc() {
     let der = to_der(&val).unwrap();
     assert_eq!(der, to_der(&inner).unwrap());
     assert_eq!(der.id().len(), val.id_len().unwrap());
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert!(val.der_contents_len().unwrap().is_none());
 }
 
 fn test_xd() {
@@ -81,5 +81,5 @@ fn test_xd() {
     let der = to_der(&val).unwrap();
     assert_eq!(der, to_der(&inner).unwrap());
     assert_eq!(der.id().len(), val.id_len().unwrap());
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert!(val.der_contents_len().unwrap().is_none());
 }
