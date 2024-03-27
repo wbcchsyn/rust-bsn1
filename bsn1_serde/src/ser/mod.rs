@@ -38,8 +38,11 @@ pub trait Serialize {
     /// Users should call `buffer.flush()` explicitly if necessary.
     fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error>;
 
-    /// Returns the byte count of the identifier of ASN.1 format.
-    fn id_len(&self) -> Result<usize, Error>;
+    /// Returns the byte count of the identifier of ASN.1 format
+    /// if it is known before the serialization, or `None`.
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(None)
+    }
 
     /// Returns the byte count of the contents of ASN.1 DER format
     /// if it is known before serialization, or `None`.
