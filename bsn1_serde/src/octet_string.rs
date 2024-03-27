@@ -70,8 +70,8 @@ impl Serialize for OctetString<'_> {
         buffer.write_all(&self.octets.as_ref()).map_err(Into::into)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
