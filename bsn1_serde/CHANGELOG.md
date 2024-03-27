@@ -20,3 +20,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 ### Fixed
 
 - Make `BTreeMap` and `HashMap` error to deserialize from BER or DER if the key-value pair includes (an) extra octet(s).
+
+### Changed
+
+- Change the return type of `ser::Serialize.der_contents_len()`. It returns `Result<Option<usize>, Error>`, instead of `Result<usize, Error>`.
