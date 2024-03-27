@@ -147,9 +147,10 @@ impl DataContainer {
     #[allow(non_snake_case)]
     pub fn id_len(&self) -> syn::Result<TokenStream> {
         let Result = quote! { ::std::result::Result };
+        let Option = quote! { ::std::option::Option };
 
         let id = self.id_slice()?;
-        Ok(quote! { #Result::Ok(#id.len()) })
+        Ok(quote! { #Result::Ok(#Option::Some(#id.len())) })
     }
 
     #[allow(non_snake_case)]
