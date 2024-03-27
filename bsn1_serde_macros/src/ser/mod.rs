@@ -108,8 +108,7 @@ fn do_to_serialize(to_fn: &syn::Path) -> syn::Result<TokenStream> {
         }
 
         fn id_len(&self) -> #Result<#Option<usize>, #Error> {
-            let this = #to_fn(self);
-            #Serialize::id_len(&this)
+            #Result::Ok(#Option::None)
         }
 
         fn der_contents_len(&self) -> #Result<#Option<usize>, #Error> {
