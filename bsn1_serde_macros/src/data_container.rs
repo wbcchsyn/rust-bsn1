@@ -157,20 +157,14 @@ impl DataContainer {
     pub fn id_len_transparent(&self) -> syn::Result<TokenStream> {
         assert!(self.attribute().is_transparent());
 
+        let Result = quote! { ::std::result::Result };
+        let Option = quote! { ::std::option::Option };
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
         let field = self.transparent_field_var(true)?;
         let field_attribute = self.transparent_field_attribute(true)?;
 
-        if let Some(into_ty) = field_attribute.into_type() {
-            let Clone = quote! { ::std::clone::Clone };
-            let Into = quote! { ::std::convert::Into };
-            let this = quote! { bsn1_macro_1704044765_this };
-
-            Ok(quote! {{
-                let #this = #Clone::clone(#field);
-                let #this: #into_ty = #Into::into(#this);
-                #Serialize::id_len(&#this)
-            }})
+        if field_attribute.into_type().is_some() {
+            Ok(quote! { #Result::Ok(#Option::None) })
         } else if let Some(path) = field_attribute.to_path() {
             let this = quote! { bsn1_macro_1706411411_this };
 
