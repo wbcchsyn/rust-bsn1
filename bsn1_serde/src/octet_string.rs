@@ -164,7 +164,7 @@ mod tests {
 
         let der = to_der(&val).unwrap();
         assert_eq!(der.id(), IdRef::octet_string());
-        assert_eq!(der.id().len(), val.id_len().unwrap());
+        assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
         assert_eq!(der.contents().as_ref(), &OCTETS);
         assert_eq!(
             der.contents().len(),
