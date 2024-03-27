@@ -43,14 +43,18 @@ where
     };
 
     let length = Length::Definite(contents_len).to_bytes();
-    let der_len = value.id_len()? + length.len() + contents_len;
+    let mut buffer = Buffer::new();
 
-    let mut buffer = Buffer::with_capacity(der_len);
+    if let Some(id_len) = value.id_len()? {
+        let der_len = id_len + length.len() + contents_len;
+        buffer.reserve(der_len);
+    }
+
     value.write_id(&mut buffer)?;
     buffer.write_all(&length).unwrap(); // Buffer::write_all() never fails.
 
     if let Some(contents) = contents {
-        unsafe { buffer.extend_from_slice(contents.as_slice()) };
+        buffer.write_all(&contents.as_slice()).unwrap(); // Buffer::write_all() never fails.
     } else {
         value.write_der_contents(&mut buffer)?;
     }
