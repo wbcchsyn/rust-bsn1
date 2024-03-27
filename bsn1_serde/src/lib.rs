@@ -326,7 +326,7 @@ mod tests {
             self.0.write_der_contents(buffer)
         }
 
-        fn id_len(&self) -> Result<usize, Error> {
+        fn id_len(&self) -> Result<Option<usize>, Error> {
             self.0.id_len()
         }
 
@@ -389,7 +389,7 @@ mod tests {
             }
         }
 
-        fn id_len(&self) -> Result<usize, Error> {
+        fn id_len(&self) -> Result<Option<usize>, Error> {
             match self {
                 NoneLenEnum::NoneDerContentsLen(i) => i.id_len(),
                 NoneLenEnum::NoneDerContentsLenWrapper(w) => w.id_len(),
