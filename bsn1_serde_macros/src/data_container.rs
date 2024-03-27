@@ -163,15 +163,8 @@ impl DataContainer {
         let field = self.transparent_field_var(true)?;
         let field_attribute = self.transparent_field_attribute(true)?;
 
-        if field_attribute.into_type().is_some() {
+        if field_attribute.into_type().is_some() || field_attribute.to_path().is_some() {
             Ok(quote! { #Result::Ok(#Option::None) })
-        } else if let Some(path) = field_attribute.to_path() {
-            let this = quote! { bsn1_macro_1706411411_this };
-
-            Ok(quote! {{
-                let #this = #path(#field);
-                #Serialize::id_len(&#this)
-            }})
         } else {
             Ok(quote! { #Serialize::id_len(#field) })
         }
