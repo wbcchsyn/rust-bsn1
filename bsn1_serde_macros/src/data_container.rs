@@ -171,15 +171,6 @@ impl DataContainer {
     }
 
     pub fn id_slice(&self) -> syn::Result<TokenStream> {
-        // This method should not be called if converting annottation is specified.
-        assert!(self.attribute().into_type().is_none());
-        assert!(self.attribute().from_type().is_none());
-        assert!(self.attribute().to_path().is_none());
-        assert!(self.attribute().try_from_type().is_none());
-
-        // This method should not be called if `transparent` is specified.
-        assert!(self.attribute().is_transparent() == false);
-
         const SEQUENCE: u8 = 0x30;
 
         match self.attribute().id(SEQUENCE) {
