@@ -701,7 +701,7 @@ mod tests {
             let der = crate::to_der(val).unwrap();
 
             assert_eq!(der, Der::from(*val));
-            assert_eq!(der.id().len(), val.id_len().unwrap());
+            assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
             assert_eq!(
                 der.contents().len(),
                 val.der_contents_len().unwrap().unwrap()
@@ -715,7 +715,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -733,7 +733,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -751,7 +751,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -769,7 +769,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -787,7 +787,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -805,7 +805,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -823,7 +823,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -841,7 +841,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -859,7 +859,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -877,7 +877,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -895,7 +895,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -913,7 +913,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -936,7 +936,7 @@ mod tests {
             let der = crate::to_der(&s).unwrap();
 
             assert_eq!(der.id(), IdRef::utf8_string());
-            assert_eq!(der.id().len(), s.id_len().unwrap());
+            assert_eq!(der.id().len(), s.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -955,7 +955,7 @@ mod tests {
             let der = crate::to_der(&v).unwrap();
 
             assert_eq!(der.id(), IdRef::sequence());
-            assert_eq!(der.id().len(), v.id_len().unwrap());
+            assert_eq!(der.id().len(), v.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
