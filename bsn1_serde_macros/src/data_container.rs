@@ -278,6 +278,7 @@ impl DataContainer {
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
 
         let ret = quote! { bsn1_macro_1704043457_ret };
+        let id_len = quote! { bsn1_macro_1711551123_contents_len };
         let contents_len = quote! { bsn1_macro_1704043457_contents_len };
         let length_len = quote! { bsn1_macro_1704043457_length_len};
 
@@ -294,8 +295,12 @@ impl DataContainer {
                 } else {
                     quote! {{
                         if let Some(#contents_len) = #Serialize::der_contents_len(#field)? {
-                            let #length_len = #Length::Definite(#contents_len).len();
-                            #ret += #Serialize::id_len(#field)? + #length_len + #contents_len;
+                            if let Some(#id_len) = #Serialize::id_len(#field)? {
+                                let #length_len = #Length::Definite(#contents_len).len();
+                                #ret += #id_len + #length_len + #contents_len;
+                            } else {
+                                return #Result::Ok(#Option::None);
+                            }
                         } else {
                             return #Result::Ok(#Option::None);
                         }
