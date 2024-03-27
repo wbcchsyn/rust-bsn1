@@ -64,8 +64,8 @@ impl Serialize for bool {
             .map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -85,8 +85,8 @@ impl Serialize for i8 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -106,8 +106,8 @@ impl Serialize for u8 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -131,8 +131,8 @@ impl Serialize for i16 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -156,8 +156,8 @@ impl Serialize for u16 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -183,8 +183,8 @@ impl Serialize for i32 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -210,8 +210,8 @@ impl Serialize for u32 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -232,8 +232,8 @@ impl Serialize for i64 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -259,8 +259,8 @@ impl Serialize for u64 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -281,8 +281,8 @@ impl Serialize for i128 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -308,8 +308,8 @@ impl Serialize for u128 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -330,8 +330,8 @@ impl Serialize for isize {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -357,8 +357,8 @@ impl Serialize for usize {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -378,8 +378,8 @@ impl Serialize for String {
         buffer.write_all(self.as_bytes()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -405,8 +405,8 @@ where
         Ok(())
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -431,8 +431,8 @@ where
         Ok(())
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -457,8 +457,8 @@ where
         Ok(())
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -483,8 +483,8 @@ where
         Ok(())
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -542,8 +542,8 @@ where
         Ok(())
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -580,8 +580,8 @@ where
         Ok(())
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -639,8 +639,8 @@ where
         Ok(())
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -662,9 +662,13 @@ where
 
 fn der_len<T: Serialize>(t: &T) -> Result<Option<usize>, Error> {
     if let Some(contents_len) = t.der_contents_len()? {
-        Ok(Some(
-            t.id_len()? + Length::Definite(contents_len).len() + contents_len,
-        ))
+        if let Some(id_len) = t.id_len()? {
+            Ok(Some(
+                id_len + Length::Definite(contents_len).len() + contents_len,
+            ))
+        } else {
+            Ok(None)
+        }
     } else {
         Ok(None)
     }
