@@ -85,12 +85,12 @@ impl ser::Serialize for SimpleAuth {
         buffer.write_all(&self.0[..]).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        // The result is always `Ok(1)`.
-        // You can write as `return Ok(1)`, of cause.
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        // The result is always `Ok(Some(1))`.
+        // You can write as `return Ok(Some(1))`, of cause.
         let mut id: Id = IdRef::octet_string().into();
         id.set_number(0_u8.into());
-        Ok(id.len())
+        Ok(Some(id.len()))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
