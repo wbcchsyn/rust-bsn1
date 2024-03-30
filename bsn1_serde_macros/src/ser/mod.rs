@@ -58,6 +58,7 @@ pub fn do_serialize(ast: syn::DeriveInput) -> syn::Result<TokenStream> {
 #[allow(non_snake_case)]
 fn do_into_serialize(ty: &syn::Path) -> syn::Result<TokenStream> {
     let Result = quote! { ::std::result::Result };
+    let Option = quote! { ::std::option::Option };
     let Write = quote! { ?Sized + ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };
     let Clone = quote! { ::std::clone::Clone };
@@ -83,10 +84,8 @@ fn do_into_serialize(ty: &syn::Path) -> syn::Result<TokenStream> {
             #Serialize::id_len(&this)
         }
 
-        fn der_contents_len(&self) -> #Result<usize, #Error> {
-            let this: Self = #Clone::clone(self);
-            let this: #ty = #Into::into(this);
-            #Serialize::der_contents_len(&this)
+        fn der_contents_len(&self) -> #Result<#Option<usize>, #Error> {
+            #Result::Ok(#Option::None)
         }
     })
 }
@@ -94,6 +93,7 @@ fn do_into_serialize(ty: &syn::Path) -> syn::Result<TokenStream> {
 #[allow(non_snake_case)]
 fn do_to_serialize(to_fn: &syn::Path) -> syn::Result<TokenStream> {
     let Result = quote! { ::std::result::Result };
+    let Option = quote! { ::std::option::Option };
     let Write = quote! { ?Sized + ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };
     let Serialize = quote! { ::bsn1_serde::ser::Serialize };
@@ -114,9 +114,8 @@ fn do_to_serialize(to_fn: &syn::Path) -> syn::Result<TokenStream> {
             #Serialize::id_len(&this)
         }
 
-        fn der_contents_len(&self) -> #Result<usize, #Error> {
-            let this = #to_fn(self);
-            #Serialize::der_contents_len(&this)
+        fn der_contents_len(&self) -> #Result<#Option<usize>, #Error> {
+            #Result::Ok(#Option::None)
         }
     })
 }
@@ -128,6 +127,7 @@ fn do_serialize_struct(
     data: syn::DataStruct,
 ) -> syn::Result<TokenStream> {
     let Result = quote! { ::std::result::Result };
+    let Option = quote! { ::std::option::Option };
     let Write = quote! { ?Sized + ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };
 
@@ -164,7 +164,7 @@ fn do_serialize_struct(
                 #id_len
             }
 
-            fn der_contents_len(&self) -> #Result<usize, #Error> {
+            fn der_contents_len(&self) -> #Result<#Option<usize>, #Error> {
                 #der_contents_len
             }
     })
@@ -179,6 +179,7 @@ fn do_serialize_enum(
     attribute.sanitize_as_enum()?;
 
     let Result = quote! { ::std::result::Result };
+    let Option = quote! { ::std::option::Option };
     let Write = quote! { ?Sized + ::std::io::Write };
     let Error = quote! { ::bsn1_serde::macro_alias::Error };
 
@@ -221,7 +222,7 @@ fn do_serialize_enum(
                 }
             }
 
-            fn der_contents_len(&self) -> #Result<usize, #Error> {
+            fn der_contents_len(&self) -> #Result<#Option<usize>, #Error> {
                 match self {
                     #(#arms =>  { #der_contents_lens } )*
                 }

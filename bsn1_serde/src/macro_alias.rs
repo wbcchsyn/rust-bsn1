@@ -14,4 +14,4 @@
 // You should have received a copy of the GNU General Public License along with this program. If
 // not, see <https://www.gnu.org/licenses/>.
 
-pub use bsn1::{BerRef, ContentsRef, DerRef, Error, IdRef, Length};
+pub use bsn1::{BerRef, Buffer, ContentsRef, DerRef, Error, IdRef, Length};

@@ -132,7 +132,10 @@ fn test_xa() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     assert_eq!(der.contents().len(), 0);
 }
 
@@ -153,7 +156,10 @@ fn test_xb() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -184,7 +190,10 @@ fn test_xc() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -218,7 +227,10 @@ fn test_xd() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -249,7 +261,10 @@ fn test_xe() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -283,7 +298,10 @@ fn test_xf() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -314,7 +332,10 @@ fn test_xg() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -348,7 +369,10 @@ fn test_xh() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -379,7 +403,10 @@ fn test_xi() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -410,7 +437,10 @@ fn test_xj() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -441,7 +471,10 @@ fn test_xk() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -472,7 +505,10 @@ fn test_xl() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -503,7 +539,10 @@ fn test_xm() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -534,7 +573,10 @@ fn test_xn() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -565,7 +607,10 @@ fn test_xo() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -596,7 +641,10 @@ fn test_xp() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();
@@ -627,7 +675,10 @@ fn test_xq() {
 
     assert_eq!(der.length().definite().unwrap(), der.contents().len());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
     {
         let contents = der.contents();
         let mut contents: &[u8] = contents.as_ref();

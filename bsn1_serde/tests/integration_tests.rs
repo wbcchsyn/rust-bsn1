@@ -40,6 +40,8 @@ fn serialize() {
     t.pass("tests/ser/transparent.rs");
 
     t.pass("tests/ser/generics.rs");
+
+    t.pass("tests/ser/non_length.rs");
 }
 
 #[test]

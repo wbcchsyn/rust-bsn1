@@ -77,7 +77,10 @@ fn test_a() {
 
     assert_eq!(der.id().len(), val.id_len().unwrap());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
 }
 
 fn test_b() {
@@ -89,7 +92,10 @@ fn test_b() {
 
     assert_eq!(der.id().len(), val.id_len().unwrap());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert_eq!(
+        der.contents().len(),
+        val.der_contents_len().unwrap().unwrap()
+    );
 }
 
 fn test_c() {
@@ -105,7 +111,7 @@ fn test_c() {
 
     assert_eq!(der.id().len(), val.id_len().unwrap());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert!(val.der_contents_len().unwrap().is_none());
 }
 
 fn test_d() {
@@ -117,7 +123,7 @@ fn test_d() {
 
     assert_eq!(der.id().len(), val.id_len().unwrap());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert!(val.der_contents_len().unwrap().is_none());
 }
 
 fn test_e() {
@@ -133,7 +139,7 @@ fn test_e() {
 
     assert_eq!(der.id().len(), val.id_len().unwrap());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert!(val.der_contents_len().unwrap().is_none());
 }
 
 fn test_f() {
@@ -145,5 +151,5 @@ fn test_f() {
 
     assert_eq!(der.id().len(), val.id_len().unwrap());
 
-    assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+    assert!(val.der_contents_len().unwrap().is_none());
 }

@@ -74,8 +74,8 @@ impl Serialize for OctetString<'_> {
         Ok(1)
     }
 
-    fn der_contents_len(&self) -> Result<usize, Error> {
-        Ok(self.octets.len())
+    fn der_contents_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(self.octets.len()))
     }
 }
 
@@ -166,7 +166,10 @@ mod tests {
         assert_eq!(der.id(), IdRef::octet_string());
         assert_eq!(der.id().len(), val.id_len().unwrap());
         assert_eq!(der.contents().as_ref(), &OCTETS);
-        assert_eq!(der.contents().len(), val.der_contents_len().unwrap());
+        assert_eq!(
+            der.contents().len(),
+            val.der_contents_len().unwrap().unwrap()
+        );
     }
 
     #[test]
