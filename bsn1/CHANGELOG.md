@@ -388,7 +388,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 
 Nothing is changed.
 
-## 3.0.0 -
+## 3.0.0 - 2024-04-03
 
 ### Added
 

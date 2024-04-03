@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 
 - First release.
 
-## 0.2.0 -
+## 0.2.0 - 2024-04-03
 
 ### Changed
 
