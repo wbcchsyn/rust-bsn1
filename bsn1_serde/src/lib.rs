@@ -43,14 +43,18 @@ where
     };
 
     let length = Length::Definite(contents_len).to_bytes();
-    let der_len = value.id_len()? + length.len() + contents_len;
+    let mut buffer = Buffer::new();
 
-    let mut buffer = Buffer::with_capacity(der_len);
+    if let Some(id_len) = value.id_len()? {
+        let der_len = id_len + length.len() + contents_len;
+        buffer.reserve(der_len);
+    }
+
     value.write_id(&mut buffer)?;
     buffer.write_all(&length).unwrap(); // Buffer::write_all() never fails.
 
     if let Some(contents) = contents {
-        unsafe { buffer.extend_from_slice(contents.as_slice()) };
+        buffer.write_all(&contents.as_slice()).unwrap(); // Buffer::write_all() never fails.
     } else {
         value.write_der_contents(&mut buffer)?;
     }
@@ -322,7 +326,7 @@ mod tests {
             self.0.write_der_contents(buffer)
         }
 
-        fn id_len(&self) -> Result<usize, Error> {
+        fn id_len(&self) -> Result<Option<usize>, Error> {
             self.0.id_len()
         }
 
@@ -365,9 +369,104 @@ mod tests {
         }
     }
 
+    struct NoneIdLen(i16);
+
+    impl ser::Serialize for NoneIdLen {
+        fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
+            self.0.write_id(buffer)
+        }
+
+        fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
+            self.0.write_der_contents(buffer)
+        }
+
+        fn id_len(&self) -> Result<Option<usize>, Error> {
+            Ok(None)
+        }
+
+        fn der_contents_len(&self) -> Result<Option<usize>, Error> {
+            self.0.der_contents_len()
+        }
+    }
+
+    #[test]
+    fn test_write_none_id_len_into_der() {
+        for i in i16::MIN..=i16::MAX {
+            let var = NoneIdLen(i);
+            assert_eq!(to_der(&var).unwrap(), to_der(&i).unwrap());
+        }
+
+        let mut va: Vec<NoneIdLen> = Vec::new();
+        let mut vb: Vec<i16> = Vec::new();
+        for i in 0..10 {
+            assert_eq!(to_der(&va).unwrap(), to_der(&vb).unwrap());
+
+            va.push(NoneIdLen(i));
+            vb.push(i);
+        }
+    }
+
+    struct NoneBothLen(i16);
+
+    impl ser::Serialize for NoneBothLen {
+        fn write_id<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
+            self.0.write_id(buffer)
+        }
+
+        fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error> {
+            self.0.write_der_contents(buffer)
+        }
+
+        fn id_len(&self) -> Result<Option<usize>, Error> {
+            Ok(None)
+        }
+
+        fn der_contents_len(&self) -> Result<Option<usize>, Error> {
+            Ok(None)
+        }
+    }
+
+    #[test]
+    fn test_write_none_both_into_der() {
+        for i in i16::MIN..=i16::MAX {
+            let var = NoneBothLen(i);
+            assert_eq!(to_der(&var).unwrap(), to_der(&i).unwrap());
+        }
+
+        let mut va: Vec<NoneBothLen> = Vec::new();
+        let mut vb: Vec<i16> = Vec::new();
+        for i in 0..10 {
+            assert_eq!(to_der(&va).unwrap(), to_der(&vb).unwrap());
+
+            va.push(NoneBothLen(i));
+            vb.push(i);
+        }
+    }
+
+    #[test]
+    fn test_write_none_both_into_ber() {
+        for i in i16::MIN..=i16::MAX {
+            let var = NoneBothLen(i);
+            assert_eq!(to_ber(&var).unwrap(), to_ber(&i).unwrap());
+        }
+
+        let mut va: Vec<NoneBothLen> = Vec::new();
+        let mut vb: Vec<i16> = Vec::new();
+        for i in 0..10 {
+            assert_eq!(to_ber(&va).unwrap(), to_ber(&vb).unwrap());
+
+            va.push(NoneBothLen(i));
+            vb.push(i);
+        }
+    }
+
     enum NoneLenEnum {
         NoneDerContentsLen(i16),
         NoneDerContentsLenWrapper(NoneDerContentsLen),
+        NoneIdLen(i16),
+        NoneIdLenWrapper(NoneIdLen),
+        NoneBothLen(i16),
+        NoneBothLenWrapper(NoneBothLen),
     }
 
     impl Serialize for NoneLenEnum {
@@ -375,6 +474,10 @@ mod tests {
             match self {
                 NoneLenEnum::NoneDerContentsLen(i) => i.write_id(buffer),
                 NoneLenEnum::NoneDerContentsLenWrapper(w) => w.write_id(buffer),
+                NoneLenEnum::NoneIdLen(i) => i.write_id(buffer),
+                NoneLenEnum::NoneIdLenWrapper(w) => w.write_id(buffer),
+                NoneLenEnum::NoneBothLen(i) => i.write_id(buffer),
+                NoneLenEnum::NoneBothLenWrapper(w) => w.write_id(buffer),
             }
         }
 
@@ -382,13 +485,21 @@ mod tests {
             match self {
                 NoneLenEnum::NoneDerContentsLen(i) => i.write_der_contents(buffer),
                 NoneLenEnum::NoneDerContentsLenWrapper(w) => w.write_der_contents(buffer),
+                NoneLenEnum::NoneIdLen(i) => i.write_der_contents(buffer),
+                NoneLenEnum::NoneIdLenWrapper(w) => w.write_der_contents(buffer),
+                NoneLenEnum::NoneBothLen(i) => i.write_der_contents(buffer),
+                NoneLenEnum::NoneBothLenWrapper(w) => w.write_der_contents(buffer),
             }
         }
 
-        fn id_len(&self) -> Result<usize, Error> {
+        fn id_len(&self) -> Result<Option<usize>, Error> {
             match self {
                 NoneLenEnum::NoneDerContentsLen(i) => i.id_len(),
                 NoneLenEnum::NoneDerContentsLenWrapper(w) => w.id_len(),
+                NoneLenEnum::NoneIdLen(_) => Ok(None),
+                NoneLenEnum::NoneIdLenWrapper(_) => Ok(None),
+                NoneLenEnum::NoneBothLen(_) => Ok(None),
+                NoneLenEnum::NoneBothLenWrapper(_) => Ok(None),
             }
         }
 
@@ -396,6 +507,10 @@ mod tests {
             match self {
                 NoneLenEnum::NoneDerContentsLen(_) => Ok(None),
                 NoneLenEnum::NoneDerContentsLenWrapper(_) => Ok(None),
+                NoneLenEnum::NoneIdLen(i) => i.der_contents_len(),
+                NoneLenEnum::NoneIdLenWrapper(w) => w.der_contents_len(),
+                NoneLenEnum::NoneBothLen(_) => Ok(None),
+                NoneLenEnum::NoneBothLenWrapper(_) => Ok(None),
             }
         }
     }
@@ -407,6 +522,18 @@ mod tests {
             assert_eq!(to_der(&var).unwrap(), to_der(&i).unwrap());
 
             let var = NoneLenEnum::NoneDerContentsLenWrapper(NoneDerContentsLen(i));
+            assert_eq!(to_der(&var).unwrap(), to_der(&i).unwrap());
+
+            let var = NoneLenEnum::NoneIdLen(i);
+            assert_eq!(to_der(&var).unwrap(), to_der(&i).unwrap());
+
+            let var = NoneLenEnum::NoneIdLenWrapper(NoneIdLen(i));
+            assert_eq!(to_der(&var).unwrap(), to_der(&i).unwrap());
+
+            let var = NoneLenEnum::NoneBothLen(i);
+            assert_eq!(to_der(&var).unwrap(), to_der(&i).unwrap());
+
+            let var = NoneLenEnum::NoneBothLenWrapper(NoneBothLen(i));
             assert_eq!(to_der(&var).unwrap(), to_der(&i).unwrap());
         }
 
@@ -422,6 +549,18 @@ mod tests {
                 i,
             )));
             vb.push(i);
+
+            va.push(NoneLenEnum::NoneIdLen(i));
+            vb.push(i);
+
+            va.push(NoneLenEnum::NoneIdLenWrapper(NoneIdLen(i)));
+            vb.push(i);
+
+            va.push(NoneLenEnum::NoneBothLen(i));
+            vb.push(i);
+
+            va.push(NoneLenEnum::NoneBothLenWrapper(NoneBothLen(i)));
+            vb.push(i);
         }
     }
 
@@ -432,6 +571,18 @@ mod tests {
             assert_eq!(to_ber(&var).unwrap(), to_ber(&i).unwrap());
 
             let var = NoneLenEnum::NoneDerContentsLenWrapper(NoneDerContentsLen(i));
+            assert_eq!(to_ber(&var).unwrap(), to_ber(&i).unwrap());
+
+            let var = NoneLenEnum::NoneIdLen(i);
+            assert_eq!(to_ber(&var).unwrap(), to_ber(&i).unwrap());
+
+            let var = NoneLenEnum::NoneIdLenWrapper(NoneIdLen(i));
+            assert_eq!(to_ber(&var).unwrap(), to_ber(&i).unwrap());
+
+            let var = NoneLenEnum::NoneBothLen(i);
+            assert_eq!(to_ber(&var).unwrap(), to_ber(&i).unwrap());
+
+            let var = NoneLenEnum::NoneBothLenWrapper(NoneBothLen(i));
             assert_eq!(to_ber(&var).unwrap(), to_ber(&i).unwrap());
         }
 
@@ -446,6 +597,18 @@ mod tests {
             va.push(NoneLenEnum::NoneDerContentsLenWrapper(NoneDerContentsLen(
                 i,
             )));
+            vb.push(i);
+
+            va.push(NoneLenEnum::NoneIdLen(i));
+            vb.push(i);
+
+            va.push(NoneLenEnum::NoneIdLenWrapper(NoneIdLen(i)));
+            vb.push(i);
+
+            va.push(NoneLenEnum::NoneBothLen(i));
+            vb.push(i);
+
+            va.push(NoneLenEnum::NoneBothLenWrapper(NoneBothLen(i)));
             vb.push(i);
         }
     }

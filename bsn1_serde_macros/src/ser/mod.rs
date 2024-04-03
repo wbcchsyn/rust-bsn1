@@ -78,10 +78,8 @@ fn do_into_serialize(ty: &syn::Path) -> syn::Result<TokenStream> {
             #Serialize::write_der_contents(&this, buffer)
         }
 
-        fn id_len(&self) -> #Result<usize, #Error> {
-            let this: Self = #Clone::clone(self);
-            let this: #ty = #Into::into(this);
-            #Serialize::id_len(&this)
+        fn id_len(&self) -> #Result<#Option<usize>, #Error> {
+            #Result::Ok(#Option::None)
         }
 
         fn der_contents_len(&self) -> #Result<#Option<usize>, #Error> {
@@ -109,9 +107,8 @@ fn do_to_serialize(to_fn: &syn::Path) -> syn::Result<TokenStream> {
             #Serialize::write_der_contents(&this, buffer)
         }
 
-        fn id_len(&self) -> #Result<usize, #Error> {
-            let this = #to_fn(self);
-            #Serialize::id_len(&this)
+        fn id_len(&self) -> #Result<#Option<usize>, #Error> {
+            #Result::Ok(#Option::None)
         }
 
         fn der_contents_len(&self) -> #Result<#Option<usize>, #Error> {
@@ -160,7 +157,7 @@ fn do_serialize_struct(
                 #write_der_contents
             }
 
-            fn id_len(&self) -> #Result<usize, #Error> {
+            fn id_len(&self) -> #Result<#Option<usize>, #Error> {
                 #id_len
             }
 
@@ -216,7 +213,7 @@ fn do_serialize_enum(
                 }
             }
 
-            fn id_len(&self) -> #Result<usize, #Error> {
+            fn id_len(&self) -> #Result<#Option<usize>, #Error> {
                 match self {
                     #(#arms =>  { #id_lens } )*
                 }

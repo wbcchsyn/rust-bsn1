@@ -75,7 +75,7 @@ fn test_a() {
 
     assert_eq!(der, to_der(&inner).unwrap());
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
 
     assert_eq!(
         der.contents().len(),
@@ -90,7 +90,7 @@ fn test_b() {
 
     assert_eq!(der, to_der(&inner).unwrap());
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
 
     assert_eq!(
         der.contents().len(),
@@ -109,7 +109,7 @@ fn test_c() {
 
     assert_eq!(der, to_der(&OctetString::from(x)).unwrap());
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert!(val.id_len().unwrap().is_none());
 
     assert!(val.der_contents_len().unwrap().is_none());
 }
@@ -121,7 +121,7 @@ fn test_d() {
 
     assert_eq!(der, to_der(&OctetString::from(inner.0)).unwrap());
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert!(val.id_len().unwrap().is_none());
 
     assert!(val.der_contents_len().unwrap().is_none());
 }
@@ -137,7 +137,7 @@ fn test_e() {
 
     assert_eq!(der, to_der(&OctetString::new(&y)).unwrap());
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert!(val.id_len().unwrap().is_none());
 
     assert!(val.der_contents_len().unwrap().is_none());
 }
@@ -149,7 +149,7 @@ fn test_f() {
 
     assert_eq!(der, to_der(&OctetString::new(&inner.1)).unwrap());
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert!(val.id_len().unwrap().is_none());
 
     assert!(val.der_contents_len().unwrap().is_none());
 }

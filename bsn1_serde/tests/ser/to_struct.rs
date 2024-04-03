@@ -77,7 +77,7 @@ fn test_a() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(der, Der::from(inner.as_bytes()));
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert!(val.id_len().unwrap().is_none());
     assert!(val.der_contents_len().unwrap().is_none());
 }
 
@@ -90,7 +90,7 @@ fn test_b() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(der, Der::from(inner.as_bytes()));
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert!(val.id_len().unwrap().is_none());
     assert!(val.der_contents_len().unwrap().is_none());
 }
 
@@ -100,7 +100,7 @@ fn test_c() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(der, Der::from(inner.as_bytes()));
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert!(val.id_len().unwrap().is_none());
     assert!(val.der_contents_len().unwrap().is_none());
 }
 
@@ -110,6 +110,6 @@ fn test_d() {
 
     let der = to_der(&val).unwrap();
     assert_eq!(der, Der::from(inner.as_bytes()));
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert!(val.id_len().unwrap().is_none());
     assert!(val.der_contents_len().unwrap().is_none());
 }

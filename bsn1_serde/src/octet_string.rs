@@ -70,8 +70,8 @@ impl Serialize for OctetString<'_> {
         buffer.write_all(&self.octets.as_ref()).map_err(Into::into)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -164,7 +164,7 @@ mod tests {
 
         let der = to_der(&val).unwrap();
         assert_eq!(der.id(), IdRef::octet_string());
-        assert_eq!(der.id().len(), val.id_len().unwrap());
+        assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
         assert_eq!(der.contents().as_ref(), &OCTETS);
         assert_eq!(
             der.contents().len(),

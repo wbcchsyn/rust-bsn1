@@ -129,7 +129,7 @@ fn test_b() {
     let val = B { _x: 315 };
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), IdRef::sequence().class());
     assert_eq!(der.id().pc(), IdRef::sequence().pc());
     assert_eq!(
@@ -153,7 +153,7 @@ fn test_c() {
     };
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), IdRef::utf8_string().class());
     assert_eq!(der.id().pc(), IdRef::utf8_string().pc());
     assert_eq!(
@@ -185,7 +185,7 @@ fn test_d() {
     };
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), ClassTag::Private);
     assert_eq!(der.id().pc(), IdRef::sequence().pc());
     assert_eq!(
@@ -218,7 +218,7 @@ fn test_e() {
     };
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), ClassTag::Private);
     assert_eq!(der.id().pc(), IdRef::utf8_string().pc());
     assert_eq!(
@@ -250,7 +250,7 @@ fn test_f() {
     let val = F(315);
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), IdRef::sequence().class());
     assert_eq!(der.id().pc(), PCTag::Primitive);
     assert_eq!(
@@ -271,7 +271,7 @@ fn test_g() {
     let val = G(315, "foo".to_string());
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), IdRef::utf8_string().class());
     assert_eq!(der.id().pc(), PCTag::Primitive);
     assert_eq!(
@@ -300,7 +300,7 @@ fn test_h() {
     let val = H(315, "foo".to_string());
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), ClassTag::Private);
     assert_eq!(der.id().pc(), PCTag::Primitive);
     assert_eq!(
@@ -329,7 +329,7 @@ fn test_i() {
     let val = I(315, "foo".to_string(), false);
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), ClassTag::Private);
     assert_eq!(der.id().pc(), PCTag::Primitive);
     assert_eq!(
@@ -361,7 +361,7 @@ fn test_xj() {
     let val = X::J { _x: 315 };
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), IdRef::sequence().class());
     assert_eq!(der.id().pc(), IdRef::sequence().pc());
     assert_eq!(der.id().number().unwrap(), 0_u32.into());
@@ -382,7 +382,7 @@ fn test_xk() {
     };
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), IdRef::utf8_string().class());
     assert_eq!(der.id().pc(), IdRef::utf8_string().pc());
     assert_eq!(der.id().number().unwrap(), 1_u32.into());
@@ -411,7 +411,7 @@ fn test_xl() {
     };
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), ClassTag::Private);
     assert_eq!(der.id().pc(), IdRef::sequence().pc());
     assert_eq!(der.id().number().unwrap(), 0x1e_u32.into());
@@ -441,7 +441,7 @@ fn test_xm() {
     };
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), ClassTag::Private);
     assert_eq!(der.id().pc(), IdRef::utf8_string().pc());
     assert_eq!(der.id().number().unwrap(), 0x1f_u32.into());
@@ -470,7 +470,7 @@ fn test_xn() {
     let val = X::N(315);
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), IdRef::sequence().class());
     assert_eq!(der.id().pc(), PCTag::Primitive);
     assert_eq!(der.id().number().unwrap(), 0x7f_u32.into());
@@ -488,7 +488,7 @@ fn test_xo() {
     let val = X::O(315, "foo".to_string());
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), IdRef::utf8_string().class());
     assert_eq!(der.id().pc(), PCTag::Primitive);
     assert_eq!(der.id().number().unwrap(), 0x80_u32.into());
@@ -514,7 +514,7 @@ fn test_xp() {
     let val = X::P(315, "foo".to_string());
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), ClassTag::Private);
     assert_eq!(der.id().pc(), PCTag::Primitive);
     assert_eq!(der.id().number().unwrap(), 0x3fff_u32.into());
@@ -540,7 +540,7 @@ fn test_xq() {
     let val = X::Q(315, "foo".to_string(), false);
     let der = to_der(&val).unwrap();
 
-    assert_eq!(der.id().len(), val.id_len().unwrap());
+    assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
     assert_eq!(der.id().class(), ClassTag::Private);
     assert_eq!(der.id().pc(), PCTag::Primitive);
     assert_eq!(der.id().number().unwrap(), 0x4000_u32.into());

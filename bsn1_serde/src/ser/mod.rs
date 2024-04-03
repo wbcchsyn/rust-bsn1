@@ -38,8 +38,11 @@ pub trait Serialize {
     /// Users should call `buffer.flush()` explicitly if necessary.
     fn write_der_contents<W: ?Sized + Write>(&self, buffer: &mut W) -> Result<(), Error>;
 
-    /// Returns the byte count of the identifier of ASN.1 format.
-    fn id_len(&self) -> Result<usize, Error>;
+    /// Returns the byte count of the identifier of ASN.1 format
+    /// if it is known before the serialization, or `None`.
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(None)
+    }
 
     /// Returns the byte count of the contents of ASN.1 DER format
     /// if it is known before serialization, or `None`.
@@ -61,8 +64,8 @@ impl Serialize for bool {
             .map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -82,8 +85,8 @@ impl Serialize for i8 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -103,8 +106,8 @@ impl Serialize for u8 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -128,8 +131,8 @@ impl Serialize for i16 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -153,8 +156,8 @@ impl Serialize for u16 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -180,8 +183,8 @@ impl Serialize for i32 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -207,8 +210,8 @@ impl Serialize for u32 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -229,8 +232,8 @@ impl Serialize for i64 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -256,8 +259,8 @@ impl Serialize for u64 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -278,8 +281,8 @@ impl Serialize for i128 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -305,8 +308,8 @@ impl Serialize for u128 {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -327,8 +330,8 @@ impl Serialize for isize {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -354,8 +357,8 @@ impl Serialize for usize {
         buffer.write_all(contents.as_ref()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -375,8 +378,8 @@ impl Serialize for String {
         buffer.write_all(self.as_bytes()).map_err(Error::from)
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -402,8 +405,8 @@ where
         Ok(())
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -428,8 +431,8 @@ where
         Ok(())
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -454,8 +457,8 @@ where
         Ok(())
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -480,8 +483,8 @@ where
         Ok(())
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -539,8 +542,8 @@ where
         Ok(())
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -577,8 +580,8 @@ where
         Ok(())
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -636,8 +639,8 @@ where
         Ok(())
     }
 
-    fn id_len(&self) -> Result<usize, Error> {
-        Ok(1)
+    fn id_len(&self) -> Result<Option<usize>, Error> {
+        Ok(Some(1))
     }
 
     fn der_contents_len(&self) -> Result<Option<usize>, Error> {
@@ -659,9 +662,13 @@ where
 
 fn der_len<T: Serialize>(t: &T) -> Result<Option<usize>, Error> {
     if let Some(contents_len) = t.der_contents_len()? {
-        Ok(Some(
-            t.id_len()? + Length::Definite(contents_len).len() + contents_len,
-        ))
+        if let Some(id_len) = t.id_len()? {
+            Ok(Some(
+                id_len + Length::Definite(contents_len).len() + contents_len,
+            ))
+        } else {
+            Ok(None)
+        }
     } else {
         Ok(None)
     }
@@ -694,7 +701,7 @@ mod tests {
             let der = crate::to_der(val).unwrap();
 
             assert_eq!(der, Der::from(*val));
-            assert_eq!(der.id().len(), val.id_len().unwrap());
+            assert_eq!(der.id().len(), val.id_len().unwrap().unwrap());
             assert_eq!(
                 der.contents().len(),
                 val.der_contents_len().unwrap().unwrap()
@@ -708,7 +715,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -726,7 +733,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -744,7 +751,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -762,7 +769,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -780,7 +787,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -798,7 +805,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -816,7 +823,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -834,7 +841,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -852,7 +859,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -870,7 +877,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -888,7 +895,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -906,7 +913,7 @@ mod tests {
             let der = crate::to_der(&i).unwrap();
 
             assert_eq!(der.id(), IdRef::integer());
-            assert_eq!(der.id().len(), i.id_len().unwrap());
+            assert_eq!(der.id().len(), i.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -929,7 +936,7 @@ mod tests {
             let der = crate::to_der(&s).unwrap();
 
             assert_eq!(der.id(), IdRef::utf8_string());
-            assert_eq!(der.id().len(), s.id_len().unwrap());
+            assert_eq!(der.id().len(), s.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),
@@ -948,7 +955,7 @@ mod tests {
             let der = crate::to_der(&v).unwrap();
 
             assert_eq!(der.id(), IdRef::sequence());
-            assert_eq!(der.id().len(), v.id_len().unwrap());
+            assert_eq!(der.id().len(), v.id_len().unwrap().unwrap());
 
             assert_eq!(
                 der.length().definite().unwrap(),

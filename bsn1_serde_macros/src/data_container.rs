@@ -147,51 +147,30 @@ impl DataContainer {
     #[allow(non_snake_case)]
     pub fn id_len(&self) -> syn::Result<TokenStream> {
         let Result = quote! { ::std::result::Result };
+        let Option = quote! { ::std::option::Option };
 
         let id = self.id_slice()?;
-        Ok(quote! { #Result::Ok(#id.len()) })
+        Ok(quote! { #Result::Ok(#Option::Some(#id.len())) })
     }
 
     #[allow(non_snake_case)]
     pub fn id_len_transparent(&self) -> syn::Result<TokenStream> {
         assert!(self.attribute().is_transparent());
 
+        let Result = quote! { ::std::result::Result };
+        let Option = quote! { ::std::option::Option };
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
         let field = self.transparent_field_var(true)?;
         let field_attribute = self.transparent_field_attribute(true)?;
 
-        if let Some(into_ty) = field_attribute.into_type() {
-            let Clone = quote! { ::std::clone::Clone };
-            let Into = quote! { ::std::convert::Into };
-            let this = quote! { bsn1_macro_1704044765_this };
-
-            Ok(quote! {{
-                let #this = #Clone::clone(#field);
-                let #this: #into_ty = #Into::into(#this);
-                #Serialize::id_len(&#this)
-            }})
-        } else if let Some(path) = field_attribute.to_path() {
-            let this = quote! { bsn1_macro_1706411411_this };
-
-            Ok(quote! {{
-                let #this = #path(#field);
-                #Serialize::id_len(&#this)
-            }})
+        if field_attribute.into_type().is_some() || field_attribute.to_path().is_some() {
+            Ok(quote! { #Result::Ok(#Option::None) })
         } else {
             Ok(quote! { #Serialize::id_len(#field) })
         }
     }
 
     pub fn id_slice(&self) -> syn::Result<TokenStream> {
-        // This method should not be called if converting annottation is specified.
-        assert!(self.attribute().into_type().is_none());
-        assert!(self.attribute().from_type().is_none());
-        assert!(self.attribute().to_path().is_none());
-        assert!(self.attribute().try_from_type().is_none());
-
-        // This method should not be called if `transparent` is specified.
-        assert!(self.attribute().is_transparent() == false);
-
         const SEQUENCE: u8 = 0x30;
 
         match self.attribute().id(SEQUENCE) {
@@ -299,6 +278,7 @@ impl DataContainer {
         let Serialize = quote! { ::bsn1_serde::ser::Serialize };
 
         let ret = quote! { bsn1_macro_1704043457_ret };
+        let id_len = quote! { bsn1_macro_1711551123_contents_len };
         let contents_len = quote! { bsn1_macro_1704043457_contents_len };
         let length_len = quote! { bsn1_macro_1704043457_length_len};
 
@@ -315,8 +295,12 @@ impl DataContainer {
                 } else {
                     quote! {{
                         if let Some(#contents_len) = #Serialize::der_contents_len(#field)? {
-                            let #length_len = #Length::Definite(#contents_len).len();
-                            #ret += #Serialize::id_len(#field)? + #length_len + #contents_len;
+                            if let Some(#id_len) = #Serialize::id_len(#field)? {
+                                let #length_len = #Length::Definite(#contents_len).len();
+                                #ret += #id_len + #length_len + #contents_len;
+                            } else {
+                                return #Result::Ok(#Option::None);
+                            }
                         } else {
                             return #Result::Ok(#Option::None);
                         }
