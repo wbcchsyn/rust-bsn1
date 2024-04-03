@@ -23,5 +23,5 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 
 ### Changed
 
-- Change the return type of `ser::Serialize.der_contents_len()`. It returns `Result<Option<usize>, Error>`, instead of `Result<usize, Error>`.
+- Change the return type of `ser::Serialize.der\_contents\_len()`. It returns `Result<Option<usize>, Error>`, instead of `Result<usize, Error>`.
 - Change the return type of `ser::Serialize.id\_len()`. It returns `Result<Option<usize>, Error>`, instead of `Result<usize, Error>`.
