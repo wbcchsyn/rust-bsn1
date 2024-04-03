@@ -19,8 +19,8 @@ name = "integration_tests"
 path = "tests/integration_tests.rs"
 
 [dependencies]
-bsn1 = { path = "../bsn1" }
-bsn1_serde_macros = { path = "../bsn1_serde_macros" }
+bsn1 = "3.0.0"
+bsn1_serde_macros = "0.2.0"
 anyhow = "1.0.81"
 
 [dev-dependencies]
