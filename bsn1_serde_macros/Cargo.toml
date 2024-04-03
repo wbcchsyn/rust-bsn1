@@ -23,5 +23,8 @@ quote = "1.0.33"
 syn = "2.0.43"
 
 [dev-dependencies]
-bsn1_serde = "0.2.0"
-anyhow = "1.0.81"
+# Remove `bsn1_serde` from the `dev-dependencies` temporarily to release.
+# It is impossible to publish crate `bsn1_serde` and `bsn1_serde_macros`
+# while they depend on each other.
+# bsn1_serde = "0.2.0"
+# anyhow = "1.0.81"
